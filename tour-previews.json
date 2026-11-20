@@ -1,0 +1,11 @@
+{
+  "schema": "jamaica.tour-previews.v1",
+  "refreshed_at_utc": null,
+  "classification": "PRELIMINARY_DETAILS_NOT_OFFERS",
+  "origin": "Иркутск",
+  "countries_status": [],
+  "previews": [],
+  "quote_verified": false,
+  "availability_verified": false,
+  "bookable": false
+}
