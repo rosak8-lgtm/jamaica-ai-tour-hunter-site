@@ -44,6 +44,14 @@ const rawAdults=params.get("adults")||"2",rawKids=params.get("kids")||"0";
 const adults=/^(?:[1-9]|1[0-2])$/.test(rawAdults)?Number(rawAdults):null;
 const kids=/^(?:[0-9]|10)$/.test(rawKids)?Number(rawKids):null;
 const pairPrice=adults===2&&kids===0;
+function ruNoun(n,one,few,many){
+ const mod10=n%10,mod100=n%100;
+ return mod100>=11&&mod100<=14?many:mod10===1?one:mod10>=2&&mod10<=4?few:many;
+}
+function partyLabel(){
+ return adults+" "+ruNoun(adults,"взрослый","взрослых","взрослых")+
+   ", "+kids+" "+ruNoun(kids,"ребёнок","ребёнка","детей");
+}
 function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
 function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
 async function init(){
@@ -78,7 +86,7 @@ async function init(){
   fact("Страна",p.country);
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
-  fact("Выбранные туристы",adults+" взрослых, "+kids+" детей");
+  fact("Выбранные туристы",partyLabel());
   const observed=Date.parse(feed.refreshed_at_utc||"");
   const age=Date.now()-observed;
   const fresh=Number.isFinite(observed)&&age>=-60000&&age<=30*60*1000;
@@ -95,7 +103,7 @@ async function init(){
   }else{
     fact("Стоимость для выбранного состава",
       pairPrice?"Требуется новый расчёт по прайс-листу":
-        "Для "+adults+" взрослых и "+kids+" детей нужна отдельная котировка, цена на двух взрослых не подходит");
+        "Для выбранного состава ("+partyLabel()+") нужна отдельная котировка, цена на двух взрослых не подходит");
   }
   if(!pairPrice){
     $("bookingStatus").textContent="Для выбранного состава туристов официальный расчёт пока не подключён. Цена пары взрослых не переносится в договор. Оплата и бронирование не выполняются.";
