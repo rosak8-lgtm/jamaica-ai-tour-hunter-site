@@ -79,30 +79,57 @@ function draw(o){
  $("price").textContent=o.total_rub.toLocaleString("ru-RU")+" ₽ за двоих";
 }
 async function init(){
- const offerId=new URLSearchParams(location.search).get("offer")||"";
- if(!/^[a-zA-Z0-9_-]{8,100}$/.test(offerId)){st("Выберите действующий тур на странице поиска. Оплата без выбранного предложения невозможна.");return;}
+ const params=new URLSearchParams(location.search);
+ const quoteId=params.get("quote")||"";
+ const offerId=params.get("offer")||"";
+ if(!/^[a-zA-Z0-9_-]{8,100}$/.test(quoteId||offerId)){
+   st("Выберите путешествие, откройте сведения о туре и получите официальную цену перед договором.");
+   return;
+ }
  try{
-  const [offersResponse,confResponse]=await Promise.all([
-  fetch("./verified-offers.json",{cache:"no-store"}),fetch("./checkout-config.json",{cache:"no-store"})]);
-  if(!offersResponse.ok||!confResponse.ok)throw Error("FETCH_FAILED");
-  const offers=await offersResponse.json();config=await confResponse.json();
-  if(offers.schema!=="jamaica.verified-offers.v1"||!Array.isArray(offers.offers))throw Error("OFFERS_INVALID");
-  selected=offers.offers.find(o=>o&&o.id===offerId);
-  if(!validOffer(selected)){st("Это предложение недоступно или его подтверждённая цена устарела. Вернитесь к поиску и выберите актуальный тур.");return;}
-  draw(selected);
+  const configResponse=await fetch("./checkout-config.json",{cache:"no-store"});
+  if(!configResponse.ok)throw Error("CONFIG_UNAVAILABLE");
+  config=await configResponse.json();
   if(!ready(config)){
-   st("Тур выбран, но онлайн-бронирование и оплата ещё не подключены. Покупка не выполняется.");
+   st("Выбранный тур пока нельзя оформить: проверенный электронный договор, авторизация, бронирование и платёжный провайдер не подключены. Оплата недоступна.");
    return;
   }
-  const origin=new URL(config.payment_iframe_origin);
-  if(origin.origin!==config.payment_iframe_origin.replace(/\/$/,""))throw Error("INVALID_PAYMENT_ORIGIN");
-  $("sellerInfo").textContent="Продавец: "+config.seller_legal_name+" · Регистрация: "+config.seller_registration;
+  if(quoteId){
+   const authToken=sessionStorage.getItem("jamaica_auth_token")||"";
+   if(authToken.length<32)throw Error("BUYER_AUTH_REQUIRED");
+   const endpoint=safeApiBase(config.api_base_url)+"/v1/private-quotes/"+encodeURIComponent(quoteId);
+   const response=await fetch(endpoint,{credentials:"omit",cache:"no-store",
+     headers:{"Authorization":"Bearer "+authToken}});
+   if(!response.ok)throw Error("AUTHORITATIVE_QUOTE_UNAVAILABLE");
+   const result=await response.json();
+   selected=result.offer;
+   if(!selected||selected.id!==quoteId)throw Error("QUOTE_ID_MISMATCH");
+  }else{
+   const response=await fetch("./verified-offers.json",{cache:"no-store"});
+   if(!response.ok)throw Error("CONFIRMED_FEED_UNAVAILABLE");
+   const feed=await response.json();
+   if(feed.schema!=="jamaica.verified-offers.v1"||!Array.isArray(feed.offers))
+     throw Error("INVALID_CONFIRMED_FEED");
+   selected=feed.offers.find(o=>o&&o.id===offerId);
+  }
+  if(!validOffer(selected)){
+   st("Котировка устарела или не соответствует выбранному туру. Получите новую цену перед договором.");
+   return;
+  }
+  draw(selected);
+  const pspOrigin=new URL(config.payment_iframe_origin);
+  if(pspOrigin.origin!==config.payment_iframe_origin.replace(/\\/$/,""))
+    throw Error("UNTRUSTED_PAYMENT_ORIGIN");
+  $("sellerInfo").textContent="Продавец: "+config.seller_legal_name+
+    " · Регистрация: "+config.seller_registration;
   $("sellerInfo").classList.remove("hide");
   $("termsLink").href=config.terms_url;
   $("privacyLink").href=config.privacy_url;
   $("checkoutForm").classList.remove("hide");
-  st("Тур выбран. Для оплаты требуется серверное подтверждение актуальной цены и брони.","ok");
- }catch(e){st("Не удалось получить подтверждённые данные заказа. Оплата недоступна.");}
+  st("Стоимость № 1 проверена. Следующий шаг — создание договора и его электронная подпись. Оплата пока невозможна.","ok");
+ }catch(e){
+  st("Не удалось загрузить подписываемую котировку или личный кабинет. Оплата не начата.");
+ }
 }
 $("checkoutForm").addEventListener("submit",async ev=>{
  ev.preventDefault();
