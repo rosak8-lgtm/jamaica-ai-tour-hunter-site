@@ -118,7 +118,7 @@ async function init(){
   }
   draw(selected);
   const pspOrigin=new URL(config.payment_iframe_origin);
-  if(pspOrigin.origin!==config.payment_iframe_origin.replace(/\\/$/,""))
+  if(pspOrigin.origin!==config.payment_iframe_origin.replace(new RegExp("/$"),""))
     throw Error("UNTRUSTED_PAYMENT_ORIGIN");
   $("sellerInfo").textContent="Продавец: "+config.seller_legal_name+
     " · Регистрация: "+config.seller_registration;
