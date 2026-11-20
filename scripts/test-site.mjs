@@ -141,8 +141,8 @@ for(const id of ['heading','subtitle','notice','facts','hotelInfo','hotelLink','
 }
 assert.ok(previewDetail.includes('tour-previews.json'));
 assert.ok(previewDetail.includes('x.bookable===false'));
-assert.ok(!/WhatsApp|wa\\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(previewDetail));
-const previewScripts=[...previewDetail.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
+assert.ok(!/WhatsApp|wa\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(previewDetail));
+const previewScripts=[...previewDetail.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
  .map(x=>x[1]).filter(x=>x.includes('(function(){'));
 assert.equal(previewScripts.length,1);
 new vm.Script(previewScripts[0],{filename:'preview-details.js'});
