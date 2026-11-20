@@ -37,7 +37,7 @@ footer{width:min(1050px,calc(100% - 30px));margin:0 auto 25px;color:var(--muted)
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
-let selected=null,config=null,orderId=null;
+let selected=null,config=null,orderId=null,statusToken=null;
 const st=(message,kind)=>{$("status").textContent=message;$("status").className=kind==="ok"?"info":"alert";};
 const dateOK=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Date.parse(d+"T23:59:59Z")>=Date.now();
 function validOffer(o){
@@ -117,7 +117,8 @@ $("checkoutForm").addEventListener("submit",async ev=>{
  if(res.status!=="PAYMENT_READY"||res.total_rub!==selected.total_rub||!/^[A-Za-z0-9_-]{8,100}$/.test(res.order_id||""))throw Error("PRICE_OR_ORDER_INVALID");
  const payUrl=new URL(res.payment_iframe_url);
  if(payUrl.origin!==new URL(config.payment_iframe_origin).origin||payUrl.protocol!=="https:")throw Error("PAYMENT_ORIGIN_INVALID");
- orderId=res.order_id;
+ if(typeof res.status_token!=="string"||res.status_token.length<32)throw Error("STATUS_TOKEN_REQUIRED");
+ orderId=res.order_id;statusToken=res.status_token;
  $("providerFrame").src=payUrl.href;
  $("checkoutForm").classList.add("hide");
  $("paymentContainer").classList.remove("hide");
@@ -128,10 +129,10 @@ $("checkoutForm").addEventListener("submit",async ev=>{
  }
 });
 $("checkOrder").addEventListener("click",async()=>{
- if(!orderId||!ready(config))return;
+ if(!orderId||!statusToken||!ready(config))return;
  try{
  const url=safeApiBase(config.api_base_url)+"/v1/orders/"+encodeURIComponent(orderId);
- const response=await fetch(url,{credentials:"omit",cache:"no-store"});
+ const response=await fetch(url,{credentials:"omit",cache:"no-store",headers:{"Authorization":"Bearer "+statusToken}});
  if(!response.ok)throw Error("NO_STATUS");
  const state=await response.json();
  if(state.status==="PAID_BOOKED"){$("orderStatus").textContent="Покупка подтверждена сервером: бронь оформлена и оплата получена.";st("Бронирование и оплата подтверждены.","ok");}
