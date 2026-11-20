@@ -14,4 +14,9 @@ else
   echo "JAMAICA_JS_VM_TESTS_SKIPPED=NODE_NOT_INSTALLED_ON_LENOVO"
   echo "JAMAICA_JS_VM_TESTS_RUN_BY=GITHUB_ACTIONS"
 fi
+if python3 -c 'import playwright.sync_api' >/dev/null 2>&1; then
+  python3 -B scripts/browser_smoke_playwright.py
+else
+  echo "JAMAICA_BROWSER_SMOKE_SKIPPED=PYTHON_PLAYWRIGHT_NOT_INSTALLED"
+fi
 echo "JAMAICA_LENOVO_PREFLIGHT_COMPLETE"
