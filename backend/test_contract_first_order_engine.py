@@ -182,6 +182,42 @@ class Tests(unittest.TestCase):
         self.supplier.book_error=NotAvailable("HOTEL_STOP")
         self.assertEqual(self.engine.reconcile_payment_and_book(id),"REFUND_REQUIRED")
         self.assertEqual(len(self.psp.refunds),1)
+    def test_ambiguous_supplier_timeout_requires_reconciliation_not_refund(self):
+        id=self.paid()
+        self.supplier.book_error=TimeoutError("unknown if supplier accepted request")
+        self.assertEqual(self.engine.reconcile_payment_and_book(id),"BOOKING_RECONCILIATION_REQUIRED")
+        self.assertEqual(self.repo.orders[id]["status"],"BOOKING_RECONCILIATION_REQUIRED")
+        self.assertEqual(self.psp.refunds,[])
+        self.assertEqual(len(self.supplier.bookings),1)
+        with self.assertRaises(BadOrder):
+            self.engine.reconcile_payment_and_book(id)
+        self.assertEqual(len(self.supplier.bookings),1)
+    def test_notification_failure_cannot_refund_successful_booking(self):
+        class BrokenOutbox:
+            def enqueue_once(self,key,event):
+                raise RuntimeError("telegram temporarily unavailable")
+        self.engine.outbox=BrokenOutbox()
+        id=self.paid()
+        self.assertEqual(self.engine.reconcile_payment_and_book(id),"BOOKED")
+        self.assertEqual(self.repo.orders[id]["status"],"BOOKED")
+        self.assertEqual(self.psp.refunds,[])
+    def test_signature_requires_provider_receipt_not_just_signed_flag(self):
+        id=self.create()["order_id"]
+        self.signer.accept=True
+        original=self.signer.verified_signature
+        def invalid(**kw):
+            d=original(**kw)
+            d["receipt_id"]=None
+            return d
+        self.signer.verified_signature=invalid
+        with self.assertRaises(NotAvailable):
+            self.engine.verify_contract_signature(id)
+        self.assertEqual(self.repo.orders[id]["status"],"AWAITING_SIGNATURE")
+    def test_prebooking_check_is_required_even_when_payment_paid(self):
+        id=self.paid()
+        self.supplier.checks_by_stage["AFTER_PAYMENT_BEFORE_BOOKING"]=quote(hotel_stop=True)
+        self.assertEqual(self.engine.reconcile_payment_and_book(id),"REFUND_REQUIRED")
+        self.assertEqual(self.supplier.bookings,[])
     def test_contract_digest_is_stable_and_tamper_evident(self):
         a={"buyer_id":"customer_1","total_rub":100}
         self.assertEqual(contract_digest(a),contract_digest(dict(reversed(list(a.items())))))
