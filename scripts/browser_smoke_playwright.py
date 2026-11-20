@@ -74,8 +74,14 @@ def main():
                 heading=page.locator("#heading").inner_text()
                 ensure("Турция" in heading,"SELECTED_COUNTRY_LOST_IN_DETAILS")
                 booking=page.locator("#bookingStatus").inner_text().lower()
-                ensure("оплат" in booking or "подтверд" in booking,
+                ensure(any(term in booking for term in ("оплат","подтверд","расчёт","договор")),
                        "BOOKING_SAFETY_MESSAGE_NOT_VISIBLE")
+                ensure("тур забронирован" not in booking,
+                       "UNVERIFIED_TOUR_CLAIMS_BOOKED")
+                quote_link=page.locator("#quoteLink")
+                ensure(quote_link.count()==1 and
+                       (quote_link.get_attribute("href") or "").startswith("quote.html?preview=p_"),
+                       "NO_QUOTE_AND_CONTRACT_HANDOFF")
                 ensure(not page.locator("#providerFrame").count(),"UNAPPROVED_PAYMENT_IFRAME")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
