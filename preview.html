@@ -93,12 +93,12 @@ async function init(){
   const listed=Number.isFinite(observed)&&age>=-60000&&age<=24*60*60*1000;
   if(listed&&pairPrice&&p.price_reference_party==="TWO_ADULTS"&&
      Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
-    fact("Ориентир по прайс-листу на 2 взрослых",
-         new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (не окончательная цена)");
+    fact("Цена по прайс-листу на 2 взрослых",
+         new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (на время выгрузки, требует проверки перед договором)");
     fact("Средняя цена при поездке вдвоём",
          new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(p.price_reference_rub/2)+" ₽ на человека — не цена отдельного одноместного тура");
     fact("Дата прайс-листа",new Date(observed).toLocaleString("ru-RU"));
-    $("bookingStatus").textContent=(fresh?"Ориентировочная стоимость загружена. ":"С момента выгрузки стоимость могла измениться. ")+
+    $("bookingStatus").textContent=(fresh?"Цена взята из обновлённого прайс-листа. ":"С момента выгрузки стоимость могла измениться. ")+
       "Перед оформлением договора требуется новый расчёт цены и подтверждение рейсов и номера.";
   }else{
     fact("Стоимость для выбранного состава",
