@@ -36,7 +36,7 @@ class Tests(unittest.TestCase):
         self.repo=Repo();self.supplier=Supplier(self.repo)
         self.engine=PreviewQuoteEngine(self.repo,self.supplier)
     def test_exact_preview_to_private_authoritative_offer(self):
-        result=self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0)
+        result=self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
         self.assertEqual(result["status"],"QUOTE_READY")
         self.assertFalse(result["booked"])
         self.assertTrue(result["contract_required"])
@@ -44,39 +44,46 @@ class Tests(unittest.TestCase):
         offer=self.repo.private[result["offer_id"]]
         self.assertTrue(valid_offer(offer,now()))
         self.assertEqual(len(self.supplier.calls),1)
+        self.assertEqual(offer["buyer_id"],"customer-12345678")
     def test_incorrect_hotel_never_generates_private_offer(self):
         self.supplier.patches={"hotel_id":"another-hotel"}
         with self.assertRaises(NotAvailable):
-            self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0)
+            self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
         self.assertEqual(self.repo.private,{})
     def test_no_seats_or_stop_prevents_contract(self):
         for patches in ({"flight_back_available":False},{"hotel_stop":True},
                         {"total_rub":0},{"supplier_quote_verified":False}):
             self.supplier.patches=patches
             with self.assertRaises(NotAvailable):
-                self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0)
+                self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
         self.assertEqual(self.repo.private,{})
     def test_on_request_requires_consent(self):
         self.supplier.patches={"hotel_status":"ON_REQUEST"}
         with self.assertRaises(NotAvailable):
-            self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0)
-        result=self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0,
+            self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
+        result=self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0,
                                                     on_request_accepted=True)
         self.assertEqual(result["hotel_status"],"ON_REQUEST")
     def test_other_party_needs_real_quote_not_divided_by_two(self):
         with self.assertRaises(NotAvailable):
-            self.engine.get_authoritative_quote(self.repo.p["id"],adults=1,children=0)
+            self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=1,children=0)
         self.assertEqual(self.supplier.calls,[])
     def test_original_source_stays_unbookable(self):
-        result=self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0)
+        result=self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
         self.assertFalse(self.repo.p["bookable"])
         self.assertNotIn("payment_id",self.repo.private[result["offer_id"]])
+    def test_authenticated_buyer_must_exist(self):
+        with self.assertRaises(BadOrder):
+            self.engine.get_authoritative_quote(self.repo.p["id"],
+              buyer_id="",adults=2,children=0)
+        self.assertEqual(self.supplier.calls,[])
+        self.assertEqual(self.repo.private,{})
     def test_expired_departure_blocked(self):
         self.repo.p["depart_date"]=(now()-timedelta(days=2)).date().isoformat()
         with self.assertRaises(NotAvailable):
-            self.engine.get_authoritative_quote(self.repo.p["id"],adults=2,children=0)
+            self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
         self.assertEqual(self.supplier.calls,[])
     def test_reject_unsupported_identifier(self):
         with self.assertRaises(BadOrder):
-            self.engine.get_authoritative_quote("wrong",adults=2,children=0)
+            self.engine.get_authoritative_quote("wrong",buyer_id="customer-12345678",adults=2,children=0)
 if __name__=="__main__":unittest.main()
