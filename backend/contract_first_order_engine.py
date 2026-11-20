@@ -188,7 +188,9 @@ class ContractFirstEngine:
             raise BadOrder("No contract pending signature")
         receipt=self.signer.verified_signature(contract_id=order["contract_id"],
                                                digest_sha256=order["contract_digest"])
-        if not isinstance(receipt,dict) or receipt.get("verified") is not True or receipt.get("digest_sha256")!=order["contract_digest"] or not receipt.get("signed_at"):
+        if (not isinstance(receipt,dict) or receipt.get("verified") is not True or
+            receipt.get("digest_sha256")!=order["contract_digest"] or
+            not receipt.get("signed_at") or not receipt.get("receipt_id")):
             raise NotAvailable("Trusted electronic signature not verified")
         if not self.repo.transition(order_id,"AWAITING_SIGNATURE","CONTRACT_SIGNED",
                                     {"signed_at":receipt["signed_at"],"signature_receipt_id":receipt.get("receipt_id")}):
@@ -263,12 +265,24 @@ class ContractFirstEngine:
                 # Supplier may have booked; human recovery required, NEVER retry blindly.
                 return "BOOKING_RECONCILIATION_REQUIRED"
             event=("TOUR_BOOKED" if state=="BOOKED" else "TOUR_REQUESTED_WAITING_HOTEL")
-            self.outbox.enqueue_once(order_id+":"+event,{
-                "type":event,"order_id":order_id,"supplier_booking_id":result["supplier_booking_id"]})
-            return state
-        except Exception:
-            self._flag_refund(order_id,"BOOKING_IN_PROGRESS","SUPPLIER_BOOKING_FAILED")
+        except NotAvailable:
+            # Explicit, authoritative supplier rejection: no booking created.
+            self._flag_refund(order_id,"BOOKING_IN_PROGRESS","SUPPLIER_BOOKING_REJECTED")
             return "REFUND_REQUIRED"
+        except Exception:
+            # Network timeouts and unknown responses may mean a booking WAS made.
+            # NEVER refund or retry automatically until supplier lookup reconciles.
+            self.repo.transition(order_id,"BOOKING_IN_PROGRESS",
+                                 "BOOKING_RECONCILIATION_REQUIRED",{})
+            return "BOOKING_RECONCILIATION_REQUIRED"
+        # Booking is already durable: messaging failure must never trigger a refund.
+        try:
+            self.outbox.enqueue_once(order_id+":"+event,{
+                "type":event,"order_id":order_id,
+                "supplier_booking_id":result["supplier_booking_id"]})
+        except Exception:
+            return state  # Production outbox monitor must replay missing notification.
+        return state
 
     def _flag_refund(self,order_id:str,expected:str,reason:str):
         if not self.repo.transition(order_id,expected,"REFUND_REQUIRED",{"failure_reason":reason}):
