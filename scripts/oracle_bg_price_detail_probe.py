@@ -124,6 +124,12 @@ def probe(directory, api, max_countries=MAX_COUNTRIES):
                           e.get("stop") is None and bg.date_iso(e.get("date")) is not None and
                           bg.date_iso(e["date"]) >= datetime.now(timezone.utc).date()]
             if not candidates:
+                outcomes.append({"country": bg.clean(country.get("name"), 60),
+                                 "result": {"format": "NO_FUTURE_PRICE_LIST",
+                                            "root": "UNKNOWN", "rows": 0, "fields": [],
+                                            "entry_fields": [], "price_fields": [],
+                                            "price_rows": 0, "amount_present": 0, "rur_present": 0,
+                                            "adult_pair_markers": 0, "row_stop_markers": 0}})
                 continue
             item = candidates[0]
             url = safe_url(item, country["id"])
