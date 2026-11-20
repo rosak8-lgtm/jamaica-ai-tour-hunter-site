@@ -426,6 +426,7 @@ function renderTourPreviews(reset=true){
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      card.append(el("strong","", "Ориентир на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
+     card.append(el("small","", "В среднем при поездке вдвоём: "+new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+" ₽ на человека. Цена одного туриста рассчитывается отдельно."));
      card.append(el("small","", "Цена из прайс-листа, не окончательная. Перед покупкой необходим расчёт и подтверждение мест."));
    }else{
      card.append(el("small","", "Стоимость требует актуального расчёта; рейсы и места не подтверждены."));
