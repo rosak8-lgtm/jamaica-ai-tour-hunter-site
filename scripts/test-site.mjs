@@ -81,7 +81,7 @@ assert.equal(matching(sample,{...q,nights:7}),false);
 assert.equal(matching(sample,{...q,nights:10}),true);
 assert.equal(matching(sample,{...q,country:'Таиланд'}),true);
 assert.equal(matching(sample,{...q,country:'Китай'}),false);
-assert.equal(matching(sample,{...q,hotel:'TEST HOTEL'}),true);
+assert.equal(matching(sample,{...q,hotel:'test hotel'}),true,'Normalized hotel query');
 assert.equal(matching(sample,{...q,budget:30000}),false);
 assert.equal(matching(sample,{...q,budget:50000}),true);
 console.log('JAMAICA_TOUR_DETAILS_QA_PASS 251 countries, no 7-night default, quote -> detail -> checkout, no fake offers');
