@@ -71,6 +71,8 @@ async function init(){
      Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
     fact("Цена по прайс-листу на 2 взрослых",
          new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (ориентировочно)");
+    fact("Средняя цена при поездке вдвоём",
+         new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(p.price_reference_rub/2)+" ₽ на человека — не цена отдельного одноместного тура");
     $("bookingStatus").textContent="Предварительная цена получена. Для оплаты необходимо подтвердить окончательный расчёт, номера и рейсы у поставщика.";
   }else{
     fact("Актуальная цена на 2 взрослых","Требуется повторный расчёт");
