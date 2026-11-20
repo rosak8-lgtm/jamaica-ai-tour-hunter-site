@@ -73,7 +73,7 @@ function valid(o){
  if(o.best_price_required===true&&o.best_price_verified!==true)return false;
  if(!Number.isInteger(o.total_rub)||o.total_rub<=0||o.adults!==2||o.children!==0)return false;
  if(!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
- if(!dataSafe(o.hotel)||!dataSafe(o.origin)||!dataSafe(o.destination)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(o.depart_date||""))return false;
+ if(!dataSafe(o.hotel)||!dataSafe(o.origin)||!dataSafe(o.destination)||!/^\d{4}-\d{2}-\d{2}$/.test(o.depart_date||""))return false;
  const checked=Date.parse(o.quote_verified_at),end=Date.parse(o.expires_at);
  return Number.isFinite(checked)&&Number.isFinite(end)&&checked<=now+60000&&now-checked<1200000&&end>now&&Date.parse(o.depart_date+"T23:59:59Z")>now;
 }
