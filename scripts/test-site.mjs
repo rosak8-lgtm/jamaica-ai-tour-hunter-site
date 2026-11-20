@@ -128,6 +128,13 @@ assert.ok(page.includes('route.html?id='));
 assert.ok(page.includes('route-discovery.json'));
 assert.ok(routePage.includes('destination-directory.json'));
 assert.ok(routePage.includes('route-discovery.json'));
+for(const id of ['alternativeSection','alternativeCountry','alternativeNights','alternativeDate','alternativeCount','alternativeList','alternativeMore']){
+ assert.ok(routePage.includes('id="'+id+'"'),'Route detail missing alternative control '+id);
+}
+assert.ok(routePage.includes('routes.routes.filter'),'Alternatives must come from actual route feed');
+assert.ok(routePage.includes('x.bookable===false'),'Alternatives must not claim verified bookability');
+assert.ok(routePage.includes('x.country===route.country?1:0'),'Different countries should be prioritized');
+assert.ok(routePage.includes('altMatches.slice(altVisible,altVisible+24)'),'Alternatives must be paginated');
 assert.ok(!/WhatsApp|wa\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(routePage));
 const routeScripts=[...routePage.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(x=>x[1]).filter(x=>x.includes('(function(){'));
 assert.equal(routeScripts.length,1);
