@@ -35,6 +35,16 @@ class Tests(unittest.TestCase):
             "total_rub":95000,"quote_verified":True})
         self.assertEqual(self.repo.get_offer("tour-private-123")["total_rub"],95000)
         self.assertNotIn("95000",self.preview.read_text())
+    def test_customer_can_read_only_own_private_quote_and_contract(self):
+        self.repo.save_verified_offer({"id":"tour-user1","buyer_id":"customer-11111111",
+                                       "total_rub":95000})
+        self.assertIsNotNone(self.repo.get_offer_for_buyer("tour-user1","customer-11111111"))
+        self.assertIsNone(self.repo.get_offer_for_buyer("tour-user1","customer-22222222"))
+        self.assertIsNone(self.repo.get_offer_for_buyer("tour-user1",""))
+        self.repo.create_order({"id":"order-123456","status":"AWAITING_SIGNATURE",
+                                "buyer_id":"customer-11111111","contract_digest":"PRIVATE"})
+        self.assertIsNotNone(self.repo.get_order_for_buyer("order-123456","customer-11111111"))
+        self.assertIsNone(self.repo.get_order_for_buyer("order-123456","customer-22222222"))
     def test_preview_lookup_from_public_file(self):
         p=self.repo.get_preview("p_"+"a"*24)
         self.assertEqual(p["hotel"],"CI Hotel")
