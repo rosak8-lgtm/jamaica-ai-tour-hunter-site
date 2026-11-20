@@ -161,9 +161,12 @@ assert.ok(page.includes('id="previewCountryChips"'));
 assert.ok(page.includes('function renderPreviewCountryChips()'));
 assert.ok(page.includes('function interleaveCountries(rows)'));
 assert.ok(page.includes('function referencePrice(x)'));
+assert.ok(page.includes('id="previewUpdatedAt"'));
+assert.ok(page.includes('if(document.visibilityState==="visible")loadTourPreviews();'));
+assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
 assert.ok(page.includes('previewPriceFresh'));
-assert.ok(page.includes('Ориентир на 2 взрослых'));
+assert.ok(page.includes('Цена по прайс-листу на 2 взрослых'));
 assert.ok(page.includes('if(!country)list=interleaveCountries(list)'));
 
 assert.ok(page.includes('preview.html?id='));
