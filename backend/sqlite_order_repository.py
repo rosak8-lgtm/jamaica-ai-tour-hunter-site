@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 from threading import RLock
 from typing import Any
@@ -25,7 +26,7 @@ class SqliteOrders:
         self.lock=RLock()
         existed=self.path.exists()
         # chmod restricts permissions even with an unsafe caller umask.
-        with self._connect() as db:
+        with self._session() as db:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS offers
                   (id TEXT PRIMARY KEY,payload TEXT NOT NULL);
@@ -48,6 +49,14 @@ class SqliteOrders:
         db.row_factory=sqlite3.Row
         return db
 
+    @contextmanager
+    def _session(self):
+        db=self._connect()
+        try:
+            yield db
+        finally:
+            db.close()
+
     @staticmethod
     def _serialize(value):
         return json.dumps(value,ensure_ascii=False,separators=(",",":"),sort_keys=True)
@@ -64,24 +73,24 @@ class SqliteOrders:
     def save_verified_offer(self,offer:dict[str,Any])->None:
         if not isinstance(offer,dict) or not offer.get("id"):
             raise BadOrder("Invalid private quote")
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             db.execute("INSERT INTO offers (id,payload) VALUES (?,?)",
                        (offer["id"],self._serialize(offer)))
 
     def get_offer(self,offer_id:str)->dict[str,Any]|None:
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             row=db.execute("SELECT payload FROM offers WHERE id=?",(offer_id,)).fetchone()
         return json.loads(row["payload"]) if row else None
 
     def create_order(self,order:dict[str,Any])->None:
         if not isinstance(order,dict) or not order.get("id") or not order.get("status"):
             raise BadOrder("Missing order ID or status")
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             db.execute("INSERT INTO orders (id,status,payload) VALUES (?,?,?)",
                        (order["id"],order["status"],self._serialize(order)))
 
     def get_order(self,order_id:str)->dict[str,Any]|None:
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             row=db.execute("SELECT payload FROM orders WHERE id=?",(order_id,)).fetchone()
         return json.loads(row["payload"]) if row else None
 
@@ -90,7 +99,7 @@ class SqliteOrders:
         if (not isinstance(updates,dict) or not expected_status or not new_status or
             "id" in updates or "status" in updates):
             raise BadOrder("Invalid atomic transition")
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             try:
                 db.execute("BEGIN IMMEDIATE")
                 row=db.execute("SELECT payload,status FROM orders WHERE id=?",
@@ -116,20 +125,20 @@ class SqliteOrders:
     def enqueue_once(self,key:str,event:dict[str,Any])->None:
         if not isinstance(key,str) or not key or not isinstance(event,dict):
             raise BadOrder("Invalid notification event")
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             db.execute("INSERT OR IGNORE INTO notification_outbox(event_key,payload) VALUES (?,?)",
                        (key,self._serialize(event)))
 
     def pending_events(self,limit:int=20):
         if type(limit) is not int or not 1<=limit<=100:
             raise BadOrder("Outbox limit invalid")
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             rows=db.execute("SELECT event_key,payload FROM notification_outbox "
                             "WHERE state='PENDING' ORDER BY created_at,event_key LIMIT ?",
                             (limit,)).fetchall()
         return [(r["event_key"],json.loads(r["payload"])) for r in rows]
 
     def mark_delivered(self,key:str)->None:
-        with self.lock,self._connect() as db:
+        with self.lock,self._session() as db:
             db.execute("UPDATE notification_outbox SET state='SENT', "
                        "delivered_at=datetime('now') WHERE event_key=? AND state='PENDING'",(key,))
