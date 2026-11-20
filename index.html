@@ -344,11 +344,14 @@ async function loadRouteDiscovery(){
 }
 
 let previewRecords=[],previewVisible=0;
-let previewsLoaded=false, previewPriceFresh=false;
+let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
 function referencePrice(x){
- if(!previewPriceFresh||x.price_reference_party!=="TWO_ADULTS"||
+ if(!previewPriceListed||x.price_reference_party!=="TWO_ADULTS"||
     !Number.isSafeInteger(x.price_reference_rub)||x.price_reference_rub<=0)return null;
  return x.price_reference_rub;
+}
+function currentReferencePrice(x){
+ return previewPriceFresh?referencePrice(x):null;
 }
 function renderPreviewCountryChips(){
  const target=$("previewCountryChips");
@@ -410,8 +413,8 @@ function renderTourPreviews(reset=true){
    (!date||x.depart_date===date)&&
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
-   (!budget||!partyTwoAdults||referencePrice(x)===null||
-                referencePrice(x)<=budget*2)
+   (!budget||!partyTwoAdults||currentReferencePrice(x)===null||
+                currentReferencePrice(x)<=budget*2)
  );
  list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
  if(!country)list=interleaveCountries(list);
@@ -427,7 +430,10 @@ function renderTourPreviews(reset=true){
    if(reference!==null){
      card.append(el("strong","", "Ориентир на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
      card.append(el("small","", "В среднем при поездке вдвоём: "+new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+" ₽ на человека. Цена одного туриста рассчитывается отдельно."));
-     card.append(el("small","", "Цена из прайс-листа, не окончательная. Перед покупкой необходим расчёт и подтверждение мест."));
+     card.append(el("small","",
+       (previewPriceFresh?"Свежий ориентир":"Цена могла измениться")+
+       ". По прайс-листу на "+previewPriceAsOf+
+       ". Итоговая стоимость, рейсы и свободные номера перепроверяются перед договором и покупкой."));
    }else{
      card.append(el("small","", "Цена пока не подтверждена; если указан бюджет, соответствие ему требует расчёта. Рейсы и места также не подтверждены."));
    }
@@ -454,6 +460,9 @@ async function loadTourPreviews(){
   const refreshed=Date.parse(data.refreshed_at_utc||"");
   const age=Date.now()-refreshed;
   previewPriceFresh=Number.isFinite(refreshed)&&age>=-60000&&age<=30*60*1000;
+  previewPriceListed=Number.isFinite(refreshed)&&age>=-60000&&age<=24*60*60*1000;
+  previewPriceAsOf=Number.isFinite(refreshed)?
+    new Date(refreshed).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"}):"неизвестную дату";
   previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
     typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
