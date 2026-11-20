@@ -1,0 +1,13 @@
+{
+  "schema": "jamaica.route-discovery.v1",
+  "refreshed_at_utc": null,
+  "classification": "AWAITING_AUTHENTICATED_ORACLE_SYNC",
+  "origin": "Иркутск",
+  "countries_checked": 0,
+  "countries_success": 0,
+  "countries_status": [],
+  "routes": [],
+  "quote_verified": false,
+  "availability_verified": false,
+  "bookable": false
+}
