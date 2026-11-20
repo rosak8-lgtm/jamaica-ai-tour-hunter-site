@@ -75,7 +75,7 @@ def checkout(env):
         raise CatalogHold("UNEXPECTED_GIT_REMOTE")
     # The dedicated worktree contains only generated public files, no user edits.
     run(["git","fetch","--depth=1","origin","main"],cwd=CHECKOUT,env=env,timeout=90)
-    run(["git","checkout","-B","main","origin/main"],cwd=CHECKOUT,env=env)
+    run(["git","checkout","--force","-B","main","origin/main"],cwd=CHECKOUT,env=env)
     run(["git","reset","--hard","origin/main"],cwd=CHECKOUT,env=env)
 
 def timestamp(value):
