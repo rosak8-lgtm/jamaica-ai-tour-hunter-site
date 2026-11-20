@@ -2,10 +2,10 @@
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#33184d">
-<meta name="description" content="JAMAICA — подбор путешествий из Иркутска и других городов. Найдите страну, выберите даты и получите персональные варианты в WhatsApp.">
+<meta name="description" content="JAMAICA — подбор путешествий из Иркутска и других городов. Поиск подтверждённых предложений по странам, датам, отелям и цене.">
 <meta property="og:title" content="JAMAICA — путешествия начинаются здесь">
-<meta property="og:description" content="Направления по всему миру. Подберите тур и запросите варианты по вашим датам и бюджету.">
-<title>JAMAICA — подбор туров и путешествий из Иркутска</title>
+<meta property="og:description" content="Поиск туров, сравнение гостиниц и дат, оформление покупки на JAMAICA.">
+<title>JAMAICA — поиск и онлайн-бронирование туров</title>
 <style>
 :root{--purple:#35194f;--purple2:#512575;--ink:#2d2140;--muted:#776d83;--teal:#007f86;--teal2:#00a6a9;--gold:#f5c452;--bg:#fcfaf6;--line:#e9e1e8;--white:#fff;--shadow:0 16px 45px rgba(39,20,56,.085)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Arial,sans-serif}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
@@ -22,123 +22,164 @@
 @media(max-width:500px){.destinationGrid{grid-template-columns:1fr}.searchHead{flex-direction:column;align-items:flex-start}.searchPanel{margin-top:-39px}.fields{grid-template-columns:1fr}.field,.field.wide,.field.short{grid-column:1}.destToolbar{flex-direction:column;align-items:stretch}.destToolbar input{width:100%}.nav{min-height:70px}.navLinks{justify-content:flex-end}.navLinks a{font-size:12px;padding:8px}.hero h1{letter-spacing:-.8px}.heroArt{min-height:198px}.artBubble{left:5%;right:5%}.offerBox{flex-direction:column;align-items:flex-start}.finalCta{padding:25px}.sectionHead{display:block}}
 </style></head>
 <body>
-<header class="top"><div class="wrap"><nav class="nav" aria-label="Навигация"><a class="logo" href="#top"><span class="bird" aria-hidden="true">🦜</span><span>JAMAICA</span></a><div class="navLinks"><a href="#destinations">Направления</a><a href="#how">Как оформить</a><a class="contactNav" href="#request">Подобрать тур</a></div></nav></div></header>
-<main><section class="hero" id="top"><div class="wrap heroGrid"><div><span class="kicker">☀ Путешествия из Иркутска и других городов</span><h1>Мир открыт.<br><em>Ваш отпуск ждёт.</em></h1><p>Выберите страну, даты и бюджет — подготовим подходящие варианты путешествия. Пляжи, острова, города и маршруты по всему миру.</p><div class="heroActions"><a class="btn btnGold" href="#request">Найти мой тур ↗</a><a class="btn btnLine" href="#destinations">Смотреть направления</a></div><div class="heroFine">Стоимость и наличие мест подтверждаем перед оформлением. Заявка не обязывает к покупке.</div></div><div class="heroArt" aria-label="Тропический стиль Jamaica: солнце и попугай" role="img"><div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span><div class="artBubble"><div><b>От мечты — к путешествию</b><span>Выбирайте направление, мы уточним детали</span></div><strong>✈</strong></div></div></div></section>
-<div class="wrap"><section class="searchPanel" id="request"><div class="searchHead"><div><div class="sectionTag">Персональный подбор</div><h2>Расскажите о поездке</h2></div><div class="micro">Без оплаты на сайте · удобная связь в WhatsApp</div></div><form id="leadForm"><div class="fields">
+<header class="top"><div class="wrap"><nav class="nav" aria-label="Навигация"><a class="logo" href="#top"><span class="bird" aria-hidden="true">🦜</span><span>JAMAICA</span></a><div class="navLinks"><a href="#destinations">Направления</a><a href="#how">Как оформить</a><a class="contactNav" href="#request">Поиск туров</a></div></nav></div></header>
+<main><section class="hero" id="top"><div class="wrap heroGrid"><div><span class="kicker">☀ Путешествия из Иркутска и других городов</span><h1>Мир открыт.<br><em>Ваш отпуск ждёт.</em></h1><p>Выбирайте направление, смотрите подтверждённые предложения, сравнивайте отели и цены. Покупка — через оформление непосредственно на JAMAICA.</p><div class="heroActions"><a class="btn btnGold" href="#request">Найти тур ↗</a><a class="btn btnLine" href="#destinations">Смотреть направления</a></div><div class="heroFine">В продаже отображаются только предложения с актуальной проверкой цены и наличия.</div></div><div class="heroArt" aria-label="Тропический стиль Jamaica: солнце и попугай" role="img"><div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span><div class="artBubble"><div><b>Выберите. Сравните. Купите.</b><span>Поиск предложений по датам и бюджету</span></div><strong>✈</strong></div></div></div></section>
+<div class="wrap"><section class="searchPanel" id="request"><div class="searchHead"><div><div class="sectionTag">Поиск путешествий</div><h2>Найдите тур под ваши даты</h2></div><div class="micro">Поиск и выбор — на сайте JAMAICA. Никаких мессенджеров или запросов.</div></div>
+<form id="tourSearchForm"><div class="fields">
 <div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
-<div class="field wide"><label for="destination">Страна или направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Например, Таиланд" maxlength="90" autocomplete="off" required><datalist id="countryDatalist"></datalist></div>
+<div class="field wide"><label for="destination">Страна или направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Любая страна" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
 <div class="field short"><label for="dateFrom">Дата вылета</label><input id="dateFrom" name="dateFrom" type="date"></div>
 <div class="field short"><label for="nights">Ночей</label><input id="nights" name="nights" type="number" min="3" max="180" value="7" required></div>
 <div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
 <div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
-<div class="field wide"><label for="budget">Бюджет на одного, ₽ (необязательно)</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Например, 50 000"></div>
-<div class="field wide"><label for="comment">Пожелания (необязательно)</label><input id="comment" name="comment" maxlength="240" placeholder="Отель, питание, курорт, удобные даты"></div>
-</div><div class="formBottom"><button class="btn btnTeal" type="submit">Получить варианты в WhatsApp ↗</button><a class="btn btnWhite" id="emailLead" href="mailto:yurii@monardas.com">Запросить по e-mail</a><span class="hint">Откроется готовое сообщение. Чтобы отправить заявку, нажмите «Отправить» в WhatsApp или почтовом приложении.</span></div></form></section></div>
-<section class="section" id="destinations"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Куда отправиться</div><h2>Страны и направления</h2><p>Выбирайте из каталога направлений. Поиск доступен по всем странам, даже если конкретный маршрут или цена пока требуют индивидуального уточнения.</p></div><div class="micro" id="dirTotal">Загрузка направлений…</div></div>
-<div class="chips" role="group" aria-label="Фильтр направлений"><button type="button" class="chip active" data-filter="all" aria-pressed="true">Все направления</button><button type="button" class="chip" data-filter="irk" aria-pressed="false">Из Иркутска в справочнике</button><button type="button" class="chip" data-filter="routes" aria-pressed="false">С маршрутами в каталоге</button><button type="button" class="chip" data-filter="other" aria-pressed="false">Другие страны</button></div>
+<div class="field wide"><label for="budget">Максимальная цена на человека, ₽</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Без ограничения"></div>
+<div class="field wide"><label for="hotelSearch">Отель (необязательно)</label><input id="hotelSearch" name="hotelSearch" type="search" maxlength="100" placeholder="Название отеля или курорта"></div>
+</div><div class="formBottom"><button class="btn btnTeal" type="submit">Показать доступные туры ↗</button><span class="hint">Поиск учитывает дату, продолжительность, состав туристов и подтверждённую стоимость. Оплата возможна только после повторного подтверждения брони.</span></div></form></section></div>
+<section class="section" id="destinations"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Куда отправиться</div><h2>Страны и направления</h2><p>Выбирайте из каталога направлений. Все направления доступны для поиска. Наличие туров зависит от даты, города вылета и текущей цены.</p></div><div class="micro" id="dirTotal">Загрузка направлений…</div></div>
+<div class="chips" role="group" aria-label="Фильтр направлений"><button type="button" class="chip active" data-filter="all" aria-pressed="true">Все направления</button><button type="button" class="chip" data-filter="irk" aria-pressed="false">Иркутск в каталоге</button><button type="button" class="chip" data-filter="routes" aria-pressed="false">С маршрутами в каталоге</button><button type="button" class="chip" data-filter="other" aria-pressed="false">Другие страны</button></div>
 <div class="destToolbar"><input id="destSearch" type="search" placeholder="Поиск страны: Египет, Индонезия, Греция…" aria-label="Поиск страны"><span class="count" id="dirCount" aria-live="polite"></span></div>
 <div class="destinationGrid" id="destinationGrid" aria-live="polite" style="margin-top:20px"></div><button class="loadMore" type="button" id="loadMore">Показать ещё страны</button>
 <p class="micro" style="margin-top:18px">Отметка о городе вылета в справочнике не означает наличия рейса или тура на выбранную дату. Направления без подходящего готового маршрута проверяются индивидуально.</p></div></section>
-<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Предложения</div><h2>Актуальные варианты путешествий</h2><p>Здесь показываются только предложения, для которых заново проверены даты, перелёты, итоговая стоимость и условия размещения.</p></div></div><div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🌴</span><div><strong>Подбор по вашим датам и бюджету</strong><p>Готовые варианты с подтверждённой ценой пока уточняются. Выберите любую страну и отправьте заявку — мы проверим подходящие поездки.</p></div><a href="#request" class="btn btnTeal">Подобрать тур</a></div><div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" style="margin-top:13px"></div></div></section>
-<section class="section" id="how"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Всё просто</div><h2>От выбора страны до оформления</h2><p>Без неподтверждённых цен и скрытых переходов на сторонние сайты.</p></div></div><div class="steps"><article class="step"><span class="stepNum">01</span><h3>Выберите направление</h3><p>Укажите город, страну, даты, количество туристов и примерный бюджет.</p></article><article class="step"><span class="stepNum">02</span><h3>Получите варианты</h3><p>Уточним маршруты, отели, места на рейсах и фактическую стоимость.</p></article><article class="step"><span class="stepNum">03</span><h3>Оформите путешествие</h3><p>После согласования предложения предоставим условия договора, сведения об исполнителе и порядок безопасной оплаты.</p></article></div></div></section>
-<div class="wrap"><section class="finalCta"><div><h2>Готовы выбрать отпуск?</h2><p>Начните с заявки: подбор доступен и для стран, которых нет среди готовых предложений.</p></div><a class="btn btnGold" href="#request">Подобрать поездку ↗</a></section></div>
+<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Найденные туры</h2><p>В результатах показываются только предложения с подтверждёнными рейсами, отелем, наличием и итоговой ценой. Без названий поставщиков.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
+<div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Укажите параметры поездки и нажмите «Показать доступные туры».</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
+<div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
+</div></section>
+<section class="section" id="how"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Покупка на JAMAICA</div><h2>От поиска до электронного заказа</h2><p>Все действия покупателя выполняются в интерфейсе JAMAICA. Данные о цене и доступности проверяются перед оплатой.</p></div></div><div class="steps"><article class="step"><span class="stepNum">01</span><h3>Найдите тур</h3><p>Страна, город вылета, отель, даты, число ночей и туристов.</p></article><article class="step"><span class="stepNum">02</span><h3>Выберите предложение</h3><p>Сравните условия, итоговую стоимость и состав тура. Перейдите к подробностям.</p></article><article class="step"><span class="stepNum">03</span><h3>Проверьте и оплатите</h3><p>При подключённой системе бронирования и платёжном сервисе — подтверждение мест, договор и безопасная оплата на сайте.</p></article></div></div></section>
+<div class="wrap"><section class="finalCta"><div><h2>Путешествие начинается с поиска</h2><p>Выберите страну и даты. Все доступные к покупке предложения появятся в результатах поиска — без переписки.</p></div><a class="btn btnGold" href="#request">Искать туры ↗</a></section></div>
 </main>
-<footer class="foot"><div class="wrap"><div class="footGrid"><div><h3>🦜 JAMAICA</h3><p>Подбор путешествий и организация запросов на бронирование.</p></div><div><a href="https://wa.me/995555516420" target="_blank" rel="noopener noreferrer">WhatsApp</a><br><a href="mailto:yurii@monardas.com">yurii@monardas.com</a></div></div><div class="legal">Данные на сайте — информация для подбора, не публичная оферта. Цены и наличие подтверждаются непосредственно перед оформлением. Оплата на этом сайте не принимается. При обращении через WhatsApp ваши сведения передаются выбранному вами сервису сообщений.</div></div></footer>
-<noscript><div style="padding:12px;text-align:center">Для поиска стран включите JavaScript. Для заявки используйте WhatsApp +995 555 516 420 или yurii@monardas.com.</div></noscript>
+<footer class="foot"><div class="wrap"><div class="footGrid"><div><h3>🦜 JAMAICA</h3><p>Поиск и электронное оформление путешествий. Актуальность каждой цены и наличие мест проверяются перед продажей.</p></div><div><a href="#request">Поиск туров</a><br><a href="checkout.html">Оформление покупки</a></div></div><div class="legal">Каталог стран не является гарантией наличия тура. Неподтверждённые предложения не продаются. Оператор услуг, условия договора и продавец должны быть раскрыты покупателю до оплаты. Данные банковских карт сайт JAMAICA не сохраняет. До подключения проверенного сервиса бронирования и платежей кнопка оплаты заблокирована.</div></div></footer>
+<noscript><div style="padding:12px;text-align:center">Для поиска предложений включите JavaScript. Бронирование без подтверждённой цены недоступно.</div></noscript>
 <script id="countries-data" type="application/json">[{"n":"Таиланд","i":true,"a":true},{"n":"Китай","i":false,"a":true},{"n":"Вьетнам","i":false,"a":true},{"n":"Абхазия","i":false,"a":true},{"n":"Австралия","i":false,"a":true},{"n":"Австрия","i":false,"a":true},{"n":"Азербайджан","i":false,"a":true},{"n":"Албания","i":false,"a":false},{"n":"Алжир","i":false,"a":false},{"n":"Американское Самоа","i":false,"a":false},{"n":"Ангилья","i":false,"a":false},{"n":"Ангола","i":false,"a":false},{"n":"Андорра","i":false,"a":true},{"n":"Антарктида","i":false,"a":false},{"n":"Антигуа и Барбуда","i":false,"a":false},{"n":"Аргентина","i":false,"a":true},{"n":"Армения","i":false,"a":true},{"n":"Аруба","i":false,"a":false},{"n":"Афганистан","i":false,"a":false},{"n":"Багамы","i":false,"a":true},{"n":"Бангладеш","i":false,"a":false},{"n":"Барбадос","i":false,"a":false},{"n":"Бахрейн","i":false,"a":true},{"n":"Беларусь","i":false,"a":true},{"n":"Белиз","i":false,"a":false},{"n":"Бельгия","i":false,"a":true},{"n":"Бенин","i":false,"a":false},{"n":"Бермуды","i":false,"a":false},{"n":"Болгария","i":false,"a":true},{"n":"Боливия","i":false,"a":false},{"n":"Босния и Герцеговина","i":false,"a":false},{"n":"Ботсвана","i":false,"a":false},{"n":"Бразилия","i":false,"a":true},{"n":"Британская территория в Индийском океане","i":false,"a":false},{"n":"Бруней-Даруссалам","i":false,"a":false},{"n":"Буркина-Фасо","i":false,"a":false},{"n":"Бурунди","i":false,"a":false},{"n":"Бутан","i":false,"a":false},{"n":"Вануату","i":false,"a":false},{"n":"Великобритания","i":false,"a":true},{"n":"Венгрия","i":false,"a":true},{"n":"Венесуэла","i":false,"a":false},{"n":"Виргинские острова, Британские","i":false,"a":false},{"n":"Виргинские острова, США","i":false,"a":false},{"n":"Габон","i":false,"a":false},{"n":"Гаити","i":false,"a":false},{"n":"Гайана","i":false,"a":false},{"n":"Гамбия","i":false,"a":false},{"n":"Гана","i":false,"a":false},{"n":"Гваделупа","i":false,"a":false},{"n":"Гватемала","i":false,"a":false},{"n":"Гвинея","i":false,"a":false},{"n":"Гвинея-Бисау","i":false,"a":false},{"n":"Германия","i":false,"a":true},{"n":"Гернси","i":false,"a":false},{"n":"Гибралтар","i":false,"a":false},{"n":"Гондурас","i":false,"a":false},{"n":"Гонконг","i":true,"a":true},{"n":"Гренада","i":false,"a":false},{"n":"Гренландия","i":false,"a":false},{"n":"Греция","i":true,"a":true},{"n":"Грузия","i":false,"a":true},{"n":"Гуам","i":false,"a":false},{"n":"Дания","i":false,"a":true},{"n":"Джерси","i":false,"a":false},{"n":"Джибути","i":false,"a":false},{"n":"Доминика","i":false,"a":false},{"n":"Доминиканская Республика","i":false,"a":true},{"n":"Египет","i":false,"a":true},{"n":"Замбия","i":false,"a":false},{"n":"Западная Сахара","i":false,"a":false},{"n":"Зимбабве","i":false,"a":false},{"n":"Израиль","i":false,"a":true},{"n":"Индия","i":false,"a":true},{"n":"Индонезия","i":true,"a":true},{"n":"Иордания","i":false,"a":true},{"n":"Ирак","i":false,"a":false},{"n":"Иран","i":false,"a":true},{"n":"Ирландия","i":false,"a":true},{"n":"Исландия","i":false,"a":true},{"n":"Испания","i":false,"a":true},{"n":"Италия","i":false,"a":true},{"n":"Йемен","i":false,"a":false},{"n":"Кабо-Верде","i":false,"a":false},{"n":"Казахстан","i":false,"a":true},{"n":"Камбоджа","i":true,"a":true},{"n":"Камерун","i":false,"a":false},{"n":"Канада","i":false,"a":true},{"n":"Катар","i":false,"a":true},{"n":"Кения","i":false,"a":true},{"n":"Кипр","i":false,"a":true},{"n":"Киргизия","i":false,"a":true},{"n":"Кирибати","i":false,"a":false},{"n":"Кокосовые (Килинг) острова","i":false,"a":false},{"n":"Колумбия","i":false,"a":false},{"n":"Коморы","i":false,"a":false},{"n":"Конго","i":false,"a":false},{"n":"Конго, Демократическая Республика","i":false,"a":false},{"n":"Косово","i":false,"a":false},{"n":"Коста-Рика","i":false,"a":true},{"n":"Кот д'Ивуар","i":false,"a":false},{"n":"Круиз","i":false,"a":false},{"n":"Куба","i":false,"a":true},{"n":"Кувейт","i":false,"a":false},{"n":"Лаос","i":false,"a":true},{"n":"Латвия","i":false,"a":true},{"n":"Лесото","i":false,"a":false},{"n":"Либерия","i":false,"a":false},{"n":"Ливан","i":false,"a":false},{"n":"Ливия","i":false,"a":false},{"n":"Литва","i":false,"a":true},{"n":"Лихтенштейн","i":false,"a":false},{"n":"Люксембург","i":false,"a":false},{"n":"Маврикий","i":false,"a":true},{"n":"Мавритания","i":false,"a":false},{"n":"Мадагаскар","i":false,"a":false},{"n":"Майотта","i":false,"a":false},{"n":"Макао","i":false,"a":false},{"n":"Малави","i":false,"a":false},{"n":"Малайзия","i":true,"a":true},{"n":"Мали","i":false,"a":false},{"n":"Малые Тихоокеанские отдаленные острова Соединенных Штатов","i":false,"a":false},{"n":"Мальдивы","i":false,"a":true},{"n":"Мальта","i":false,"a":true},{"n":"Марокко","i":false,"a":true},{"n":"Мартиника","i":false,"a":false},{"n":"Маршалловы острова","i":false,"a":false},{"n":"Мексика","i":false,"a":true},{"n":"Микронезия, Федеративные Штаты","i":false,"a":false},{"n":"Мозамбик","i":false,"a":false},{"n":"Молдова","i":false,"a":true},{"n":"Монако","i":false,"a":false},{"n":"Монголия","i":false,"a":false},{"n":"Монтсеррат","i":false,"a":false},{"n":"Мьянма","i":false,"a":false},{"n":"Намибия","i":false,"a":true},{"n":"Науру","i":false,"a":false},{"n":"Непал","i":false,"a":false},{"n":"Нигер","i":false,"a":false},{"n":"Нигерия","i":false,"a":false},{"n":"Нидерландские Антилы","i":false,"a":false},{"n":"Нидерланды","i":false,"a":true},{"n":"Никарагуа","i":false,"a":false},{"n":"Ниуэ","i":false,"a":false},{"n":"Новая Зеландия","i":false,"a":false},{"n":"Новая Каледония","i":false,"a":false},{"n":"Норвегия","i":false,"a":true},{"n":"Объединенные Арабские Эмираты","i":false,"a":true},{"n":"Оман","i":false,"a":true},{"n":"Остров Буве","i":false,"a":false},{"n":"Остров Клиппертон","i":false,"a":false},{"n":"Остров Мэн","i":false,"a":false},{"n":"Остров Норфолк","i":false,"a":false},{"n":"Остров Рождества","i":false,"a":false},{"n":"Остров Святого Мартина","i":false,"a":false},{"n":"Остров Херд и острова Макдональд","i":false,"a":false},{"n":"Острова Кайман","i":false,"a":false},{"n":"Острова Кука","i":false,"a":false},{"n":"Острова Теркс и Кайкос","i":false,"a":false},{"n":"Пакистан","i":false,"a":false},{"n":"Палау","i":false,"a":false},{"n":"Палестинская территория, оккупированная","i":false,"a":false},{"n":"Панама","i":false,"a":false},{"n":"Папуа-Новая Гвинея","i":false,"a":false},{"n":"Парагвай","i":false,"a":false},{"n":"Перу","i":false,"a":true},{"n":"Питкерн","i":false,"a":false},{"n":"Польша","i":false,"a":true},{"n":"Португалия","i":false,"a":true},{"n":"Пуэрто-Рико","i":false,"a":false},{"n":"Республика Македония","i":false,"a":false},{"n":"Реюньон","i":false,"a":false},{"n":"Россия","i":true,"a":true},{"n":"Руанда","i":false,"a":false},{"n":"Румыния","i":false,"a":false},{"n":"Самоа","i":false,"a":false},{"n":"Сан-Марино","i":false,"a":false},{"n":"Сан-Томе и Принсипи","i":false,"a":false},{"n":"Саудовская Аравия","i":false,"a":true},{"n":"Свазиленд","i":false,"a":false},{"n":"Святая Елена","i":false,"a":false},{"n":"Северная Корея","i":false,"a":false},{"n":"Северные Марианские острова","i":false,"a":false},{"n":"Северный Кипр","i":false,"a":true},{"n":"Сейшелы","i":false,"a":true},{"n":"Сен-Бартельми","i":false,"a":false},{"n":"Сен-Пьер и Микелон","i":false,"a":false},{"n":"Сенегал","i":false,"a":false},{"n":"Сент-Винсент и Гренадины","i":false,"a":false},{"n":"Сент-Китс и Невис","i":false,"a":false},{"n":"Сент-Люсия","i":false,"a":false},{"n":"Сербия","i":false,"a":true},{"n":"Сингапур","i":true,"a":true},{"n":"Сирия","i":false,"a":false},{"n":"Словакия","i":false,"a":false},{"n":"Словения","i":false,"a":true},{"n":"Соединенные Штаты","i":false,"a":true},{"n":"Соломоновы острова","i":false,"a":false},{"n":"Сомали","i":false,"a":false},{"n":"Судан","i":false,"a":false},{"n":"Суринам","i":false,"a":false},{"n":"Сьерра-Леоне","i":false,"a":false},{"n":"Таджикистан","i":false,"a":false},{"n":"Тайвань (Китай)","i":false,"a":false},{"n":"Танзания","i":false,"a":true},{"n":"Тимор-Лесте","i":false,"a":false},{"n":"Того","i":false,"a":false},{"n":"Токелау","i":false,"a":false},{"n":"Тонга","i":false,"a":false},{"n":"Тринидад и Тобаго","i":false,"a":false},{"n":"Тувалу","i":false,"a":false},{"n":"Тунис","i":false,"a":true},{"n":"Туркменистан","i":false,"a":true},{"n":"Турция","i":true,"a":true},{"n":"Уганда","i":false,"a":false},{"n":"Узбекистан","i":false,"a":true},{"n":"Украина","i":false,"a":true},{"n":"Уоллис и Футуна","i":false,"a":false},{"n":"Уругвай","i":false,"a":false},{"n":"Фарерские острова","i":false,"a":false},{"n":"Фиджи","i":true,"a":true},{"n":"Филиппины","i":true,"a":true},{"n":"Финляндия","i":false,"a":true},{"n":"Фолклендские острова (Мальвинские)","i":false,"a":false},{"n":"Франция","i":false,"a":false},{"n":"Французская Гвиана","i":false,"a":false},{"n":"Французская Полинезия","i":false,"a":true},{"n":"Французские Южные территории","i":false,"a":false},{"n":"Хорватия","i":false,"a":true},{"n":"Центрально-Африканская Республика","i":false,"a":false},{"n":"Чад","i":false,"a":false},{"n":"Черногория","i":false,"a":false},{"n":"Чехия","i":true,"a":false},{"n":"Чили","i":false,"a":true},{"n":"Швейцария","i":false,"a":true},{"n":"Швеция","i":false,"a":true},{"n":"Шпицберген и Ян Майен","i":false,"a":false},{"n":"Шри-Ланка","i":true,"a":true},{"n":"Эквадор","i":false,"a":true},{"n":"Экваториальная Гвинея","i":false,"a":false},{"n":"Эландские острова","i":false,"a":false},{"n":"Эль-Сальвадор","i":false,"a":false},{"n":"Эритрея","i":false,"a":false},{"n":"Эстония","i":false,"a":true},{"n":"Эфиопия","i":false,"a":true},{"n":"Южная Джорджия и Южные Сандвичевы острова","i":false,"a":false},{"n":"Южная Корея","i":false,"a":true},{"n":"Южная Осетия","i":false,"a":false},{"n":"Южно-Африканская Республика","i":false,"a":true},{"n":"Ямайка","i":false,"a":true},{"n":"Япония","i":false,"a":true}]</script>
 <script>
 (function(){
-'use strict';
-const countries=JSON.parse(document.getElementById('countries-data').textContent);
-const byName=(a,b)=>a.n.localeCompare(b.n,'ru');
-const priorities=new Map([['Таиланд',0],['Китай',1],['Вьетнам',2]]);
+"use strict";
+const countries=JSON.parse(document.getElementById("countries-data").textContent);
+const byName=(a,b)=>a.n.localeCompare(b.n,"ru");
+const priorities=new Map([["Таиланд",0],["Китай",1],["Вьетнам",2]]);
 const sorted=[...countries].sort((a,b)=>(priorities.get(a.n)??999)-(priorities.get(b.n)??999)||byName(a,b));
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
-const form=$('leadForm');
-const fields=['departure','destination','dateFrom','nights','adults','kids','budget','comment'];
-const datalist=$('countryDatalist');
-for(const c of sorted){const e=document.createElement('option');e.value=c.n;datalist.append(e);}
-$('dirTotal').textContent=countries.length+' направлений для подбора';
-let mode='all', visible=0, filtered=[];
-function selectCountry(name){$('destination').value=name;$('request').scrollIntoView({behavior:'smooth',block:'start'});$('dateFrom').focus({preventScroll:true});setEmailHref();}
+const form=$("tourSearchForm");
+const datalist=$("countryDatalist");
+for(const c of sorted){const e=document.createElement("option");e.value=c.n;datalist.append(e);}
+$("dirTotal").textContent=countries.length+" направлений";
+let mode="all",visible=0,filtered=[],activeOffers=[],inventoryLoaded=false,inventoryError=false;
+function scrollToResults(){$("offers").scrollIntoView({behavior:"smooth",block:"start"});}
+function selectCountry(name){$("destination").value=name;$("request").scrollIntoView({behavior:"smooth",block:"start"});runSearch();}
 function showCountries(){
-  const search=$('destSearch').value.trim().toLocaleLowerCase('ru');
-  filtered=sorted.filter(c=>(!search||c.n.toLocaleLowerCase('ru').includes(search))&&(mode==='all'||mode==='irk'&&c.i||mode==='routes'&&c.a||mode==='other'&&!c.i));
-  visible=0;$('destinationGrid').replaceChildren();
-  $('dirCount').textContent='Найдено направлений: '+filtered.length;
-  if(!filtered.length){$('destinationGrid').append(el('div','empty','По вашему запросу стран не найдено. Попробуйте другое название.'));}
-  else appendCountries();
+ const search=$("destSearch").value.trim().toLocaleLowerCase("ru");
+ filtered=sorted.filter(c=>(!search||c.n.toLocaleLowerCase("ru").includes(search))&&(mode==="all"||mode==="irk"&&c.i||mode==="routes"&&c.a||mode==="other"&&!c.i));
+ visible=0;$("destinationGrid").replaceChildren();
+ $("dirCount").textContent="Найдено направлений: "+filtered.length;
+ if(!filtered.length)$("destinationGrid").append(el("div","empty","Направления не найдены. Измените поисковый запрос."));
+ else appendCountries();
 }
 function appendCountries(){
- const part=filtered.slice(visible,visible+24);
- const frag=document.createDocumentFragment();
+ const part=filtered.slice(visible,visible+24),frag=document.createDocumentFragment();
  for(const c of part){
-   const article=el('article','destination');
-   article.append(el('div','destMark',c.i?'✈':'🌴'));
-   article.append(el('h3','',c.n));
-   article.append(el('p','',c.i?'Иркутск указан среди городов вылета; конкретные места и даты проверяются отдельно':c.a?'Подбор доступных маршрутов и отелей под ваш запрос':'Индивидуальный запрос: уточним возможные маршруты'));
-   const b=el('button','askCountry','Подобрать поездку ↗');b.type='button';b.addEventListener('click',()=>selectCountry(c.n));article.append(b);frag.append(article);
+  const article=el("article","destination");
+  article.append(el("div","destMark",c.i?"✈":"🌴"));
+  article.append(el("h3","",c.n));
+  article.append(el("p","",c.i?"Иркутск указан среди городов вылета — конкретные даты проверяются поиском":c.a?"Направление есть в каталоге — поиск покажет доступные туры":"Направление в общем справочнике; доступность не подтверждена"));
+  const b=el("button","askCountry","Искать туры →");b.type="button";b.addEventListener("click",()=>selectCountry(c.n));article.append(b);frag.append(article);
  }
- $('destinationGrid').append(frag);visible+=part.length;
- $('loadMore').hidden=visible>=filtered.length;
+ $("destinationGrid").append(frag);visible+=part.length;$("loadMore").hidden=visible>=filtered.length;
 }
-document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{mode=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-pressed',b===button?'true':'false');});showCountries();}));
-$('destSearch').addEventListener('input',showCountries);
-$('loadMore').addEventListener('click',appendCountries);
+document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>{x.classList.toggle("active",x===b);x.setAttribute("aria-pressed",x===b?"true":"false");});showCountries();}));
+$("destSearch").addEventListener("input",showCountries);
+$("loadMore").addEventListener("click",appendCountries);
 showCountries();
-function prepareMessage(offer){
+function validOffer(o,now){
+ return o && typeof o==="object" &&
+ /^[a-zA-Z0-9_-]{8,100}$/.test(o.id||"") &&
+ o.publish_approved===true &&
+ o.quote_verified===true && o.availability_verified===true &&
+ o.flights_out_green===true && o.flights_back_green===true &&
+ o.price_scope_verified===true && o.total_two_verified===true &&
+ o.best_price_required!==true || false;
+}
+function strictOffer(o,now){
+ if(!o||typeof o!=="object")return false;
+ if(!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
+ if(o.publish_approved!==true||o.quote_verified!==true||o.availability_verified!==true||o.flights_out_green!==true||o.flights_back_green!==true||o.price_scope_verified!==true||o.total_two_verified!==true)return false;
+ if(o.best_price_required===true&&o.best_price_verified!==true)return false;
+ if(o.adults!==2||o.children!==0||!Number.isInteger(o.total_rub)||o.total_rub<=0)return false;
+ if(!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
+ if(typeof o.destination!=="string"||!countries.some(c=>c.n===o.destination))return false;
+ if(typeof o.hotel!=="string"||o.hotel.length<2)return false;
+ if(typeof o.origin!=="string"||!o.origin.trim())return false;
+ if(typeof o.depart_date!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(o.depart_date)||Date.parse(o.depart_date+"T23:59:59Z")<now)return false;
+ if(typeof o.quote_verified_at!=="string"||!Number.isFinite(Date.parse(o.quote_verified_at)))return false;
+ const age=now-Date.parse(o.quote_verified_at);
+ if(age < -60000||age>=20*60*1000)return false;
+ if(typeof o.expires_at!=="string"||!Number.isFinite(Date.parse(o.expires_at))||Date.parse(o.expires_at)<=now)return false;
+ return true;
+}
+function filters(){
  const val=id=>$(id).value.trim();
- const d=val('destination')||'любая страна';
- const city=val('departure')||'Иркутск';
- const arr=['Здравствуйте! Хочу получить варианты путешествия JAMAICA.','Вылет: '+city+'.','Направление: '+d+'.','Дата: '+(val('dateFrom')||'даты гибкие')+'.','Ночей: '+val('nights')+'.','Взрослых: '+val('adults')+', детей: '+val('kids')+'.','Бюджет на человека: '+(val('budget')?val('budget')+' руб.':'уточнить')+'.'];
- if(val('comment'))arr.push('Пожелания: '+val('comment')+'.');
- if(offer)arr.push('Интересует вариант: '+String(offer).slice(0,200)+'.');
- arr.push('Прошу прислать актуальные доступные варианты, итоговую цену за всех туристов и условия оформления.');
- return arr.join('\n');
+ return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),nights:Number(val("nights")),adults:Number(val("adults")),children:Number(val("kids")),budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
 }
-function setEmailHref(){
- const msg=prepareMessage();
- $('emailLead').href='mailto:yurii@monardas.com?subject='+encodeURIComponent('JAMAICA — заявка на подбор тура')+'&body='+encodeURIComponent(msg);
+function matching(o,q){
+ if(o.origin.toLocaleLowerCase("ru")!==q.origin.toLocaleLowerCase("ru"))return false;
+ if(q.country&&o.destination.toLocaleLowerCase("ru")!==q.country.toLocaleLowerCase("ru"))return false;
+ if(q.date&&o.depart_date!==q.date)return false;
+ if(o.nights!==q.nights||o.adults!==q.adults||o.children!==q.children)return false;
+ if(q.budget>0 && o.total_rub/o.adults>q.budget)return false;
+ if(q.hotel && !o.hotel.toLocaleLowerCase("ru").includes(q.hotel))return false;
+ return true;
 }
-form.addEventListener('input',setEmailHref);
-form.addEventListener('change',setEmailHref);
-form.addEventListener('submit',ev=>{
- ev.preventDefault();
+function offerCard(o){
+ const c=el("article","offerCard");
+ c.append(el("h3","",o.destination+" · "+o.hotel));
+ c.append(el("small","",o.origin+" · "+o.depart_date+" · "+o.nights+" ночей · "+o.adults+" взрослых"));
+ c.append(el("div","price",o.total_rub.toLocaleString("ru-RU")+" ₽ за двоих"));
+ c.append(el("small","",Math.round(o.total_rub/2).toLocaleString("ru-RU")+" ₽ на человека при размещении вдвоём"));
+ if(Number.isInteger(o.single_rub)&&o.single_rub>0)c.append(el("small","",o.single_rub.toLocaleString("ru-RU")+" ₽ за отдельное одноместное размещение"));
+ c.append(el("small","", "Цена и места подтверждены на момент проверки; перед оплатой требуется повторная проверка"));
+ const button=el("a","btn btnTeal","Выбрать и оформить →");
+ button.href="checkout.html?offer="+encodeURIComponent(o.id);
+ c.append(button);
+ return c;
+}
+function setEmpty(title,message){
+ $("noOffers").classList.remove("hide");
+ $("noOffersTitle").textContent=title;
+ $("noOffersText").textContent=message;
+}
+function runSearch(){
  if(!form.reportValidity())return;
- const destination=$('destination').value.trim();
- if(!destination){$('destination').focus();return;}
- const url='https://wa.me/995555516420?text='+encodeURIComponent(prepareMessage());
- window.location.assign(url);
-});
-setEmailHref();
-function addOfferCard(o){
- const card=el('article','offerCard');
- const destination=String(o.destination).slice(0,100);
- card.append(el('h3','',destination));
- card.append(el('div','',String(o.hotel).slice(0,100)));
- card.append(el('small','',o.depart_date+' · '+o.nights+' ночей · '+o.adults+' взрослых'));
- card.append(el('div','price',Number(o.total_rub).toLocaleString('ru-RU')+' ₽ за '+o.adults+' взрослых'));
- if(o.adults===2&&o.children===0)card.append(el('small','',Math.round(o.total_rub/2).toLocaleString('ru-RU')+' ₽ на человека при размещении вдвоём'));
- if(Number.isInteger(o.single_rub)&&o.single_rub>0)card.append(el('small','',o.single_rub.toLocaleString('ru-RU')+' ₽ за отдельное одноместное размещение'));
- const b=el('button','btn btnTeal','Уточнить и забронировать ↗');b.type='button';b.addEventListener('click',()=>{$('destination').value=destination;$('dateFrom').value=o.depart_date;$('nights').value=o.nights;$('adults').value=o.adults;$('kids').value=o.children;$('comment').value=('Отель: '+String(o.hotel).slice(0,120)).slice(0,240);selectCountry(destination);});card.append(b);
- return card;
+ const q=filters();
+ const found=activeOffers.filter(o=>matching(o,q)).sort((a,b)=>a.total_rub-b.total_rub);
+ const cards=$("offerCards");cards.replaceChildren();
+ $("offerCount").textContent=found.length+" подтверждённых предложений";
+ if(!inventoryLoaded){
+  setEmpty("Каталог доступных туров сейчас не загружен","Данные о рейсах, цене и наличии временно недоступны. Продажа неподтверждённых предложений заблокирована.");
+ }else if(!found.length){
+  setEmpty("По этим параметрам сейчас нет подтверждённых туров","Попробуйте другое направление, дату или число ночей. Варианты без актуальной проверки цены и мест в продажу не попадают.");
+ }else{
+  $("noOffers").classList.add("hide");
+  const frag=document.createDocumentFragment();
+  found.forEach(o=>frag.append(offerCard(o)));cards.append(frag);
+ }
+ $("offerStatus").textContent=inventoryLoaded?"Каталог показывает только свежие, проверенные предложения. Итоговая цена перепроверяется на этапе оформления.": "Данные о наличии временно недоступны — покупка закрыта.";
+ scrollToResults();
 }
+form.addEventListener("submit",e=>{e.preventDefault();runSearch();});
 async function loadOffers(){
  try{
-   const response=await fetch('./verified-offers.json',{cache:'no-store'});
-   if(!response.ok)throw Error('NO_FEED');
-   const feed=await response.json();
-   if(feed.schema!=='jamaica.verified-offers.v1'||!Array.isArray(feed.offers)||feed.offers.length>200)throw Error('BAD_FEED');
-   const now=Date.now(), maxAge=20*60*1000;
-   const valid=feed.offers.filter(o=>o&&typeof o==='object'&&o.publish_approved===true&&o.quote_verified===true&&o.availability_verified===true&&o.flights_out_green===true&&o.flights_back_green===true&&o.price_scope_verified===true&&o.total_two_verified===true&&o.adults===2&&o.children===0&&Number.isInteger(o.total_rub)&&o.total_rub>0&&Number.isInteger(o.nights)&&o.nights>=3&&o.nights<=180&&typeof o.destination==='string'&&countries.some(c=>c.n===o.destination)&&typeof o.hotel==='string'&&o.hotel.length>1&&/^\d{4}-\d{2}-\d{2}$/.test(o.depart_date)&&Date.parse(o.depart_date+'T23:59:59Z')>=now&&typeof o.quote_verified_at==='string'&&Number.isFinite(Date.parse(o.quote_verified_at))&&now-Date.parse(o.quote_verified_at)<maxAge&&Date.parse(o.quote_verified_at)<=now+60_000&&typeof o.expires_at==='string'&&Number.isFinite(Date.parse(o.expires_at))&&Date.parse(o.expires_at)>now);
-   if(!valid.length){$('offerStatus').textContent='Проверенных к публикации предложений на текущий момент нет. Закажите персональный подбор.';return;}
-   const fragment=document.createDocumentFragment();
-   for(const o of valid.sort((a,b)=>a.total_rub-b.total_rub))fragment.append(addOfferCard(o));
-   $('offerCards').append(fragment);
-   $('noOffers').classList.add('hide');
-   $('offerStatus').textContent='Показаны только предложения с актуальной проверкой. Итоговая стоимость повторно подтверждается при оформлении.';
- }catch(err){$('offerStatus').textContent='Для получения актуальной стоимости отправьте запрос — система подбора работает.';}
+  const response=await fetch("./verified-offers.json",{cache:"no-store"});
+  if(!response.ok)throw Error("FEED_HTTP_"+response.status);
+  const feed=await response.json();
+  if(feed.schema!=="jamaica.verified-offers.v1"||!Array.isArray(feed.offers)||feed.offers.length>500)throw Error("BAD_FEED");
+  const now=Date.now();
+  activeOffers=feed.offers.filter(o=>strictOffer(o,now));
+  inventoryLoaded=true;inventoryError=false;
+  $("offerStatus").textContent=activeOffers.length+" актуальных проверенных предложений в каталоге.";
+ }catch(e){
+  inventoryLoaded=false;inventoryError=true;
+  $("offerStatus").textContent="Сервис доступных предложений временно недоступен. Оплата отключена.";
+ }
+ runSearch();
 }
 loadOffers();
 })();
