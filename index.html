@@ -47,6 +47,7 @@
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
 <div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
 <div class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки. Обновление данных в браузере — каждые 5 минут.</div>
+<div class="micro" id="previewCoverage" role="status">Проверяем наличие туров по направлениям и странам…</div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 </div></section>
@@ -468,6 +469,13 @@ async function loadTourPreviews(){
   $("previewUpdatedAt").textContent="Выгрузка: "+previewPriceAsOf+
     ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
     ". Браузер проверяет новый каталог каждые 5 минут; расписание серверного импорта задаётся отдельно.";
+  const coverage=Array.isArray(data.countries_status)?data.countries_status.filter(x=>x&&typeof x.country==="string"):[];
+  const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
+  const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
+  $("previewCoverage").textContent="Проверено направлений с вылетом из Иркутска: "+coverage.length+
+    "; реальные варианты опубликованы по "+withTours.size+" странам."+
+    (missing.length?" Пока нет подтверждённых прайс-листов или подходящих дат: "+missing.join(", ")+".":"")+
+    " Всего стран в справочнике: 251; наличие туров зависит от официальной выгрузки.";
   previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
     typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
