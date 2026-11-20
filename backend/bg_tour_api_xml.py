@@ -59,6 +59,40 @@ def _person(node,person:dict):
         raise BadOrder("Date invalid") from exc
     p=ET.SubElement(node,"person")
     for key,value in specs:ET.SubElement(p,key).text=value
+    middle=person.get("middle_name")
+    absent=person.get("no_middle_name") is True
+    if middle and absent:raise BadOrder("Middle name status contradictory")
+    if middle:
+        ET.SubElement(p,"middleName").text=_require_text(
+            middle,r"[A-ZА-ЯЁ][A-ZА-ЯЁ '-]{0,79}",80)
+    elif absent:
+        ET.SubElement(p,"notHaveMiddleName").text="1"
+
+def _customer_details(item:ET.Element,customer:dict|None):
+    """Optional but strongly recommended customer GAIS EP data."""
+    if customer is None:
+        return
+    if not isinstance(customer,dict):
+        raise BadOrder("Customer identity must be a private verified record")
+    fields=(
+       ("customerFirstName",_require_text(customer.get("first_name"),r"[A-Z][A-Z '-]{0,79}",80)),
+       ("customerLastName",_require_text(customer.get("last_name"),r"[A-Z][A-Z '-]{0,79}",80)),
+       ("customerAddress",_require_text(customer.get("address"),r"[^<>\\x00-\\x1f\\x7f]{8,160}",160)),
+       ("customerCitizen",_require_text(customer.get("citizenship"),r"\\d{7,20}",20)),
+       ("customerPassportSeries",_require_text(customer.get("passport_series"),r"[A-Z0-9]{1,15}",15)),
+       ("customerPassportNumber",_require_text(customer.get("passport_number"),r"[A-Z0-9]{4,20}",20)),
+    )
+    for key,val in fields:
+        ET.SubElement(item,key).text=val
+    if customer.get("middle_name"):
+        ET.SubElement(item,"customerMiddleName").text=_require_text(
+            customer["middle_name"],r"[A-ZА-ЯЁ][A-ZА-ЯЁ '-]{0,79}",80)
+    if customer.get("phone"):
+        ET.SubElement(item,"customerPhone").text=_require_text(
+            customer["phone"],r"[+0-9() -]{7,25}",25)
+    if customer.get("email"):
+        ET.SubElement(item,"customerEmail").text=_require_text(
+            customer["email"],r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,30}",120)
 
 def _check_model(tour,persons):
     if not isinstance(tour,dict):
@@ -88,7 +122,8 @@ def url_for_prx(prx:str)->str:
     # Exact required order: ?prx=<encoded>&action=createtour
     return BG_HOST+"?prx="+urllib.parse.quote(prx,safe="")+"&action=createtour"
 
-def build_price_request(tour:dict,persons:list[dict])->tuple[str,bytes]:
+def build_price_request(tour:dict,persons:list[dict],
+                        customer:dict|None=None)->tuple[str,bytes]:
     """Build a READ-ONLY price inquiry; never produces <confirm/>."""
     _check_model(tour,persons)
     root=ET.Element("tours")
@@ -96,6 +131,7 @@ def build_price_request(tour:dict,persons:list[dict])->tuple[str,bytes]:
     ET.SubElement(item,"countryId").text=tour["country_id"]
     key="comissionId" if tour.get("commission_id") else "templateId"
     ET.SubElement(item,key).text=tour.get("commission_id") or tour["template_id"]
+    _customer_details(item,customer)
     groups=ET.SubElement(item,"groups")
     group=ET.SubElement(groups,"group")
     ET.SubElement(group,"startDate").text=_date_from_iso(tour["start_date"])
