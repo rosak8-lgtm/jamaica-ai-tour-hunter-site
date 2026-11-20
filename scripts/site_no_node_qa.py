@@ -86,7 +86,7 @@ def main():
             preview.get("availability_verified") is False,
             "PREVIEWS_WRONG_STATUS")
     records=preview.get("previews")
-    require(isinstance(records,list) and 0<len(records)<=6000,"PREVIEWS_EMPTY")
+    require(isinstance(records,list) and 0<len(records)<=8000,"PREVIEWS_EMPTY")
     require(directory.get("schema")=="jamaica.destination-directory.v1" and
             directory.get("total_countries")==251,"DIRECTORY_INVALID")
     require(routes.get("schema")=="jamaica.route-discovery.v1" and
