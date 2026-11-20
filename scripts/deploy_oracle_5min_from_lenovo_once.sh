@@ -51,7 +51,9 @@ REMOTE_SH
 echo "JAMAICA_ORACLE_DEPLOY_KEY_GENERATED=YES"
 
 echo "=== AUTHORIZE ORACLE KEY ONLY FOR THE JAMAICA REPOSITORY ==="
-if gh api "repos/$REPO/keys" --jq '.[].key' 2>/dev/null | grep -Fxq "$PUBLIC_KEY"; then
+PUBLIC_KEY_MATERIAL="$(printf '%s\n' "$PUBLIC_KEY" | awk '{print $2}')"
+if gh api "repos/$REPO/keys" --jq '.[].key' 2>/dev/null |
+   awk '{print $2}' | grep -Fxq "$PUBLIC_KEY_MATERIAL"; then
  echo "JAMAICA_REPOSITORY_DEPLOY_KEY=EXISTS"
 else
  if gh api -X POST "repos/$REPO/keys" \
