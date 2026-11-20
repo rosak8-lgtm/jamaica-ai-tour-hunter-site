@@ -44,7 +44,7 @@ def adult_pair_marker(value):
     for part in parts:
         if part=="12+":
             continue
-        m=re.fullmatch(r"(\\d{1,2})-(\\d{1,3})",part)
+        m=re.fullmatch(r"(\d{1,2})-(\d{1,3})",part)
         if not m or int(m.group(1))<12 or int(m.group(2))<int(m.group(1)):
             return False
     return True
