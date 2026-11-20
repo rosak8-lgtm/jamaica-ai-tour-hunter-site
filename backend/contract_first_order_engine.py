@@ -292,7 +292,8 @@ class ContractFirstEngine:
         """
         order=self._order(order_id)
         previous=order["status"]
-        if previous not in ("BOOKING_RECONCILIATION_REQUIRED","SUPPLIER_ON_REQUEST"):
+        if previous not in ("BOOKING_RECONCILIATION_REQUIRED","BOOKING_IN_PROGRESS",
+                            "SUPPLIER_ON_REQUEST"):
             raise BadOrder("Order is not awaiting supplier status")
         try:
             supplier=self.supplier.lookup_booking(order_id)
