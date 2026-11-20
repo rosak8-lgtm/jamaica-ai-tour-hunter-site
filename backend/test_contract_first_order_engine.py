@@ -7,7 +7,8 @@ from backend.contract_first_order_engine import (
 
 def offer():
     now=datetime.now(timezone.utc)
-    return {"id":"tour_abcdefgh123","publish_approved":True,"quote_verified":True,
+    return {"id":"tour_abcdefgh123","buyer_id":"customer-12345678",
+            "publish_approved":True,"quote_verified":True,
       "availability_verified":True,"flights_out_green":True,"flights_back_green":True,
       "price_scope_verified":True,"total_two_verified":True,
       "best_price_required":False,"total_rub":95000,
@@ -103,6 +104,13 @@ class Tests(unittest.TestCase):
         self.engine.initiate_payment(id)
         self.psp.status="PAID"
         return id
+    def test_other_customer_cannot_sign_private_quote(self):
+        self.repo.offer["buyer_id"]="another-customer"
+        with self.assertRaises(BadOrder):
+            self.create()
+        self.assertEqual(self.supplier.checks,[])
+        self.assertEqual(self.repo.orders,{})
+        self.assertEqual(self.psp.created,[])
     def test_contract_requires_terms_acceptance(self):
         with self.assertRaises(BadOrder):
             self.engine.draft_contract(
