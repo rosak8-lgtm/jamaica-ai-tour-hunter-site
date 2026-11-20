@@ -83,8 +83,27 @@ def main():
                        (quote_link.get_attribute("href") or "").startswith("quote.html?preview=p_"),
                        "NO_QUOTE_AND_CONTRACT_HANDOFF")
                 ensure(not page.locator("#providerFrame").count(),"UNAPPROVED_PAYMENT_IFRAME")
+                quote_link.click()
+                page.wait_for_url("**/quote.html?preview=*",timeout=20000)
+                page.locator("#hotelTitle").wait_for(timeout=15000)
+                ensure("Турция" in page.locator("#hotelTitle").inner_text(),
+                       "SELECTED_COUNTRY_LOST_ON_QUOTE_PAGE")
+                ensure(page.locator("#checkQuote").is_disabled(),
+                       "UNCONFIGURED_REAL_PAYMENT_WAS_UNEXPECTEDLY_ENABLED")
+                ensure("недоступ" in page.locator("#quoteNotice").inner_text().lower(),
+                       "UNCONFIGURED_QUOTE_SAFETY_GATE_NOT_VISIBLE")
+                page.goto(base+"account.html",wait_until="domcontentloaded")
+                page.locator("#orderMessage").wait_for(timeout=15000)
+                page.wait_for_function(
+                    "()=>document.getElementById('orderMessage').textContent.includes('недоступны')",
+                    timeout=10000
+                )
+                ensure(not page.locator("#payment iframe:visible").count(),
+                       "UNCONFIGURED_ACCOUNT_PAYMENT_ENABLED")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
+                print("SELECTED_TOUR_TO_QUOTE=PASS")
+                print("UNCONFIGURED_ACCOUNT_PAYMENT=BLOCKED")
                 print("DIFFERENT_COUNTRIES_ON_FIRST_PAGE="+str(len(shown)))
                 print("FILTERED_COUNTRY=Турция")
                 print("DETAILED_TOUR_LINK=PASS")
