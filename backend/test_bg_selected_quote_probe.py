@@ -50,6 +50,16 @@ class Tests(unittest.TestCase):
         self.assertNotIn("115000",str(result))
         self.assertNotIn("121132934133",str(result))
         self.assertEqual(len(a.calls),2)
+    def test_invalid_price_amounts_are_not_eligible(self):
+        for value in (None,"",0,-50,"NaN","Infinity",[],["500"],{},True,"not a price"):
+            self.assertFalse(selected.valid_positive_amount(value),repr(value))
+        for value in ("1","1000.50",100,1.25):
+            self.assertTrue(selected.valid_positive_amount(value),repr(value))
+    def test_only_numeric_rub_amount_is_counted(self):
+        corrupted={**ROW,"prices":[{"RUR":["90000"],"amount":"1000","ag":"12+,12+"}]}
+        result=selected.inspect_match([corrupted],P,{HOTEL["id"]:HOTEL})
+        self.assertEqual(result["two_adults_with_rub"],0)
+        self.assertEqual(result["two_adults_amount_only"],1)
     def test_range_encoded_adults(self):
         self.assertTrue(selected.adult_pair_marker("12+,12+"))
         self.assertTrue(selected.adult_pair_marker("12-99,12-99"))
