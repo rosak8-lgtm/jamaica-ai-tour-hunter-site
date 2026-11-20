@@ -34,6 +34,20 @@ def main():
     require(all(p.get("bookable") is False and p.get("quote_verified") is False and
                 p.get("availability_verified") is False and p.get("flight_verified") is False
                 for p in previews["previews"]),"preview row claims booking or verification")
+    for p in previews["previews"]:
+        amount=p.get("price_reference_rub")
+        if amount is not None:
+            require(type(amount) is int and 0<amount<=100_000_000,
+                    "invalid indicative two-adult amount")
+            require(p.get("price_reference_party")=="TWO_ADULTS",
+                    "indicative price has unverified party scope")
+        elif "price_reference_party" in p:
+            require(p["price_reference_party"]=="UNVERIFIED",
+                    "unverified price reference scope incorrect")
+    indicative_count=sum(p.get("price_reference_rub") is not None for p in previews["previews"])
+    if "indicative_two_adult_rub_count" in previews:
+        require(previews["indicative_two_adult_rub_count"]==indicative_count,
+                "indicated price count mismatch")
     require(isinstance(routes.get("routes"),list),"route list missing")
     require(routes.get("bookable") is False,"unverified routes marked bookable")
     require(routes.get("quote_verified") is False,"unverified routes marked quoted")
@@ -53,6 +67,7 @@ def main():
     print("HOTELS_DIRECTORY="+str(len(directory["hotels"])))
     print("ROUTES="+str(len(rows)))
     print("TOUR_PREVIEWS="+str(len(previews["previews"])))
+    print("INDICATIVE_TWO_ADULT_RUB_PRICES="+str(indicative_count))
     print("ROUTE_COUNTRIES="+str(len(countries)))
     print("CONFIRMED_OFFERS="+str(len(offers["offers"])))
     print("LIVE_BOOKING_ENABLED="+str(config.get("live_booking_enabled")).lower())
