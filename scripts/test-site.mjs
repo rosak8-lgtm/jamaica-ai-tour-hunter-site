@@ -160,6 +160,12 @@ assert.ok(page.includes('renderRouteCountryChips();'));
 assert.ok(page.includes('route.html?id='));
 assert.ok(page.includes('route-discovery.json'));
 assert.ok(routePage.includes('destination-directory.json'));
+assert.ok(routePage.includes('id="routePreviewSection"'));
+assert.ok(routePage.includes('id="routePreviewList"'));
+assert.ok(routePage.includes('id="routePreviewCount"'));
+assert.ok(routePage.includes('p.depart_date===route.date'));
+assert.ok(routePage.includes('preview.html?id='));
+
 assert.ok(routePage.includes('route-discovery.json'));
 for(const id of ['alternativeSection','alternativeCountry','alternativeNights','alternativeDate','alternativeCount','alternativeList','alternativeMore']){
  assert.ok(routePage.includes('id="'+id+'"'),'Route detail missing alternative control '+id);
