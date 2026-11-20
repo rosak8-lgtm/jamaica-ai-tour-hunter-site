@@ -82,7 +82,7 @@ def probe(directory, api, max_countries=MAX_COUNTRIES):
             "flt2": bg.CITY_ID, "xml": "11"
         })
         try:
-            listing = json.loads(api.get(bg.BASE + "?" + query))
+            listing = json.loads(api.get("https://export.bgoperator.ru/yandex?" + query))
             entries = listing.get("entries")
             if not isinstance(entries, list):
                 raise bg.SyncHold("FILES_SCHEMA_UNKNOWN")
