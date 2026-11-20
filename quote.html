@@ -38,6 +38,14 @@ const rawAdults=params.get("adults")||"2",rawKids=params.get("kids")||"0";
 const adults=/^(?:[1-9]|1[0-2])$/.test(rawAdults)?Number(rawAdults):null;
 const kids=/^(?:[0-9]|10)$/.test(rawKids)?Number(rawKids):null;
 const supportedParty=adults===2&&kids===0;
+function ruNoun(n,one,few,many){
+ const mod10=n%10,mod100=n%100;
+ return mod100>=11&&mod100<=14?many:mod10===1?one:mod10>=2&&mod10<=4?few:many;
+}
+function partyLabel(){
+ return adults+" "+ruNoun(adults,"взрослый","взрослых","взрослых")+
+   ", "+kids+" "+ruNoun(kids,"ребёнок","ребёнка","детей");
+}
 let selected=null,config=null,quoteResult=null,auth="";
 function notice(s){$("quoteNotice").textContent=s;}
 function cfgReady(c){
@@ -67,9 +75,9 @@ async function init(){
   $("hotelTitle").textContent=selected.country+" · "+selected.hotel;
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
       " · "+selected.nights+" ночей · "+selected.room+
-      " · "+adults+" взрослых, "+kids+" детей";
+      " · "+partyLabel();
   if(!supportedParty){
-    notice("Для "+adults+" взрослых и "+kids+" детей требуется отдельная проверка стоимости. Сейчас онлайн-оформление доступно только для 2 взрослых без детей при наличии подтверждённого API. Цена на двух взрослых для вашего состава не применяется; оплата и бронирование не выполняются.");
+    notice("Для выбранного состава ("+partyLabel()+") требуется отдельная проверка стоимости. Сейчас онлайн-оформление поддерживает только 2 взрослых без детей при наличии подтверждённого API. Цена на двух взрослых для вашего состава не применяется; оплата и бронирование не выполняются.");
     return;
   }
   auth=sessionStorage.getItem("jamaica_auth_token")||"";
