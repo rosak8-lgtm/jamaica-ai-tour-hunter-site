@@ -102,4 +102,21 @@ assert.ok(!hotelPage.includes('checkout.html?offer='));
 const hotelScripts=[...hotelPage.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(x=>x[1]).filter(x=>x.includes('(function(){'));
 assert.equal(hotelScripts.length,1);
 new vm.Script(hotelScripts[0],{filename:'hotel-reference.js'});
+
+const directory=JSON.parse(fs.readFileSync('destination-directory.json','utf8'));
+assert.equal(directory.schema,'jamaica.destination-directory.v1');
+assert.equal(directory.availability_verified,false);
+assert.equal(directory.quote_verified,false);
+assert.equal(directory.total_countries,251);
+assert.ok(directory.total_hotels>=1000,'Official hotel directory should not be the old 159 hotel archive');
+assert.equal(directory.hotels.length,directory.total_hotels);
+assert.ok(directory.hotels.every(h=>typeof h.name==='string'&&typeof h.country==='string'&&typeof h.id==='string'));
+assert.ok(page.includes('destination-directory.json'),'Client must load the new global directory');
+assert.ok(page.includes('window.jamaicaUpdateHotels'),'Search criteria must filter the hotel list');
+assert.ok(page.includes('slice(visible,visible+48)'),'Large catalogue must be paginated');
+assert.ok(hotelPage.includes('destination-directory.json'),'Hotel detail must use official hotel directory');
+assert.ok(hotelPage.includes('^\\d{7,20}
+),'Hotel detail must support official numeric IDs');
+console.log('JAMAICA_GLOBAL_DIRECTORY_PASS countries='+directory.total_countries+' hotels='+directory.total_hotels);
+
 console.log('JAMAICA_TOUR_DETAILS_QA_PASS 251 countries, 159 historical hotels, flexible search, offer -> tour -> checkout, no unsupported sales');
