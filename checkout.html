@@ -148,7 +148,7 @@ $("checkoutForm").addEventListener("submit",async ev=>{
      body:JSON.stringify({offer_id:selected.id,expected_total_rub:selected.total_rub,
        buyer:{first_name:$("firstName").value.trim(),last_name:$("lastName").value.trim(),
               email:$("email").value.trim(),phone:$("phone").value.trim()},
-       terms_version:config.terms_version,
+       terms_version:config.terms_version,terms_accepted:$("termsAccept").checked,
        on_request_accepted:$("onRequestAccept").checked})});
    if(!resp.ok)throw Error("CONTRACT_DRAFT_FAILED");
    const res=await resp.json();
