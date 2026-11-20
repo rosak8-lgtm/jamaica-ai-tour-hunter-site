@@ -10,5 +10,9 @@
   "terms_url": "",
   "privacy_url": "",
   "terms_version": "",
-  "note": "Payments must stay disabled until authoritative operator booking, merchant acquiring, signed payment webhooks, legal disclosure and fulfillment are tested. No fake purchase."
+  "note": "Contract signature must be authoritatively verified before payment. After authoritative PSP confirmation, recheck exact price/flights/hotel, then create supplier booking; never beforehand. Production adapters, seller terms, authorization and PSP are not installed.",
+  "contract_first_enabled": false,
+  "trusted_signature_enabled": false,
+  "signing_origin": "",
+  "auth_api_enabled": false
 }
