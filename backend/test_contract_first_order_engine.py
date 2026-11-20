@@ -218,6 +218,46 @@ class Tests(unittest.TestCase):
         self.supplier.checks_by_stage["AFTER_PAYMENT_BEFORE_BOOKING"]=quote(hotel_stop=True)
         self.assertEqual(self.engine.reconcile_payment_and_book(id),"REFUND_REQUIRED")
         self.assertEqual(self.supplier.bookings,[])
+    def test_ambiguous_booking_read_only_lookup_confirms_without_second_booking(self):
+        id=self.paid()
+        self.supplier.book_error=TimeoutError("unknown")
+        self.engine.reconcile_payment_and_book(id)
+        def found(key):
+            self.assertEqual(key,id)
+            return {"status":"CONFIRMED","supplier_booking_id":"operator-123"}
+        self.supplier.lookup_booking=found
+        self.assertEqual(self.engine.reconcile_supplier_status(id),"BOOKED")
+        self.assertEqual(len(self.supplier.bookings),1)
+        self.assertEqual(list(self.outbox.events.values())[0]["type"],"TOUR_BOOKED")
+    def test_supplier_on_request_stays_pending_until_confirmed(self):
+        id=self.signed(on_request=True)
+        self.engine.initiate_payment(id)
+        self.psp.status="PAID"
+        self.supplier.booking_result={"status":"ON_REQUEST","supplier_booking_id":"operator-789"}
+        self.assertEqual(self.engine.reconcile_payment_and_book(id),"SUPPLIER_ON_REQUEST")
+        self.supplier.lookup_booking=lambda key:{"status":"ON_REQUEST","supplier_booking_id":"operator-789"}
+        self.assertEqual(self.engine.reconcile_supplier_status(id),"SUPPLIER_ON_REQUEST")
+        self.supplier.lookup_booking=lambda key:{"status":"CONFIRMED","supplier_booking_id":"operator-789"}
+        self.assertEqual(self.engine.reconcile_supplier_status(id),"BOOKED")
+        self.assertEqual(len(self.supplier.bookings),1)
+        self.assertEqual(len(self.outbox.events),2)
+    def test_supplier_on_request_rejection_issues_refund(self):
+        id=self.signed(on_request=True)
+        self.engine.initiate_payment(id)
+        self.psp.status="PAID"
+        self.supplier.booking_result={"status":"ON_REQUEST","supplier_booking_id":"operator-789"}
+        self.engine.reconcile_payment_and_book(id)
+        self.supplier.lookup_booking=lambda key:{"status":"REJECTED","definitive":True}
+        self.assertEqual(self.engine.reconcile_supplier_status(id),"REFUND_REQUIRED")
+        self.assertEqual(len(self.psp.refunds),1)
+    def test_supplier_timeout_lookup_does_not_refund_or_rebook(self):
+        id=self.paid()
+        self.supplier.book_error=TimeoutError("unknown")
+        self.engine.reconcile_payment_and_book(id)
+        self.supplier.lookup_booking=lambda key:(_ for _ in ()).throw(TimeoutError())
+        self.assertEqual(self.engine.reconcile_supplier_status(id),"BOOKING_RECONCILIATION_REQUIRED")
+        self.assertEqual(self.psp.refunds,[])
+        self.assertEqual(len(self.supplier.bookings),1)
     def test_contract_digest_is_stable_and_tamper_evident(self):
         a={"buyer_id":"customer_1","total_rub":100}
         self.assertEqual(contract_digest(a),contract_digest(dict(reversed(list(a.items())))))
