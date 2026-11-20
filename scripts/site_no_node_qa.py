@@ -13,7 +13,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent.parent
-REQUIRED_PAGES=("index.html","preview.html","route.html","hotel.html","tour.html","checkout.html")
+REQUIRED_PAGES=("index.html","preview.html","route.html","hotel.html","tour.html",
+                "quote.html","checkout.html","account.html")
 
 class SiteStructure(HTMLParser):
     def __init__(self):
@@ -50,6 +51,16 @@ def main():
         require(root.ids.get(key)==1,"MISSING_UI_ID_"+key)
     for key in ("heading","facts","bookingStatus","hotelLink","alternatives"):
         require(pages["preview.html"][1].ids.get(key)==1,"MISSING_PREVIEW_ID_"+key)
+    require(pages["preview.html"][1].ids.get("quoteLink")==1,
+            "NO_QUOTE_LINK_FROM_SELECTED_TOUR")
+    require(pages["quote.html"][1].ids.get("checkQuote")==1,
+            "NO_FIRST_QUOTE_UI")
+    require(pages["account.html"][1].ids.get("verifySign")==1,
+            "NO_SIGNED_CONTRACT_ACCOUNT")
+    require("v1/contract-orders/draft" in pages["checkout.html"][0],
+            "NO_CONTRACT_FIRST_DRAFT")
+    require("v1/checkout/prepare" not in pages["checkout.html"][0],
+            "UNSAFE_LEGACY_PAYMENT_PATH")
     main_src=pages["index.html"][0]
     require('window.jamaicaUpdatePreviews()' in main_src and
             'form.addEventListener("submit"' in main_src,
@@ -83,6 +94,11 @@ def main():
     require(confirmed.get("schema")=="jamaica.verified-offers.v1" and
             isinstance(confirmed.get("offers"),list),"CONFIRMED_FEED_INVALID")
     require(checkout.get("schema")=="jamaica.checkout-config.v1","CHECKOUT_CONFIG_INVALID")
+    if checkout.get("live_booking_enabled") is False:
+        require(checkout.get("contract_first_enabled") is False and
+                checkout.get("trusted_signature_enabled") is False and
+                checkout.get("auth_api_enabled") is False,
+                "CONTRACT_FIRST_FEATURE_FLAGS_UNSAFE")
     if checkout.get("live_booking_enabled") is True or checkout.get("payments_enabled") is True:
         require(bool(checkout.get("api_base_url") and checkout.get("seller_legal_name")
                      and checkout.get("terms_url") and checkout.get("privacy_url")),
