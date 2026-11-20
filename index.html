@@ -344,7 +344,12 @@ async function loadRouteDiscovery(){
 }
 
 let previewRecords=[],previewVisible=0;
-let previewsLoaded=false;
+let previewsLoaded=false, previewPriceFresh=false;
+function referencePrice(x){
+ if(!previewPriceFresh||x.price_reference_party!=="TWO_ADULTS"||
+    !Number.isSafeInteger(x.price_reference_rub)||x.price_reference_rub<=0)return null;
+ return x.price_reference_rub;
+}
 function renderPreviewCountryChips(){
  const target=$("previewCountryChips");
  target.replaceChildren();
@@ -413,7 +418,13 @@ function renderTourPreviews(reset=true){
    card.append(el("small","",x.origin+" · "+x.depart_date+" · "+x.nights+" ночей"));
    card.append(el("div","",x.resort||x.country));
    card.append(el("small","",x.room));
-   card.append(el("small","", "Предварительный вариант: стоимость, рейсы и свободные места не подтверждены."));
+   const reference=referencePrice(x);
+   if(reference!==null){
+     card.append(el("strong","", "Ориентир на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
+     card.append(el("small","", "Цена из прайс-листа, не окончательная. Перед покупкой необходим расчёт и подтверждение мест."));
+   }else{
+     card.append(el("small","", "Стоимость требует актуального расчёта; рейсы и места не подтверждены."));
+   }
    const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
    a.href="preview.html?id="+encodeURIComponent(x.id);
    card.append(a);frag.append(card);
@@ -434,6 +445,9 @@ async function loadTourPreviews(){
   if(data.schema!=="jamaica.tour-previews.v1"||data.bookable!==false||
      data.quote_verified!==false||data.availability_verified!==false||
      !Array.isArray(data.previews)||data.previews.length>6000)throw Error("PREVIEW_FEED_INVALID");
+  const refreshed=Date.parse(data.refreshed_at_utc||"");
+  const age=Date.now()-refreshed;
+  previewPriceFresh=Number.isFinite(refreshed)&&age>=-60000&&age<=30*60*1000;
   previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
     typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
@@ -442,7 +456,10 @@ async function loadTourPreviews(){
     x.depart_date>=new Date().toISOString().slice(0,10)&&
     Number.isInteger(x.nights)&&x.nights>=3&&x.nights<=180&&
     x.bookable===false&&x.quote_verified===false&&
-    x.availability_verified===false&&x.flight_verified===false);
+    x.availability_verified===false&&x.flight_verified===false&&
+    (x.price_reference_rub==null||
+     (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
+      x.price_reference_party==="TWO_ADULTS")));
   previewsLoaded=true;renderTourPreviews(true);
  }catch(e){previewsLoaded=false;renderTourPreviews(true);}
 }
