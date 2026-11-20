@@ -31,6 +31,26 @@ class DetailPriceTests(unittest.TestCase):
         self.assertNotIn("secret",str(s))
         self.assertNotIn("private hotel",str(s))
         self.assertNotIn("12345",str(s))
+    def test_nested_price_metadata_is_aggregate_only(self):
+        payload={"entries":[
+            {"hotel":"SECRET HOTEL", "room":"DBL HB", "quota":"3",
+             "prices":[{"amount":"450","RUR":"42000","ag":"12+,12+",
+                        "href2":"secret-token"}]},
+            {"hotel":"ANOTHER HOTEL", "isstop":["hotel"],
+             "prices":[{"amount":"","ag":"2-11,12+"}]}
+        ], "prx":"internal-secret"}
+        result=probe.shape(json.dumps(payload).encode())
+        self.assertEqual(result["rows"],2)
+        self.assertEqual(result["price_rows"],2)
+        self.assertEqual(result["amount_present"],1)
+        self.assertEqual(result["rur_present"],1)
+        self.assertEqual(result["row_stop_markers"],1)
+        self.assertIn("hotel",result["entry_fields"])
+        self.assertIn("RUR",result["price_fields"])
+        self.assertNotIn("href2",result["price_fields"])
+        self.assertNotIn("prx",str(result))
+        self.assertNotIn("SECRET HOTEL",str(result))
+        self.assertNotIn("42000",str(result))
     def test_probe_limit(self):
         class Api:
             def get(self,url):
