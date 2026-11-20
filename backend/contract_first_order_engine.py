@@ -123,7 +123,7 @@ class ContractFirstEngine:
         return quote
 
     def draft_contract(self, *, offer_id:str, expected_total_rub:int,
-                       buyer_id:str, terms_version:str,
+                       buyer_id:str, terms_version:str, terms_accepted:bool=False,
                        on_request_accepted:bool=False)->dict[str,Any]:
         """Stage #1: read-only supplier verification and legal contract creation.
         NO payment, reservation, booking or notification is sent.
@@ -135,6 +135,8 @@ class ContractFirstEngine:
             raise BadOrder("Invalid expected total")
         if not isinstance(buyer_id,str) or not 8<=len(buyer_id)<=128:
             raise BadOrder("Authenticated customer account required")
+        if terms_accepted is not True:
+            raise BadOrder("Buyer must explicitly accept the applicable contract terms")
         if terms_version!=self.merchant.terms_version:
             raise BadOrder("Wrong contract terms")
         offer=self.repo.get_offer(offer_id)
@@ -149,7 +151,7 @@ class ContractFirstEngine:
             "order_id":order_id,"offer_id":offer_id,"buyer_id":buyer_id,
             "merchant_legal_name":self.merchant.seller_legal_name,
             "merchant_registration":self.merchant.registration_number,
-            "terms_version":terms_version,
+            "terms_version":terms_version,"terms_accepted":True,
             "total_rub":expected_total_rub,"currency":"RUB",
             "hotel_status_at_draft":check["hotel_status"],
             "hotel_on_request_accepted":bool(on_request_accepted),
