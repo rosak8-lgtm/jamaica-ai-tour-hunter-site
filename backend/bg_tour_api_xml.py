@@ -77,8 +77,8 @@ def _customer_details(item:ET.Element,customer:dict|None):
     fields=(
        ("customerFirstName",_require_text(customer.get("first_name"),r"[A-Z][A-Z '-]{0,79}",80)),
        ("customerLastName",_require_text(customer.get("last_name"),r"[A-Z][A-Z '-]{0,79}",80)),
-       ("customerAddress",_require_text(customer.get("address"),r"[^<>\\x00-\\x1f\\x7f]{8,160}",160)),
-       ("customerCitizen",_require_text(customer.get("citizenship"),r"\\d{7,20}",20)),
+       ("customerAddress",_require_text(customer.get("address"),r"[^<>\x00-\x1f\x7f]{8,160}",160)),
+       ("customerCitizen",_require_text(customer.get("citizenship"),r"\d{7,20}",20)),
        ("customerPassportSeries",_require_text(customer.get("passport_series"),r"[A-Z0-9]{1,15}",15)),
        ("customerPassportNumber",_require_text(customer.get("passport_number"),r"[A-Z0-9]{4,20}",20)),
     )
@@ -92,7 +92,7 @@ def _customer_details(item:ET.Element,customer:dict|None):
             customer["phone"],r"[+0-9() -]{7,25}",25)
     if customer.get("email"):
         ET.SubElement(item,"customerEmail").text=_require_text(
-            customer["email"],r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,30}",120)
+            customer["email"],r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,30}",120)
 
 def _check_model(tour,persons):
     if not isinstance(tour,dict):
