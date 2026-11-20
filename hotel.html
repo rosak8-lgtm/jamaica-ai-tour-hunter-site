@@ -1,0 +1,54 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#35194f"><meta name="robots" content="noindex,follow">
+<title>Информация об отеле — JAMAICA</title>
+<style>
+:root{--violet:#35194f;--teal:#007f86;--ink:#2d2140;--muted:#75687e;--bg:#fcfaf6;--border:#e5dae9}
+*{box-sizing:border-box}body{margin:0;font:16px/1.6 system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--violet);color:white;padding:20px 0}header a{color:white;text-decoration:none;font-weight:850}
+.wrap{width:min(1000px,calc(100% - 34px));margin:auto}.nav{display:flex;justify-content:space-between;gap:20px}.logo{font-size:23px}
+main{padding:40px 0 75px}.eyebrow{text-transform:uppercase;color:var(--teal);font-size:12px;font-weight:900;letter-spacing:1px}h1{font-size:clamp(29px,4.7vw,45px);line-height:1.1;margin:15px 0}h2{font-size:23px;margin:0 0 15px}
+.box{background:white;border:1px solid var(--border);border-radius:20px;padding:25px;margin:20px 0;box-shadow:0 12px 33px #28134e0c}
+.hero{height:235px;background:radial-gradient(circle at 78% 30%,#f3dc82,transparent 35%),linear-gradient(125deg,#3f95ae,#9be0bc 65%,#f1d3a1);display:grid;place-items:center;border-radius:17px;font-size:72px;position:relative}.hero small{position:absolute;left:14px;right:14px;bottom:13px;text-align:center;background:#ffffffd9;border-radius:10px;font-size:13px;padding:8px;color:#494056;font-weight:750}
+ul{padding-left:20px}.meta{color:var(--muted)}.alert{border:1px solid #eedaaa;background:#fff9e7;border-radius:15px;padding:16px;font-size:14px;color:#634b21}.pill{display:inline-block;border:1px solid #c3dfda;background:#ecf8f6;padding:6px 12px;border-radius:30px;font-size:13px;font-weight:750;margin:0 8px 8px 0}
+.link{display:inline-block;background:var(--teal);color:white;text-decoration:none;padding:13px 20px;border-radius:12px;font-weight:850}.link:focus-visible{outline:3px solid #f3c55d;outline-offset:2px}
+footer{color:var(--muted);font-size:12px;padding:18px 0}.hide{display:none}
+</style></head><body>
+<header><div class="wrap nav"><a class="logo" href="./">🦜 JAMAICA</a><a href="./#hotels">← Назад к отелям</a></div></header>
+<main class="wrap"><div class="eyebrow">Справочная информация</div>
+<h1 id="name">Загружаем данные об отеле…</h1><p class="meta" id="location"></p>
+<div class="alert" id="warning">Эти сведения получены из исторических наблюдений. Наличие номеров, даты туров, цены и право бронирования сейчас не подтверждены.</div>
+<div class="box"><div class="hero" aria-label="Стилизованная заставка без фотографий отеля"><span aria-hidden="true">🏝️</span><small>Фотографии именно этого отеля пока не загружены</small></div>
+<h2 style="margin-top:24px">Об отеле</h2>
+<p id="description">Информация об отеле пока загружается.</p>
+<div id="meals"></div></div>
+<div class="box"><h2>Номера, встречавшиеся в каталоге</h2><ul id="rooms"></ul><p class="meta">Список категорий номера относится к историческим данным, а не к текущему наличию.</p></div>
+<a href="./#request" class="link">Найти доступные туры в JAMAICA</a>
+</main><footer class="wrap">JAMAICA · Справочный каталог отелей не является предложением к продаже. Реальное оформление доступно только по свежим подтверждённым турам.</footer>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id),id=new URLSearchParams(location.search).get("id")||"";
+function text(id,v){$(id).textContent=v;}
+async function load(){
+ if(!/^hotel_ref_\d{4}$/.test(id)){text("name","Отель не выбран");text("description","Вернитесь к каталогу и выберите гостиницу.");return;}
+ try{
+  const response=await fetch("./hotel-reference.json",{cache:"no-store"});
+  if(!response.ok)throw Error("NO_REFERENCE");
+  const data=await response.json();
+  if(data.schema!=="jamaica.hotel-reference.v1"||data.bookable!==false||!Array.isArray(data.hotels))throw Error("BAD_REFERENCE");
+  const h=data.hotels.find(h=>h&&h.id===id);
+  if(!h||typeof h.hotel!=="string"||!h.country||h.bookable!==false)throw Error("HOTEL_NOT_FOUND");
+  text("name",h.hotel);text("location",h.country+(h.region?" · "+h.region:""));
+  text("description","Исторические записи подтверждают, что этот отель присутствовал в результатах поиска. Актуальные услуги, категория гостиницы и возможности размещения должны быть проверены отдельно.");
+  const meals=Array.isArray(h.meals)?h.meals:[];
+  for(const value of meals){if(!/^(BB|HB|FB|AI|AO|RO|UAI)$/.test(value))continue;const tag=document.createElement("span");tag.className="pill";tag.textContent="Встречался код питания: "+value;$("meals").append(tag);}
+  const rooms=Array.isArray(h.rooms)?h.rooms:[];
+  if(!rooms.length){const li=document.createElement("li");li.textContent="Сведения о номерах не подтверждены";$("rooms").append(li);}
+  for(const room of rooms.slice(0,6)){if(typeof room!=="string")continue;const li=document.createElement("li");li.textContent=room;$("rooms").append(li);}
+ }catch(e){text("name","Не удалось загрузить сведения");text("description","Данные справочника отелей временно недоступны. Попробуйте обновить страницу.");}
+}
+load();
+})();
+</script>
+</body></html>
