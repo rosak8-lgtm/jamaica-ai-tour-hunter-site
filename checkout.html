@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#35194f">
+<title>Оформление тура — JAMAICA</title>
+<style>
+:root{--violet:#35194f;--teal:#007f86;--gold:#f5c452;--ink:#2d2140;--muted:#70677d;--border:#e6dce9;--bg:#fbfaf7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Arial,sans-serif}a{color:var(--teal)}
+nav{background:var(--violet);color:white}.nav{width:min(1050px,calc(100% - 30px));margin:auto;min-height:70px;display:flex;justify-content:space-between;align-items:center;gap:12px}.nav a{color:white;text-decoration:none;font-weight:800}.brand{font-size:22px}.back{font-size:14px}
+main{width:min(1050px,calc(100% - 30px));margin:36px auto 75px}.tag{color:var(--teal);font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase}.title{font-size:clamp(29px,5vw,45px);line-height:1.15;margin:11px 0}.lead{color:var(--muted);margin-top:0}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}.card{background:white;border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 11px 40px #35194f0b}.card h2{font-size:21px;margin:0 0 15px}.muted{color:var(--muted);font-size:14px}.summaryRow{display:flex;align-items:start;justify-content:space-between;border-bottom:1px solid var(--border);padding:11px 0;gap:15px}.summaryRow:last-child{border-bottom:0}.summaryRow strong{text-align:right}.price{font-size:29px;font-weight:900;color:var(--violet)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:13px;font-weight:800}.field input{height:46px;padding:10px 12px;border:1px solid #d8cfe0;border-radius:11px;width:100%;min-width:0}.field input:focus{outline:2px solid #009b9e;outline-offset:1px}
+.btn{border:0;border-radius:12px;background:var(--teal);color:white;padding:13px 18px;font-weight:850;font-size:15px;cursor:pointer;min-height:48px}.btn:disabled{opacity:.55;cursor:not-allowed}.outline{background:#f3eef5;color:var(--violet)}.alert{background:#fff6dc;border:1px solid #eeddb0;border-radius:12px;padding:15px;margin:13px 0;color:#624b25}.info{background:#edf8f6;border:1px solid #b6deda;border-radius:12px;padding:15px;margin:13px 0;color:#195d60}
+footer{width:min(1050px,calc(100% - 30px));margin:0 auto 25px;color:var(--muted);font-size:12px}.hide{display:none!important}.consent{display:flex;align-items:flex-start;gap:10px;margin:18px 0;font-size:13px}.consent input{width:18px;height:18px;flex-shrink:0}iframe{width:100%;height:560px;border:1px solid var(--border);border-radius:14px}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:750px){.grid{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.card{padding:18px}}
+</style></head>
+<body><nav><div class="nav"><a class="brand" href="./">🦜 JAMAICA</a><a class="back" href="./#offers">← Вернуться к поиску туров</a></div></nav>
+<main><div class="tag">Онлайн-оформление</div><h1 class="title">Ваше путешествие</h1><p class="lead">Сначала подтверждаем цену и наличие тура, затем оформляем заказ и безопасную оплату.</p>
+<div class="grid"><section class="card">
+<h2>Оформление</h2><div id="status" class="alert" role="status" aria-live="polite">Проверяем выбранное предложение…</div>
+<div id="sellerInfo" class="info hide"></div>
+<form id="checkoutForm" class="hide">
+<h3>Контактные данные</h3>
+<div class="fields"><div class="field"><label for="firstName">Имя покупателя</label><input id="firstName" autocomplete="given-name" maxlength="80" required></div>
+<div class="field"><label for="lastName">Фамилия покупателя</label><input id="lastName" autocomplete="family-name" maxlength="80" required></div>
+<div class="field"><label for="email">E-mail для документов</label><input id="email" type="email" autocomplete="email" maxlength="150" required></div>
+<div class="field"><label for="phone">Телефон</label><input id="phone" type="tel" autocomplete="tel" maxlength="30" required></div></div>
+<p class="muted">Состав туристов, паспортные данные и условия въезда уточняются сервером бронирования после подтверждения цены. Реквизиты банковской карты JAMAICA не запрашивает.</p>
+<label class="consent"><input type="checkbox" id="termsAccept" required><span>Я ознакомился с <a id="termsLink" href="#" target="_blank" rel="noopener">условиями покупки</a>, <a id="privacyLink" href="#" target="_blank" rel="noopener">обработкой данных</a> и данными продавца.</span></label>
+<button type="submit" class="btn" id="payButton">Подтвердить цену и перейти к оплате</button>
+</form>
+<div id="paymentContainer" class="hide"><h3>Безопасная оплата</h3><p class="muted">Оплата проводится через встроенную защищённую форму платёжного провайдера.</p><iframe id="providerFrame" title="Защищённая платёжная форма" referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms allow-same-origin"></iframe><button type="button" id="checkOrder" class="btn outline">Проверить статус покупки</button><div id="orderStatus" role="status" aria-live="polite"></div></div>
+</section><aside class="card"><h2>Ваш тур</h2><div id="itinerary" class="muted">Предложение не выбрано</div><div id="price" class="price"></div><p class="muted">Итоговая стоимость подтверждается сервером перед оформлением. Если цена изменится, оплата не начнётся без нового согласия.</p></aside></div>
+</main><footer>JAMAICA · До подключения юридически оформленного продавца, подтверждения брони и платёжного провайдера покупка недоступна. Это не страница ввода карточных реквизитов.</footer>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+let selected=null,config=null,orderId=null;
+const st=(message,kind)=>{$("status").textContent=message;$("status").className=kind==="ok"?"info":"alert";};
+const dateOK=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Date.parse(d+"T23:59:59Z")>=Date.now();
+function validOffer(o){
+ if(!o||!(/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||"")))return false;
+ if(o.publish_approved!==true||o.quote_verified!==true||o.availability_verified!==true||o.flights_out_green!==true||o.flights_back_green!==true||o.price_scope_verified!==true||o.total_two_verified!==true)return false;
+ if(o.best_price_required===true&&o.best_price_verified!==true)return false;
+ if(o.adults!==2||o.children!==0||!Number.isInteger(o.total_rub)||o.total_rub<=0||!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
+ if(typeof o.destination!=="string"||typeof o.hotel!=="string"||!dateOK(o.depart_date))return false;
+ const updated=Date.parse(o.quote_verified_at),expiry=Date.parse(o.expires_at),now=Date.now();
+ return Number.isFinite(updated)&&now-updated>=-60000&&now-updated<20*60*1000&&Number.isFinite(expiry)&&expiry>now;
+}
+function safeApiBase(base){
+ if(typeof base!=="string"||!base)return "";
+ try{
+ const url=new URL(base);
+ if(url.protocol!=="https:"||url.username||url.password||url.search||url.hash)return "";
+ return url.href.replace(/\/$/,"");
+ }catch(e){return "";}
+}
+function ready(c){
+ return c&&c.schema==="jamaica.checkout-config.v1"&&c.live_booking_enabled===true&&c.payments_enabled===true&&
+ safeApiBase(c.api_base_url)&&typeof c.payment_iframe_origin==="string"&&c.payment_iframe_origin.startsWith("https://")&&
+ typeof c.seller_legal_name==="string"&&c.seller_legal_name.trim().length>5&&
+ typeof c.seller_registration==="string"&&c.seller_registration.trim().length>3&&
+ typeof c.terms_url==="string"&&c.terms_url.startsWith("https://")&&
+ typeof c.privacy_url==="string"&&c.privacy_url.startsWith("https://")&&
+ typeof c.terms_version==="string"&&c.terms_version.length>2;
+}
+function draw(o){
+ const summary=$("itinerary");summary.replaceChildren();
+ const rows=[
+ ["Страна",o.destination],["Город вылета",o.origin],["Отель",o.hotel],
+ ["Вылет",o.depart_date],["Продолжительность",o.nights+" ночей"],
+ ["Туристы",o.adults+" взрослых"+(o.children?", "+o.children+" детей":"")]];
+ for(const [key,val] of rows){const row=document.createElement("div");row.className="summaryRow";const k=document.createElement("span"),v=document.createElement("strong");k.textContent=key;v.textContent=String(val);row.append(k,v);summary.append(row);}
+ $("price").textContent=o.total_rub.toLocaleString("ru-RU")+" ₽ за двоих";
+}
+async function init(){
+ const offerId=new URLSearchParams(location.search).get("offer")||"";
+ if(!/^[a-zA-Z0-9_-]{8,100}$/.test(offerId)){st("Выберите действующий тур на странице поиска. Оплата без выбранного предложения невозможна.");return;}
+ try{
+  const [offersResponse,confResponse]=await Promise.all([
+  fetch("./verified-offers.json",{cache:"no-store"}),fetch("./checkout-config.json",{cache:"no-store"})]);
+  if(!offersResponse.ok||!confResponse.ok)throw Error("FETCH_FAILED");
+  const offers=await offersResponse.json();config=await confResponse.json();
+  if(offers.schema!=="jamaica.verified-offers.v1"||!Array.isArray(offers.offers))throw Error("OFFERS_INVALID");
+  selected=offers.offers.find(o=>o&&o.id===offerId);
+  if(!validOffer(selected)){st("Это предложение недоступно или его подтверждённая цена устарела. Вернитесь к поиску и выберите актуальный тур.");return;}
+  draw(selected);
+  if(!ready(config)){
+   st("Тур выбран, но онлайн-бронирование и оплата ещё не подключены. Покупка не выполняется.");
+   return;
+  }
+  const origin=new URL(config.payment_iframe_origin);
+  if(origin.origin!==config.payment_iframe_origin.replace(/\/$/,""))throw Error("INVALID_PAYMENT_ORIGIN");
+  $("sellerInfo").textContent="Продавец: "+config.seller_legal_name+" · Регистрация: "+config.seller_registration;
+  $("sellerInfo").classList.remove("hide");
+  $("termsLink").href=config.terms_url;
+  $("privacyLink").href=config.privacy_url;
+  $("checkoutForm").classList.remove("hide");
+  st("Тур выбран. Для оплаты требуется серверное подтверждение актуальной цены и брони.","ok");
+ }catch(e){st("Не удалось получить подтверждённые данные заказа. Оплата недоступна.");}
+}
+$("checkoutForm").addEventListener("submit",async ev=>{
+ ev.preventDefault();
+ if(!selected||!ready(config)||!$("checkoutForm").reportValidity())return;
+ const btn=$("payButton");btn.disabled=true;
+ st("Получаем повторное подтверждение цены и доступности…");
+ try{
+ const url=safeApiBase(config.api_base_url)+"/v1/checkout/prepare";
+ const resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},credentials:"omit",
+  body:JSON.stringify({offer_id:selected.id,expected_total_rub:selected.total_rub,
+    buyer:{first_name:$("firstName").value.trim(),last_name:$("lastName").value.trim(),email:$("email").value.trim(),phone:$("phone").value.trim()},
+    terms_version:config.terms_version,terms_accepted:$("termsAccept").checked})});
+ if(!resp.ok)throw Error("RECHECK_FAILED");
+ const res=await resp.json();
+ if(res.status!=="PAYMENT_READY"||res.total_rub!==selected.total_rub||!/^[A-Za-z0-9_-]{8,100}$/.test(res.order_id||""))throw Error("PRICE_OR_ORDER_INVALID");
+ const payUrl=new URL(res.payment_iframe_url);
+ if(payUrl.origin!==new URL(config.payment_iframe_origin).origin||payUrl.protocol!=="https:")throw Error("PAYMENT_ORIGIN_INVALID");
+ orderId=res.order_id;
+ $("providerFrame").src=payUrl.href;
+ $("checkoutForm").classList.add("hide");
+ $("paymentContainer").classList.remove("hide");
+ st("Цена подтверждена сервером. Для оплаты используйте защищённую форму ниже.","ok");
+ }catch(e){
+  st("Повторная проверка цены, наличия или платёжной формы не пройдена. Оплата не начата. Вернитесь к поиску.");
+  btn.disabled=false;
+ }
+});
+$("checkOrder").addEventListener("click",async()=>{
+ if(!orderId||!ready(config))return;
+ try{
+ const url=safeApiBase(config.api_base_url)+"/v1/orders/"+encodeURIComponent(orderId);
+ const response=await fetch(url,{credentials:"omit",cache:"no-store"});
+ if(!response.ok)throw Error("NO_STATUS");
+ const state=await response.json();
+ if(state.status==="PAID_BOOKED"){$("orderStatus").textContent="Покупка подтверждена сервером: бронь оформлена и оплата получена.";st("Бронирование и оплата подтверждены.","ok");}
+ else {$("orderStatus").textContent="Статус заказа: "+({"PAYMENT_PENDING":"ожидается оплата","BOOKING_PENDING":"ожидается подтверждение бронирования","FAILED":"не подтверждён"}[state.status]||"проверяется")+". Не оплачивайте повторно до проверки статуса.";}
+ }catch(e){$("orderStatus").textContent="Статус покупки временно недоступен. Не выполняйте повторный платёж без подтверждения.";}
+});
+init();
+})();
+</script></body></html>
