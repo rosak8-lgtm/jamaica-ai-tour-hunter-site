@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#35194f"><meta name="robots" content="noindex,follow">
+<title>Подробности выбранного путешествия — JAMAICA</title>
+<style>
+:root{--purple:#35194f;--ink:#2d2140;--teal:#007f86;--muted:#756b80;--bg:#fcfaf6;--line:#e8dee8;--gold:#f5c452}
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:var(--teal);text-decoration:none}a:hover{text-decoration:underline}nav{background:var(--purple);color:white}
+.nav{max-width:1100px;margin:auto;padding:18px 16px;display:flex;justify-content:space-between;align-items:center}.nav a{color:white;font-weight:800}
+main{max-width:1100px;margin:35px auto 70px;padding:0 16px}.tag{color:var(--teal);font-weight:900;text-transform:uppercase;font-size:12px;letter-spacing:1px}
+h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22px;margin:0 0 14px}
+.sub{color:var(--muted)}.card{background:white;border:1px solid var(--line);border-radius:22px;padding:24px;margin:20px 0}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.fact{border:1px solid #ece5ed;border-radius:13px;padding:14px;overflow-wrap:anywhere}
+.fact span{font-size:12px;color:var(--muted);display:block}.fact strong{display:block;margin-top:5px}
+.notice{background:#fff6dc;color:#594524;border:1px solid #ecd9aa;padding:18px;border-radius:14px;margin:18px 0}
+.btn{display:inline-block;border:1px solid var(--teal);background:var(--teal);border-radius:13px;color:white;padding:13px 20px;font-weight:800;margin:10px 10px 0 0}
+.btn:hover{color:white}.btn.secondary{background:white;color:var(--teal)}.other{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.other a{display:block;border:1px solid var(--line);padding:13px;border-radius:13px;background:#fff}
+@media(max-width:700px){.grid,.other{grid-template-columns:1fr}}
+</style></head>
+<body>
+<nav><div class="nav"><a href="./">🦜 JAMAICA</a><a href="./#offers">← Все варианты</a></div></nav>
+<main>
+<div class="tag">Выбранное путешествие</div>
+<h1 id="heading">Загружаем выбранный вариант…</h1>
+<p class="sub" id="subtitle">Данные подбираются по конкретному прайс-листу</p>
+<div class="notice" id="notice" role="status">Это предварительный вариант, а не подтверждённый тур. Итоговая цена, номер, рейсы и наличие подлежат повторной проверке перед оформлением.</div>
+<section class="card"><h2>Сведения о путешествии</h2><div class="grid" id="facts"></div></section>
+<section class="card"><h2>Информация об отеле</h2><p class="sub" id="hotelInfo">Загружаем справочник гостиниц…</p><a class="btn secondary" id="hotelLink" href="./#hotels">Подробнее об отеле</a></section>
+<section class="card"><h2>Оформление</h2><p>Выбранные даты и тип номера сохранены на этой странице. Для оплаты требуется подтверждённый поставщиком расчёт, доступность мест, договор и действующая система бронирования.</p>
+<div id="bookingStatus" class="notice">Сейчас предложение нельзя оплатить: подтверждённая котировка и бронирование ещё не подключены.</div>
+<a class="btn" href="./#offers">Выбрать другой вариант</a></section>
+<section class="card"><h2>Похожие варианты по другим странам и датам</h2><div id="alternatives" class="other"></div></section>
+</main>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const id=new URLSearchParams(location.search).get("id")||"";
+function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
+function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
+async function init(){
+ if(!/^p_[a-f0-9]{24}$/.test(id)){$("heading").textContent="Выберите путешествие в поиске";return;}
+ try{
+  const [pr,hr]=await Promise.all([
+   fetch("./tour-previews.json",{cache:"no-store"}),
+   fetch("./destination-directory.json",{cache:"no-store"})
+  ]);
+  if(!pr.ok||!hr.ok)throw Error("NO_FEED");
+  const feed=await pr.json(),directory=await hr.json();
+  if(feed.schema!=="jamaica.tour-previews.v1"||feed.bookable!==false||
+     feed.quote_verified!==false||feed.availability_verified!==false||
+     !Array.isArray(feed.previews)||directory.schema!=="jamaica.destination-directory.v1"||
+     !Array.isArray(directory.hotels))throw Error("INVALID_FEED");
+  const p=feed.previews.find(x=>x&&x.id===id&&x.bookable===false&&x.quote_verified===false&&
+    x.availability_verified===false&&x.flight_verified===false&&
+    x.depart_date>=new Date().toISOString().slice(0,10));
+  if(!p){$("heading").textContent="Вариант больше не актуален";$("subtitle").textContent="Вернитесь в поиск и выберите свежую дату.";return;}
+  $("heading").textContent=p.country+" — "+p.hotel;
+  $("subtitle").textContent=p.resort||p.country;
+  fact("Город вылета",p.origin);
+  fact("Дата вылета",p.depart_date);
+  fact("Продолжительность",p.nights+" ночей");
+  fact("Страна",p.country);
+  fact("Гостиница",p.hotel);
+  fact("Тип номера / размещения",p.room);
+  const h=directory.hotels.find(x=>x&&x.id===p.hotel_id&&x.country===p.country);
+  if(h){
+   $("hotelInfo").textContent=[h.name,h.resort,h.stars].filter(Boolean).join(" · ")+" — справочные сведения об отеле";
+   $("hotelLink").href="hotel.html?id="+encodeURIComponent(h.id);
+  }else{
+   $("hotelInfo").textContent="Информация об отеле временно не найдена в справочнике.";
+  }
+  const choices=feed.previews.filter(x=>x&&x.id!==p.id&&x.bookable===false&&
+    (x.country!==p.country||x.depart_date!==p.depart_date)).slice(0,12);
+  for(const choice of choices){
+   const link=document.createElement("a");
+   link.href="preview.html?id="+encodeURIComponent(choice.id);
+   add("strong",choice.country+" · "+choice.hotel,link);
+   add("div",choice.depart_date+" · "+choice.nights+" ночей",link);
+   $("alternatives").append(link);
+  }
+  if(!choices.length)add("p","Другие варианты пока не опубликованы.",$("alternatives"));
+ }catch(err){
+  $("heading").textContent="Информация временно недоступна";
+  $("subtitle").textContent="Не удалось загрузить подтверждённый источник справочных данных.";
+ }
+}
+init();
+})();
+</script></body></html>
