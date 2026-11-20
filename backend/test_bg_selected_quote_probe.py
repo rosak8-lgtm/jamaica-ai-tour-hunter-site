@@ -1,0 +1,74 @@
+import json
+import sys
+import unittest
+from datetime import datetime,timedelta,timezone
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"scripts"))
+import oracle_bg_selected_quote_probe as selected
+import oracle_bg_preview_export as exporter
+import oracle_bg_route_sync as bg
+
+DAY=(datetime.now(timezone.utc)+timedelta(days=7)).strftime("%d.%m.%Y")
+DATE=bg.date_iso(DAY).isoformat()
+COUNTRY={"name":"Индонезия","id":"100410000051","has_tour_catalog":True,"origins":[bg.CITY_ID]}
+HOTEL={"id":"102610001486","name":"Test reference hotel","country":"Индонезия","resort":"Бали"}
+ROW={"id_hotel":HOTEL["id"],"tour_date":DAY,"duration":"7",
+     "room":"STANDARD HB","town":"Бали",
+     "prices":[{"amount":"1700","RUR":"115000","ag":"12+,12+"},
+               {"amount":"1400","ag":"2-11,12+"}]}
+P=exporter.safe_preview(ROW,COUNTRY["name"],{HOTEL["id"]:HOTEL})
+URL=("https://export.bgoperator.ru/partners?action=price&tid=211&flt="
+     +COUNTRY["id"]+"&flt2="+bg.CITY_ID+"&id_price=121132934133&data="+DAY+"&xml=11")
+
+class Api:
+    def __init__(self,match=True):self.match=match;self.calls=[]
+    def get(self,url):
+        self.calls.append(url)
+        if "/yandex?" in url:
+            return json.dumps({"entries":[{"date":DAY,"url":URL}]}).encode()
+        if "/partners?" in url:
+            return json.dumps({"entries":[ROW if self.match else {**ROW,"room":"OTHER"}]}).encode()
+        raise AssertionError("Unapproved request")
+
+class Tests(unittest.TestCase):
+    def setup_data(self):
+        return {"schema":"jamaica.destination-directory.v1",
+                "countries":[COUNTRY],"hotels":[HOTEL]},{
+                "schema":"jamaica.tour-previews.v1","bookable":False,
+                "previews":[P]}
+    def test_matching_price_reference_is_not_verified_quote(self):
+        d,feed=self.setup_data()
+        a=Api()
+        result=selected.inspect_selected(d,feed,P["id"],a)
+        self.assertEqual(result["matched_rows"],1)
+        self.assertEqual(result["price_options"],2)
+        self.assertEqual(result["rub_price_fields"],1)
+        self.assertEqual(result["two_adults_age_markers"],1)
+        self.assertIs(result["bookable"],False)
+        self.assertIs(result["quote_verified"],False)
+        self.assertIs(result["availability_verified"],False)
+        self.assertNotIn("115000",str(result))
+        self.assertNotIn("121132934133",str(result))
+        self.assertEqual(len(a.calls),2)
+    def test_avoid_false_matches(self):
+        d,feed=self.setup_data()
+        result=selected.inspect_selected(d,feed,P["id"],Api(match=False))
+        self.assertEqual(result["status"],"NO_CURRENT_MATCH")
+        self.assertEqual(result["price_options"],0)
+    def test_fail_if_preview_not_in_public_feed(self):
+        d,feed=self.setup_data()
+        with self.assertRaises(bg.SyncHold):
+            selected.inspect_selected(d,feed,"p_"+"f"*24,Api())
+    def test_reject_preview_claiming_bookable(self):
+        d,feed=self.setup_data()
+        feed["previews"][0]={**P,"bookable":True}
+        with self.assertRaises(bg.SyncHold):
+            selected.inspect_selected(d,feed,P["id"],Api())
+    def test_blocked_price_options_are_not_counted(self):
+        blocked={**ROW,"prices":[{"amount":"120","isstop":["avia_to"]}]}
+        result=selected.inspect_match([blocked],P,{HOTEL["id"]:HOTEL})
+        # preview exporter deliberately blocks only rows without any
+        # unblocked price options; a stopped row cannot become a quote.
+        self.assertEqual(result["price_options"],0)
+if __name__=="__main__":
+    unittest.main()
