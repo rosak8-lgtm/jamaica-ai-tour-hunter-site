@@ -1,0 +1,14 @@
+name: Verify JAMAICA customer site
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate destinations, public wording and JavaScript
+        run: node scripts/test-site.mjs
