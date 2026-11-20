@@ -288,8 +288,12 @@ class ContractFirstEngine:
         if not self.repo.transition(order_id,expected,"REFUND_REQUIRED",{"failure_reason":reason}):
             raise BadOrder("Concurrent order change needs manual reconciliation")
         order=self._order(order_id)
-        self.outbox.enqueue_once(order_id+":REFUND_REQUIRED",{
-            "type":"REFUND_REQUIRED","order_id":order_id,"reason":reason})
+        try:
+            self.outbox.enqueue_once(order_id+":REFUND_REQUIRED",{
+                "type":"REFUND_REQUIRED","order_id":order_id,"reason":reason})
+        except Exception:
+            # Notification transport must NEVER prevent the refund attempt.
+            pass
         # Persist the intent BEFORE calling PSP. A refund request failure is a human incident.
         try:
             self.payment.refund(order["payment_id"],order_id+":refund")
