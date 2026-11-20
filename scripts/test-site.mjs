@@ -141,13 +141,12 @@ assert.ok(page.includes('function referencePrice(x)'));
 assert.ok(page.includes('price_reference_party'));
 assert.ok(page.includes('previewPriceFresh'));
 assert.ok(page.includes('Ориентир на 2 взрослых'));
-assert.ok(previewDetail.includes('price_reference_rub'));
-assert.ok(previewDetail.includes('30*60*1000'));
-
 assert.ok(page.includes('if(!country)list=interleaveCountries(list)'));
 
 assert.ok(page.includes('preview.html?id='));
 const previewDetail=fs.readFileSync('preview.html','utf8');
+assert.ok(previewDetail.includes('price_reference_rub'));
+assert.ok(previewDetail.includes('30*60*1000'));
 for(const id of ['heading','subtitle','notice','facts','hotelInfo','hotelLink','bookingStatus','alternatives']){
  assert.ok(previewDetail.includes('id="'+id+'"'),'Preview detail missing '+id);
 }
