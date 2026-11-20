@@ -68,16 +68,20 @@ async function init(){
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
   const observed=Date.parse(feed.refreshed_at_utc||"");
-  const fresh=Number.isFinite(observed)&&Date.now()-observed>=-60000&&Date.now()-observed<=30*60*1000;
-  if(fresh&&p.price_reference_party==="TWO_ADULTS"&&
+  const age=Date.now()-observed;
+  const fresh=Number.isFinite(observed)&&age>=-60000&&age<=30*60*1000;
+  const listed=Number.isFinite(observed)&&age>=-60000&&age<=24*60*60*1000;
+  if(listed&&p.price_reference_party==="TWO_ADULTS"&&
      Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
-    fact("Цена по прайс-листу на 2 взрослых",
-         new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (ориентировочно)");
+    fact("Ориентир по прайс-листу на 2 взрослых",
+         new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (не окончательная цена)");
     fact("Средняя цена при поездке вдвоём",
          new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(p.price_reference_rub/2)+" ₽ на человека — не цена отдельного одноместного тура");
-    $("bookingStatus").textContent="Предварительная цена получена. Для оплаты необходимо подтвердить окончательный расчёт, номера и рейсы у поставщика.";
+    fact("Дата прайс-листа",new Date(observed).toLocaleString("ru-RU"));
+    $("bookingStatus").textContent=(fresh?"Ориентировочная стоимость загружена. ":"С момента выгрузки стоимость могла измениться. ")+
+      "Перед оформлением договора требуется новый расчёт цены и подтверждение рейсов и номера.";
   }else{
-    fact("Актуальная цена на 2 взрослых","Требуется повторный расчёт");
+    fact("Стоимость на 2 взрослых","Требуется новый расчёт по прайс-листу");
   }
   const h=directory.hotels.find(x=>x&&x.id===p.hotel_id&&x.country===p.country);
   if(h){
