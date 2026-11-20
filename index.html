@@ -40,16 +40,16 @@
 <div class="destToolbar"><input id="destSearch" type="search" placeholder="Поиск страны: Египет, Индонезия, Греция…" aria-label="Поиск страны"><span class="count" id="dirCount" aria-live="polite"></span></div>
 <div class="destinationGrid" id="destinationGrid" aria-live="polite" style="margin-top:20px"></div><button class="loadMore" type="button" id="loadMore">Показать ещё страны</button>
 <p class="micro" style="margin-top:18px">Отметка о городе вылета в справочнике не означает наличия рейса или тура на выбранную дату. Направления без подходящего готового маршрута проверяются индивидуально.</p></div></section>
-<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Найденные туры</h2><p>Все страны доступны для поиска. Для каждого доступного тура открывается отдельная страница с информацией об отеле, перелётах, питании, цене и условиях.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
+<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Результаты поиска путешествий</h2><p>Сначала отображаются подтверждённые туры, затем ниже — варианты отелей по всем направлениям. Без указания страны показывается полный справочник; фильтры сужают результаты.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
 <div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Выберите страну и параметры поездки. Туры с проверенной стоимостью появятся здесь после загрузки.</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
 <div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
 </div></section>
 <section class="section" id="hotels"><div class="wrap">
-<div class="sectionHead"><div><div class="sectionTag">Дополнительный справочник</div><h2>Отели, встречавшиеся в поиске</h2><p>Справочная информация из ранее наблюдавшихся вариантов. Это не туры в наличии: цены, свободные номера и перелёты не подтверждены. Открывайте страницу отеля, чтобы посмотреть известные сведения без переходов на другие сайты.</p></div><span class="count" id="hotelGuideCount">Загрузка отелей…</span></div>
+<div class="sectionHead"><div><div class="sectionTag">Дополнительный справочник</div><h2>Все варианты гостиниц по направлениям</h2><p>Справочник отелей обновляется автоматически. Без дополнительных фильтров показываются варианты по всем странам; при выборе страны, курорта или отеля остаются подходящие. Цены и места в этом разделе не подтверждены.</p></div><span class="count" id="hotelGuideCount">Загрузка полного каталога гостиниц…</span></div>
 <div class="destToolbar"><input id="hotelGuideSearch" type="search" placeholder="Название гостиницы, страна или курорт…" aria-label="Поиск по справочнику отелей"><span class="micro" id="hotelGuideStatus" role="status" aria-live="polite">Загружаем справочные данные об отелях…</span></div>
 <div class="destinationGrid" id="hotelGuideCards" style="margin-top:20px"></div>
 <button class="loadMore" id="hotelGuideMore" type="button" hidden>Показать все отели</button>
-<p class="micro" style="margin-top:16px">Каталог отелей существует отдельно от актуальной продажи туров. Для покупки необходимы подтверждённая дата, цена за всех туристов, рейсы и доступность.</p>
+<p class="micro" style="margin-top:16px">Даты, количество ночей и состав туристов применяются к подтверждённым турам. В справочнике отелей они не означают наличие мест на выбранные даты. Для покупки требуются свежая итоговая цена и подтверждённая бронь.</p>
 </div></section>
 <section class="section" id="how"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Покупка на JAMAICA</div><h2>От поиска до электронного заказа</h2><p>Все действия покупателя выполняются в интерфейсе JAMAICA. Данные о цене и доступности проверяются перед оплатой.</p></div></div><div class="steps"><article class="step"><span class="stepNum">01</span><h3>Найдите тур</h3><p>Страна, город вылета, отель, даты, число ночей и туристов.</p></article><article class="step"><span class="stepNum">02</span><h3>Выберите предложение</h3><p>Сравните условия, итоговую стоимость и состав тура. Перейдите к подробностям.</p></article><article class="step"><span class="stepNum">03</span><h3>Проверьте и оплатите</h3><p>При подключённой системе бронирования и платёжном сервисе — подтверждение мест, договор и безопасная оплата на сайте.</p></article></div></div></section>
 <div class="wrap"><section class="finalCta"><div><h2>Путешествие начинается с поиска</h2><p>Выберите страну и даты. Все доступные к покупке предложения появятся в результатах поиска — без переписки.</p></div><a class="btn btnGold" href="#request">Искать туры ↗</a></section></div>
@@ -72,7 +72,7 @@ for(const c of sorted){const e=document.createElement("option");e.value=c.n;data
 $("dirTotal").textContent=countries.length+" направлений";
 let mode="all",visible=0,filtered=[],activeOffers=[],inventoryLoaded=false,inventoryError=false,inventoryLoading=true;
 function scrollToResults(){$("offers").scrollIntoView({behavior:"smooth",block:"start"});}
-function selectCountry(name){$("destination").value=name;runSearch(true);}
+function selectCountry(name){$("destination").value=name;runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();}
 function showCountries(){
  const search=$("destSearch").value.trim().toLocaleLowerCase("ru");
  filtered=sorted.filter(c=>(!search||c.n.toLocaleLowerCase("ru").includes(search))&&(mode==="all"||mode==="irk"&&c.i||mode==="routes"&&c.a||mode==="other"&&!c.i));
@@ -165,7 +165,7 @@ function runSearch(scroll=false){
  $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
  if(scroll)scrollToResults();
 }
-form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);});
+form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();});
 async function loadOffers(){
  inventoryLoading=true;
  try{
@@ -187,38 +187,66 @@ loadOffers();
 setInterval(loadOffers,60000);
 async function loadHotelReference(){
  const out=$("hotelGuideCards"),input=$("hotelGuideSearch"),more=$("hotelGuideMore");
- try{
-  const response=await fetch("./hotel-reference.json",{cache:"no-store"});
-  if(!response.ok)throw Error("REFERENCE_HTTP_"+response.status);
-  const data=await response.json();
-  if(data.schema!=="jamaica.hotel-reference.v1"||data.bookable!==false||!Array.isArray(data.hotels))throw Error("REFERENCE_INVALID");
-  const hotels=data.hotels.filter(h=>h&&h.bookable===false&&typeof h.hotel==="string"&&typeof h.country==="string"&&/^hotel_ref_\d{4}$/.test(h.id||""));
-  if(!hotels.length)throw Error("EMPTY_REFERENCE");
-  let all=false;
-  function render(){
-   const q=input.value.trim().toLocaleLowerCase("ru");
-   const found=hotels.filter(h=>!q||[h.hotel,h.country,h.region||""].join(" ").toLocaleLowerCase("ru").includes(q));
-   const showing=all?found:found.slice(0,28),frag=document.createDocumentFragment();
-   for(const h of showing){
-    const c=el("article","destination");
-    c.append(el("div","destMark","🏨"));
-    c.append(el("h3","",h.hotel));
-    c.append(el("p","",(h.region?h.region+" · ":"")+h.country+" · историческая запись, наличие не подтверждено"));
-    const link=el("a","askCountry","Подробнее об отеле →");
-    link.href="hotel.html?id="+encodeURIComponent(h.id);c.append(link);frag.append(c);
-   }
-   out.replaceChildren(frag);
-   if(!found.length)out.append(el("div","empty","По этому запросу отели в справочнике не найдены."));
-   $("hotelGuideCount").textContent=found.length+" отелей из "+hotels.length;
-   $("hotelGuideStatus").textContent="Справочные сведения; не являются текущими предложениями к продаже.";
-   more.hidden=all||found.length<=28;
+ let hotels=[],countries=[],visible=0,view=[];
+ const normalized=s=>(typeof s==="string"?s:"").trim().toLocaleLowerCase("ru");
+ function render(rebuild=true){
+  const q=normalized(input.value), country=normalized($("destination").value),
+        hotel=normalized($("hotelSearch").value);
+  if(rebuild){
+   view=hotels.filter(h=>(!country||normalized(h.country)===country)
+      &&(!hotel||normalized(h.name).includes(hotel))
+      &&(!q||normalized([h.country,h.name,h.resort,h.stars].join(" ")).includes(q)));
+   visible=0;out.replaceChildren();
   }
-  input.addEventListener("input",()=>{all=false;render();});
-  more.addEventListener("click",()=>{all=true;render();});
-  render();
+  const batch=view.slice(visible,visible+48),frag=document.createDocumentFragment();
+  for(const item of batch){
+   const c=el("article","destination");
+   c.append(el("div","destMark","🏨"));
+   c.append(el("h3","",item.name));
+   c.append(el("p","",(item.resort?item.resort+" · ":"")+item.country
+      +(item.stars?" · "+item.stars:"")+" · справочные сведения"));
+   const link=el("a","askCountry","Информация об отеле →");
+   link.href="hotel.html?id="+encodeURIComponent(item.id);
+   c.append(link);frag.append(c);
+  }
+  out.append(frag);visible+=batch.length;
+  if(!view.length)out.append(el("div","empty","По этим условиям отели в справочнике не найдены. Снимите фильтр страны или название отеля."));
+  $("hotelGuideCount").textContent=view.length.toLocaleString("ru-RU")+" отелей по запросу из "+hotels.length.toLocaleString("ru-RU");
+  $("hotelGuideStatus").textContent="Справочник обновлён; цены, наличие и даты требуют отдельного подтверждения.";
+  more.hidden=visible>=view.length;
+ }
+ window.jamaicaUpdateHotels=()=>render(true);
+ try{
+  const response=await fetch("./destination-directory.json",{cache:"no-store"});
+  if(!response.ok)throw Error("DIRECTORY_HTTP_"+response.status);
+  const data=await response.json();
+  if(data.schema!=="jamaica.destination-directory.v1"||
+     data.availability_verified!==false||data.quote_verified!==false||
+     !Array.isArray(data.hotels)||!Array.isArray(data.countries)||
+     data.hotels.length<500||data.hotels.length>120000)throw Error("DIRECTORY_INVALID");
+  countries=data.countries;
+  const countryNames=new Set(countries.map(c=>c.name));
+  hotels=data.hotels.filter(h=>h&&/^\d{7,20}$/.test(h.id||"")&&
+     typeof h.name==="string"&&h.name.length>=2&&countryNames.has(h.country));
+  if(!hotels.length)throw Error("HOTELS_EMPTY");
+  input.addEventListener("input",()=>render(true));
+  more.addEventListener("click",()=>render(false));
+  render(true);
  }catch(err){
-  $("hotelGuideCount").textContent="Справочник недоступен";
-  $("hotelGuideStatus").textContent="Загрузка сведений об отелях не удалась. Поиск стран и подтверждённых туров продолжает работать.";
+  $("hotelGuideCount").textContent="Каталог обновляется";
+  $("hotelGuideStatus").textContent="Не удалось загрузить расширенный справочник. Покажем ранее сохранённые варианты.";
+  try{
+   const response=await fetch("./hotel-reference.json",{cache:"no-store"});
+   if(!response.ok)throw Error("FALLBACK_HTTP");
+   const guide=await response.json();
+   if(guide.schema!=="jamaica.hotel-reference.v1"||!Array.isArray(guide.hotels))throw Error("FALLBACK_SCHEMA");
+   hotels=guide.hotels.map(h=>({id:h.id,name:h.hotel,country:h.country,resort:h.region,stars:""}));
+   input.addEventListener("input",()=>render(true));
+   more.addEventListener("click",()=>render(false));
+   render(true);
+  }catch(fallbackError){
+   $("hotelGuideStatus").textContent="Справочник гостиниц временно недоступен.";
+  }
  }
 }
 loadHotelReference();
