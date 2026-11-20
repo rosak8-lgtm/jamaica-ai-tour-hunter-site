@@ -3,6 +3,7 @@ import importlib.util
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -99,7 +100,7 @@ class Tests(unittest.TestCase):
 
     def test_disabled_github_deploy_key_prevents_publish(self):
         with self.assertRaises(publisher.CatalogHold):
-            with unittest.mock.patch.object(publisher,"KEY",Path("/some/nonexistent/key")):
+            with patch.object(publisher,"KEY",Path("/some/nonexistent/key")):
                 publisher.git_env()
 
 if __name__=="__main__":
