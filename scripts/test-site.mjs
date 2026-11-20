@@ -124,6 +124,10 @@ assert.equal(routeFeed.quote_verified,false);
 assert.equal(routeFeed.availability_verified,false);
 assert.ok(Array.isArray(routeFeed.routes));
 assert.ok(page.includes('id="routeCards"'));
+assert.ok(page.includes('id="routeCountryChips"'));
+assert.ok(page.includes('function renderRouteCountryChips()'));
+assert.ok(page.includes('renderRouteCountryChips();'));
+
 assert.ok(page.includes('route.html?id='));
 assert.ok(page.includes('route-discovery.json'));
 assert.ok(routePage.includes('destination-directory.json'));
