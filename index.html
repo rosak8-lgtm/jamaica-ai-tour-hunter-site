@@ -29,7 +29,7 @@
 <div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
 <div class="field wide"><label for="destination">Страна или направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Любая страна" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
 <div class="field short"><label for="dateFrom">Дата вылета</label><input id="dateFrom" name="dateFrom" type="date"></div>
-<div class="field short"><label for="nights">Ночей</label><input id="nights" name="nights" type="number" min="3" max="180" value="7" required></div>
+<div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option><option value="3">3 ночи</option><option value="4">4 ночи</option><option value="5">5 ночей</option><option value="7">7 ночей</option><option value="10">10 ночей</option><option value="12">12 ночей</option><option value="14">14 ночей</option><option value="21">21 ночь</option><option value="30">30 ночей</option><option value="60">60 ночей</option><option value="120">120 ночей</option><option value="180">180 ночей</option></select></div>
 <div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
 <div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
 <div class="field wide"><label for="budget">Максимальная цена на человека, ₽</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Без ограничения"></div>
@@ -40,8 +40,8 @@
 <div class="destToolbar"><input id="destSearch" type="search" placeholder="Поиск страны: Египет, Индонезия, Греция…" aria-label="Поиск страны"><span class="count" id="dirCount" aria-live="polite"></span></div>
 <div class="destinationGrid" id="destinationGrid" aria-live="polite" style="margin-top:20px"></div><button class="loadMore" type="button" id="loadMore">Показать ещё страны</button>
 <p class="micro" style="margin-top:18px">Отметка о городе вылета в справочнике не означает наличия рейса или тура на выбранную дату. Направления без подходящего готового маршрута проверяются индивидуально.</p></div></section>
-<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Найденные туры</h2><p>В результатах показываются только предложения с подтверждёнными рейсами, отелем, наличием и итоговой ценой. Без названий поставщиков.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
-<div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Укажите параметры поездки и нажмите «Показать доступные туры».</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
+<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Найденные туры</h2><p>Все страны доступны для поиска. Для каждого доступного тура открывается отдельная страница с информацией об отеле, перелётах, питании, цене и условиях.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
+<div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Выберите страну и параметры поездки. Туры с проверенной стоимостью появятся здесь после загрузки.</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
 <div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
 </div></section>
 <section class="section" id="how"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Покупка на JAMAICA</div><h2>От поиска до электронного заказа</h2><p>Все действия покупателя выполняются в интерфейсе JAMAICA. Данные о цене и доступности проверяются перед оплатой.</p></div></div><div class="steps"><article class="step"><span class="stepNum">01</span><h3>Найдите тур</h3><p>Страна, город вылета, отель, даты, число ночей и туристов.</p></article><article class="step"><span class="stepNum">02</span><h3>Выберите предложение</h3><p>Сравните условия, итоговую стоимость и состав тура. Перейдите к подробностям.</p></article><article class="step"><span class="stepNum">03</span><h3>Проверьте и оплатите</h3><p>При подключённой системе бронирования и платёжном сервисе — подтверждение мест, договор и безопасная оплата на сайте.</p></article></div></div></section>
@@ -63,9 +63,9 @@ const form=$("tourSearchForm");
 const datalist=$("countryDatalist");
 for(const c of sorted){const e=document.createElement("option");e.value=c.n;datalist.append(e);}
 $("dirTotal").textContent=countries.length+" направлений";
-let mode="all",visible=0,filtered=[],activeOffers=[],inventoryLoaded=false,inventoryError=false;
+let mode="all",visible=0,filtered=[],activeOffers=[],inventoryLoaded=false,inventoryError=false,inventoryLoading=true;
 function scrollToResults(){$("offers").scrollIntoView({behavior:"smooth",block:"start"});}
-function selectCountry(name){$("destination").value=name;$("request").scrollIntoView({behavior:"smooth",block:"start"});runSearch();}
+function selectCountry(name){$("destination").value=name;runSearch(true);}
 function showCountries(){
  const search=$("destSearch").value.trim().toLocaleLowerCase("ru");
  filtered=sorted.filter(c=>(!search||c.n.toLocaleLowerCase("ru").includes(search))&&(mode==="all"||mode==="irk"&&c.i||mode==="routes"&&c.a||mode==="other"&&!c.i));
@@ -75,13 +75,13 @@ function showCountries(){
  else appendCountries();
 }
 function appendCountries(){
- const part=filtered.slice(visible,visible+24),frag=document.createDocumentFragment();
+ const part=filtered.slice(visible,visible+300),frag=document.createDocumentFragment();
  for(const c of part){
   const article=el("article","destination");
   article.append(el("div","destMark",c.i?"✈":"🌴"));
   article.append(el("h3","",c.n));
   article.append(el("p","",c.i?"Иркутск указан среди городов вылета — конкретные даты проверяются поиском":c.a?"Направление есть в каталоге — поиск покажет доступные туры":"Направление в общем справочнике; доступность не подтверждена"));
-  const b=el("button","askCountry","Искать туры →");b.type="button";b.addEventListener("click",()=>selectCountry(c.n));article.append(b);frag.append(article);
+  const b=el("button","askCountry","Посмотреть туры →");b.type="button";b.addEventListener("click",()=>selectCountry(c.n));article.append(b);frag.append(article);
  }
  $("destinationGrid").append(frag);visible+=part.length;$("loadMore").hidden=visible>=filtered.length;
 }
@@ -114,7 +114,8 @@ function matching(o,q){
  if(o.origin.toLocaleLowerCase("ru")!==q.origin.toLocaleLowerCase("ru"))return false;
  if(q.country&&o.destination.toLocaleLowerCase("ru")!==q.country.toLocaleLowerCase("ru"))return false;
  if(q.date&&o.depart_date!==q.date)return false;
- if(o.nights!==q.nights||o.adults!==q.adults||o.children!==q.children)return false;
+ if(q.nights!==0&&o.nights!==q.nights)return false;
+ if(o.adults!==q.adults||o.children!==q.children)return false;
  if(q.budget>0 && o.total_rub/o.adults>q.budget)return false;
  if(q.hotel && !o.hotel.toLocaleLowerCase("ru").includes(q.hotel))return false;
  return true;
@@ -127,8 +128,8 @@ function offerCard(o){
  c.append(el("small","",Math.round(o.total_rub/2).toLocaleString("ru-RU")+" ₽ на человека при размещении вдвоём"));
  if(Number.isInteger(o.single_rub)&&o.single_rub>0)c.append(el("small","",o.single_rub.toLocaleString("ru-RU")+" ₽ за отдельное одноместное размещение"));
  c.append(el("small","", "Цена и места подтверждены на момент проверки; перед оплатой требуется повторная проверка"));
- const button=el("a","btn btnTeal","Выбрать и оформить →");
- button.href="checkout.html?offer="+encodeURIComponent(o.id);
+ const button=el("a","btn btnTeal","Подробнее о туре и отеле →");
+ button.href="tour.html?offer="+encodeURIComponent(o.id);
  c.append(button);
  return c;
 }
@@ -137,26 +138,29 @@ function setEmpty(title,message){
  $("noOffersTitle").textContent=title;
  $("noOffersText").textContent=message;
 }
-function runSearch(){
+function runSearch(scroll=false){
  if(!form.reportValidity())return;
  const q=filters();
  const found=activeOffers.filter(o=>matching(o,q)).sort((a,b)=>a.total_rub-b.total_rub);
  const cards=$("offerCards");cards.replaceChildren();
  $("offerCount").textContent=found.length+" подтверждённых предложений";
- if(!inventoryLoaded){
-  setEmpty("Каталог доступных туров сейчас не загружен","Данные о рейсах, цене и наличии временно недоступны. Продажа неподтверждённых предложений заблокирована.");
+ if(inventoryLoading){
+  setEmpty("Загружаем варианты путешествий…","Проверяем каталог опубликованных предложений. Поиск по всем направлениям доступен уже сейчас.");
+ }else if(!inventoryLoaded){
+  setEmpty("Не удалось загрузить актуальные предложения","Проверьте соединение и повторите поиск. Неподтверждённые цены не показываются.");
  }else if(!found.length){
-  setEmpty("По этим параметрам сейчас нет подтверждённых туров","Попробуйте другое направление, дату или число ночей. Варианты без актуальной проверки цены и мест в продажу не попадают.");
+  setEmpty("Нет подтверждённых туров по этим параметрам","Все страны доступны в каталоге направлений. Свежие туры появятся здесь автоматически после проверки цены, наличия мест и рейсов. Попробуйте другое направление, даты или город вылета.");
  }else{
   $("noOffers").classList.add("hide");
   const frag=document.createDocumentFragment();
   found.forEach(o=>frag.append(offerCard(o)));cards.append(frag);
  }
- $("offerStatus").textContent=inventoryLoaded?"Каталог показывает только свежие, проверенные предложения. Итоговая цена перепроверяется на этапе оформления.": "Данные о наличии временно недоступны — покупка закрыта.";
- scrollToResults();
+ $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
+ if(scroll)scrollToResults();
 }
-form.addEventListener("submit",e=>{e.preventDefault();runSearch();});
+form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);});
 async function loadOffers(){
+ inventoryLoading=true;
  try{
   const response=await fetch("./verified-offers.json",{cache:"no-store"});
   if(!response.ok)throw Error("FEED_HTTP_"+response.status);
@@ -164,15 +168,16 @@ async function loadOffers(){
   if(feed.schema!=="jamaica.verified-offers.v1"||!Array.isArray(feed.offers)||feed.offers.length>500)throw Error("BAD_FEED");
   const now=Date.now();
   activeOffers=feed.offers.filter(o=>strictOffer(o,now));
-  inventoryLoaded=true;inventoryError=false;
+  inventoryLoaded=true;inventoryError=false;inventoryLoading=false;
   $("offerStatus").textContent=activeOffers.length+" актуальных проверенных предложений в каталоге.";
  }catch(e){
-  inventoryLoaded=false;inventoryError=true;
+  inventoryLoaded=false;inventoryError=true;inventoryLoading=false;
   $("offerStatus").textContent="Сервис доступных предложений временно недоступен. Оплата отключена.";
  }
- runSearch();
+ runSearch(false);
 }
 loadOffers();
+setInterval(loadOffers,60000);
 })();
 </script>
 </body></html>
