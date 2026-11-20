@@ -1,0 +1,78 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#35194f"><meta name="robots" content="noindex,follow">
+<title>Маршрут, даты и отели — JAMAICA</title>
+<style>
+:root{--purple:#35194f;--ink:#2d2140;--teal:#007f86;--muted:#756b80;--bg:#fcfaf6;--line:#e8dee8}
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+a{text-decoration:none;color:var(--teal)}nav{background:var(--purple);color:#fff}
+.nav{max-width:1100px;padding:19px 16px;display:flex;justify-content:space-between;margin:auto;gap:14px}.nav a{color:white;font-weight:800}.logo{font-size:22px}
+main{max-width:1100px;margin:35px auto 70px;padding:0 16px}.tag{color:var(--teal);text-transform:uppercase;font-size:12px;font-weight:900;letter-spacing:1px}
+h1{font-size:clamp(29px,5vw,46px);line-height:1.12;margin:9px 0 15px}.sub{color:var(--muted)}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;margin:17px 0;box-shadow:0 12px 38px #2d174b0a}
+.notice{padding:15px;background:#fff6da;border:1px solid #ecd9aa;border-radius:13px;color:#65512c;margin:19px 0}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.kv div{border:1px solid #ece5ed;border-radius:12px;padding:11px}.kv span{color:var(--muted);font-size:12px;display:block}.kv b{font-size:16px;overflow-wrap:anywhere}
+.hotels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.hotel{border:1px solid var(--line);padding:16px;border-radius:16px;display:flex;flex-direction:column;gap:7px}.hotel h3{font-size:17px;margin:0;overflow-wrap:anywhere}.hotel small{color:var(--muted)}.hotel a{font-weight:850;margin-top:auto}
+input{width:min(450px,100%);padding:12px 15px;border:1px solid #ded5e2;border-radius:12px;font:inherit}button{border:1px solid #ddcfdf;background:white;color:var(--purple);font:inherit;border-radius:10px;padding:12px 20px;cursor:pointer;font-weight:800;margin:16px 0}button[hidden]{display:none}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #f5c452;outline-offset:2px}
+@media(max-width:740px){.hotels{grid-template-columns:1fr 1fr}}@media(max-width:450px){.hotels,.kv{grid-template-columns:1fr}}
+</style></head>
+<body><nav><div class="nav"><a class="logo" href="./">🦜 JAMAICA</a><a href="./#routes">← Назад к вариантам</a></div></nav>
+<main>
+<div class="tag">Маршрут и варианты размещения</div><h1 id="title">Загружаем маршрут…</h1>
+<p class="sub" id="subtitle">Ищем дату, длительность и связанные направления</p>
+<div class="notice" id="alert" role="status">Информация о маршрутах получена из прайс-листов. Наличие мест и итоговая стоимость конкретного тура не подтверждены.</div>
+<section class="card"><h2>Сведения о маршруте</h2><div class="kv" id="details"></div></section>
+<section class="card"><h2>Гостиницы в этом направлении</h2><p class="sub">Ниже отели из общего справочника выбранной страны. Это ещё не список гостиниц, доступных на конкретном рейсе или выбранные даты.</p>
+<input id="hotelSearch" type="search" placeholder="Название отеля или курорт…" aria-label="Поиск отеля"><p class="sub" id="hotelCount"></p>
+<div class="hotels" id="hotelList"></div><button id="more" type="button" hidden>Показать ещё</button></section>
+</main><script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const id=new URLSearchParams(location.search).get("id")||"";
+const add=(tag,text,parent)=>{const e=document.createElement(tag);e.textContent=text;parent.append(e);return e;};
+const info=(key,value)=>{const el=document.createElement("div");add("span",key,el);add("b",String(value),el);$("details").append(el);};
+async function init(){
+ if(!/^r_[a-f0-9]{24}$/.test(id)){$("title").textContent="Маршрут не выбран";return;}
+ try{
+  const [r1,r2]=await Promise.all([fetch("./route-discovery.json",{cache:"no-store"}),
+                                   fetch("./destination-directory.json",{cache:"no-store"})]);
+  if(!r1.ok||!r2.ok)throw Error("DATA_UNAVAILABLE");
+  const routes=await r1.json(),catalog=await r2.json();
+  if(routes.schema!=="jamaica.route-discovery.v1"||routes.bookable!==false||
+    !Array.isArray(routes.routes)||catalog.schema!=="jamaica.destination-directory.v1"||
+    !Array.isArray(catalog.hotels))throw Error("BAD_DATA_SCHEMA");
+  const route=routes.routes.find(x=>x&&x.id===id);
+  if(!route){$("title").textContent="Маршрут не найден";$("subtitle").textContent="Возможно, срок действия справочника изменился.";return;}
+  $("title").textContent=route.country+" — "+route.date;
+  $("subtitle").textContent=route.route;
+  info("Страна",route.country);info("Вылет",route.origin);info("Дата",route.date);
+  info("Возможная продолжительность",route.nights.join(", ")+" ночей");
+  info("Цена и наличие","Не подтверждены — онлайн-покупка этого маршрута недоступна");
+  const hotels=catalog.hotels.filter(h=>h&&h.country===route.country);
+  let visible=0,found=hotels;
+  function show(reset){
+    if(reset){
+      visible=0;$("hotelList").replaceChildren();
+      const q=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
+      found=hotels.filter(h=>!q||(h.name+" "+h.resort).toLocaleLowerCase("ru").includes(q));
+    }
+    const frag=document.createDocumentFragment();
+    for(const h of found.slice(visible,visible+24)){
+      const box=document.createElement("article");box.className="hotel";
+      add("h3",h.name,box);add("small",(h.resort||route.country)+(h.stars?" · "+h.stars:""),box);
+      const link=add("a","Информация об отеле →",box);link.href="hotel.html?id="+encodeURIComponent(h.id);
+      frag.append(box);
+    }
+    $("hotelList").append(frag);visible=Math.min(found.length,visible+24);
+    $("hotelCount").textContent=found.length.toLocaleString("ru-RU")+" гостиниц в справочнике страны";
+    $("more").hidden=visible>=found.length;
+  }
+  $("hotelSearch").addEventListener("input",()=>show(true));
+  $("more").addEventListener("click",()=>show(false));
+  show(true);
+ }catch(e){$("title").textContent="Информация временно недоступна";$("alert").textContent="Не удалось получить проверенный справочник. Денежные операции не выполнялись.";}
+}
+init();
+})();
+</script></body></html>
