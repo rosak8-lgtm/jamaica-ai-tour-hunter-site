@@ -12,10 +12,17 @@ def offer():
       "price_scope_verified":True,"total_two_verified":True,
       "best_price_required":False,"total_rub":95000,
       "adults":2,"children":0,
+      "origin":"Иркутск","destination":"Индонезия",
+      "hotel":"CI Test Hotel","hotel_id":"102610001486","room":"DBL HB",
+      "depart_date":(now+timedelta(days=7)).date().isoformat(),"nights":7,
       "quote_verified_at":(now-timedelta(minutes=1)).isoformat(),
       "expires_at":(now+timedelta(minutes=30)).isoformat()}
 def quote(price=95000,status="IN_STOCK",**patch):
-    v={"currency":"RUB","total_rub":price,"flight_out_available":True,
+    o=offer()
+    v={"offer_id":o["id"],"origin":o["origin"],"destination":o["destination"],
+       "hotel_id":o["hotel_id"],"room":o["room"],"depart_date":o["depart_date"],
+       "nights":o["nights"],"adults":o["adults"],"children":o["children"],
+       "currency":"RUB","total_rub":price,"flight_out_available":True,
        "flight_back_available":True,"hotel_stop":False,"hotel_status":status,
        "two_adults_price_verified":True,"supplier_quote_verified":True,
        "expires_at":(datetime.now(timezone.utc)+timedelta(minutes=10)).isoformat()}
@@ -130,6 +137,27 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.supplier.checks,["BEFORE_CONTRACT","AFTER_SIGNATURE_BEFORE_PAYMENT"])
         self.assertEqual(len(self.psp.created),1)
         self.assertEqual(self.supplier.bookings,[])
+    def test_first_quote_for_another_hotel_never_creates_contract(self):
+        self.supplier.checks_by_stage["BEFORE_CONTRACT"]=quote(hotel_id="DIFFERENT_HOTEL")
+        with self.assertRaises(NotAvailable):
+            self.create()
+        self.assertEqual(self.repo.orders,{})
+        self.assertEqual(self.psp.created,[])
+    def test_second_quote_wrong_room_blocks_payment(self):
+        id=self.signed()
+        self.supplier.checks_by_stage["AFTER_SIGNATURE_BEFORE_PAYMENT"]=quote(room="SGL BB")
+        with self.assertRaises(NotAvailable):
+            self.engine.initiate_payment(id)
+        self.assertEqual(self.psp.created,[])
+    def test_third_quote_wrong_departure_or_adults_blocks_booking(self):
+        for field,value in (("depart_date","2031-01-01"),("adults",1)):
+            instance=Tests()
+            instance.setUp()
+            oid=instance.paid()
+            instance.supplier.checks_by_stage["AFTER_PAYMENT_BEFORE_BOOKING"]=quote(**{field:value})
+            self.assertEqual(instance.engine.reconcile_payment_and_book(oid),"REFUND_REQUIRED")
+            self.assertEqual(instance.supplier.bookings,[])
+            self.assertEqual(len(instance.psp.refunds),1)
     def test_price_changed_before_payment_blocks_psp(self):
         id=self.signed()
         self.supplier.checks_by_stage["AFTER_SIGNATURE_BEFORE_PAYMENT"]=quote(price=96000)
