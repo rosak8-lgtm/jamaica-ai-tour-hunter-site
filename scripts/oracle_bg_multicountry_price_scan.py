@@ -31,7 +31,7 @@ def select_candidates(feed,today=None,limit=MAX_CANDIDATES):
             continue
         try:day=date.fromisoformat(item.get("depart_date",""))
         except (ValueError,TypeError):continue
-        if not today+timedelta(days=2)<=day<=today+timedelta(days=180):
+        if not today+timedelta(days=1)<=day<=today+timedelta(days=180):
             continue
         country=item.get("country")
         if not isinstance(country,str) or country=="Россия":
@@ -46,6 +46,37 @@ def select_candidates(feed,today=None,limit=MAX_CANDIDATES):
     priority=("Индонезия","Турция","Шри-Ланка","Таиланд")
     countries=sorted(found,key=lambda name:(priority.index(name) if name in priority else 100,name))
     return [found[name][1] for name in countries[:limit]]
+
+def catalog_summary(feed, today=None):
+    """Safe aggregate reasons why a public catalog cannot provide candidates."""
+    today=today or datetime.now(timezone.utc).date()
+    rows=feed.get("previews",[])
+    if not isinstance(rows,list):
+        raise bg.SyncHold("PREVIEW_ROWS_INVALID")
+    summary={"total":0,"future":0,"future_non_domestic":0,
+             "future_non_domestic_unverified":0,"countries":set(),
+             "earliest_future":None,"latest_future":None}
+    for item in rows:
+        if not isinstance(item,dict):
+            continue
+        summary["total"]+=1
+        try:day=date.fromisoformat(item.get("depart_date",""))
+        except (ValueError,TypeError):continue
+        if day<=today or day>today+timedelta(days=180):
+            continue
+        summary["future"]+=1
+        d=day.isoformat()
+        summary["earliest_future"]=min(summary["earliest_future"] or d,d)
+        summary["latest_future"]=max(summary["latest_future"] or d,d)
+        if item.get("country")!="Россия":
+            summary["future_non_domestic"]+=1
+            if (item.get("bookable") is False and item.get("quote_verified") is False and
+                item.get("availability_verified") is False and item.get("flight_verified") is False):
+                summary["future_non_domestic_unverified"]+=1
+                if isinstance(item.get("country"),str):
+                    summary["countries"].add(item["country"])
+    summary["countries"]=sorted(summary["countries"])
+    return summary
 
 def run(directory,feed,api,limit=MAX_CANDIDATES,today=None):
     result=[]
@@ -79,6 +110,13 @@ def main():
     bg.BASE="https://export.bgoperator.ru/"
     results=run(directory,feed,bg.ApiClient(login,password),args.limit)
     print("JAMAICA_MULTICOUNTRY_PRICE_REFERENCE_SCAN_V1")
+    meta=catalog_summary(feed)
+    print("CATALOG_ROWS="+str(meta["total"]))
+    print("FUTURE_PREVIEWS="+str(meta["future"]))
+    print("FUTURE_INTERNATIONAL_PREVIEWS="+str(meta["future_non_domestic_unverified"]))
+    print("FUTURE_COUNTRIES="+",".join(meta["countries"]))
+    print("EARLIEST_FUTURE="+str(meta["earliest_future"] or "NONE"))
+    print("LATEST_FUTURE="+str(meta["latest_future"] or "NONE"))
     print("COUNTRIES_CHECKED="+str(len(results)))
     for i,item in enumerate(results,1):
         print("PREVIEW_"+str(i)+"="+item["preview_id"])
