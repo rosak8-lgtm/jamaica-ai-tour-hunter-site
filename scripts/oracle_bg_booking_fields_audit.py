@@ -51,8 +51,8 @@ def assess_row(row,payload,listing,selected,hotels):
     }
 
 def audit(directory,feed,api,limit=3):
-    if directory.get("schema")!="jamaica.destination-directory.v1" or
-       feed.get("schema")!="jamaica.tour-previews.v1":
+    if (directory.get("schema")!="jamaica.destination-directory.v1" or
+        feed.get("schema")!="jamaica.tour-previews.v1"):
         raise bg.SyncHold("BAD_FEED_SCHEMA")
     chosen=scan.select_candidates(feed,limit=limit)
     hotels={str(h["id"]):h for h in directory.get("hotels",[])
