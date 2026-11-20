@@ -85,6 +85,29 @@ def quote_is_valid(check:dict[str,Any]|None, price:int, *, allow_on_request:bool
         return False
     return True
 
+def quote_matches_signed_offer(offer:dict[str,Any]|None, quote:dict[str,Any]|None)->bool:
+    """Requote #1, #2 and #3 MUST bind to the identical itinerary and party.
+
+    The private supplier adapter must supply these normalized, independently
+    checked fields from the official response. Do not simply echo browser data.
+    """
+    if not isinstance(offer,dict) or not isinstance(quote,dict):
+        return False
+    fields=("origin","destination","hotel_id","room","depart_date","nights",
+            "adults","children")
+    if not all(k in quote and k in offer for k in fields):
+        return False
+    if quote.get("offer_id")!=offer.get("id"):
+        return False
+    for key in fields:
+        if key in ("hotel_id","room","origin","destination","depart_date"):
+            if str(quote[key])!=str(offer[key]):
+                return False
+        elif type(quote[key]) is not int or type(offer[key]) is not int or quote[key]!=offer[key]:
+            return False
+    return True
+
+
 def contract_digest(content:dict[str,Any])->str:
     return hashlib.sha256(json.dumps(content,sort_keys=True,separators=(",",":"),
                                       ensure_ascii=False).encode()).hexdigest()
@@ -114,8 +137,8 @@ class ContractFirstEngine:
 
     def _check(self, offer, stage, price, allow_on_request):
         quote=self.supplier.check(offer, stage)
-        if not isinstance(quote,dict):
-            raise NotAvailable("Supplier did not return an authoritative quote")
+        if not isinstance(quote,dict) or not quote_matches_signed_offer(offer,quote):
+            raise NotAvailable("Supplier quote not linked to exact signed itinerary or party")
         if not quote_is_valid(quote,price,allow_on_request=allow_on_request):
             if quote.get("currency")=="RUB" and quote.get("total_rub")!=price:
                 raise PriceChanged("Supplier price changed; new contract consent required")
@@ -156,6 +179,13 @@ class ContractFirstEngine:
             "hotel_status_at_draft":check["hotel_status"],
             "hotel_on_request_accepted":bool(on_request_accepted),
             "contract_kind":"tourism_service_agreement",
+            "itinerary":{
+                "origin":offer["origin"],"destination":offer["destination"],
+                "hotel":offer["hotel"],"hotel_id":offer["hotel_id"],
+                "room":offer["room"],"depart_date":offer["depart_date"],
+                "nights":offer["nights"],"adults":offer["adults"],
+                "children":offer["children"],
+            },
         }
         digest=contract_digest(contents)
         self.repo.create_order({
