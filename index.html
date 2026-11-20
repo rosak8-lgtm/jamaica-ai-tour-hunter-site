@@ -43,6 +43,10 @@
 <section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Результаты поиска путешествий</h2><p>Сначала отображаются подтверждённые туры, затем ниже — варианты отелей по всем направлениям. Без указания страны показывается полный справочник; фильтры сужают результаты.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
 <div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Выберите страну и параметры поездки. Туры с проверенной стоимостью появятся здесь после загрузки.</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
 <div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
+<div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
+<div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
+<div class="offerCards" id="previewCards" aria-live="polite"></div>
+<button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 </div></section>
 <section class="section" id="routes"><div class="wrap">
 <div class="sectionHead"><div><div class="sectionTag">Маршруты и даты</div><h2>Возможные вылеты и продолжительность</h2><p>После авторизованного обновления здесь появятся маршруты и даты из прайс-листов. Это предварительные варианты: подтверждение мест, отеля и итоговой цены производится отдельно.</p></div><span class="count" id="routeCount">Загрузка направлений…</span></div>
@@ -80,7 +84,7 @@ for(const c of sorted){const e=document.createElement("option");e.value=c.n;data
 $("dirTotal").textContent=countries.length+" направлений";
 let mode="all",visible=0,filtered=[],activeOffers=[],inventoryLoaded=false,inventoryError=false,inventoryLoading=true;
 function scrollToResults(){$("offers").scrollIntoView({behavior:"smooth",block:"start"});}
-function selectCountry(name){$("destination").value=name;runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();}
+function selectCountry(name){$("destination").value=name;runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();}
 function showCountries(){
  const search=$("destSearch").value.trim().toLocaleLowerCase("ru");
  filtered=sorted.filter(c=>(!search||c.n.toLocaleLowerCase("ru").includes(search))&&(mode==="all"||mode==="irk"&&c.i||mode==="routes"&&c.a||mode==="other"&&!c.i));
@@ -336,6 +340,66 @@ async function loadRouteDiscovery(){
   $("routeStatus").textContent="Не удалось загрузить справочник маршрутов. Каталог отелей доступен ниже.";
  }
 }
+
+let previewRecords=[],previewVisible=0;
+let previewsLoaded=false;
+function renderTourPreviews(reset=true){
+ const target=$("previewCards"),more=$("previewMore");
+ if(reset){target.replaceChildren();previewVisible=0;}
+ const origin=$("departure").value.trim().toLocaleLowerCase("ru");
+ const country=$("destination").value.trim().toLocaleLowerCase("ru");
+ const date=$("dateFrom").value;
+ const nights=Number($("nights").value);
+ const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
+ const list=previewRecords.filter(x=>
+   (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
+   (!country||x.country.toLocaleLowerCase("ru")===country)&&
+   (!date||x.depart_date===date)&&
+   (!nights||x.nights===nights)&&
+   (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))
+ );
+ list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
+ const frag=document.createDocumentFragment();
+ for(const x of list.slice(previewVisible,previewVisible+30)){
+   const card=el("article","offerCard");
+   card.append(el("h3","",x.country+" · "+x.hotel));
+   card.append(el("small","",x.origin+" · "+x.depart_date+" · "+x.nights+" ночей"));
+   card.append(el("div","",x.resort||x.country));
+   card.append(el("small","",x.room));
+   card.append(el("small","", "Предварительный вариант: стоимость, рейсы и свободные места не подтверждены."));
+   const a=el("a","btn btnWhite","Посмотреть отель →");
+   a.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
+   card.append(a);frag.append(card);
+ }
+ target.append(frag);
+ previewVisible=Math.min(list.length,previewVisible+30);
+ more.hidden=previewVisible>=list.length;
+ $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" конкретных предварительных вариантов по выбранным параметрам":
+ "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
+}
+window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
+$("previewMore").addEventListener("click",()=>renderTourPreviews(false));
+async function loadTourPreviews(){
+ try{
+  const response=await fetch("./tour-previews.json",{cache:"no-store"});
+  if(!response.ok)throw Error("PREVIEW_FEED_HTTP");
+  const data=await response.json();
+  if(data.schema!=="jamaica.tour-previews.v1"||data.bookable!==false||
+     data.quote_verified!==false||data.availability_verified!==false||
+     !Array.isArray(data.previews)||data.previews.length>2000)throw Error("PREVIEW_FEED_INVALID");
+  previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
+    /^\d{7,20}$/.test(x.hotel_id||"")&&
+    typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
+    typeof x.origin==="string"&&typeof x.resort==="string"&&
+    /^\d{4}-\d{2}-\d{2}$/.test(x.depart_date||"")&&
+    x.depart_date>=new Date().toISOString().slice(0,10)&&
+    Number.isInteger(x.nights)&&x.nights>=3&&x.nights<=180&&
+    x.bookable===false&&x.quote_verified===false&&
+    x.availability_verified===false&&x.flight_verified===false);
+  previewsLoaded=true;renderTourPreviews(true);
+ }catch(e){previewsLoaded=false;renderTourPreviews(true);}
+}
+loadTourPreviews();
 loadRouteDiscovery();
 })();
 </script>
