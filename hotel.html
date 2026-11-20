@@ -22,7 +22,7 @@ footer{color:var(--muted);font-size:12px;padding:18px 0}.hide{display:none}
 <h2 style="margin-top:24px">Об отеле</h2>
 <p id="description">Информация об отеле пока загружается.</p>
 <div id="meals"></div></div>
-<div class="box"><h2>Номера, встречавшиеся в каталоге</h2><ul id="rooms"></ul><p class="meta">Список категорий номера относится к историческим данным, а не к текущему наличию.</p></div>
+<div class="box"><h2>Сведения о размещении и категории</h2><ul id="rooms"></ul><p class="meta">Этот справочник не отображает актуальные свободные номера. Выбор доступного предложения происходит в поиске туров.</p></div>
 <a href="./#request" class="link">Найти доступные туры в JAMAICA</a>
 </main><footer class="wrap">JAMAICA · Справочный каталог отелей не является предложением к продаже. Реальное оформление доступно только по свежим подтверждённым турам.</footer>
 <script>
@@ -31,22 +31,51 @@ footer{color:var(--muted);font-size:12px;padding:18px 0}.hide{display:none}
 const $=id=>document.getElementById(id),id=new URLSearchParams(location.search).get("id")||"";
 function text(id,v){$(id).textContent=v;}
 async function load(){
- if(!/^hotel_ref_\d{4}$/.test(id)){text("name","Отель не выбран");text("description","Вернитесь к каталогу и выберите гостиницу.");return;}
+ const official=/^\d{7,20}$/.test(id);
+ const legacy=/^hotel_ref_\d{4}$/.test(id);
+ if(!official&&!legacy){
+   text("name","Отель не выбран");
+   text("description","Вернитесь к каталогу и выберите гостиницу.");
+   return;
+ }
  try{
-  const response=await fetch("./hotel-reference.json",{cache:"no-store"});
-  if(!response.ok)throw Error("NO_REFERENCE");
+  const path=official?"./destination-directory.json":"./hotel-reference.json";
+  const response=await fetch(path,{cache:"no-store"});
+  if(!response.ok)throw Error("DIRECTORY_NOT_AVAILABLE");
   const data=await response.json();
-  if(data.schema!=="jamaica.hotel-reference.v1"||data.bookable!==false||!Array.isArray(data.hotels))throw Error("BAD_REFERENCE");
-  const h=data.hotels.find(h=>h&&h.id===id);
-  if(!h||typeof h.hotel!=="string"||!h.country||h.bookable!==false)throw Error("HOTEL_NOT_FOUND");
-  text("name",h.hotel);text("location",h.country+(h.region?" · "+h.region:""));
-  text("description","Исторические записи подтверждают, что этот отель присутствовал в результатах поиска. Актуальные услуги, категория гостиницы и возможности размещения должны быть проверены отдельно.");
-  const meals=Array.isArray(h.meals)?h.meals:[];
-  for(const value of meals){if(!/^(BB|HB|FB|AI|AO|RO|UAI)$/.test(value))continue;const tag=document.createElement("span");tag.className="pill";tag.textContent="Встречался код питания: "+value;$("meals").append(tag);}
-  const rooms=Array.isArray(h.rooms)?h.rooms:[];
-  if(!rooms.length){const li=document.createElement("li");li.textContent="Сведения о номерах не подтверждены";$("rooms").append(li);}
-  for(const room of rooms.slice(0,6)){if(typeof room!=="string")continue;const li=document.createElement("li");li.textContent=room;$("rooms").append(li);}
- }catch(e){text("name","Не удалось загрузить сведения");text("description","Данные справочника отелей временно недоступны. Попробуйте обновить страницу.");}
+  if(official){
+   if(data.schema!=="jamaica.destination-directory.v1"||
+     data.quote_verified!==false||data.availability_verified!==false||
+     !Array.isArray(data.hotels)||!Array.isArray(data.countries))throw Error("DIRECTORY_INVALID");
+   const hotel=data.hotels.find(h=>h&&h.id===id);
+   if(!hotel||typeof hotel.name!=="string"||hotel.name.length<2)throw Error("HOTEL_NOT_FOUND");
+   text("name",hotel.name);
+   text("location",hotel.country+(hotel.resort?" · "+hotel.resort:"")+(hotel.stars?" · "+hotel.stars:""));
+   text("description","Отель есть в обновлённом справочнике. Это подтверждает его присутствие в каталоге, но не подтверждает наличие мест, конкретные условия размещения или цену на выбранную дату.");
+   const tags=[["Страна",hotel.country],["Курорт",hotel.resort||"Не указан"],["Категория",hotel.stars||"Не указана"]];
+   for(const [key,value] of tags){
+    const li=document.createElement("li");li.textContent=key+": "+value;$("rooms").append(li);
+   }
+   text("warning","Справочная карточка: наличие номеров, даты, туры, питание и итоговые цены не подтверждены. Уточняйте конкретные предложения в разделе поиска.");
+  }else{
+   if(data.schema!=="jamaica.hotel-reference.v1"||data.bookable!==false||!Array.isArray(data.hotels))throw Error("ARCHIVED_DIRECTORY_INVALID");
+   const hotel=data.hotels.find(h=>h&&h.id===id);
+   if(!hotel||typeof hotel.hotel!=="string"||hotel.bookable!==false)throw Error("HOTEL_NOT_FOUND");
+   text("name",hotel.hotel);
+   text("location",hotel.country+(hotel.region?" · "+hotel.region:""));
+   text("description","Отель встречался в ранее найденных вариантах путешествий. Текущие условия размещения, доступные даты и стоимость в исторических записях не подтверждены.");
+   for(const meal of Array.isArray(hotel.meals)?hotel.meals:[]){
+    if(!/^(BB|HB|FB|AI|AO|RO|UAI)$/.test(meal))continue;
+    const tag=document.createElement("span");tag.className="pill";tag.textContent="Ранее встречался вариант питания: "+meal;$("meals").append(tag);
+   }
+   for(const room of (Array.isArray(hotel.rooms)?hotel.rooms:[]).slice(0,6)){
+    const li=document.createElement("li");li.textContent=room;$("rooms").append(li);
+   }
+  }
+ }catch(err){
+   text("name","Не удалось загрузить сведения");
+   text("description","Информация об отеле временно недоступна. Вернитесь к поиску направлений.");
+ }
 }
 load();
 })();
