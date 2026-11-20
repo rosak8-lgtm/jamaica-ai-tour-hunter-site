@@ -51,22 +51,54 @@ def safe_url(entry, country_id):
     return DETAIL_BASE + "?" + urllib.parse.urlencode(values)
 
 
+SAFE_ENTRY_FIELDS = {
+    "hotel", "room", "town", "tour_date", "aircompany", "dt",
+    "duration", "o_duration", "id_hotel", "id_ns", "quota",
+    "prices", "isstop", "flights", "id_price"
+}
+SAFE_PRICE_FIELDS = {"amount", "RUR", "ag", "isstop", "concr"}
+
 def shape(raw):
-    """Inspect JSON shape, never expose raw operator content."""
+    """Report only allowlisted key names and aggregate counts; never raw values."""
+    empty = {"format": "NON_JSON", "root": "UNKNOWN", "rows": 0,
+             "fields": [], "entry_fields": [], "price_fields": [],
+             "price_rows": 0, "amount_present": 0, "rur_present": 0,
+             "adult_pair_markers": 0, "row_stop_markers": 0}
     try:
         data = json.loads(raw)
     except (ValueError, UnicodeDecodeError):
-        return {"format": "NON_JSON", "root": "UNKNOWN", "rows": 0, "fields": []}
-    if isinstance(data, dict):
-        keys = sorted(k for k in data if k in SAFE_FIELDS)
-        entries = data.get("entries")
-        return {"format": "JSON", "root": "OBJECT",
-                "rows": len(entries) if isinstance(entries, list) else 0,
-                "fields": keys}
-    if isinstance(data, list):
-        return {"format": "JSON", "root": "ARRAY",
-                "rows": len(data), "fields": []}
-    return {"format": "JSON", "root": "OTHER", "rows": 0, "fields": []}
+        return empty
+    if not isinstance(data, (dict, list)):
+        return {**empty, "format": "JSON", "root": "OTHER"}
+    entries = data.get("entries") if isinstance(data, dict) else data
+    result = {**empty, "format": "JSON",
+              "root": "OBJECT" if isinstance(data, dict) else "ARRAY",
+              "fields": sorted(k for k in data if k in SAFE_FIELDS) if isinstance(data, dict) else []}
+    if not isinstance(entries, list):
+        return result
+    result["rows"] = len(entries)
+    entry_keys, price_keys = set(), set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        entry_keys.update(entry.keys() & SAFE_ENTRY_FIELDS)
+        if entry.get("isstop"):
+            result["row_stop_markers"] += 1
+        for price in entry.get("prices", []) if isinstance(entry.get("prices"), list) else []:
+            if not isinstance(price, dict):
+                continue
+            result["price_rows"] += 1
+            price_keys.update(price.keys() & SAFE_PRICE_FIELDS)
+            if str(price.get("amount", "")).strip():
+                result["amount_present"] += 1
+            if str(price.get("RUR", "")).strip():
+                result["rur_present"] += 1
+            ag = str(price.get("ag", ""))
+            if "12+" in ag or "14-99" in ag:
+                result["adult_pair_markers"] += 1
+    result["entry_fields"] = sorted(entry_keys)
+    result["price_fields"] = sorted(price_keys)
+    return result
 
 
 def probe(directory, api, max_countries=MAX_COUNTRIES):
@@ -74,9 +106,11 @@ def probe(directory, api, max_countries=MAX_COUNTRIES):
                  if c.get("has_tour_catalog") and bg.CITY_ID in c.get("origins", [])]
     outcomes = []
     selected = 0
+    attempts = 0
     for country in countries:
-        if selected >= max_countries:
+        if selected >= max_countries or attempts >= 12:
             break
+        attempts += 1
         query = urllib.parse.urlencode({
             "action": "files", "flt": country["id"],
             "flt2": bg.CITY_ID, "xml": "11"
@@ -101,7 +135,9 @@ def probe(directory, api, max_countries=MAX_COUNTRIES):
                 ValueError, KeyError, TimeoutError):
             outcomes.append({"country": bg.clean(country.get("name"), 60),
                              "result": {"format": "UNVERIFIED", "root": "UNKNOWN",
-                                        "rows": 0, "fields": []}})
+                                        "rows": 0, "fields": [], "entry_fields": [], "price_fields": [],
+                                        "price_rows": 0, "amount_present": 0, "rur_present": 0,
+                                        "adult_pair_markers": 0, "row_stop_markers": 0}})
     return outcomes
 
 
@@ -123,7 +159,8 @@ def main():
     client = bg.ApiClient(login, password)
     results = probe(directory, client, args.max_countries)
     print("JAMAICA_DETAIL_PRICE_PROBE_V1")
-    print("COUNTRIES_INSPECTED=" + str(len(results)))
+    print("COUNTRIES_ATTEMPTED=" + str(len(results)))
+    print("COUNTRIES_DETAIL_JSON=" + str(sum(x["result"]["format"] == "JSON" for x in results)))
     for i, row in enumerate(results, 1):
         result = row["result"]
         print("COUNTRY_" + str(i) + "=" + row["country"])
@@ -131,6 +168,13 @@ def main():
         print("ROOT_" + str(i) + "=" + result["root"])
         print("ROWS_" + str(i) + "=" + str(result["rows"]))
         print("STRUCTURE_" + str(i) + "=" + ",".join(result["fields"]))
+        print("ENTRY_FIELDS_" + str(i) + "=" + ",".join(result["entry_fields"]))
+        print("PRICE_FIELDS_" + str(i) + "=" + ",".join(result["price_fields"]))
+        print("PRICE_ROWS_" + str(i) + "=" + str(result["price_rows"]))
+        print("AMOUNT_PRESENT_" + str(i) + "=" + str(result["amount_present"]))
+        print("RUR_PRESENT_" + str(i) + "=" + str(result["rur_present"]))
+        print("ADULT_MARKERS_" + str(i) + "=" + str(result["adult_pair_markers"]))
+        print("ROW_STOP_MARKERS_" + str(i) + "=" + str(result["row_stop_markers"]))
     print("NO_PRICE_NO_BOOKING_NO_SECRET_EXPORTED=YES")
     if not results or not any(x["result"]["format"] == "JSON" for x in results):
         print("DETAIL_PRICE_NOT_YET_CONFIRMED")
