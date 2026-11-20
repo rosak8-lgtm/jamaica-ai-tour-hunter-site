@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#35194f"><meta name="robots" content="noindex,follow">
+<meta name="description" content="JAMAICA — подробности путешествия: отель, размещение, перелёт и условия тура">
+<title>Информация о туре и отеле — JAMAICA</title>
+<style>
+:root{--violet:#35194f;--violet2:#57297d;--ink:#2d2140;--muted:#73697c;--teal:#007f86;--gold:#f5c452;--paper:#fcfaf6;--border:#e8dfe8}
+*{box-sizing:border-box}body{background:var(--paper);margin:0;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+nav{background:var(--violet);color:white}.nav{width:min(1120px,calc(100% - 34px));margin:auto;min-height:75px;display:flex;align-items:center;justify-content:space-between;gap:14px}.logo{font-size:23px;font-weight:900;letter-spacing:1px}.back{font-size:14px;font-weight:700}
+main{width:min(1120px,calc(100% - 34px));margin:34px auto 80px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--teal)}h1{font-size:clamp(29px,4.2vw,45px);line-height:1.14;margin:10px 0 15px}h2{font-size:22px;margin:0 0 15px}.subtitle{color:var(--muted);margin:0 0 24px}.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.85fr);gap:20px;align-items:start}.card{background:white;border:1px solid var(--border);border-radius:22px;padding:24px;box-shadow:0 12px 34px #30144b0a;margin-bottom:20px}.card:last-child{margin-bottom:0}.hero{height:300px;border-radius:18px;background:radial-gradient(circle at 75% 20%,#f2c661 0,transparent 28%),linear-gradient(135deg,#2aa3ad 0%,#62c5b1 50%,#f1d6a2 100%);display:grid;place-items:center;position:relative;overflow:hidden}.heroIcon{font-size:90px;filter:drop-shadow(0 10px 10px #03484e66)}.heroLegend{position:absolute;bottom:10px;left:12px;right:12px;text-align:center;background:#ffffffe8;border-radius:11px;padding:8px 11px;color:#534861;font-size:12px;font-weight:750}.hero img{width:100%;height:100%;object-fit:cover;display:block}.gallery{display:flex;gap:9px;flex-wrap:wrap;margin:11px 0}.gallery button{width:76px;height:60px;background:#f2f7f3;border:1px solid var(--border);border-radius:9px;overflow:hidden;padding:0}.gallery img{width:100%;height:100%;object-fit:cover}.badge{display:inline-flex;align-items:center;gap:6px;color:#146363;font-size:12px;font-weight:850;background:#e9f8f4;border-radius:40px;padding:6px 11px;margin:0 6px 7px 0}.specs{display:grid;grid-template-columns:1fr 1fr;gap:11px}.spec{background:#faf8fb;border:1px solid #f0e8f0;border-radius:13px;padding:13px;min-width:0}.spec small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}.spec b{font-weight:800;overflow-wrap:anywhere}.line{padding:12px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px}.line:last-child{border:0}.line span:first-child{color:var(--muted)}.line strong{max-width:57%;text-align:right;overflow-wrap:anywhere}.price{font-size:30px;color:var(--violet);font-weight:950;line-height:1.25}.primary{display:block;text-align:center;background:var(--teal);color:white;font-weight:850;border-radius:14px;padding:14px 18px;border:0;min-height:50px}.primary:hover{background:#00686e}.off{pointer-events:none;opacity:.55}.status{border:1px solid #e8d9a3;background:#fff8e5;color:#6e5928;padding:17px;border-radius:16px;margin:0 0 22px}.status.ok{background:#e8f7f4;border-color:#bee2dd;color:#225e59}.small{font-size:13px;color:var(--muted)}.terms{white-space:pre-wrap;overflow-wrap:anywhere}footer{border-top:1px solid var(--border);padding:24px 0;color:var(--muted);font-size:13px}.hide{display:none!important}
+@media(max-width:790px){.layout{grid-template-columns:1fr}.hero{height:245px}}@media(max-width:430px){.specs{grid-template-columns:1fr}.card{padding:17px}main{margin-top:24px}}
+</style>
+</head>
+<body>
+<nav><div class="nav"><a class="logo" href="./">🦜 JAMAICA</a><a class="back" href="./#offers">← Назад к поиску туров</a></div></nav>
+<main>
+<div class="eyebrow">Подробности путешествия</div>
+<h1 id="tourTitle">Загружаем информацию о туре…</h1>
+<p class="subtitle" id="tourSubtitle">Проверяем гостиницу, даты, состав тура и подтверждённую стоимость</p>
+<div class="status" id="tourStatus" role="status" aria-live="polite">Загрузка данных…</div>
+<div class="layout">
+<div>
+<section class="card" aria-labelledby="hotelHeading">
+<div class="hero" id="hotelHero"><span class="heroIcon" aria-hidden="true">🌴</span><div class="heroLegend" id="photoStatus">Изображения отеля появятся после получения разрешённых фотографий</div></div>
+<div id="photoThumbnails" class="gallery"></div>
+<h2 id="hotelHeading" style="margin-top:21px">Отель и размещение</h2>
+<div id="hotelBadges"></div>
+<div class="specs" id="hotelSpecs"></div>
+<p class="small terms" id="hotelDescription"></p>
+</section>
+<section class="card"><h2>Перелёт и маршрут</h2><div id="flightDetails"></div></section>
+<section class="card"><h2>Что включено в тур</h2><div id="packageDetails"></div><p class="small">Состав услуг определяется только подтверждённым предложением и договором. Неуказанные услуги не считаются включёнными.</p></section>
+<section class="card"><h2>Условия бронирования</h2><p class="terms" id="cancellationTerms">Условия изменения и отмены уточняются в договоре до оплаты.</p></section>
+</div>
+<aside class="card"><h2>Ваш вариант</h2><div id="summary"></div>
+<div class="price" id="tourPrice"></div><p class="small" id="priceComment"></p>
+<a class="primary off" id="checkoutLink" aria-disabled="true" href="./#offers">Перейти к оформлению</a>
+<p class="small">Перед списанием денег сервер повторно проверяет наличие и окончательную стоимость. Если условия изменятся, оплата не начнётся.</p></aside>
+</div>
+</main>
+<footer><div style="width:min(1120px,calc(100% - 34px));margin:auto">JAMAICA · Покупка осуществляется только после подтверждения цены, наличия и раскрытия необходимых сведений договора. В клиентском каталоге нет рекламирования поставщиков.</div></footer>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const now=Date.now();
+const id=new URLSearchParams(location.search).get("offer")||"";
+const dataSafe=s=>typeof s==="string"?s.trim():"";
+function put(id,text){$(id).textContent=text;}
+function line(root,key,value){
+ const row=document.createElement("div");row.className="line";
+ const label=document.createElement("span"),v=document.createElement("strong");
+ label.textContent=key;v.textContent=value===undefined||value===null||String(value).trim()===""?"Не указано":String(value);
+ row.append(label,v);$(root).append(row);
+}
+function badge(text){const e=document.createElement("span");e.className="badge";e.textContent=text;$("hotelBadges").append(e);}
+function spec(name,value){
+ const box=document.createElement("div");box.className="spec";
+ const small=document.createElement("small"),bold=document.createElement("b");
+ small.textContent=name;bold.textContent=value||"Не указано";box.append(small,bold);$("hotelSpecs").append(box);
+}
+function safeImage(src){
+ if(typeof src!=="string"||src.length>250||src.includes(".."))return null;
+ // Only internally hosted images with documented rights; do not embed arbitrary vendor or tracking URLs.
+ if(!/^assets\/hotels\/[a-zA-Z0-9/_-]+\.(?:webp|jpg|jpeg|png)$/.test(src))return null;
+ return src;
+}
+function valid(o){
+ if(!o||typeof o!=="object"||!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
+ for(const k of ["publish_approved","quote_verified","availability_verified","flights_out_green","flights_back_green","price_scope_verified","total_two_verified"])if(o[k]!==true)return false;
+ if(o.best_price_required===true&&o.best_price_verified!==true)return false;
+ if(!Number.isInteger(o.total_rub)||o.total_rub<=0||o.adults!==2||o.children!==0)return false;
+ if(!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
+ if(!dataSafe(o.hotel)||!dataSafe(o.origin)||!dataSafe(o.destination)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(o.depart_date||""))return false;
+ const checked=Date.parse(o.quote_verified_at),end=Date.parse(o.expires_at);
+ return Number.isFinite(checked)&&Number.isFinite(end)&&checked<=now+60000&&now-checked<1200000&&end>now&&Date.parse(o.depart_date+"T23:59:59Z")>now;
+}
+function fill(o){
+ put("tourTitle",o.hotel+" — "+o.destination);
+ put("tourSubtitle",o.origin+" → "+o.destination+" · "+o.depart_date+" · "+o.nights+" ночей");
+ put("tourStatus","Подтверждённый вариант: цена, наличие мест и перелёты проверены. Перед покупкой проводится повторная проверка.");
+ $("tourStatus").className="status ok";
+ badge(o.destination);if(Number.isInteger(o.hotel_stars)&&o.hotel_stars>=1&&o.hotel_stars<=5)badge("★".repeat(o.hotel_stars));
+ if(dataSafe(o.resort))badge(o.resort.slice(0,70));
+ spec("Отель",o.hotel);spec("Курорт",dataSafe(o.resort));spec("Тип номера",dataSafe(o.room_type));
+ spec("Питание",dataSafe(o.meal_plan));spec("Размещение",o.adults+" взрослых"+(o.children?", "+o.children+" детей":""));
+ if(dataSafe(o.hotel_description))put("hotelDescription",o.hotel_description.slice(0,1500));
+ const flights=o.flights&&typeof o.flights==="object"?o.flights:{};
+ line("flightDetails","Вылет из",o.origin);line("flightDetails","Туда",dataSafe(flights.outbound_route)||"Рейс подтверждён, сведения пока не представлены");
+ line("flightDetails","Обратно",dataSafe(flights.return_route)||"Рейс подтверждён, сведения пока не представлены");
+ line("flightDetails","Багаж",dataSafe(flights.baggage));line("flightDetails","Авиакомпания",dataSafe(flights.airline));
+ const pkg=o.package_details&&typeof o.package_details==="object"?o.package_details:{};
+ line("packageDetails","Проживание",o.hotel+", "+o.nights+" ночей");
+ line("packageDetails","Питание",dataSafe(o.meal_plan));
+ line("packageDetails","Трансфер",dataSafe(pkg.transfer));
+ line("packageDetails","Медицинская страховка",dataSafe(pkg.insurance));
+ line("packageDetails","Другие включённые услуги",dataSafe(pkg.included));
+ put("cancellationTerms",dataSafe(pkg.cancellation_terms)||"Полные условия изменения, аннуляции и возврата должны быть раскрыты при оформлении до оплаты.");
+ line("summary","Страна",o.destination);line("summary","Отель",o.hotel);line("summary","Дата вылета",o.depart_date);
+ line("summary","Продолжительность",o.nights+" ночей");line("summary","Туристы",o.adults+" взрослых");
+ put("tourPrice",o.total_rub.toLocaleString("ru-RU")+" ₽");
+ put("priceComment","Итоговая стоимость за двух взрослых · "+Math.round(o.total_rub/2).toLocaleString("ru-RU")+" ₽ на человека при размещении вдвоём");
+ const btn=$("checkoutLink");btn.href="checkout.html?offer="+encodeURIComponent(o.id);btn.classList.remove("off");btn.removeAttribute("aria-disabled");
+ const gallery=Array.isArray(o.gallery_paths)&&o.photos_licensed===true?o.gallery_paths.map(safeImage).filter(Boolean).slice(0,8):[];
+ if(gallery.length){
+   const hero=$("hotelHero");hero.replaceChildren();
+   const large=document.createElement("img");large.src=gallery[0];large.alt="Фотография отеля "+o.hotel;large.loading="eager";hero.append(large);
+   for(const src of gallery){
+     const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Посмотреть фотографию отеля");
+     const image=document.createElement("img");image.src=src;image.alt="";image.loading="lazy";b.append(image);b.addEventListener("click",()=>{large.src=src;});
+     $("photoThumbnails").append(b);
+   }
+ }
+}
+async function init(){
+ if(!/^[a-zA-Z0-9_-]{8,100}$/.test(id)){
+  put("tourTitle","Тур не выбран");put("tourStatus","Выберите предложение в результатах поиска. Подробности появятся после выбора конкретного тура.");
+  return;
+ }
+ try{
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+  let resp;
+  try{resp=await fetch("./verified-offers.json",{cache:"no-store",signal:controller.signal});}
+  finally{clearTimeout(timeout);}
+  if(!resp.ok)throw Error("HTTP_"+resp.status);
+  const data=await resp.json();
+  if(data.schema!=="jamaica.verified-offers.v1"||!Array.isArray(data.offers)||data.offers.length>500)throw Error("INVALID_CATALOG");
+  const o=data.offers.find(item=>item&&item.id===id);
+  if(!valid(o)){
+   put("tourTitle","Тур больше не доступен");put("tourSubtitle","Предложение снято с продажи или его подтверждение устарело.");
+   put("tourStatus","Данные выбранного тура не актуальны. Вернитесь к поиску и выберите другое предложение. Оплата недоступна.");return;
+  }
+  fill(o);
+ }catch(err){
+  put("tourTitle","Не удалось загрузить тур");put("tourSubtitle","Временная ошибка загрузки сведений.");
+  put("tourStatus","Проверьте соединение или вернитесь к поиску. Никакие платежи не выполнялись.");
+ }
+}
+init();
+})();
+</script>
+</body></html>
