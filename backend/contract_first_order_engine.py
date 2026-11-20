@@ -164,6 +164,8 @@ class ContractFirstEngine:
         if terms_version!=self.merchant.terms_version:
             raise BadOrder("Wrong contract terms")
         offer=self.repo.get_offer(offer_id)
+        if not isinstance(offer,dict) or offer.get("buyer_id")!=buyer_id:
+            raise BadOrder("Only the owner of this private quote can sign its contract")
         if not valid_offer(offer,datetime.now(timezone.utc)):
             raise NotAvailable("First supplier verified offer required")
         if offer["total_rub"]!=expected_total_rub:
