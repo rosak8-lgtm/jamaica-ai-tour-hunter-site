@@ -47,6 +47,7 @@
 <section class="section" id="routes"><div class="wrap">
 <div class="sectionHead"><div><div class="sectionTag">Маршруты и даты</div><h2>Возможные вылеты и продолжительность</h2><p>После авторизованного обновления здесь появятся маршруты и даты из прайс-листов. Это предварительные варианты: подтверждение мест, отеля и итоговой цены производится отдельно.</p></div><span class="count" id="routeCount">Загрузка направлений…</span></div>
 <div class="offerBox" id="routeEmpty"><div><strong>Подключаем актуальные маршруты</strong><p id="routeStatus" class="micro">Данные о датах требуют защищённой синхронизации. Справочник гостиниц ниже уже загружен.</p></div></div>
+<div class="chips" id="routeCountryChips" role="group" aria-label="Страны с маршрутными прайс-листами"></div>
 <div class="offerCards" id="routeCards" style="margin-top:17px"></div>
 <button class="loadMore" id="routeMore" type="button" hidden>Показать больше маршрутов</button>
 <p class="micro">Строка прайс-листа ещё не гарантирует цену или доступность конкретного номера. Оплачиваемые туры отображаются отдельно после проверки.</p>
@@ -294,6 +295,26 @@ function renderRouteDiscovery(rebuild=true){
    "По выбранным условиям актуальных маршрутов в загруженных прайс-листах пока нет.";
  $("routeEmpty").classList.toggle("hide",list.length>0);
 }
+function renderRouteCountryChips(){
+ const target=$("routeCountryChips");
+ target.replaceChildren();
+ const names=[...new Set(routeRecords.map(x=>x.country))].sort((a,b)=>a.localeCompare(b,"ru"));
+ const current=$("destination").value.trim();
+ for(const name of ["Все страны",...names]){
+   const button=el("button","chip",name);
+   button.type="button";
+   const selected=name==="Все страны"?!current:current.toLocaleLowerCase("ru")===name.toLocaleLowerCase("ru");
+   if(selected)button.classList.add("active");
+   button.setAttribute("aria-pressed",String(selected));
+   button.addEventListener("click",()=>{
+     $("destination").value=name==="Все страны"?"":name;
+     renderRouteCountryChips();
+     renderRouteDiscovery(true);
+     if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
+   });
+   target.append(button);
+ }
+}
 window.jamaicaUpdateRoutes=()=>renderRouteDiscovery(true);
 $("routeMore").addEventListener("click",()=>renderRouteDiscovery(false));
 async function loadRouteDiscovery(){
@@ -308,6 +329,7 @@ async function loadRouteDiscovery(){
     typeof x.country==="string"&&typeof x.origin==="string"&&typeof x.route==="string"&&
     /^\d{4}-\d{2}-\d{2}$/.test(x.date)&&Array.isArray(x.nights)&&x.nights.every(n=>Number.isInteger(n)&&n>=3&&n<=180)&&
     x.quote_verified===false&&x.availability_verified===false&&x.bookable===false);
+  renderRouteCountryChips();
   renderRouteDiscovery(true);
  }catch(err){
   $("routeCount").textContent="Пока нет данных";
