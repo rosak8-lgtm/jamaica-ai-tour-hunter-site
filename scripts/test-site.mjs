@@ -116,6 +116,22 @@ assert.ok(page.includes('window.jamaicaUpdateHotels'),'Search criteria must filt
 assert.ok(page.includes('slice(visible,visible+48)'),'Large catalogue must be paginated');
 assert.ok(hotelPage.includes('destination-directory.json'),'Hotel detail must use official hotel directory');
 assert.ok(hotelPage.includes('destination-directory.json'),'Hotel detail must support official entries');
+const routePage=fs.readFileSync('route.html','utf8');
+const routeFeed=JSON.parse(fs.readFileSync('route-discovery.json','utf8'));
+assert.equal(routeFeed.schema,'jamaica.route-discovery.v1');
+assert.equal(routeFeed.bookable,false);
+assert.equal(routeFeed.quote_verified,false);
+assert.equal(routeFeed.availability_verified,false);
+assert.ok(Array.isArray(routeFeed.routes));
+assert.ok(page.includes('id="routeCards"'));
+assert.ok(page.includes('route.html?id='));
+assert.ok(page.includes('route-discovery.json'));
+assert.ok(routePage.includes('destination-directory.json'));
+assert.ok(routePage.includes('route-discovery.json'));
+assert.ok(!/WhatsApp|wa\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(routePage));
+const routeScripts=[...routePage.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(x=>x[1]).filter(x=>x.includes('(function(){'));
+assert.equal(routeScripts.length,1);
+new vm.Script(routeScripts[0],{filename:'jamaica-route.js'});
 console.log('JAMAICA_GLOBAL_DIRECTORY_PASS countries='+directory.total_countries+' hotels='+directory.total_hotels);
 
 console.log('JAMAICA_TOUR_DETAILS_QA_PASS 251 countries, 159 historical hotels, flexible search, offer -> tour -> checkout, no unsupported sales');
