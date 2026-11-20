@@ -169,7 +169,7 @@ function runSearch(scroll=false){
  }else if(!inventoryLoaded){
   setEmpty("Не удалось загрузить актуальные предложения","Проверьте соединение и повторите поиск. Неподтверждённые цены не показываются.");
  }else if(!found.length){
-  setEmpty("Нет подтверждённых туров по этим параметрам","Все страны доступны в каталоге направлений. Свежие туры появятся здесь автоматически после проверки цены, наличия мест и рейсов. Попробуйте другое направление, даты или город вылета.");
+  setEmpty("Поиск поездок по разным странам","Ниже показываются конкретные отели, даты и типы номеров из проверенных прайс-листов. Для покупки нужна окончательная стоимость, подтверждение рейсов и мест. Вы можете открыть любую карточку и сравнить поездки.");
  }else{
   $("noOffers").classList.add("hide");
   const frag=document.createDocumentFragment();
@@ -178,7 +178,7 @@ function runSearch(scroll=false){
  $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
  if(scroll)scrollToResults();
 }
-form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();});
+form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();});
 async function loadOffers(){
  inventoryLoading=true;
  try{
@@ -410,8 +410,8 @@ function renderTourPreviews(reset=true){
    (!date||x.depart_date===date)&&
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
-   (!budget||(partyTwoAdults&&referencePrice(x)!==null&&
-                referencePrice(x)<=budget*2))
+   (!budget||!partyTwoAdults||referencePrice(x)===null||
+                referencePrice(x)<=budget*2)
  );
  list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
  if(!country)list=interleaveCountries(list);
@@ -429,7 +429,7 @@ function renderTourPreviews(reset=true){
      card.append(el("small","", "В среднем при поездке вдвоём: "+new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+" ₽ на человека. Цена одного туриста рассчитывается отдельно."));
      card.append(el("small","", "Цена из прайс-листа, не окончательная. Перед покупкой необходим расчёт и подтверждение мест."));
    }else{
-     card.append(el("small","", "Стоимость требует актуального расчёта; рейсы и места не подтверждены."));
+     card.append(el("small","", "Цена пока не подтверждена; если указан бюджет, соответствие ему требует расчёта. Рейсы и места также не подтверждены."));
    }
    const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
    a.href="preview.html?id="+encodeURIComponent(x.id);
