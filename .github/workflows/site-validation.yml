@@ -16,6 +16,12 @@ jobs:
         run: python3 -B scripts/site_no_node_qa.py
       - name: Verify server-side quote, booking and payment state machine
         run: python3 -m unittest -v backend.test_order_engine backend.test_contract_first_order_engine backend.test_preview_quote_engine backend.test_sqlite_order_repository backend.test_send_booking_notifications backend.test_bg_route_sync backend.test_bg_detail_probe backend.test_bg_preview_export backend.test_bg_selected_quote_probe backend.test_future_preview_selection backend.test_multicountry_price_scan backend.test_tour_price_reference backend.test_bg_booking_fields_audit backend.test_bg_tour_api_xml
+      - name: Verify customer journey in real Chromium
+        run: |
+          python3 -m venv /tmp/jamaica-playwright-venv
+          /tmp/jamaica-playwright-venv/bin/pip install --disable-pip-version-check playwright==1.55.0
+          /tmp/jamaica-playwright-venv/bin/python -m playwright install chromium
+          /tmp/jamaica-playwright-venv/bin/python -B scripts/browser_smoke_playwright.py
       - name: Validate safe synchronization scripts
         run: |
           python3 -m py_compile scripts/sync_destination_directory.py scripts/oracle_bg_route_sync.py scripts/probe_price_catalog.py scripts/oracle_bg_price_detail_probe.py scripts/oracle_bg_preview_export.py scripts/oracle_bg_selected_quote_probe.py scripts/select_future_preview.py scripts/oracle_bg_multicountry_price_scan.py scripts/tour_price_reference.py scripts/oracle_bg_booking_fields_audit.py scripts/browser_smoke_playwright.py scripts/site_no_node_qa.py backend/contract_first_order_engine.py backend/preview_quote_engine.py backend/sqlite_order_repository.py backend/send_booking_notifications.py backend/bg_tour_api_xml.py
