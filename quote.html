@@ -32,7 +32,12 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
-const id=new URLSearchParams(location.search).get("preview")||"";
+const params=new URLSearchParams(location.search);
+const id=params.get("preview")||"";
+const rawAdults=params.get("adults")||"2",rawKids=params.get("kids")||"0";
+const adults=/^(?:[1-9]|1[0-2])$/.test(rawAdults)?Number(rawAdults):null;
+const kids=/^(?:[0-9]|10)$/.test(rawKids)?Number(rawKids):null;
+const supportedParty=adults===2&&kids===0;
 let selected=null,config=null,quoteResult=null,auth="";
 function notice(s){$("quoteNotice").textContent=s;}
 function cfgReady(c){
@@ -44,7 +49,9 @@ function cfgReady(c){
  }catch(e){return false;}
 }
 async function init(){
- if(!/^p_[a-f0-9]{24}$/.test(id)){notice("Выберите действующий вариант на главной странице.");return;}
+ if(!/^p_[a-f0-9]{24}$/.test(id)||adults===null||kids===null){
+  notice("Выберите действующий тур и корректный состав туристов.");return;
+ }
  try{
   const [p,c]=await Promise.all([
     fetch("./tour-previews.json",{cache:"no-store"}),
@@ -59,7 +66,12 @@ async function init(){
   if(!selected)throw Error("PREVIEW_NOT_CURRENT");
   $("hotelTitle").textContent=selected.country+" · "+selected.hotel;
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
-      " · "+selected.nights+" ночей · "+selected.room;
+      " · "+selected.nights+" ночей · "+selected.room+
+      " · "+adults+" взрослых, "+kids+" детей";
+  if(!supportedParty){
+    notice("Для "+adults+" взрослых и "+kids+" детей требуется отдельная проверка стоимости. Сейчас онлайн-оформление доступно только для 2 взрослых без детей при наличии подтверждённого API. Цена на двух взрослых для вашего состава не применяется; оплата и бронирование не выполняются.");
+    return;
+  }
   auth=sessionStorage.getItem("jamaica_auth_token")||"";
   if(!cfgReady(config)||auth.length<32){
     notice("Тур найден, но онлайн-расчёт для договора пока недоступен: необходимы подключённые авторизация покупателя, поставщик и платёжная система. Бронирование и оплата не выполняются.");
@@ -70,14 +82,14 @@ async function init(){
  }catch(e){notice("Не удалось получить актуальные сведения о выбранной поездке. Выберите другой вариант.");}
 }
 $("checkQuote").addEventListener("click",async()=>{
- if(!selected||!cfgReady(config)||auth.length<32)return;
+ if(!selected||!supportedParty||!cfgReady(config)||auth.length<32)return;
  $("checkQuote").disabled=true;$("quoteResult").classList.add("hide");
  notice("Сверяем цену, оба направления перелёта, гостиницу и статус стоп-продажи…");
  try{
   const response=await fetch(new URL(config.api_base_url).href.replace(/\/$/,"")+"/v1/preview-quotes",{
    method:"POST",credentials:"omit",headers:{"Content-Type":"application/json",
      "Authorization":"Bearer "+auth},
-   body:JSON.stringify({preview_id:selected.id,adults:2,children:0,
+   body:JSON.stringify({preview_id:selected.id,adults:adults,children:kids,
      on_request_accepted:$("onRequestAccept").checked})});
   if(!response.ok)throw Error("QUOTE_UNAVAILABLE");
   const res=await response.json();
