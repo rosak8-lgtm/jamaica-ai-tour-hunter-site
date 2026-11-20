@@ -1,0 +1,14 @@
+{
+  "schema": "jamaica.checkout-config.v1",
+  "live_booking_enabled": false,
+  "payments_enabled": false,
+  "api_base_url": "",
+  "payment_iframe_origin": "",
+  "seller_legal_name": "",
+  "seller_registration": "",
+  "seller_contact": "",
+  "terms_url": "",
+  "privacy_url": "",
+  "terms_version": "",
+  "note": "Payments must stay disabled until authoritative operator booking, merchant acquiring, signed payment webhooks, legal disclosure and fulfillment are tested. No fake purchase."
+}
