@@ -38,7 +38,12 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
-const id=new URLSearchParams(location.search).get("id")||"";
+const params=new URLSearchParams(location.search);
+const id=params.get("id")||"";
+const rawAdults=params.get("adults")||"2",rawKids=params.get("kids")||"0";
+const adults=/^(?:[1-9]|1[0-2])$/.test(rawAdults)?Number(rawAdults):null;
+const kids=/^(?:[0-9]|10)$/.test(rawKids)?Number(rawKids):null;
+const pairPrice=adults===2&&kids===0;
 function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
 function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
 async function init(){
@@ -59,7 +64,13 @@ async function init(){
     x.depart_date>=new Date().toISOString().slice(0,10));
   if(!p){$("heading").textContent="Вариант больше не актуален";$("subtitle").textContent="Вернитесь в поиск и выберите свежую дату.";return;}
   $("heading").textContent=p.country+" — "+p.hotel;
-  $("quoteLink").href="quote.html?preview="+encodeURIComponent(p.id);
+  if(adults===null||kids===null){
+    $("heading").textContent="Неверно указан состав туристов";
+    $("quoteLink").removeAttribute("href");
+    return;
+  }
+  $("quoteLink").href="quote.html?preview="+encodeURIComponent(p.id)+
+    "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(kids);
   $("subtitle").textContent=p.resort||p.country;
   fact("Город вылета",p.origin);
   fact("Дата вылета",p.depart_date);
@@ -67,11 +78,12 @@ async function init(){
   fact("Страна",p.country);
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
+  fact("Выбранные туристы",adults+" взрослых, "+kids+" детей");
   const observed=Date.parse(feed.refreshed_at_utc||"");
   const age=Date.now()-observed;
   const fresh=Number.isFinite(observed)&&age>=-60000&&age<=30*60*1000;
   const listed=Number.isFinite(observed)&&age>=-60000&&age<=24*60*60*1000;
-  if(listed&&p.price_reference_party==="TWO_ADULTS"&&
+  if(listed&&pairPrice&&p.price_reference_party==="TWO_ADULTS"&&
      Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
     fact("Ориентир по прайс-листу на 2 взрослых",
          new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (не окончательная цена)");
@@ -81,7 +93,12 @@ async function init(){
     $("bookingStatus").textContent=(fresh?"Ориентировочная стоимость загружена. ":"С момента выгрузки стоимость могла измениться. ")+
       "Перед оформлением договора требуется новый расчёт цены и подтверждение рейсов и номера.";
   }else{
-    fact("Стоимость на 2 взрослых","Требуется новый расчёт по прайс-листу");
+    fact("Стоимость для выбранного состава",
+      pairPrice?"Требуется новый расчёт по прайс-листу":
+        "Для "+adults+" взрослых и "+kids+" детей нужна отдельная котировка, цена на двух взрослых не подходит");
+  }
+  if(!pairPrice){
+    $("bookingStatus").textContent="Для выбранного состава туристов официальный расчёт пока не подключён. Цена пары взрослых не переносится в договор. Оплата и бронирование не выполняются.";
   }
   const h=directory.hotels.find(x=>x&&x.id===p.hotel_id&&x.country===p.country);
   if(h){
@@ -94,7 +111,8 @@ async function init(){
     (x.country!==p.country||x.depart_date!==p.depart_date)).slice(0,12);
   for(const choice of choices){
    const link=document.createElement("a");
-   link.href="preview.html?id="+encodeURIComponent(choice.id);
+   link.href="preview.html?id="+encodeURIComponent(choice.id)+
+     "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(kids);
    add("strong",choice.country+" · "+choice.hotel,link);
    add("div",choice.depart_date+" · "+choice.nights+" ночей",link);
    $("alternatives").append(link);
