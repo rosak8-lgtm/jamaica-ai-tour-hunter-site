@@ -23,7 +23,7 @@ import tour_price_reference as price_ref
 
 MAX_ROWS = 6000
 MAX_RESPONSE_ROWS = 25000
-MAX_COUNTRIES = 12
+MAX_COUNTRIES = 13
 ALLOWED_ORIGIN = "Иркутск"
 
 def normalize_date(value):
@@ -189,7 +189,7 @@ def main():
     p.add_argument("--max-countries", type=int, default=5)
     p.add_argument("--per-country", type=int, default=2)
     args = p.parse_args()
-    if not 1 <= args.max_countries <= 12 or not 1 <= args.per_country <= 3:
+    if not 1 <= args.max_countries <= 13 or not 1 <= args.per_country <= 3:
         raise bg.SyncHold("PROBE_LIMIT_INVALID")
     catalog = json.loads(Path(args.directory).read_text(encoding="utf-8"))
     login, password = bg.read_secret(bg.credentials_path(args.credentials))
