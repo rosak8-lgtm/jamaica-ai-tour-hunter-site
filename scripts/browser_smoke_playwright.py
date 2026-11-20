@@ -100,6 +100,37 @@ def main():
                 )
                 ensure(not page.locator("#payment iframe:visible").count(),
                        "UNCONFIGURED_ACCOUNT_PAYMENT_ENABLED")
+
+                # The traveler party from search must NEVER silently become 2 adults.
+                page.goto(base,wait_until="domcontentloaded")
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                page.locator("#destination").fill("Турция")
+                page.locator("#adults").fill("1")
+                page.locator("#kids").fill("1")
+                page.locator("#tourSearchForm button[type=submit]").click()
+                custom=page.locator('#previewCards article.offerCard a[href^="preview.html?id="]').first
+                custom.wait_for(timeout=15000)
+                ensure("&adults=1&kids=1" in custom.get_attribute("href"),
+                       "TRAVELER_COUNT_LOST_FROM_SEARCH")
+                custom.click()
+                page.wait_for_url("**/preview.html?id=*",timeout=20000)
+                page.locator("#facts .fact").first.wait_for(timeout=15000)
+                ensure("1 взрослый, 1 ребёнок" in page.locator("#facts").inner_text(),
+                       "TRAVELER_COUNT_LOST_ON_DETAILS")
+                ensure("Ориентир по прайс-листу на 2 взрослых" not in
+                       page.locator("#facts").inner_text(),
+                       "PAIR_PRICE_MISREPRESENTED_FOR_FAMILY")
+                q=page.locator("#quoteLink").get_attribute("href")
+                ensure("&adults=1&kids=1" in q,
+                       "TRAVELER_COUNT_LOST_TO_QUOTATION")
+                page.locator("#quoteLink").click()
+                page.wait_for_url("**/quote.html?preview=*",timeout=20000)
+                page.wait_for_function(
+                    "()=>document.getElementById('quoteNotice').textContent.includes('Для выбранного состава')",
+                    timeout=12000)
+                ensure(page.locator("#checkQuote").is_disabled(),
+                       "UNSUPPORTED_TRAVELERS_ENTERED_TWO_ADULT_CHECKOUT")
+                print("CUSTOM_TRAVELER_PARTY_1_ADULT_1_CHILD_PROTECTED=YES")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
