@@ -24,7 +24,7 @@ class Tests(unittest.TestCase):
                 item("Шри-Ланка",7,"e"),item("Турция",4,"f")])
         rows=scan.select_candidates(f,today=TODAY,limit=3)
         self.assertEqual([x["country"] for x in rows],["Индонезия","Турция","Шри-Ланка"])
-        self.assertEqual(rows[0]["id"],"p_"+"c"*24)
+        self.assertEqual(rows[0]["id"],"p_"+"b"*24)
     def test_skip_unsupported_and_no_fabricated_booking(self):
         f=feed([item("Индонезия",5,"a",bookable=True),
                 item("Турция",6,"b",availability_verified=True),
@@ -33,7 +33,16 @@ class Tests(unittest.TestCase):
     def test_expired_and_invalid(self):
         f=feed([item("Турция",-1,"a"),item("Турция",0,"b"),
                 item("Турция",1,"c"),item("Турция",181,"d")])
-        self.assertEqual(scan.select_candidates(f,today=TODAY),[])
+        self.assertEqual([x["id"] for x in scan.select_candidates(f,today=TODAY)],
+                         ["p_"+"c"*24])
+    def test_safe_catalog_diagnostic_no_price_values(self):
+        f=feed([item("Россия",0,"a"),item("Индонезия",1,"b"),
+                item("Турция",3,"c")])
+        m=scan.catalog_summary(f,today=TODAY)
+        self.assertEqual(m["total"],3)
+        self.assertEqual(m["future"],2)
+        self.assertEqual(m["future_non_domestic_unverified"],2)
+        self.assertEqual(m["countries"],["Индонезия","Турция"])
     def test_invalid_schema_fails_closed(self):
         with self.assertRaises(SyncHold):
             scan.select_candidates({"schema":"bad","bookable":False,"previews":[]},today=TODAY)
