@@ -82,6 +82,13 @@ class SqliteOrders:
             row=db.execute("SELECT payload FROM offers WHERE id=?",(offer_id,)).fetchone()
         return json.loads(row["payload"]) if row else None
 
+    def get_offer_for_buyer(self,offer_id:str,buyer_id:str)->dict[str,Any]|None:
+        """Only call this method from an authenticated, authorized HTTP handler."""
+        if not isinstance(buyer_id,str) or len(buyer_id)<8:
+            return None
+        offer=self.get_offer(offer_id)
+        return offer if offer and offer.get("buyer_id")==buyer_id else None
+
     def create_order(self,order:dict[str,Any])->None:
         if not isinstance(order,dict) or not order.get("id") or not order.get("status"):
             raise BadOrder("Missing order ID or status")
@@ -93,6 +100,13 @@ class SqliteOrders:
         with self.lock,self._session() as db:
             row=db.execute("SELECT payload FROM orders WHERE id=?",(order_id,)).fetchone()
         return json.loads(row["payload"]) if row else None
+
+    def get_order_for_buyer(self,order_id:str,buyer_id:str)->dict[str,Any]|None:
+        """Never expose signed contracts across customer accounts."""
+        if not isinstance(buyer_id,str) or len(buyer_id)<8:
+            return None
+        order=self.get_order(order_id)
+        return order if order and order.get("buyer_id")==buyer_id else None
 
     def transition(self,order_id:str,expected_status:str,new_status:str,
                    updates:dict[str,Any])->bool:
