@@ -284,6 +284,52 @@ class ContractFirstEngine:
             return state  # Production outbox monitor must replay missing notification.
         return state
 
+    def reconcile_supplier_status(self,order_id:str)->str:
+        """Read-only status reconciliation. No duplicate booking submissions.
+
+        Handles unknown response after paid booking and hotel 'ON_REQUEST'.
+        'NOT_FOUND' must be an authoritative supplier result, not a timeout.
+        """
+        order=self._order(order_id)
+        previous=order["status"]
+        if previous not in ("BOOKING_RECONCILIATION_REQUIRED","SUPPLIER_ON_REQUEST"):
+            raise BadOrder("Order is not awaiting supplier status")
+        try:
+            supplier=self.supplier.lookup_booking(order_id)
+        except Exception:
+            return previous
+        if not isinstance(supplier,dict):
+            return previous
+        status=supplier.get("status")
+        bid=supplier.get("supplier_booking_id")
+        if status=="CONFIRMED" and bid:
+            if not self.repo.transition(order_id,previous,"BOOKED",
+                                        {"supplier_booking_id":bid}):
+                return "CONCURRENT_RECONCILIATION"
+            try:
+                self.outbox.enqueue_once(order_id+":TOUR_BOOKED",{
+                    "type":"TOUR_BOOKED","order_id":order_id,"supplier_booking_id":bid})
+            except Exception:
+                pass
+            return "BOOKED"
+        if status=="ON_REQUEST" and bid:
+            if previous=="SUPPLIER_ON_REQUEST":
+                return previous
+            if not self.repo.transition(order_id,previous,"SUPPLIER_ON_REQUEST",
+                                        {"supplier_booking_id":bid}):
+                return "CONCURRENT_RECONCILIATION"
+            try:
+                self.outbox.enqueue_once(order_id+":TOUR_REQUESTED_WAITING_HOTEL",{
+                    "type":"TOUR_REQUESTED_WAITING_HOTEL","order_id":order_id,
+                    "supplier_booking_id":bid})
+            except Exception:
+                pass
+            return "SUPPLIER_ON_REQUEST"
+        if status in ("REJECTED","NOT_FOUND") and supplier.get("definitive") is True:
+            self._flag_refund(order_id,previous,"SUPPLIER_CONFIRMED_NO_BOOKING")
+            return "REFUND_REQUIRED"
+        return previous
+
     def _flag_refund(self,order_id:str,expected:str,reason:str):
         if not self.repo.transition(order_id,expected,"REFUND_REQUIRED",{"failure_reason":reason}):
             raise BadOrder("Concurrent order change needs manual reconciliation")
