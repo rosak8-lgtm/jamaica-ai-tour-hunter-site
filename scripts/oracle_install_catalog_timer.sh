@@ -89,13 +89,16 @@ WantedBy=timers.target
 EOF
 chmod 600 "$SERVICE" "$TIMER"
 systemctl --user daemon-reload
-systemctl --user enable --now "$SERVICE_NAME.timer"
 
 # First full run: confirms authorized GETs, source checks, and Git push.
-systemctl --user start "$SERVICE_NAME.service"
+# The timer is NOT enabled if the first real import fails.
+if ! systemctl --user start "$SERVICE_NAME.service"; then
+ echo "STOP_ORACLE_FIRST_IMPORT_FAILED_REVIEW_STATUS"; exit 2
+fi
 result="$(systemctl --user show "$SERVICE_NAME.service" -p Result --value)"
 [[ "$result" == "success" ]] || {
  echo "STOP_ORACLE_FIRST_IMPORT_FAILED_REVIEW_STATUS"; exit 2; }
+systemctl --user enable --now "$SERVICE_NAME.timer"
 [[ "$(systemctl --user is-active "$SERVICE_NAME.timer")" == "active" ]] || {
  echo "STOP_ORACLE_TIMER_NOT_ACTIVE"; exit 2; }
 
