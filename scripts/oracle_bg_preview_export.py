@@ -19,6 +19,7 @@ from pathlib import Path
 
 import oracle_bg_route_sync as bg
 import oracle_bg_price_detail_probe as detail
+import tour_price_reference as price_ref
 
 MAX_ROWS = 6000
 MAX_RESPONSE_ROWS = 25000
@@ -39,7 +40,7 @@ def nights_value(value):
     except (TypeError, ValueError):
         return None
 
-def safe_preview(entry, country, hotel_by_id):
+def safe_preview(entry, country, hotel_by_id, price_currency=None):
     if not isinstance(entry, dict):
         return None
     hotel_id = str(entry.get("id_hotel", ""))
@@ -63,6 +64,7 @@ def safe_preview(entry, country, hotel_by_id):
     name = bg.clean(hotel.get("name"), 110)
     if not name:
         return None
+    listed_price=price_ref.indicative_two_adult_rub(entry["prices"], price_currency)
     key = "|".join((country, hotel_id, tour_date, str(nights), room))
     return {
         "id": "p_" + hashlib.sha256(key.encode()).hexdigest()[:24],
@@ -75,6 +77,8 @@ def safe_preview(entry, country, hotel_by_id):
         "depart_date": tour_date,
         "nights": nights,
         "status": "REFERENCE_PRICE_LIST_ONLY",
+        "price_reference_rub": listed_price,
+        "price_reference_party": "TWO_ADULTS" if listed_price is not None else "UNVERIFIED",
         "quote_verified": False,
         "availability_verified": False,
         "flight_verified": False,
@@ -113,6 +117,7 @@ def build(directory, api, max_countries=5, per_country=2):
     countries = [c for c in directory.get("countries", [])
                  if c.get("has_tour_catalog") and bg.CITY_ID in c.get("origins", [])]
     results, statuses, ids = [], [], set()
+    by_id={}
     for country in countries[:MAX_COUNTRIES]:
         if len(statuses) >= max_countries:
             break
@@ -135,13 +140,22 @@ def build(directory, api, max_countries=5, per_country=2):
                 if not isinstance(rows, list) or len(rows) > MAX_RESPONSE_ROWS:
                     raise bg.SyncHold("PRICE_LIST_SCHEMA_OR_SIZE")
                 stats["lists_read"] += 1
+                currency=payload.get("cur")
                 for row in rows:
                     stats["rows_scanned"] += 1
                     if isinstance(row, dict) and str(row.get("id_hotel", "")) in hotel_by_id:
                         stats["known_hotel_ids"] += 1
-                    candidate = safe_preview(row, country["name"], hotel_by_id)
-                    if candidate and candidate["id"] not in ids:
+                    candidate = safe_preview(row, country["name"], hotel_by_id, currency)
+                    if candidate and candidate["id"] in by_id:
+                        existing=by_id[candidate["id"]]
+                        incoming=candidate["price_reference_rub"]
+                        previous=existing["price_reference_rub"]
+                        if incoming is not None and (previous is None or incoming<previous):
+                            existing["price_reference_rub"]=incoming
+                            existing["price_reference_party"]="TWO_ADULTS"
+                    elif candidate:
                         ids.add(candidate["id"])
+                        by_id[candidate["id"]]=candidate
                         results.append(candidate)
                         stats["previews"] += 1
                         if len(results) >= MAX_ROWS:
@@ -156,12 +170,14 @@ def build(directory, api, max_countries=5, per_country=2):
         if len(results) >= MAX_ROWS:
             break
     results.sort(key=lambda r: (r["depart_date"], r["country"], r["hotel"]))
+    indicative_count=sum(p["price_reference_rub"] is not None for p in results)
     return {"schema": "jamaica.tour-previews.v1",
             "refreshed_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "classification": "PRELIMINARY_DETAILS_NOT_OFFERS",
             "origin": ALLOWED_ORIGIN,
             "countries_status": statuses,
             "previews": results,
+            "indicative_two_adult_rub_count":indicative_count,
             "quote_verified": False, "availability_verified": False,
             "bookable": False}
 
@@ -199,6 +215,7 @@ def main():
     print("COUNTRIES_ATTEMPTED="+str(len(result["countries_status"])))
     print("COUNTRIES_WITH_PREVIEWS="+str(len({p["country"] for p in result["previews"]})))
     print("PREVIEW_COUNT="+str(len(result["previews"])))
+    print("INDICATIVE_2_ADULT_RUB_PRICES="+str(result["indicative_two_adult_rub_count"]))
     for i, stats in enumerate(result["countries_status"], 1):
         print("COUNTRY_"+str(i)+"="+stats["country"])
         print("STATUS_"+str(i)+"="+stats["status"])
