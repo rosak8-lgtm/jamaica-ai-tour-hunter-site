@@ -1,0 +1,21 @@
+name: Validate JAMAICA server-published tour data
+on:
+  push:
+    branches: [main]
+    paths:
+      - tour-previews.json
+      - destination-directory.json
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate-data:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate structure, country coverage and no fabricated bookings
+        run: |
+          python3 -B scripts/local_site_qa.py
+          python3 -B scripts/site_no_node_qa.py
+      - name: Verify price and no-booking guarantees in JavaScript
+        run: node scripts/test-site.mjs
