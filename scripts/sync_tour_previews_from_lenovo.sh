@@ -26,7 +26,7 @@ REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-previews.
 [[ "$REMOTE_TMP" =~ ^/tmp/jamaica-previews\.[[:alnum:]]+$ ]] || { echo "STOP_REMOTE_TMP_INVALID"; exit 2; }
 "${SCP[@]}" "$ROOT/scripts/oracle_bg_preview_export.py" "$ROOT/scripts/oracle_bg_price_detail_probe.py" "$ROOT/scripts/oracle_bg_route_sync.py" "$ROOT/scripts/tour_price_reference.py" "$ROOT/destination-directory.json" "$REMOTE:$REMOTE_TMP/"
 echo "=== AUTHENTICATED ORACLE TOUR PREVIEWS (READ ONLY) ==="
-"${SSH[@]}" "$REMOTE" "python3 -B '$REMOTE_TMP/oracle_bg_preview_export.py' --directory '$REMOTE_TMP/destination-directory.json' --output '$REMOTE_TMP/tour-previews.json' --max-countries 12 --per-country 2"
+"${SSH[@]}" "$REMOTE" "python3 -B '$REMOTE_TMP/oracle_bg_preview_export.py' --directory '$REMOTE_TMP/destination-directory.json' --output '$REMOTE_TMP/tour-previews.json' --max-countries 13 --per-country 2"
 "${SCP[@]}" "$REMOTE:$REMOTE_TMP/tour-previews.json" "$TMP/tour-previews.json"
 python3 - "$TMP/tour-previews.json" "$TMP/upload.json" <<'PY'
 import base64,json,pathlib,sys
