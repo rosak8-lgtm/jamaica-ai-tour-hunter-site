@@ -223,7 +223,7 @@ def main():
         print("ROWS_SCANNED_"+str(i)+"="+str(stats["rows_scanned"]))
         print("HOTEL_IDS_MATCHED_"+str(i)+"="+str(stats["known_hotel_ids"]))
         print("PUBLIC_PREVIEWS_"+str(i)+"="+str(stats["previews"]))
-    print("NO_PRICE_NO_SECRET_NO_BOOKING_EXPORTED=YES")
+    print("NO_CONFIRMED_SALE_NO_BOOKING_NO_SECRET_EXPORTED=YES")
 
 if __name__ == "__main__":
     try:
