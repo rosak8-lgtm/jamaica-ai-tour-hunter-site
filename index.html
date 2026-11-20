@@ -368,8 +368,8 @@ function renderTourPreviews(reset=true){
    card.append(el("div","",x.resort||x.country));
    card.append(el("small","",x.room));
    card.append(el("small","", "Предварительный вариант: стоимость, рейсы и свободные места не подтверждены."));
-   const a=el("a","btn btnWhite","Посмотреть отель →");
-   a.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
+   const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
+   a.href="preview.html?id="+encodeURIComponent(x.id);
    card.append(a);frag.append(card);
  }
  target.append(frag);
