@@ -84,7 +84,8 @@ class Tests(unittest.TestCase):
     def create(self,on_request=False):
         return self.engine.draft_contract(offer_id="tour_abcdefgh123",
                  expected_total_rub=95000,buyer_id="customer-12345678",
-                 terms_version="contract_v1",on_request_accepted=on_request)
+                 terms_version="contract_v1",terms_accepted=True,
+                 on_request_accepted=on_request)
     def signed(self,on_request=False):
         result=self.create(on_request)
         self.signer.accept=True
@@ -95,6 +96,14 @@ class Tests(unittest.TestCase):
         self.engine.initiate_payment(id)
         self.psp.status="PAID"
         return id
+    def test_contract_requires_terms_acceptance(self):
+        with self.assertRaises(BadOrder):
+            self.engine.draft_contract(
+                offer_id="tour_abcdefgh123",expected_total_rub=95000,
+                buyer_id="customer-12345678",terms_version="contract_v1",
+                terms_accepted=False)
+        self.assertEqual(self.supplier.checks,[])
+        self.assertEqual(self.psp.created,[])
     def test_only_first_readonly_quote_before_contract(self):
         p=self.create()
         self.assertEqual(p["status"],"AWAITING_SIGNATURE")
