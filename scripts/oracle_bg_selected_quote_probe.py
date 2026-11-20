@@ -12,7 +12,7 @@ import re
 import sys
 import urllib.error
 import urllib.parse
-from collections import Counter
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,6 +22,17 @@ import oracle_bg_preview_export as preview
 
 ID_RE = re.compile(r"^p_[a-f0-9]{24}$")
 MAX_DETAIL_LISTS = 4
+
+def valid_positive_amount(value):
+    """Reject arrays, booleans, zero, NaN and non-numeric supplier fields."""
+    if isinstance(value,bool) or not isinstance(value,(str,int,float,Decimal)):
+        return False
+    try:
+        amount=Decimal(str(value).strip())
+        return amount.is_finite() and amount>0
+    except (InvalidOperation,ValueError):
+        return False
+
 
 def adult_pair_marker(value):
     """Recognize two ADULT age bands, but do not infer group price scope."""
@@ -64,7 +75,7 @@ def inspect_match(rows, selected, hotels):
                 blocked += 1
                 continue
             prices += 1
-            if str(p.get("RUR", "")).strip():
+            if valid_positive_amount(p.get("RUR")):
                 rub_price_fields += 1
             age=str(p.get("ag", "")).strip()
             if age:
@@ -74,9 +85,9 @@ def inspect_match(rows, selected, hotels):
                 age_marker_unrecognized += 1
             if adult_pair:
                 exact_two_adults += 1
-                if str(p.get("RUR", "")).strip():
+                if valid_positive_amount(p.get("RUR")):
                     two_adults_with_rub += 1
-                elif str(p.get("amount", "")).strip():
+                elif valid_positive_amount(p.get("amount")):
                     two_adults_amount_only += 1
     return {"matched_rows": matches, "price_options": prices,
             "rub_price_fields": rub_price_fields,
