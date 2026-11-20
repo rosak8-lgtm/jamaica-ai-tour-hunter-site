@@ -134,6 +134,19 @@ assert.ok(page.includes('id="previewCards"'));
 assert.ok(page.includes('id="previewMore"'));
 assert.ok(page.includes('tour-previews.json'));
 assert.ok(page.includes('function renderTourPreviews('));
+assert.ok(page.includes('preview.html?id='));
+const previewDetail=fs.readFileSync('preview.html','utf8');
+for(const id of ['heading','subtitle','notice','facts','hotelInfo','hotelLink','bookingStatus','alternatives']){
+ assert.ok(previewDetail.includes('id="'+id+'"'),'Preview detail missing '+id);
+}
+assert.ok(previewDetail.includes('tour-previews.json'));
+assert.ok(previewDetail.includes('x.bookable===false'));
+assert.ok(!/WhatsApp|wa\\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(previewDetail));
+const previewScripts=[...previewDetail.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
+ .map(x=>x[1]).filter(x=>x.includes('(function(){'));
+assert.equal(previewScripts.length,1);
+new vm.Script(previewScripts[0],{filename:'preview-details.js'});
+
 assert.ok(page.includes('id="routeCards"'));
 assert.ok(page.includes('id="routeCountryChips"'));
 assert.ok(page.includes('function renderRouteCountryChips()'));
