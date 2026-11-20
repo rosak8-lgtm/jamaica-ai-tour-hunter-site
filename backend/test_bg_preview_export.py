@@ -23,6 +23,21 @@ class Tests(unittest.TestCase):
         self.hotels={HOTEL_ID:{"id":HOTEL_ID,"country":COUNTRY,
                                "name":"Verified Catalog Hotel","resort":"Бали"}}
 
+    def test_choose_different_future_price_list_dates(self):
+        from datetime import date, timedelta
+        today=date(2026,11,20)
+        def entry(delta,name):
+            return {"date":(today+timedelta(days=delta)).strftime("%d.%m.%Y"),"file":name}
+        candidates=[entry(0,"today"),entry(1,"a"),entry(1,"b"),
+                    entry(3,"c"),entry(8,"d")]
+        chosen=exporter.choose_price_lists(candidates,2,today=today)
+        self.assertEqual([x["file"] for x in chosen],["a","c"])
+    def test_no_past_or_today_only_listings(self):
+        from datetime import date,timedelta
+        today=date(2026,11,20)
+        rows=[{"date":today.strftime("%d.%m.%Y")},
+              {"date":(today-timedelta(days=1)).strftime("%d.%m.%Y")}]
+        self.assertEqual(exporter.choose_price_lists(rows,2,today=today),[])
     def test_preview_contains_only_safe_descriptive_fields(self):
         p=exporter.safe_preview(row(),COUNTRY,self.hotels)
         self.assertEqual(p["hotel"],"Verified Catalog Hotel")
