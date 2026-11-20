@@ -50,6 +50,27 @@ class Tests(unittest.TestCase):
         self.assertNotIn("115000",str(result))
         self.assertNotIn("121132934133",str(result))
         self.assertEqual(len(a.calls),2)
+    def test_range_encoded_adults(self):
+        self.assertTrue(selected.adult_pair_marker("12+,12+"))
+        self.assertTrue(selected.adult_pair_marker("12-99,12-99"))
+        self.assertTrue(selected.adult_pair_marker("[14-99],[14-99]"))
+        self.assertFalse(selected.adult_pair_marker("2-11,12+"))
+        self.assertFalse(selected.adult_pair_marker("18+,2-11"))
+        self.assertFalse(selected.adult_pair_marker("12+,12+,12+"))
+        self.assertFalse(selected.adult_pair_marker("any"))
+    def test_non_rub_amount_only_is_not_a_sale_price(self):
+        row={**ROW,"prices":[{"amount":"1000","ag":"12+,12+"}]}
+        result=selected.inspect_match([row],P,{HOTEL["id"]:HOTEL})
+        self.assertEqual(result["two_adults_amount_only"],1)
+        self.assertEqual(result["two_adults_with_rub"],0)
+    def test_age_buckets_are_aggregate_only(self):
+        row={**ROW,"prices":[{"amount":"100","RUR":"9000","ag":"SECRET"},
+                              {"amount":"100","RUR":"9000","ag":"12-99,12-99"}]}
+        result=selected.inspect_match([row],P,{HOTEL["id"]:HOTEL})
+        self.assertEqual(result["age_value_present"],2)
+        self.assertEqual(result["age_marker_unrecognized"],1)
+        self.assertEqual(result["two_adults_with_rub"],1)
+        self.assertNotIn("SECRET",str(result))
     def test_adult_rub_requires_both_on_same_price_option(self):
         conflicting={**ROW,"prices":[
           {"RUR":"95000","ag":"2-11,12+","amount":"1000"},
