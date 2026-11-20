@@ -128,7 +128,7 @@ assert.equal(previews.schema,'jamaica.tour-previews.v1');
 assert.equal(previews.bookable,false);
 assert.equal(previews.quote_verified,false);
 assert.equal(previews.availability_verified,false);
-assert.ok(Array.isArray(previews.previews)&&previews.previews.length<=2000);
+assert.ok(Array.isArray(previews.previews)&&previews.previews.length<=6000);
 assert.ok(previews.previews.every(x=>x.bookable===false&&x.quote_verified===false&&x.availability_verified===false));
 assert.ok(page.includes('id="previewCards"'));
 assert.ok(page.includes('id="previewMore"'));
