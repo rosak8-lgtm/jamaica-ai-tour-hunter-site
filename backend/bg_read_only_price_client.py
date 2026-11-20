@@ -97,9 +97,10 @@ class BGReadOnlyPriceClient:
         self._open(request)
         self._authenticated=True
 
-    def price_only(self,tour:dict,passengers:list[dict])->dict:
+    def price_only(self,tour:dict,passengers:list[dict],
+                   customer:dict|None=None)->dict:
         """Read-only cost inquiry. Caller MUST authenticate/authorize buyer."""
-        url,body=build_price_request(tour,passengers)
+        url,body=build_price_request(tour,passengers,customer)
         if not _safe_price_url(url):
             raise BadOrder("Operator API URL is not allowlisted")
         _require_read_only_xml(body)
