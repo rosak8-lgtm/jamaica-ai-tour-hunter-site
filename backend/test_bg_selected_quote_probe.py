@@ -50,6 +50,18 @@ class Tests(unittest.TestCase):
         self.assertNotIn("115000",str(result))
         self.assertNotIn("121132934133",str(result))
         self.assertEqual(len(a.calls),2)
+    def test_adult_rub_requires_both_on_same_price_option(self):
+        conflicting={**ROW,"prices":[
+          {"RUR":"95000","ag":"2-11,12+","amount":"1000"},
+          {"ag":"12+,12+","amount":"1100"}
+        ]}
+        result=selected.inspect_match([conflicting],P,{HOTEL["id"]:HOTEL})
+        self.assertEqual(result["rub_price_fields"],1)
+        self.assertEqual(result["two_adults_age_markers"],1)
+        self.assertEqual(result["two_adults_with_rub"],0)
+    def test_same_option_has_two_adults_and_rub(self):
+        result=selected.inspect_match([ROW],P,{HOTEL["id"]:HOTEL})
+        self.assertEqual(result["two_adults_with_rub"],1)
     def test_avoid_false_matches(self):
         d,feed=self.setup_data()
         result=selected.inspect_selected(d,feed,P["id"],Api(match=False))
