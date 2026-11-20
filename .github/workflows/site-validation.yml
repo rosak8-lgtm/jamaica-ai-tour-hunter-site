@@ -13,8 +13,8 @@ jobs:
       - name: Validate destinations, public wording and JavaScript
         run: node scripts/test-site.mjs
       - name: Verify server-side quote, booking and payment state machine
-        run: python3 -m unittest -v backend.test_order_engine backend.test_bg_route_sync backend.test_bg_detail_probe
+        run: python3 -m unittest -v backend.test_order_engine backend.test_bg_route_sync backend.test_bg_detail_probe backend.test_bg_preview_export
       - name: Validate safe synchronization scripts
         run: |
-          python3 -m py_compile scripts/sync_destination_directory.py scripts/oracle_bg_route_sync.py scripts/probe_price_catalog.py scripts/oracle_bg_price_detail_probe.py
-          bash -n scripts/sync_price_routes_from_lenovo.sh scripts/probe_price_details_from_lenovo.sh
+          python3 -m py_compile scripts/sync_destination_directory.py scripts/oracle_bg_route_sync.py scripts/probe_price_catalog.py scripts/oracle_bg_price_detail_probe.py scripts/oracle_bg_preview_export.py
+          bash -n scripts/sync_price_routes_from_lenovo.sh scripts/probe_price_details_from_lenovo.sh scripts/sync_tour_previews_from_lenovo.sh
