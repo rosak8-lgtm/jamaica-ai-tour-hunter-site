@@ -12,3 +12,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate destinations, public wording and JavaScript
         run: node scripts/test-site.mjs
+      - name: Verify server-side quote, booking and payment state machine
+        run: python3 -m unittest -v backend.test_order_engine
