@@ -23,7 +23,7 @@ import tour_price_reference as price_ref
 
 MAX_ROWS = 8000
 MAX_RESPONSE_ROWS = 25000
-MAX_COUNTRIES = 13
+MAX_COUNTRIES = 80
 ALLOWED_ORIGIN = "Иркутск"
 
 def normalize_date(value):
@@ -109,16 +109,18 @@ def choose_price_lists(entries, limit=2, today=None):
     return selected
 
 
-def build(directory, api, max_countries=5, per_country=2):
+def build(directory, api, max_countries=80, per_country=3):
     if directory.get("schema") != "jamaica.destination-directory.v1":
         raise bg.SyncHold("DIRECTORY_SCHEMA_UNKNOWN")
     hotel_by_id = {str(h["id"]): h for h in directory.get("hotels", [])
                    if isinstance(h, dict) and h.get("id") and h.get("country")}
     countries = [c for c in directory.get("countries", [])
                  if c.get("has_tour_catalog") and bg.CITY_ID in c.get("origins", [])]
+    if not countries or len(countries) > MAX_COUNTRIES:
+        raise bg.SyncHold("ORIGIN_COUNTRY_SCOPE_INVALID")
     results, statuses, ids = [], [], set()
     by_id={}
-    for country in countries[:MAX_COUNTRIES]:
+    for country in countries:
         if len(statuses) >= max_countries:
             break
         stats = {"country": bg.clean(country.get("name"), 70),
@@ -186,10 +188,10 @@ def main():
     p.add_argument("--directory", required=True)
     p.add_argument("--output", required=True)
     p.add_argument("--credentials", default="")
-    p.add_argument("--max-countries", type=int, default=5)
+    p.add_argument("--max-countries", type=int, default=80)
     p.add_argument("--per-country", type=int, default=3)
     args = p.parse_args()
-    if not 1 <= args.max_countries <= 13 or not 1 <= args.per_country <= 3:
+    if not 1 <= args.max_countries <= MAX_COUNTRIES or not 1 <= args.per_country <= 3:
         raise bg.SyncHold("PROBE_LIMIT_INVALID")
     catalog = json.loads(Path(args.directory).read_text(encoding="utf-8"))
     login, password = bg.read_secret(bg.credentials_path(args.credentials))
@@ -213,6 +215,8 @@ def main():
     temp.replace(destination)
     print("JAMAICA_PREVIEW_EXPORT_PASS")
     print("COUNTRIES_ATTEMPTED="+str(len(result["countries_status"])))
+    print("COUNTRIES_ELIGIBLE_FOR_ORIGIN="+str(len([c for c in catalog["countries"]
+       if c.get("has_tour_catalog") and bg.CITY_ID in c.get("origins",[])])))
     print("COUNTRIES_WITH_PREVIEWS="+str(len({p["country"] for p in result["previews"]})))
     print("PREVIEW_COUNT="+str(len(result["previews"])))
     print("INDICATIVE_2_ADULT_RUB_PRICES="+str(result["indicative_two_adult_rub_count"]))
