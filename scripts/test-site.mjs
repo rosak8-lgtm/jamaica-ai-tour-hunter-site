@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 const page=fs.readFileSync('index.html','utf8');
 const detail=fs.readFileSync('tour.html','utf8');
 const checkout=fs.readFileSync('checkout.html','utf8');
+const account=fs.readFileSync('account.html','utf8');
+const quotePage=fs.readFileSync('quote.html','utf8');
+const previewSelection=fs.readFileSync('preview.html','utf8');
 const feed=JSON.parse(fs.readFileSync('verified-offers.json','utf8'));
 const config=JSON.parse(fs.readFileSync('checkout-config.json','utf8'));
 const data=page.match(/<script id="countries-data" type="application\/json">([\s\S]*?)<\/script>/);
@@ -41,6 +44,26 @@ assert.equal(feed.schema,'jamaica.verified-offers.v1');
 assert.ok(Array.isArray(feed.offers)&&feed.offers.length===0,'No invented available tours');
 assert.equal(config.live_booking_enabled,false);
 assert.equal(config.payments_enabled,false);
+assert.equal(config.contract_first_enabled,false);
+assert.equal(config.trusted_signature_enabled,false);
+assert.equal(config.auth_api_enabled,false);
+assert.ok(checkout.includes('/v1/contract-orders/draft'));
+assert.ok(!checkout.includes('/v1/checkout/prepare'),'Legacy pay-before-contract route forbidden');
+assert.ok(previewSelection.includes('quote.html?preview='));
+assert.ok(quotePage.includes('/v1/preview-quotes'));
+assert.ok(quotePage.includes('checkout.html?quote='));
+assert.ok(account.includes('/verify-signature'));
+assert.ok(account.includes('/payment'));
+assert.ok(account.includes('PAID_RECHECK_REQUIRED'));
+assert.ok(account.includes('BOOKING_RECONCILIATION_REQUIRED'));
+for(const [name,source] of [['account',account],['quote',quotePage]]){
+  assert.ok(!forbidden.test(source),'supplier branding: '+name);
+  const scripts=[...source.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
+      .map(m=>m[1]).filter(x=>x.includes('(function(){'));
+  assert.equal(scripts.length,1);
+  new vm.Script(scripts[0],{filename:name+'.js'});
+}
+
 assert.equal(config.api_base_url,'');
 for(const flag of ['quote_verified','flights_out_green','flights_back_green','availability_verified','total_two_verified','price_scope_verified','publish_approved']){
  assert.ok(page.includes('o.'+flag+'!==true'),'Index missing gate '+flag);
