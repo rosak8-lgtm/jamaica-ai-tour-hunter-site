@@ -23,6 +23,22 @@ import oracle_bg_preview_export as preview
 ID_RE = re.compile(r"^p_[a-f0-9]{24}$")
 MAX_DETAIL_LISTS = 4
 
+def adult_pair_marker(value):
+    """Recognize two ADULT age bands, but do not infer group price scope."""
+    if not isinstance(value, str):
+        return False
+    parts=[x.strip().strip("[]()") for x in value.split(",")]
+    if len(parts)!=2:
+        return False
+    for part in parts:
+        if part=="12+":
+            continue
+        m=re.fullmatch(r"(\\d{1,2})-(\\d{1,3})",part)
+        if not m or int(m.group(1))<12 or int(m.group(2))<int(m.group(1)):
+            return False
+    return True
+
+
 def inspect_match(rows, selected, hotels):
     """Match real operator rows to the exact selected site preview ID."""
     matches = 0
@@ -31,6 +47,9 @@ def inspect_match(rows, selected, hotels):
     exact_two_adults = 0
     blocked = 0
     two_adults_with_rub = 0
+    two_adults_amount_only = 0
+    age_value_present = 0
+    age_marker_unrecognized = 0
     for row in rows:
         candidate = preview.safe_preview(row, selected["country"], hotels)
         if not candidate or candidate["id"] != selected["id"]:
@@ -47,16 +66,26 @@ def inspect_match(rows, selected, hotels):
             prices += 1
             if str(p.get("RUR", "")).strip():
                 rub_price_fields += 1
-            adult_pair = str(p.get("ag", "")).strip() in ("12+,12+", "[14-99][14-99]")
+            age=str(p.get("ag", "")).strip()
+            if age:
+                age_value_present += 1
+            adult_pair = adult_pair_marker(age)
+            if age and not adult_pair:
+                age_marker_unrecognized += 1
             if adult_pair:
                 exact_two_adults += 1
                 if str(p.get("RUR", "")).strip():
                     two_adults_with_rub += 1
+                elif str(p.get("amount", "")).strip():
+                    two_adults_amount_only += 1
     return {"matched_rows": matches, "price_options": prices,
             "rub_price_fields": rub_price_fields,
             "two_adults_age_markers": exact_two_adults,
             "blocked_price_options": blocked,
-            "two_adults_with_rub": two_adults_with_rub}
+            "two_adults_with_rub": two_adults_with_rub,
+            "two_adults_amount_only":two_adults_amount_only,
+            "age_value_present":age_value_present,
+            "age_marker_unrecognized":age_marker_unrecognized}
 
 def inspect_selected(directory, public_feed, chosen_id, api):
     if directory.get("schema") != "jamaica.destination-directory.v1":
@@ -96,7 +125,9 @@ def inspect_selected(directory, public_feed, chosen_id, api):
                        e.get("stop") is None][:MAX_DETAIL_LISTS]
     summary={"matched_rows":0,"price_options":0,"rub_price_fields":0,
              "two_adults_age_markers":0,"blocked_price_options":0,
-             "two_adults_with_rub":0}
+             "two_adults_with_rub":0,
+             "two_adults_amount_only":0,"age_value_present":0,
+             "age_marker_unrecognized":0}
     detail_lists=0
     for item in matching_listings:
         url=detail.safe_url(item,country["id"])
@@ -114,6 +145,7 @@ def inspect_selected(directory, public_feed, chosen_id, api):
             "flight_verified":False,"bookable":False,
             "status":("NO_CURRENT_MATCH" if not summary["matched_rows"] else
                       "POTENTIAL_2_ADULT_RUB_PRICE_OPTION" if summary["two_adults_with_rub"] else
+                      "POTENTIAL_2_ADULT_AMOUNT_CURRENCY_UNVERIFIED" if summary["two_adults_amount_only"] else
                       "PRICE_REFERENCE_NOT_SUITABLE_FOR_2_ADULT_RUB_CHECK")}
 
 def main():
@@ -134,6 +166,7 @@ def main():
     for key in ("preview_id","country","depart_date","detail_lists",
                 "matched_rows","price_options","rub_price_fields",
                 "two_adults_age_markers","two_adults_with_rub",
+                "two_adults_amount_only","age_value_present","age_marker_unrecognized",
                 "blocked_price_options","status"):
         print(key.upper()+"="+str(result[key]))
     print("QUOTE_VERIFIED=NO")
