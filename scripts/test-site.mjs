@@ -137,6 +137,13 @@ assert.ok(page.includes('function renderTourPreviews('));
 assert.ok(page.includes('id="previewCountryChips"'));
 assert.ok(page.includes('function renderPreviewCountryChips()'));
 assert.ok(page.includes('function interleaveCountries(rows)'));
+assert.ok(page.includes('function referencePrice(x)'));
+assert.ok(page.includes('price_reference_party'));
+assert.ok(page.includes('previewPriceFresh'));
+assert.ok(page.includes('Ориентир на 2 взрослых'));
+assert.ok(previewDetail.includes('price_reference_rub'));
+assert.ok(previewDetail.includes('30*60*1000'));
+
 assert.ok(page.includes('if(!country)list=interleaveCountries(list)'));
 
 assert.ok(page.includes('preview.html?id='));
