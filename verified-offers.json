@@ -1,0 +1,6 @@
+{
+  "schema": "jamaica.verified-offers.v1",
+  "generated_at_utc": "2026-11-20T00:00:00Z",
+  "published_rules": "Fresh signed-off quotes only; both outbound and return flight confirmations; verified total party price; no inferred solo fare.",
+  "offers": []
+}
