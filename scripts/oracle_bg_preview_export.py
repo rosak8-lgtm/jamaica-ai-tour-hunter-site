@@ -81,6 +81,30 @@ def safe_preview(entry, country, hotel_by_id):
         "bookable": False,
     }
 
+def choose_price_lists(entries, limit=2, today=None):
+    """Prefer future departures on separate dates over same-day duplicate files."""
+    today=today or datetime.now(timezone.utc).date()
+    candidates=[]
+    for entry in entries:
+        if not isinstance(entry,dict) or entry.get("stop") is not None:
+            continue
+        d=bg.date_iso(entry.get("date"))
+        if d is None or d<=today or d>today+timedelta(days=180):
+            continue
+        candidates.append((d,entry))
+    candidates.sort(key=lambda pair:pair[0])
+    seen=set()
+    selected=[]
+    for day,entry in candidates:
+        if day in seen:
+            continue
+        selected.append(entry)
+        seen.add(day)
+        if len(selected)==limit:
+            break
+    return selected
+
+
 def build(directory, api, max_countries=5, per_country=2):
     if directory.get("schema") != "jamaica.destination-directory.v1":
         raise bg.SyncHold("DIRECTORY_SCHEMA_UNKNOWN")
@@ -103,9 +127,8 @@ def build(directory, api, max_countries=5, per_country=2):
             entries = listings.get("entries")
             if not isinstance(entries, list):
                 raise bg.SyncHold("FILES_SCHEMA_UNKNOWN")
-            eligible = [e for e in entries if isinstance(e, dict) and
-                        normalize_date(e.get("date")) and e.get("stop") is None]
-            for listed in eligible[:per_country]:
+            selected_lists=choose_price_lists(entries,per_country)
+            for listed in selected_lists:
                 url = detail.safe_url(listed, country["id"])
                 payload = json.loads(api.get(url))
                 rows = payload.get("entries") if isinstance(payload, dict) else None
