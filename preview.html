@@ -65,6 +65,16 @@ async function init(){
   fact("Страна",p.country);
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
+  const observed=Date.parse(feed.refreshed_at_utc||"");
+  const fresh=Number.isFinite(observed)&&Date.now()-observed>=-60000&&Date.now()-observed<=30*60*1000;
+  if(fresh&&p.price_reference_party==="TWO_ADULTS"&&
+     Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
+    fact("Цена по прайс-листу на 2 взрослых",
+         new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (ориентировочно)");
+    $("bookingStatus").textContent="Предварительная цена получена. Для оплаты необходимо подтвердить окончательный расчёт, номера и рейсы у поставщика.";
+  }else{
+    fact("Актуальная цена на 2 взрослых","Требуется повторный расчёт");
+  }
   const h=directory.hotels.find(x=>x&&x.id===p.hotel_id&&x.country===p.country);
   if(h){
    $("hotelInfo").textContent=[h.name,h.resort,h.stars].filter(Boolean).join(" · ")+" — справочные сведения об отеле";
