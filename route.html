@@ -28,6 +28,11 @@ input{width:min(450px,100%);padding:12px 15px;border:1px solid #ded5e2;border-ra
 <input id="hotelSearch" type="search" placeholder="Название отеля или курорт…" aria-label="Поиск отеля"><p class="sub" id="hotelCount"></p>
 <div class="hotels" id="hotelList"></div><button id="more" type="button" hidden>Показать ещё</button></section>
 
+<section class="card" id="routePreviewSection"><h2>Варианты гостиниц на выбранную дату</h2>
+<p class="sub">Это записи прайс-листов по той же стране и дате. Принадлежность к данному рейсу и возможность бронирования не подтверждены.</p>
+<p class="sub" id="routePreviewCount">Загружаем варианты…</p>
+<div class="hotels" id="routePreviewList"></div>
+</section>
 <section class="card" id="alternativeSection"><h2>Другие страны, маршруты и даты</h2><p class="sub">Варианты из актуальной выгрузки маршрутных прайс-листов. Цена, отель и свободные места проверяются отдельно перед оформлением.</p><div class="alt-tools"><input id="alternativeCountry" type="search" aria-label="Поиск другой страны" placeholder="Любая страна или маршрут"><select id="alternativeNights" aria-label="Количество ночей"><option value="0">Любая длительность</option><option value="3">3 ночи</option><option value="4">4 ночи</option><option value="5">5 ночей</option><option value="7">7 ночей</option><option value="10">10 ночей</option><option value="14">14 ночей</option><option value="21">21 ночь</option><option value="30">30 ночей</option></select><input id="alternativeDate" type="date" aria-label="Дата вылета"></div><p class="alt-note" id="alternativeCount" role="status" aria-live="polite">Загрузка вариантов…</p><div class="alternatives" id="alternativeList"></div><button type="button" id="alternativeMore" hidden>Показать ещё маршруты</button></section>
 </main><script>
 (function(){
@@ -75,6 +80,31 @@ async function init(){
   $("hotelSearch").addEventListener("input",()=>show(true));
   $("more").addEventListener("click",()=>show(false));
   show(true);
+  try{
+    const pResponse=await fetch("./tour-previews.json",{cache:"no-store"});
+    if(!pResponse.ok)throw Error("PREVIEWS_HTTP");
+    const pFeed=await pResponse.json();
+    if(pFeed.schema!=="jamaica.tour-previews.v1"||pFeed.bookable!==false||
+       pFeed.quote_verified!==false||pFeed.availability_verified!==false||
+       !Array.isArray(pFeed.previews))throw Error("PREVIEWS_SCHEMA");
+    const matching=pFeed.previews.filter(p=>p&&p.country===route.country&&
+       p.depart_date===route.date&&route.nights.includes(p.nights)&&
+       p.bookable===false&&p.quote_verified===false&&p.availability_verified===false);
+    $("routePreviewCount").textContent=matching.length.toLocaleString("ru-RU")+" предварительных вариантов размещения на эту дату";
+    const frag=document.createDocumentFragment();
+    for(const p of matching.slice(0,24)){
+      const card=document.createElement("article");card.className="hotel";
+      add("h3",p.hotel,card);
+      add("small",p.room+" · "+p.nights+" ночей",card);
+      add("small",p.resort||p.country,card);
+      const link=add("a","Подробнее о поездке →",card);
+      link.href="preview.html?id="+encodeURIComponent(p.id);
+      frag.append(card);
+    }
+    $("routePreviewList").append(frag);
+  }catch(previewErr){
+    $("routePreviewCount").textContent="Сведения о конкретных вариантах пока недоступны.";
+  }
 
   const alternatives=routes.routes.filter(x=>x&&x.id!==route.id&&typeof x.country==="string"&&typeof x.date==="string"&&Array.isArray(x.nights)&&x.date>=new Date().toISOString().slice(0,10)&&x.bookable===false);
   const norm=s=>String(s||"").toLocaleLowerCase("ru").trim();
