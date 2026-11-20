@@ -21,7 +21,7 @@ import oracle_bg_route_sync as bg
 import oracle_bg_price_detail_probe as detail
 import tour_price_reference as price_ref
 
-MAX_ROWS = 6000
+MAX_ROWS = 8000
 MAX_RESPONSE_ROWS = 25000
 MAX_COUNTRIES = 13
 ALLOWED_ORIGIN = "Иркутск"
@@ -187,7 +187,7 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--credentials", default="")
     p.add_argument("--max-countries", type=int, default=5)
-    p.add_argument("--per-country", type=int, default=2)
+    p.add_argument("--per-country", type=int, default=3)
     args = p.parse_args()
     if not 1 <= args.max_countries <= 13 or not 1 <= args.per_country <= 3:
         raise bg.SyncHold("PROBE_LIMIT_INVALID")
