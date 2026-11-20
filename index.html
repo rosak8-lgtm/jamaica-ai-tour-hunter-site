@@ -44,6 +44,7 @@
 <div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Выберите страну и параметры поездки. Туры с проверенной стоимостью появятся здесь после загрузки.</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
 <div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
 <div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
+<div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
 <div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
@@ -344,6 +345,49 @@ async function loadRouteDiscovery(){
 
 let previewRecords=[],previewVisible=0;
 let previewsLoaded=false;
+function renderPreviewCountryChips(){
+ const target=$("previewCountryChips");
+ target.replaceChildren();
+ const names=[...new Set(previewRecords.map(x=>x.country))].sort((a,b)=>a.localeCompare(b,"ru"));
+ const current=$("destination").value.trim();
+ for(const name of ["Все страны",...names]){
+  const button=el("button","chip",name);
+  button.type="button";
+  const active=name==="Все страны"?!current:current.toLocaleLowerCase("ru")===name.toLocaleLowerCase("ru");
+  if(active)button.classList.add("active");
+  button.setAttribute("aria-pressed",String(active));
+  button.addEventListener("click",()=>{
+    $("destination").value=name==="Все страны"?"":name;
+    renderTourPreviews(true);
+    if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();
+    if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
+    renderRouteCountryChips();
+  });
+  target.append(button);
+ }
+}
+function interleaveCountries(rows){
+ const groups=new Map();
+ for(const item of rows){
+  if(!groups.has(item.country))groups.set(item.country,[]);
+  groups.get(item.country).push(item);
+ }
+ const keys=[...groups.keys()].sort((a,b)=>a.localeCompare(b,"ru"));
+ const output=[],positions=new Map(keys.map(k=>[k,0]));
+ let added=true;
+ while(added){
+  added=false;
+  for(const key of keys){
+   const pos=positions.get(key),group=groups.get(key);
+   if(pos<group.length){
+    output.push(group[pos]);
+    positions.set(key,pos+1);
+    added=true;
+   }
+  }
+ }
+ return output;
+}
 function renderTourPreviews(reset=true){
  const target=$("previewCards"),more=$("previewMore");
  if(reset){target.replaceChildren();previewVisible=0;}
@@ -352,7 +396,7 @@ function renderTourPreviews(reset=true){
  const date=$("dateFrom").value;
  const nights=Number($("nights").value);
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
- const list=previewRecords.filter(x=>
+ let list=previewRecords.filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
    (!date||x.depart_date===date)&&
@@ -360,6 +404,8 @@ function renderTourPreviews(reset=true){
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))
  );
  list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
+ if(!country)list=interleaveCountries(list);
+ if(reset)renderPreviewCountryChips();
  const frag=document.createDocumentFragment();
  for(const x of list.slice(previewVisible,previewVisible+30)){
    const card=el("article","offerCard");
