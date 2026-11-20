@@ -1,0 +1,18 @@
+name: Probe official price-list feed read-only
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/probe_price_catalog.py
+      - .github/workflows/probe-price-catalog.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect documented price-list data (never book or pay)
+        run: python3 scripts/probe_price_catalog.py
