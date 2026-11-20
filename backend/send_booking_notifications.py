@@ -19,6 +19,7 @@ from backend.sqlite_order_repository import SqliteOrders
 TYPES={
  "TOUR_BOOKED":"✅ JAMAICA: тур забронирован и подтверждён",
  "TOUR_REQUESTED_WAITING_HOTEL":"🕒 JAMAICA: заявка оформлена, гостиница под запрос",
+ "TOUR_SUBMITTED_WAITING_OPERATOR":"🕒 JAMAICA: заявка отправлена туроператору, подтверждение ожидается",
  "REFUND_REQUIRED":"⚠️ JAMAICA: требуется проверить возврат оплаты",
 }
 
