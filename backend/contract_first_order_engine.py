@@ -21,8 +21,9 @@ from backend.order_engine import (BadOrder, NotAvailable, NotConfigured,
                                   PriceChanged, GatewayError, Merchant, valid_offer)
 
 ALLOWED_HOTEL = ("IN_STOCK", "ON_REQUEST")
-SUCCESS = ("CONFIRMED", "ON_REQUEST")
-FINISHED = ("BOOKED", "SUPPLIER_ON_REQUEST", "REFUND_REQUIRED",
+SUCCESS = ("CONFIRMED", "ON_REQUEST", "SUBMITTED")
+FINISHED = ("BOOKED", "SUPPLIER_ON_REQUEST", "SUPPLIER_SUBMITTED",
+            "BOOKING_RECONCILIATION_REQUIRED", "REFUND_REQUIRED",
             "REFUND_PENDING", "REFUNDED", "CANCELLED")
 
 class StrictRepo(Protocol):
@@ -291,12 +292,15 @@ class ContractFirstEngine:
             result=self.supplier.create_booking(self._order(order_id),order_id)
             if not isinstance(result,dict) or result.get("status") not in SUCCESS or not result.get("supplier_booking_id"):
                 raise NotAvailable("Supplier did not confirm creation of an order")
-            state="BOOKED" if result["status"]=="CONFIRMED" else "SUPPLIER_ON_REQUEST"
+            state={"CONFIRMED":"BOOKED","ON_REQUEST":"SUPPLIER_ON_REQUEST",
+                   "SUBMITTED":"SUPPLIER_SUBMITTED"}[result["status"]]
             if not self.repo.transition(order_id,"BOOKING_IN_PROGRESS",state,
                                         {"supplier_booking_id":result["supplier_booking_id"]}):
                 # Supplier may have booked; human recovery required, NEVER retry blindly.
                 return "BOOKING_RECONCILIATION_REQUIRED"
-            event=("TOUR_BOOKED" if state=="BOOKED" else "TOUR_REQUESTED_WAITING_HOTEL")
+            event={"BOOKED":"TOUR_BOOKED",
+                   "SUPPLIER_ON_REQUEST":"TOUR_REQUESTED_WAITING_HOTEL",
+                   "SUPPLIER_SUBMITTED":"TOUR_SUBMITTED_WAITING_OPERATOR"}[state]
         except NotAvailable:
             # Explicit, authoritative supplier rejection: no booking created.
             self._flag_refund(order_id,"BOOKING_IN_PROGRESS","SUPPLIER_BOOKING_REJECTED")
@@ -325,7 +329,7 @@ class ContractFirstEngine:
         order=self._order(order_id)
         previous=order["status"]
         if previous not in ("BOOKING_RECONCILIATION_REQUIRED","BOOKING_IN_PROGRESS",
-                            "SUPPLIER_ON_REQUEST"):
+                            "SUPPLIER_ON_REQUEST","SUPPLIER_SUBMITTED"):
             raise BadOrder("Order is not awaiting supplier status")
         try:
             supplier=self.supplier.lookup_booking(order_id)
