@@ -10,13 +10,7 @@ for name in scripts/oracle_bg_selected_quote_probe.py scripts/oracle_bg_preview_
 done
 PREVIEW_ID="${1:-}"
 if [[ -z "$PREVIEW_ID" ]]; then
- PREVIEW_ID="$(python3 - "$ROOT/tour-previews.json" <<'PY'
-import json,sys
-data=json.load(open(sys.argv[1],encoding="utf-8"))
-rows=data.get("previews",[])
-print(rows[0].get("id","") if rows else "")
-PY
-)"
+ PREVIEW_ID="$(python3 -B "$ROOT/scripts/select_future_preview.py" --feed "$ROOT/tour-previews.json")"
 fi
 [[ "$PREVIEW_ID" =~ ^p_[a-f0-9]{24}$ ]] || { echo "STOP_INVALID_PREVIEW_ID"; exit 2; }
 SSH=(ssh -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -i "$KEY")
