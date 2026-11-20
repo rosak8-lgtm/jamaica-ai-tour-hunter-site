@@ -26,7 +26,7 @@ REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-previews.
 [[ "$REMOTE_TMP" =~ ^/tmp/jamaica-previews\.[[:alnum:]]+$ ]] || { echo "STOP_REMOTE_TMP_INVALID"; exit 2; }
 "${SCP[@]}" "$ROOT/scripts/oracle_bg_preview_export.py" "$ROOT/scripts/oracle_bg_price_detail_probe.py" "$ROOT/scripts/oracle_bg_route_sync.py" "$ROOT/scripts/tour_price_reference.py" "$ROOT/destination-directory.json" "$REMOTE:$REMOTE_TMP/"
 echo "=== AUTHENTICATED ORACLE TOUR PREVIEWS (READ ONLY) ==="
-"${SSH[@]}" "$REMOTE" "python3 -B '$REMOTE_TMP/oracle_bg_preview_export.py' --directory '$REMOTE_TMP/destination-directory.json' --output '$REMOTE_TMP/tour-previews.json' --max-countries 13 --per-country 2"
+"${SSH[@]}" "$REMOTE" "python3 -B '$REMOTE_TMP/oracle_bg_preview_export.py' --directory '$REMOTE_TMP/destination-directory.json' --output '$REMOTE_TMP/tour-previews.json' --max-countries 13 --per-country 3"
 "${SCP[@]}" "$REMOTE:$REMOTE_TMP/tour-previews.json" "$TMP/tour-previews.json"
 python3 - "$TMP/tour-previews.json" "$TMP/upload.json" <<'PY'
 import base64,json,pathlib,sys
@@ -36,7 +36,7 @@ if source.stat().st_size>8_000_000:
 obj=json.loads(source.read_text(encoding="utf-8"))
 allowed={"id","hotel_id","hotel","country","origin","resort","room","depart_date","nights","status","quote_verified","availability_verified","flight_verified","bookable","price_reference_rub","price_reference_party"}
 rows=obj.get("previews")
-if obj.get("schema")!="jamaica.tour-previews.v1" or obj.get("bookable") is not False or not isinstance(rows,list) or not 0<len(rows)<=6000:
+if obj.get("schema")!="jamaica.tour-previews.v1" or obj.get("bookable") is not False or not isinstance(rows,list) or not 0<len(rows)<=8000:
     raise SystemExit("STOP_PREVIEW_SCHEMA_INVALID")
 for row in rows:
     if not isinstance(row,dict) or set(row)!=allowed:
