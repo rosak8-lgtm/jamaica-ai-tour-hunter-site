@@ -438,7 +438,8 @@ function renderTourPreviews(reset=true){
      card.append(el("small","", "Цена пока не подтверждена; если указан бюджет, соответствие ему требует расчёта. Рейсы и места также не подтверждены."));
    }
    const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
-   a.href="preview.html?id="+encodeURIComponent(x.id);
+   a.href="preview.html?id="+encodeURIComponent(x.id)+
+      "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(children);
    card.append(a);frag.append(card);
  }
  target.append(frag);
