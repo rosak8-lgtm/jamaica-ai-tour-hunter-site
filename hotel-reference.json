@@ -1,0 +1,3167 @@
+{
+  "schema": "jamaica.hotel-reference.v1",
+  "source_observed_at_utc": "2026-11-19T15:54:59Z",
+  "status": "ARCHIVED_NO_CURRENT_AVAILABILITY",
+  "bookable": false,
+  "offers_count": 0,
+  "hotels": [
+    {
+      "id": "hotel_ref_0001",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ADEMA BOUTIQUE KARON HOTEL 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0002",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ALFRESCO PHUKET HOTEL 3*",
+      "rooms": [
+        "DELUXE DOUBLE ROOM WITH BALCONY BB ЗАВТРАКИ Купить",
+        "GRAND DELUXE ROOM WITH BATHTUB BB ЗАВТРАКИ Купить",
+        "PREMIER ROOM WITH BATHTUB BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0003",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ANDAMAN SEASIDE RESORT 3*",
+      "rooms": [
+        "STANDARD FAMILY ROOM TRIPLE BB ЗАВТРАКИ Купить",
+        "STANDARD FAMILY ROOM QUAD BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0004",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "AOCHALONG RESORT VILLA AND SPA 4*",
+      "rooms": [
+        "VILLA ONE BEDROOM POOL SIDE BB ЗАВТРАКИ Купить",
+        "VILLA ONE BEDROOM WITH PARTIAL SEAVIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0005",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "AQUA MAYA PHUKET (ex. DI PANTAI BOUTIQUE BEACH RESORT) 4*",
+      "rooms": [
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW BB ЗАВТРАКИ Купить",
+        "SUPERIOR SUITE BB ЗАВТРАКИ Купить",
+        "DELUXE KINGE SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0006",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ARITA HOTEL 3*",
+      "rooms": [
+        "SUPERIOR AO БЕЗ ПИТАНИЯ Купить",
+        "SUPERIOR BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "AO",
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0007",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ASHLEE HUB HOTEL PATONG 3*",
+      "rooms": [
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0008",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "B BURI HOTEL 3*",
+      "rooms": [
+        "STANDARD ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "STANDARD ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0009",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BAAN KARON RESORT 3*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE FAMILY BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE FAMILY HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0010",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BARAMEE RESORTEL 3*",
+      "rooms": [
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "PREMIER BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIER HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "PREMIER FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 9,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0011",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BEEHIVE BOUTIQUE PHUKET HOTEL 4*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0012",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BEL AIRE RESORT 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "SUPERIOR HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "GRAND SUPERIOR BB ЗАВТРАКИ Купить",
+        "GRAND SUPERIOR HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "GRAND SUPERIOR FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0013",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BLUE BEACH GRAND RESORT AND SPA 4*",
+      "rooms": [
+        "DELUXE MOUNTAIN VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE MOUNTAIN VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE SEA VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE MOUNTAIN VIEW FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE SEA VIEW FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0014",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BLUE NEPTUNA HOTEL PATONG BY KOKO 3*",
+      "rooms": [
+        "STANDARD TWIN AO БЕЗ ПИТАНИЯ Купить",
+        "STANDARD KING AO БЕЗ ПИТАНИЯ Купить",
+        "SUPERIOR KING AO БЕЗ ПИТАНИЯ Купить",
+        "FAMILY YRIPLE AO БЕЗ ПИТАНИЯ Купить"
+      ],
+      "meals": [
+        "AO"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0015",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BOUTIQUE RESORT PRIVATE POOL VILLA PHUKET 4*",
+      "rooms": [
+        "1 bedroom suite Pool Access BB ЗАВТРАКИ Купить",
+        "1 bedroom suite private pool villa BB ЗАВТРАКИ Купить",
+        "2 bedroom suite private pool villa BB ЗАВТРАКИ Купить",
+        "2 bedroom presidential suite private pool villa BB ЗАВТРАКИ Купить",
+        "3 bedroom suite private pool villa BB ЗАВТРАКИ Купить",
+        "4 bedroom suite private pook villa BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0016",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "BY THE SEA 4*",
+      "rooms": [
+        "2 BEDROOM DELUXE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0017",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "CASA DEL M 3*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIER POOL ACCESS BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0018",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "CHABANA RESORT 3*",
+      "rooms": [
+        "DELUXE LAGOON ROOM AO БЕЗ ПИТАНИЯ Купить"
+      ],
+      "meals": [
+        "AO"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0019",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "CITIN ARMONI PATONG 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "TRIPLE DELUXE BB ЗАВТРАКИ Купить",
+        "EXECUTIVE SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0020",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "CITRUS PATONG HOTEL 4*",
+      "rooms": [
+        "DELUXE ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0021",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "DIAMOND RESORT PHUKET 4*",
+      "rooms": [
+        "TWO BEDROOM SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 1,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0022",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ELITE SUITES PATONG (BAUMAN RESIDENCE PATONG) 4*",
+      "rooms": [
+        "EXECUTIVE SUITE POOL VIEW BB ЗАВТРАКИ Купить",
+        "FAMILY SUITE CITY VIEW BB ЗАВТРАКИ Купить",
+        "FAMILY SUITE POOL VIEW BB ЗАВТРАКИ Купить",
+        "EXECUTIVE SUITE POOL VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "CLASIC SUITE POOL ACCESS BB ЗАВТРАКИ Купить",
+        "FAMILY SUITE CITY VIEW HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "AI",
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 28,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0023",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ESTELLA MAI KHAO BEACH RESORT (ex. D VAREE MAI KHAO BEACH) 4*",
+      "rooms": [
+        "DELUXE POOL VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE POOL ACCESS BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE POOL ACCESS HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE POOL VIEW FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE POOL ACCESS FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0024",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "GOOD NICE HOTEL 3*",
+      "rooms": [
+        "STANDARD BB ЗАВТРАКИ Купить",
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0025",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "GU HOTEL 3*",
+      "rooms": [
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "ROMANTIC SUITE BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "ROMANTIC SUITE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "ROMANTIC SUITE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0026",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "HEMINGWAYS HOTEL 3*",
+      "rooms": [
+        "SUPERIOR (BACK SIDE, NO VIEW) BB ЗАВТРАКИ Купить",
+        "SUPERIOR (ROAD SIDE) BB ЗАВТРАКИ Купить",
+        "STUDIO ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR (BACK SIDE, NO VIEW) HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR (ROAD SIDE) HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "STUDIO ROOM HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0027",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "HEMINGWAYS SILK HOTEL 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "SUPERIOR HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0028",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "HOTEL COCO PHUKET BANGTAO 4*",
+      "rooms": [
+        "COCO SUITE BB ЗАВТРАКИ Купить",
+        "COCO POOL SUITE BB ЗАВТРАКИ Купить",
+        "PENTHOUSE BB ЗАВТРАКИ Купить",
+        "FAMILY 2 BEDROOMS SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0029",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "HOWARD JOHNSON BY WYNDHAM PHUKET NAIYANG (ex. T-VILLA) 4*",
+      "rooms": [
+        "DELUXE KING BB ЗАВТРАКИ Купить",
+        "DELUXE TWIN BB ЗАВТРАКИ Купить",
+        "DELUXE POOL ACCESS KING BB ЗАВТРАКИ Купить",
+        "DELUXE POOL ACCESS TWIN BB ЗАВТРАКИ Купить",
+        "VILLA POOL ACCESS TWIN BB ЗАВТРАКИ Купить",
+        "VILLA POOL ACCESS KING WITH BATHTUB BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 48,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0030",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "I DEE HOTEL 3*",
+      "rooms": [
+        "SUPERIOR AO БЕЗ ПИТАНИЯ Купить",
+        "DELUXE AO БЕЗ ПИТАНИЯ Купить"
+      ],
+      "meals": [
+        "AO"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0031",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "IBIS PHUKET KATA 3*",
+      "rooms": [
+        "FAMILY ROOM BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "FAMILY ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0032",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "KAMALA RESOTEL 3*",
+      "rooms": [
+        "DELUXE KING SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0033",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "KATA SEA BREEZE RESORT 3*",
+      "rooms": [
+        "SPLENDID SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 1,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0034",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "LA GREEN HOTEL & RESIDENCE 5*",
+      "rooms": [
+        "LA GREEN JUNIOR SUITE BB ЗАВТРАКИ Купить",
+        "LA GREEN JUNIOR SUITE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "LA GREEN JUNIOR SUITE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 3,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0035",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "LAE LAY SUITES RESORT 3*",
+      "rooms": [
+        "JUNIOR SUITE POOL SIDE BB ЗАВТРАКИ Купить",
+        "ONE BEDROOM SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0036",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "MAIKHAO HOTEL 4*",
+      "rooms": [
+        "SUITE 2 BEDROOM POOL VIEW BB ЗАВТРАКИ Купить",
+        "SUITE 2 BEDROOM POOL VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUITE 2 BEDROOM POOL VIEW FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0037",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "MALA HOTEL 2*",
+      "rooms": [
+        "DELUXE MOUNTAIN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0038",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "MARINA HOUSE MUAYTHAI TA-IAD PHUKET 3*",
+      "rooms": [
+        "STANDARD ROOM BB ЗАВТРАКИ Купить",
+        "STANDATD POOL VIEW BB ЗАВТРАКИ Купить",
+        "ONE BEDROOM SUITE POOL FACING BB ЗАВТРАКИ Купить",
+        "ONE BEDROOM SUITE POOL ACCESS BB ЗАВТРАКИ Купить",
+        "TWO BEDROOM SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 10,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0039",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "MASSUWAN HOUSE 2*",
+      "rooms": [
+        "STANDARD BB ЗАВТРАКИ Купить",
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0040",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "MERCURE PHUKET PATONG JOURNEYHUB 4*",
+      "rooms": [
+        "CLASSIC ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM MOUNTAIN VIEW BB ЗАВТРАКИ Купить",
+        "PRIVILEGE CORNER BB ЗАВТРАКИ Купить",
+        "CLASSIC ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR ROOM MOUNTAIN VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "CLASSIC ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0041",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "MUST SEA HOTEL 3*",
+      "rooms": [
+        "SUPERIOR NO WINDOW BB ЗАВТРАКИ Купить",
+        "SUPERIOR BALCONY BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0042",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "NANAI 2 RESIDENCE PATONG 3*",
+      "rooms": [
+        "STANDARD BB ЗАВТРАКИ Купить",
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "PREMIER BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "SUITE FAMILY BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 10,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0043",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ON HOTEL 3*",
+      "rooms": [
+        "STANDARD BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "STANDARD HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "STANDARD FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "SUPERIOR ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0044",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ONELOFT HOTEL 3*",
+      "rooms": [
+        "DUPLEX SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0045",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "PATONG BAY RESIDENCE 3*",
+      "rooms": [
+        "GRAND DELUXE SUNSET VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0046",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "PATONG HEMINGWAYS 3*",
+      "rooms": [
+        "SUPERIOR NO BALCONY BB ЗАВТРАКИ Купить",
+        "SUPERIOR WITH BALCONY BB ЗАВТРАКИ Купить",
+        "SUPERIOR NO BALCONY HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR WITH BALCONY HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR NO BALCONY FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "SUPERIOR WITH BALCONY FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0047",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "PATONG LODGE HOTEL 3*",
+      "rooms": [
+        "PREMIUM POOL VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW BB ЗАВТРАКИ Купить",
+        "PREMIUM POOL VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE POOL VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIUM POOL VIEW FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE POOL VIEW FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0048",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "PHUKET LEELAVADEE HUA TING RESORT 4*",
+      "rooms": [
+        "SUPERIOR GARDEN VIEW BB ЗАВТРАКИ Купить",
+        "SUPERIOR POOL VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW BB ЗАВТРАКИ Купить",
+        "COTTAGE BB ЗАВТРАКИ Купить",
+        "FAMILY SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 10,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0049",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "PHUNAWA RESORT 4*",
+      "rooms": [
+        "2 BEDROOM JUNIOR SUITE BB ЗАВТРАКИ Купить",
+        "2 BEDROOM FAMILY SUITE WITH BATHTUB BB ЗАВТРАКИ Купить",
+        "ONE BED ROOM PENTHOUSE SUITE WITH JACUZZI ROOFTOP BB ЗАВТРАКИ Купить",
+        "TWO BEDROOM GRAND FAMILY SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0050",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "PJ PATONG RESORTEL 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0051",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "Q VICTORY PATONG 3*",
+      "rooms": [
+        "DELUXE ROOM AO БЕЗ ПИТАНИЯ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "AO",
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0052",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "RAWAI PRINCESS HOTEL 3*",
+      "rooms": [
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "DELUXE SEMI SEAVIEW BB ЗАВТРАКИ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "FAMILY ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE SEMI SEAVIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0053",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SEAVALE RESIDENCES PATONG 4*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM WITH SEA VIEW BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE ROOM WITH SEA VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0054",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SEAVIEW PATONG HOTEL 4*",
+      "rooms": [
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE POOL ACCESS BB ЗАВТРАКИ Купить",
+        "DELUXE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE POOL ACCESS HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE AI ВСЕ ВКЛЮЧЕНО Купить"
+      ],
+      "meals": [
+        "AI",
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 16,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0055",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SECRET CLIFF RESORT & RESTAURANT 3*",
+      "rooms": [
+        "PREMIER VILLA OCEAN VIEW BB ЗАВТРАКИ Купить",
+        "ROMANTIC PREMIER OCEAN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0056",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SELINA SERENITY RAWAI PHUKET 4*",
+      "rooms": [
+        "DELUXE QUEEN ROOM BB ЗАВТРАКИ Купить",
+        "PREMIUM SUITE OCEAN VIEW BB ЗАВТРАКИ Купить",
+        "PREMIUM ONE BEDROOM APARTMENT BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE QUEEN ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIUM ONE BEDROOM APARTMENT OCEAN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 54,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0057",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SIMPLITEL 3*",
+      "rooms": [
+        "FAMILY BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0058",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SLEEPWITHME 4*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "SUPERIOR PREMIUM BB ЗАВТРАКИ Купить",
+        "DELUXE JACUZZI BB ЗАВТРАКИ Купить",
+        "SUPERIOR HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR PREMIUM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 15,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0059",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SUGAR MARINA EXPRESS AVIATOR PHUKET AIRPORT 3*",
+      "rooms": [
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE POOL ACCESS BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0060",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SUGAR MARINA RESORT LAGOON VILLAS 4*",
+      "rooms": [
+        "SUPERIOR PLUNGE POOL WITH JACUZZI BB ЗАВТРАКИ Купить",
+        "SUPERIOR PLUNGE POOL WITH JACUZZI HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR PLUNGE POOL WITH JACUZZI FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "ONE BEDROOM LAGOON SUITE VILLA BB ЗАВТРАКИ Купить",
+        "ONE BEDROOM LAGOON SUITE VILLA HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "ONE BEDROOM LAGOON SUITE VILLA FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 30,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0061",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SUN SEA SAND HOTEL 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0062",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SUN SHINE PATONG 3*",
+      "rooms": [
+        "DELUXE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0063",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SUNSET BEACH RESORT 4*",
+      "rooms": [
+        "SUNSET STUDIO NO VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE GROUND FLOOR BB ЗАВТРАКИ Купить",
+        "JUNIOR SUITE SEA VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0064",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "SUPALAI SCENIC BAY RESORT & SPA 4*",
+      "rooms": [
+        "DELUXE SEA VIEW BB ЗАВТРАКИ Купить",
+        "SUPER DELUXE SEA VIEW BB ЗАВТРАКИ Купить",
+        "GRAND DELUXE SEA VIEW BB ЗАВТРАКИ Купить",
+        "POOLSIDE VILLA BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPER DELUXE SEA VIEW HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0065",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE AIM PATONG HOTEL 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "SUPERIOR HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0066",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE ASHLEE HEIGHTS PATONG HOTEL & SUITES 4*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE CITY VIEW BB ЗАВТРАКИ Купить",
+        "Premier Triple BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE CITY VIEW HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0067",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE ASHLEE PLAZA PATONG HOTEL 3*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "FAMILY WITH BUNK BED BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 15,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0068",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE ORCHID HOUSE 2*",
+      "rooms": [
+        "STANDARD CONNECTING ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR CONNECTING ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0069",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE PALMS KAMALA BEACH 4*",
+      "rooms": [
+        "3 BEDROOM DUPLEX PENTHOUSE AO БЕЗ ПИТАНИЯ Купить",
+        "3 BEDROOM SUPREME AO БЕЗ ПИТАНИЯ Купить"
+      ],
+      "meals": [
+        "AO"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0070",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE PROUD RAWAI 4*",
+      "rooms": [
+        "PREMIER BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "TWO BEDROOM SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0071",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "THE TREND KAMALA 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "FAMILY BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0072",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "TRAVELODGE PHUKET TOWN 3*",
+      "rooms": [
+        "STANDARD ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0073",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "TRIS MIRACLE APARTMENT KATA 2*",
+      "rooms": [
+        "SUPERIOR CITY BB ЗАВТРАКИ Купить",
+        "SUPERIOR MOUNTAIN BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0074",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "TROPICA BUNGALOW HOTEL 3*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0075",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "TUANA HOTELS BROOK RESORT & VILLAS (ex. TUANA HOTEL BROOK POOL ACCESS) 4*",
+      "rooms": [
+        "POOL ACCESS DELUXE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0076",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "TUANA HOTELS THE NATURAL RESORT (ex. THE NATURAL RESORT) 4*",
+      "rooms": [
+        "SUPERIOR BUILDING BB ЗАВТРАКИ Купить",
+        "DELUXE BUNGALOW BB ЗАВТРАКИ Купить",
+        "DELUXE BUNGALOW POOL ACCESS BB ЗАВТРАКИ Купить",
+        "SUPERIOR BUILDING HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "FAMILY BUNGALOW BUNKBED BB ЗАВТРАКИ Купить",
+        "DELUXE BUNGALOW HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 36,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0077",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "TUANA HOTELS THE PHULIN RESORT 4*",
+      "rooms": [
+        "SUPERIOR BB ЗАВТРАКИ Купить",
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "SUPERIOR HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPERIOR LHB ЗАВТРАКИ И ОБЕДЫ Купить",
+        "2 ROOMS FAMILY DELUXE BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 32,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0078",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "WYNDHAM PHUKET AIRPORT (ex. WYNDHAM ROYAL LEE PHUKET) 5*",
+      "rooms": [
+        "STUDIO ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0079",
+      "country": "Таиланд",
+      "region": "Пхукет",
+      "hotel": "ZEPHYR GRAND HOTEL 3*",
+      "rooms": [
+        "STUDIO WITH A JACUZZI BB ЗАВТРАКИ Купить",
+        "TRIPLE FAMILY ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0080",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "AEGEAN SUITES SANYA YALONG BAY RESORT 5*",
+      "rooms": [
+        "TWO-BEDROOM SUITE WITH GARDEN VIEW AND KITCHEN. BB ЗАВТРАКИ Купить",
+        "TWO-BEDROOM SUITE WITH GARDEN VIEW AND KITCHEN BB ЗАВТРАКИ Купить",
+        "TWO-BEDROOM SUITE WITH OCEAN VIEW AND KITCHEN. BB ЗАВТРАКИ Купить",
+        "TWO-BEDROOM SUITE WITH OCEAN VIEW AND KITCHEN BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0081",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "ARGYLE YALONG BAY RESORT 4*",
+      "rooms": [
+        "YAGE BIG BED ROOM. BB ЗАВТРАКИ Купить",
+        "ONE ROOM SUITE KING BED. BB ЗАВТРАКИ Купить",
+        "ONE ROOM SUITE TWIN BED. BB ЗАВТРАКИ Купить",
+        "TWO ROOMS SUITE (2F1T1W). BB ЗАВТРАКИ Купить",
+        "DELUXE TWO ROOMS SUITE(2F1T2W). BB ЗАВТРАКИ Купить",
+        "GARDEN VILLA-3 KING 1.8m*2m. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 11,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0082",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "ARK. YUEHAI NO 1 SEAVIEW HOTEL XIANGSHUIBAY 5*",
+      "rooms": [
+        "VILLA ROOM WITH SINGLE BED (CLOSED 4 BEDROOM IN A 5 BEDROOM VILLA). BB ЗАВТРАКИ Купит",
+        "GRADEN VIEW ROOM KING BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW KING ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW TWIN ROOM. BB ЗАВТРАКИ Купить",
+        "VILLA ROOM WITH TWIN BED (CLOSED 5 BEDROOM IN A 6 BEDROOM VILLA). BB ЗАВТРАКИ Купить",
+        "FIVE-BEDROOM OCEANFRONT DETACHED VILLA. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 16,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0083",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "ASCOTT DADONGHAI BAY SANYA 5*",
+      "rooms": [
+        "ONE BEDROOM PREMIER SEAVEIW SUITE-KING BED. BB ЗАВТРАКИ Купить",
+        "TWO BEDROOM EXECUTIVE SEAVIEW SUITE-KING+KING. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0084",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "BEST INTERNATIONAL RESORT HOTEL SANYA (ex. YUEHAI SANYA BLOSSOM) 5*",
+      "rooms": [
+        "MOORE VILLA GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "MOORE VILLA GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "GILDED RETRO LUXURY KING-SIZE BED ROOM. BB ЗАВТРАКИ Купить",
+        "COCONUT FUN VILLA GARDEN VIEW FAMILY TWIN ROOM. BB ЗАВТРАКИ Купить",
+        "TIANYU DUPLEX ONE BEDROOM SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 10,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0085",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "BLOSSOM LAND MANGROVES YALONG BAY 5*",
+      "rooms": [
+        "DELUXE KING ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE TWIN ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0086",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "CROWNE PLAZA RESORT SANYA BAY 5*",
+      "rooms": [
+        "CROWNE PLAZA DELUXE ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "CROWNE PLAZA DELUXE ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "CROWNE PLAZA DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "CROWNE PLAZA GARDEN SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "CROWNE PLAZA GARDEN SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "CROWNE PLAZA GARDEN SEA VIEW ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 64,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0087",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "CROWNE PLAZA SANYA CITY CENTER 5*",
+      "rooms": [
+        "CROWNE PLAZA DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "CROWNE PLAZA RIVER VIEW ROOM BB ЗАВТРАКИ Купить",
+        "1 KING BED STANDARD CITY VIEW HIGH FLOOR BB ЗАВТРАКИ Купить",
+        "2 SINGLE BED STANDARD CITY VIEW HIGH FLOOR BB ЗАВТРАКИ Купить",
+        "1 KING BED STANDARD BAY VIEW BB ЗАВТРАКИ Купить",
+        "2 SINGLE BED STANDARD BAY VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 20,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0088",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "DAISY INN SANYA（Ex.Sanya Yuanye Ying Xing Hotel) 3*",
+      "rooms": [
+        "TATAMI KING ROOM WITH WINDOW. BB ЗАВТРАКИ Купить",
+        "TATAMI KING ROOM BB ЗАВТРАКИ Купить",
+        "CITY VIEW KING ROOM WITH WINDOW. BB ЗАВТРАКИ Купить",
+        "CITY VIEW KING ROOM BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW KING ROOM BAY WINDOW. BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW KING ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 16,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0089",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "DOUBLETREE BY HILTON HAINAN XINGLONG LAKESIDE 5*",
+      "rooms": [
+        "DELUXE ROOM. BB ЗАВТРАКИ Купить",
+        "PREMIUM ROOM LAKE VIEW. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0090",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "DOUBLETREE BY HILTON LINGSHUI HOT SPRING 5*",
+      "rooms": [
+        "YILIN HOUSE. BB ЗАВТРАКИ Купить",
+        "180 DEGREES LANDS CAPE. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0091",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "DOUBLETREE BY HILTON SANYA BAY 5*",
+      "rooms": [
+        "DELUXE MOUNTAIN VIEW ROOM KING/TWIN. BB ЗАВТРАКИ Купить",
+        "SUPERIOR MOUNTAIN VIEW ROOM TWIN. BB ЗАВТРАКИ Купить",
+        "PREMIER MOUNTAIN VIEW ROOM KING/TWIN. BB ЗАВТРАКИ Купить",
+        "FAMILY MOUNTAIN VIEW ROOM KING/TWIN. BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW ROOM KING/TWIN. BB ЗАВТРАКИ Купить",
+        "PREMIER SEA VIEW ROOM KING/TWIN. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0092",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "FAIRMONT SANYA HAITANG BAY 5*",
+      "rooms": [
+        "FAIRMONT KING, 1 KING SIZE BED GARDEN VIEW BB ЗАВТРАКИ Купить",
+        "FAIRMONT TWIN, 2 SINGLE SIZE BED GARDEN VIEW BB ЗАВТРАКИ Купить",
+        "FAIRMONT TWIN, 2 SINGLE SIZE BED OCEAN VIEW BB ЗАВТРАКИ Купить",
+        "FAIRMONT KING, 1 KING SIZE BED OCEAN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0093",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "FOUR POINTS BY SHERATON SANYA 5*",
+      "rooms": [
+        "CITY VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "CITY VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "CITY VIEW ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN ROOM KINGSIZE. BB ЗАВТРАКИ Купить",
+        "PREMIUM OCEAN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 44,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0094",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "FOUR POINTS BY SHERATON SHENZHOU PENINSULA 5*",
+      "rooms": [
+        "GRAND ROOM BB ЗАВТРАКИ Купить",
+        "OCEAN ROOM BB ЗАВТРАКИ Купить",
+        "SEA FRONT SUITE BB ЗАВТРАКИ Купить",
+        "FAMILY SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0095",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "GOLDEN PALM RESORT HOTEL 4*",
+      "rooms": [
+        "GARDEN VIEW ROOM TWIN BED WITH BALCONY BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM（TWIN） BB ЗАВТРАКИ Купить",
+        "CHILDREN'S THEME TWIN BED ROOM BB ЗАВТРАКИ Купить",
+        "POOL VIEW TWIN BED ROOM BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM（KING） BB ЗАВТРАКИ Купить",
+        "POOL VIEW ROOM（TWIN） BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 100,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0096",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "GOLDEN PHOENIX SEA VIEW HOTEL 4*",
+      "rooms": [
+        "CITY VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0097",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "GRAND METRO PARK BAY HOTEL SANYA 4*",
+      "rooms": [
+        "MOUNTAIN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "ORANGE FUN ZOO COZY FAMILY ROOM. BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW ROOM TWIN BED. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 44,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0098",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "GRAND METROPARK RESORT YALONG BAY 5*",
+      "rooms": [
+        "DELUXE TWIN ROOM. BB ЗАВТРАКИ Купить",
+        "GOLF ELEGANT ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "GOLF ELEGANT ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE FAMILY ROOM WITH CHILDREN'S POOL. BB ЗАВТРАКИ Купить",
+        "DELUXE TWIN ROOM. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "GOLF ELEGANT ROOM KING BED. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 32,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0099",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "GRAND SOLUXE HOTEL & RESORT SANYA 5*",
+      "rooms": [
+        "DELUXE GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM TWIN BED. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE GARDEN VIEW ROOM KING BED. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE OCEAN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 36,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0100",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HAINAN GREENTOWN BLUE BAY RESORT 4*",
+      "rooms": [
+        "SUPERIOR GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR GARDEN VIEW ROOM HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0101",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HILTON GARDEN INN SANYA 5*",
+      "rooms": [
+        "KING GUEST ROOM WITH BALCONY. BB ЗАВТРАКИ Купить",
+        "TWIN GUEST ROOM WITH BALCONY. BB ЗАВТРАКИ Купить",
+        "KING GUEST ROOM SEA VIEW WITH BALCONY. BB ЗАВТРАКИ Купить",
+        "TWIN GUEST ROOM SEA VIEW WITH BALCONY. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0102",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HOLIDAY INN HAINAN XIANGSHUI BAY 5*",
+      "rooms": [
+        "2 DOUBLE STANDARD MOUNTAIN VIEW. BB ЗАВТРАКИ Купить",
+        "1 KING STANDARD SEA VIEW. BB ЗАВТРАКИ Купить",
+        "2 DOUBLE STANDARD SEA VIEW. BB ЗАВТРАКИ Купить",
+        "1 BEDROOM SUITE 1 KING FOREST VIEW SEA VIEW. BB ЗАВТРАКИ Купить",
+        "2 BEDROOM SUITE PENTHOUSE. BB ЗАВТРАКИ Купить",
+        "1 KING 2 DOUBLE TWO BEDROOM SUITE. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0103",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HOLIDAY INN RESORT SANYA BAY 5*",
+      "rooms": [
+        "PREMIUM OCEAN VIEW TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE FAMILY SUITE 1 BEDROOM CITY&GARDEN VIEW-KING+SINGLE BED. BB ЗАВТРАКИ Купить",
+        "PREMIUM OCEAN VIEW TWIN BED. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIUM OCEAN VIEW TWIN BED. FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "DELUXE FAMILY SUITE 1 BEDROOM CITY&GARDEN VIEW-KING+SINGLE BED. HB ЗАВТРАКИ И УЖИНЫ К",
+        "DELUXE FAMILY SUITE 1 BEDROOM CITY&GARDEN VIEW-KING+SINGLE BED. FB ЗАВТРАКИ, ОБЕДЫ И "
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0104",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HOLIDAY INN RESORT WANNING SHENZHOU PENINSULA 5*",
+      "rooms": [
+        "1 KING STANDARD GARDEN VIEW FURNISHED BALCONY. BB ЗАВТРАКИ Купить",
+        "2 DOUBLE STANDARD GARDEN VIEW FURNISHED BALCONY. BB ЗАВТРАКИ Купить",
+        "1 KING STANDARD SEA VIEW BALCONY. BB ЗАВТРАКИ Купить",
+        "2 DOUBLE STANDARD SEA VIEW FURNISHED BALCONY. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0105",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HOWARD JOHNSON RESORT SANYA BAY 5*",
+      "rooms": [
+        "SUPREME SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SUPREME SEA VIEW ROOM TWIN BEDS. BB ЗАВТРАКИ Купить",
+        "SUPREME SEAVIEW ROOM BB ЗАВТРАКИ Купить",
+        "SUPREME SEA VIEW ROOM TWIN BEDS. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "SUPREME SEA VIEW ROOM KING BED. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "FAMILY SUITE ROOM-KING 1.8m+SINGLE BED 1.2m. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 22,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0106",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HYATT PLACE SANYA CITY CENTER 5*",
+      "rooms": [
+        "TWIN BED ROOM(WITHE SOFA BED） BB ЗАВТРАКИ Купить",
+        "KING BED ROOM(WITHE SOFA BED） BB ЗАВТРАКИ Купить",
+        "OCEAN VIEW KING BED ROOM(WITH SOFA BED) BB ЗАВТРАКИ Купить",
+        "OCEAN VIEW TWIN BED ROOM(WITH SOFA BED) BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0107",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "HYATT REGENCY SANYA TIANLIBAY (ex. HYATT REGENCY SANYA BAY) 5*",
+      "rooms": [
+        "GARDEN VIEW KING BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW KING BED. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "OCEAN VIEW CLUB ACCESS KING BED. BB ЗАВТРАКИ Купить",
+        "OCEAN VIEW CLUB ACCESS KING BED. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0108",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "LA COSTA RESORT HOTEL 4*",
+      "rooms": [
+        "DELUXE SEAVIEW KING SIZE ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE SEAVIEW TWIN SIZE ROOM. BB ЗАВТРАКИ Купить",
+        "SELECTED DELUXE SEAVIEW TWIN SIZE ROOM. BB ЗАВТРАКИ Купить",
+        "SELECTED DELUXE SEAVIEW KING SIZE ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0109",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "LONGXING LAIMAN SEA VIEW RESORT HOTEL 3*",
+      "rooms": [
+        "GARDEN TWIN ROOM. BB ЗАВТРАКИ Купить",
+        "GARDEN KING ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE TWIN ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE KING ROOM. BB ЗАВТРАКИ Купить",
+        "COURTYARD TWIN ROOM. BB ЗАВТРАКИ Купить",
+        "COURTYARD KING ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 16,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0110",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "LUHUITOU SANYA RESORT 5*",
+      "rooms": [
+        "PREMIER KING BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW ROOM,2 SINGLE SIZE BED BB ЗАВТРАКИ Купить",
+        "PREMIER ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR OCEAN VIEW,KING BED BB ЗАВТРАКИ Купить",
+        "DELUXE POOL VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW KING BED BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0111",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "MANGROVE TREE RESORT HAITANGBAY 5*",
+      "rooms": [
+        "HAITANG GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "STANDARD OCEAN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "180° DELUXE OCEAN VIEW ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0112",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "MANGROVE TREE RESORT WORLD SANYA BAY 5*",
+      "rooms": [
+        "SUPERIOR ROOM (KAPOK TOWER) BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM (KAPOK TOWER) BB ЗАВТРАКИ Купить",
+        "(KING PALM) SUPERIOR ROOM. BB ЗАВТРАКИ Купить",
+        "(KING PALM) DELUXE ROOM. BB ЗАВТРАКИ Купить",
+        "QUEEN PALM SUPERIOR ROOM. BB ЗАВТРАКИ Купить",
+        "QUEEN PALM DELUXE ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0113",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "MARINA SPA HOTEL SANYA 4*",
+      "rooms": [
+        "DELUXE GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR SEA VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "LUXURY OCEAN VIEW TWIN ROOM BB ЗАВТРАКИ Купить",
+        "SUPERIOR SEAVIEW TWIN BED ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 36,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0114",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "MARRIOTT RESORT XIANGSHUI BAY 5*",
+      "rooms": [
+        "DELUXE GARDEN VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0115",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "MOKU OLA SANYA HOTEL (ex. SANYA YEJING LANAN GRAND HOTEL) 2*",
+      "rooms": [
+        "ELEGANT ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM. BB ЗАВТРАКИ Купить",
+        "LANDSCAPE TRIPLE ROOM. BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0116",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "NOVOTEL RESORT SANYA BAY YATAI 5*",
+      "rooms": [
+        "DELUXE GARDEN&SEA VIEW TWIN ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN KING ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN&SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "EXECUTIVE OCEAN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "EXECUTIVE OCEAN KING ROOM BB ЗАВТРАКИ Купить",
+        "EXECUTIVE OCEAN-VIEW FAMILY ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 16,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0117",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "OAKWOOD APARTMENTS SANYA 4*",
+      "rooms": [
+        "STUDIO SUPERIOR GARDEN VIEW KING. BB ЗАВТРАКИ Купить",
+        "STUDIO SUPERIOR GARDEN VIEW TWIN. BB ЗАВТРАКИ Купить",
+        "STUDIO SUPERIOR GARDEN VIEW KING BB ЗАВТРАКИ Купить",
+        "ONE-BEDROOM SUPERIOR GARDEN VIEW. BB ЗАВТРАКИ Купить",
+        "STUDIO SUPERIOR OCEAN VIEW TWIN. BB ЗАВТРАКИ Купить",
+        "ONE-BEDROOM SUPERIOR GARDEN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 34,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0118",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "OCEAN SONIC RESORT 5*",
+      "rooms": [
+        "DELUXE GARDEN VIEW FLAT 2 BEDROOM-1 KING 1.8m+1 KING 1.5m. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW FLAT 2 BEDROOM-1 KING 1.8m+1 KING 1.5m. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW FLAT 2 BEDROOM-1 KING 1.8m+1 KING 1.5m. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE OCEAN VIEW FLAT 2 BEDROOM-1 KING 1.8m+1 KING 1.5m. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE GARDEN VIEW FLAT 2 BEDROOM-1 KING 1.8m+1 KING 1.5m. FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ",
+        "DELUXE OCEAN VIEW FLAT 2 BEDROOM-1 KING 1.8m+1 KING 1.5m. FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ "
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0119",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "OCEAN VIEW RESORT YALONG BAY 5*",
+      "rooms": [
+        "MOUTAIN VIEW FAMILY SUITE BB ЗАВТРАКИ Купить",
+        "MOUTAIN VIEW FAMILY SUITE HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0120",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "PALM BEACH RESORT & SPA HOTEL 4*",
+      "rooms": [
+        "SUPERIOR GARDEN VIEW IN ANNEX BUILDING KING BED BB ЗАВТРАКИ Купить",
+        "SUPERIOR GARDEN VIEW IN ANNEX BUILDING TWIN BED BB ЗАВТРАКИ Купить",
+        "ELEGANT GARDEN VIEW ROOM TWIN BED BB ЗАВТРАКИ Купить",
+        "ELEGANT GARDEN VIEW ROOM KING BED BB ЗАВТРАКИ Купить",
+        "POOL VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "POOL VIEW ROOM KING BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 84,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0121",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "PAXTON VACANCES HOTELS & RESORTS-SANYA 3*",
+      "rooms": [
+        "BRILLIANT CITY VIEW KING BED. BB ЗАВТРАКИ Купить",
+        "BRILLIANT CITY VIEW TWIN BED. BB ЗАВТРАКИ Купить",
+        "BRILLIANT CITY VIEW BB ЗАВТРАКИ Купить",
+        "HEGATIVE OXYGEN MOUNTAIN VIEW TWIN BED. BB ЗАВТРАКИ Купить",
+        "HEGATIVE OXYGEN MOUNTAIN VIEW KING BED. BB ЗАВТРАКИ Купить",
+        "NEGATIVE OXYGEN MOUNTAIN VIEW ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 20,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0122",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "RENAISSANCE SANYA HAITANG BAY RESORT 5*",
+      "rooms": [
+        "DELUXE GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0123",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA BAY GUEST HOUSE 5*",
+      "rooms": [
+        "MINI ROOM（18 M²）WITH KING BED 1.5*2M. BB ЗАВТРАКИ Купить",
+        "MINI ROOM BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW SUITE WITH SOFA BED 1.5X1.9M. BB ЗАВТРАКИ Купить",
+        "SUNSHINE SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 44,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0124",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA BIBOLUO HOTEL 2*",
+      "rooms": [
+        "STANDARD ROOM BB ЗАВТРАКИ Купить",
+        "STANDARD ROOM with 3 beds BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0125",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA DAWEI CHUANQI HOTEL 3*",
+      "rooms": [
+        "POOL VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "POOL VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "HIGH SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "HIGH SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "HIGH FLOOR SEA VIEW FAMILY ROOM-1 KING 1.8M+SINGLE BED 1.35M. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 10,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0126",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA DONGRONG GUEST INTERNATIONAL HOTEL 5*",
+      "rooms": [
+        "SUPERIOR KING ROOM WITH NEW RENOVATION. BB ЗАВТРАКИ Купить",
+        "DELUXE TWIN ROOM WITH NEW RENOVATION. BB ЗАВТРАКИ Купить",
+        "DELUXE KING ROOM WITH NEW RENOVATION. BB ЗАВТРАКИ Купить",
+        "DONGRONG GUEST HOUSE LUXURIOUS DELUXE KING ROOM BY THE POOL. BB ЗАВТРАКИ Купить",
+        "DONGRONG GUEST HOUSE LUXURIOUS DELUXE TWIN ROOM BY THE POOL. BB ЗАВТРАКИ Купить",
+        "DONGRONG LUXURY MOUNTAIN AND SEA ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 40,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0127",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA GIONEE INTERNATIONAL HOTEL 4*",
+      "rooms": [
+        "DELUXE QUEEN BED BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0128",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA HAITANG BAY MOUTAI RESORT 5*",
+      "rooms": [
+        "BOUTIQUE GARDEN VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "CLASSICAL GARDEN VIEW ROOM (TWIN/KING BED). BB ЗАВТРАКИ Купить",
+        "SUPERIOR LUXURY ROOM. BB ЗАВТРАКИ Купить",
+        "PRIME GARDEN LUXURY ROOM. BB ЗАВТРАКИ Купить",
+        "SUPERIOR LUXURY FAMILY SUITE (KING SIZE AND ONE SINGLE BED). BB ЗАВТРАКИ Купить",
+        "PRIME GARDEN LUXURY ROOM (TWIN/KING BED). BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 14,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0129",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA JUNDA SEA VIEW HOTEL 4*",
+      "rooms": [
+        "DELUXE SEA VIEW ROOM (KING / TWIN). BB ЗАВТРАКИ Купить",
+        "PREMIUM SEA VIEW ROOM (KING / TWIN). BB ЗАВТРАКИ Купить",
+        "SPACE THEMED FAMILY SUITE (ONE BEDROOM & ONE LIVING ROOM). BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0130",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA JUNJI SEAVIEW HOTEL 5*",
+      "rooms": [
+        "90-DEGREE SEA VIEW KING/TWIN ROOM BB ЗАВТРАКИ Купить",
+        "SUPREME SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SUPREME SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "180-DEGREE PANORAMIC SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "180-DEGREE PANORAMIC SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "60° SEA VIEW TRIPLE ROOM (WITH BALCONY). BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 36,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0131",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA NEW CITY HOTEL 4*",
+      "rooms": [
+        "DELUXE FAMILY SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 2,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0132",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA SEACUBE RESORT (ex. SEACUBE RESORT) 4*",
+      "rooms": [
+        "DELUXE SEA VIEW PARENT-CHILD SUITE. BB ЗАВТРАКИ Купить",
+        "180-DEGREE SUPER OCEAN VIEW TWO-BEDROOM SUITE. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 3,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0133",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA SEARAINBOW HOTEL 3*",
+      "rooms": [
+        "DELUXE TWIN ROOM WITH MOUNTAIN VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE KING BED ROOM WITH MOUNTAIN VIEW BB ЗАВТРАКИ Купить",
+        "DELUXE TRIPLE ROOM WITH MOUNTAIN VIEW BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0134",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA TIANCHENG BELMONT OCEANVIEW SUITE HOTEL 5*",
+      "rooms": [
+        "COZY SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "COZY SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "COMFORTABLE SEA VIEW KING ROOM BB ЗАВТРАКИ Купить",
+        "COMFORTABLE SEA VIEW TWIN ROOM BB ЗАВТРАКИ Купить",
+        "COZY SEA VIEW ROOM KING BED. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "COZY SEA VIEW ROOM TWIN BED. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 40,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0135",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA XIZANG HOTEL (ex. SANYA TIBET) 5*",
+      "rooms": [
+        "SENIOR GARDEN VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "SENIOR RIVER VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "SUPERIOR SEA VIEW ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0136",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA YALONG BAY 99 SUITE RESORT HOTEL 4*",
+      "rooms": [
+        "GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "GARDEN ROOM KING BED BB ЗАВТРАКИ Купить",
+        "GARDEN ROOM TWIN BED BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 28,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0137",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA YALONG BAY XINYA 4*",
+      "rooms": [
+        "DELUXE POOL VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "TIFFANY BLUE POOLSIDE. BB ЗАВТРАКИ Купить",
+        "PANORAMIC SUNROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE EXECUTIVE POOL. BB ЗАВТРАКИ Купить",
+        "BOUTIQUE FAMILY SUITE. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 10,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0138",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA YELANWAN RESORT HOTEL 4*",
+      "rooms": [
+        "YELAN MINI ROOM. BB ЗАВТРАКИ Купить",
+        "LEISURE ROOM. BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM. BB ЗАВТРАКИ Купить",
+        "SUPERIOR POOL VIEW ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0139",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA YUAN SHUAI FU HOTEL 4*",
+      "rooms": [
+        "DELUXE COURTYARD ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE VILLA ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 6,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0140",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SANYA YUHUAYUAN SEAVIEW HOTEL 4*",
+      "rooms": [
+        "SENIOR GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SENIOR GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW VILLA ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW ROOM (1-3 floor) KING BED. BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW ROOM (1-3 floor) TWIN BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR SEA VIEW ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0141",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SHANGRI-LA SANYA 5*",
+      "rooms": [
+        "PREMIER SEA VIEW ROOM BB ЗАВТРАКИ Купить",
+        "PREMIER SEA VIEW ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIER SEA VIEW ROOM FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить",
+        "OCEAN SUITE KING BB ЗАВТРАКИ Купить",
+        "OCEAN SUITE KING HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "OCEAN SUITE KING FB ЗАВТРАКИ, ОБЕДЫ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 21,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0142",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SHERATON SANYA HAITANG BAY RESORT 5*",
+      "rooms": [
+        "DELUXE GARDEN VIEW ROOM KING BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW ROOM TWIN BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW KING BED. BB ЗАВТРАКИ Купить",
+        "COCONUT GROVE SEA VIEW KING BB ЗАВТРАКИ Купить",
+        "COCONUT GROVE SEA VIEW TWIN BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 64,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0143",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SOFITEL SANYA LEEMAN RESORT 5*",
+      "rooms": [
+        "SUPERIOR ROOM BB ЗАВТРАКИ Купить",
+        "OCEAN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "PREMIUM OCEAN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "OCEAN VIEW CLUB ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0144",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "SWISSOTEL&GRAND MERCURE SANYA YALONG BAY (ex. SWISSOTEL SANYA YALONG BAY) 5*",
+      "rooms": [
+        "GRAND MERCURE DELUXE ROOM WITH POOL VIEW-TWIN BED. BB ЗАВТРАКИ Купить",
+        "GRAND MERCURE DELUXE ROOM WITH POOL VIEW-KING BED. BB ЗАВТРАКИ Купить",
+        "SWISS DELUXE ROOM-KING BED. BB ЗАВТРАКИ Купить",
+        "SWISS DELUXE ROOM-TWIN BED. BB ЗАВТРАКИ Купить",
+        "SWISS POOL VIEW ROOM-TWIN BED. BB ЗАВТРАКИ Купить",
+        "SWISS POOL VIEW ROOM-KING BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 28,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0145",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "THE MERMOON RESORT HAINAN TUFU BAY, TAPESTRY COLLECTION BY HILTON 5*",
+      "rooms": [
+        "GUEST ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM OCEAN VIEW. BB ЗАВТРАКИ Купить",
+        "PREMIUM ROOM OCEAN VIEW. BB ЗАВТРАКИ Купить",
+        "GUEST ROOM. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "DELUXE ROOM OCEAN VIEW. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PREMIUM ROOM OCEAN VIEW. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0146",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "THE SEA VIEW HOTEL 2*",
+      "rooms": [
+        "REGULAR ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM BB ЗАВТРАКИ Купить",
+        "REGULAR PARENT-CHILD ROOM BB ЗАВТРАКИ Купить",
+        "REGULAR TRIPLE ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE PARENT-CHILD ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE TRIPLE ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0147",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "THE TAIKANG SANYA，A TRIBUTE PORTFOLIO RESORT (By MARRIOTT) 5*",
+      "rooms": [
+        "DELUXE BB ЗАВТРАКИ Купить",
+        "DELUXE AQUA ROOM BB ЗАВТРАКИ Купить",
+        "TRIBUTE PORTFOLIO AQUA OPENED SUITE BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 3,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0148",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "THE WESTIN SHIMEI BAY RESORT 5*",
+      "rooms": [
+        "MOUNTAIN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "PARTIAL OCEAN VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "MOUNTAIN VIEW ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "GARDEN VIEW ROOM HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "PARTIAL OCEAN VIEW ROOM. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 32,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0149",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "TIMTON FUHE HOTEL (ex. TIMTON KANGDA HOTEL) 5*",
+      "rooms": [
+        "GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "DELUXE SEA VIEW ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 22,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0150",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "UECHAO HOTEL RIYUEBAY 5*",
+      "rooms": [
+        "GARDEN VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "SEA VIEW ROOM. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0151",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "VAPERSE HOTEL HAINAN CLEAR WATER BAY 5*",
+      "rooms": [
+        "SUPERIOR GARDEN VIEW ROOM. BB ЗАВТРАКИ Купить",
+        "GRAND OCEANFRONT ROOM. BB ЗАВТРАКИ Купить",
+        "SUPERIOR GARDEN VIEW ROOM. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "GRAND OCEANFRONT ROOM. HB ЗАВТРАКИ И УЖИНЫ Купить",
+        "FAMILY LOFT SUITE. BB ЗАВТРАКИ Купить",
+        "FAMILY LOFT SUITE. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0152",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "VOCO SANYA BAY 5*",
+      "rooms": [
+        "STANDARD WITH BALCONY KING BED. BB ЗАВТРАКИ Купить",
+        "STANDARD WITH BALCONY TWIN BED. BB ЗАВТРАКИ Купить",
+        "STANDARD ROOM BB ЗАВТРАКИ Купить",
+        "STANDARD OCEAN WITH BALCONY BB ЗАВТРАКИ Купить",
+        "STANDARD OCEAN VIEW WITH BALCONY. BB ЗАВТРАКИ Купить",
+        "1 KING AND 1 TWIN STANDARD WITH BALCONY BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "FB",
+        "HB"
+      ],
+      "observation_count": 64,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0153",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "WANDA REALM RESORT SANYA HAITANG BAY 5*",
+      "rooms": [
+        "GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM WITH KING BED BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM WITH TWIN BED BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE OCEAN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 20,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0154",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "WYNDHAM SANYA BAY 5*",
+      "rooms": [
+        "SUPERIOR ROOM WITH BAY VIEW TWIN BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM KINGSIZE. BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR ROOM WITH BAY VIEW KINGSIZE. BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM WITH OCEAN VIEW KINGSIZE. BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM WITH OCEAN VIEW TWIN BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 24,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0155",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "XINJIANG PLAZA HOLIDAY HOTEL 4*",
+      "rooms": [
+        "COURTYARD VIEW DOUBLE ROOM. BB ЗАВТРАКИ Купить",
+        "COURTYARD VIEW STANDARD ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW DOUBLE ROOM. BB ЗАВТРАКИ Купить",
+        "DELUXE GARDEN VIEW STANDARD ROOM. BB ЗАВТРАКИ Купить",
+        "CUTE FAMILY ROOM. BB ЗАВТРАКИ Купить",
+        "FAMILY ROOM WITH AN ANIMAL THEME. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0156",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "YALONG BAY VILLA & SPA 5*",
+      "rooms": [
+        "EXECUTIVE VILLA. BB ЗАВТРАКИ Купить",
+        "EXECUTIVE VILLA. HB ЗАВТРАКИ И УЖИНЫ Купить"
+      ],
+      "meals": [
+        "BB",
+        "HB"
+      ],
+      "observation_count": 4,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0157",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "YIN YUN SEAVIEW HOTEL 4*",
+      "rooms": [
+        "SUPERIOR GARDEN VIEW TWIN BED. BB ЗАВТРАКИ Купить",
+        "SUPERIOR GARDEN VIEW KING BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW TWIN BEDS ROOM BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW KING BED ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 8,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0158",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "YINTIAN RESORT 3*",
+      "rooms": [
+        "STANDARD ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "STANDARD ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "AUDIO-VISUAL ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "COURTYARD ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "COURTYARD ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "DELUXE ROOM KING BED. BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 18,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    },
+    {
+      "id": "hotel_ref_0159",
+      "country": "Китай",
+      "region": "Санья",
+      "hotel": "YUHAI HOT SPRING RESORT HOTEL (ex. YUHAI INTERNATIONAL RESORT) 4*",
+      "rooms": [
+        "GARDEN VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "GARDEN VIEW ROOM BB ЗАВТРАКИ Купить",
+        "SIDE SEA VIEW ROOM KING BED. BB ЗАВТРАКИ Купить",
+        "SIDE SEA VIEW ROOM TWIN BED. BB ЗАВТРАКИ Купить",
+        "SEA VIEW ROOM BB ЗАВТРАКИ Купить"
+      ],
+      "meals": [
+        "BB"
+      ],
+      "observation_count": 12,
+      "availability_verified": false,
+      "quote_verified": false,
+      "bookable": false
+    }
+  ]
+}
