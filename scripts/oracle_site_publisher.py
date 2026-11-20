@@ -55,9 +55,10 @@ def git_env():
         raise CatalogHold("DEPLOY_KEY_PERMISSIONS_NOT_PRIVATE")
     env=dict(os.environ)
     env["GIT_SSH_COMMAND"]=(
-        "ssh -F /dev/null -o BatchMode=yes -o IdentitiesOnly=yes"
-        " -o StrictHostKeyChecking=yes -o UserKnownHostsFile="+str(KNOWN_HOSTS)
-        " -o ConnectTimeout=15 -i "+str(KEY))
+        "ssh -F /dev/null -o BatchMode=yes -o IdentitiesOnly=yes "
+        "-o StrictHostKeyChecking=yes "
+        f"-o UserKnownHostsFile={KNOWN_HOSTS} "
+        f"-o ConnectTimeout=15 -i {KEY}")
     env["GIT_TERMINAL_PROMPT"]="0"
     return env
 
