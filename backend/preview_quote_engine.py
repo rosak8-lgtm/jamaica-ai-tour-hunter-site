@@ -35,11 +35,14 @@ class PreviewQuoteEngine:
         self.repo,self.supplier=repo,supplier
         self.clock=clock or (lambda:datetime.now(timezone.utc))
 
-    def get_authoritative_quote(self,preview_id:str,*,adults:int,children:int,
+    def get_authoritative_quote(self,preview_id:str,*,buyer_id:str,
+                                adults:int,children:int,
                                 on_request_accepted:bool=False)->dict[str,Any]:
         if not isinstance(preview_id,str) or len(preview_id)!=26 or not preview_id.startswith("p_"):
             raise BadOrder("Selected tour ID invalid")
-        if adults!=2 or children!=0:
+        if not isinstance(buyer_id,str) or not 8<=len(buyer_id)<=128:
+            raise BadOrder("Authenticated buyer required; never trust buyer_id from browser")
+        if type(adults) is not int or type(children) is not int or adults!=2 or children!=0:
             raise NotAvailable("Other party compositions need separate supplier adapter")
         p=self.repo.get_preview(preview_id)
         if not isinstance(p,dict) or p.get("id")!=preview_id or p.get("bookable") is not False:
@@ -64,7 +67,7 @@ class PreviewQuoteEngine:
         expires=min(expires,now+timedelta(minutes=10))
         # Source/party/flight facts are from a trusted supplier adapter, NEVER browser.
         offer={
-            "id":offer_id,"source_preview_id":preview_id,
+            "id":offer_id,"buyer_id":buyer_id,"source_preview_id":preview_id,
             "origin":p["origin"],"destination":p["country"],
             "hotel":p["hotel"],"room":p["room"],"hotel_id":p["hotel_id"],
             "depart_date":p["depart_date"],"nights":p["nights"],
