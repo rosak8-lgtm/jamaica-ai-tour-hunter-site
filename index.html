@@ -89,15 +89,6 @@ document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click"
 $("destSearch").addEventListener("input",showCountries);
 $("loadMore").addEventListener("click",appendCountries);
 showCountries();
-function validOffer(o,now){
- return o && typeof o==="object" &&
- /^[a-zA-Z0-9_-]{8,100}$/.test(o.id||"") &&
- o.publish_approved===true &&
- o.quote_verified===true && o.availability_verified===true &&
- o.flights_out_green===true && o.flights_back_green===true &&
- o.price_scope_verified===true && o.total_two_verified===true &&
- o.best_price_required!==true || false;
-}
 function strictOffer(o,now){
  if(!o||typeof o!=="object")return false;
  if(!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
