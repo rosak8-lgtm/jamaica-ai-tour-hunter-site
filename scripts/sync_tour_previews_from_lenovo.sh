@@ -31,12 +31,12 @@ echo "=== AUTHENTICATED ORACLE TOUR PREVIEWS (READ ONLY) ==="
 python3 - "$TMP/tour-previews.json" "$TMP/upload.json" <<'PY'
 import base64,json,pathlib,sys
 source=pathlib.Path(sys.argv[1])
-if source.stat().st_size>4_000_000:
+if source.stat().st_size>8_000_000:
     raise SystemExit("STOP_PREVIEWS_TOO_LARGE")
 obj=json.loads(source.read_text(encoding="utf-8"))
 allowed={"id","hotel_id","hotel","country","origin","resort","room","depart_date","nights","status","quote_verified","availability_verified","flight_verified","bookable"}
 rows=obj.get("previews")
-if obj.get("schema")!="jamaica.tour-previews.v1" or obj.get("bookable") is not False or not isinstance(rows,list) or not 0<len(rows)<=2000:
+if obj.get("schema")!="jamaica.tour-previews.v1" or obj.get("bookable") is not False or not isinstance(rows,list) or not 0<len(rows)<=6000:
     raise SystemExit("STOP_PREVIEW_SCHEMA_INVALID")
 for row in rows:
     if not isinstance(row,dict) or set(row)!=allowed:
