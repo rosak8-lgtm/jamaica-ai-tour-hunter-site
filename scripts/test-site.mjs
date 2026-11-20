@@ -162,6 +162,8 @@ assert.ok(page.includes('function renderPreviewCountryChips()'));
 assert.ok(page.includes('function interleaveCountries(rows)'));
 assert.ok(page.includes('function referencePrice(x)'));
 assert.ok(page.includes('id="previewUpdatedAt"'));
+assert.ok(page.includes('id="previewCoverage"'));
+assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible")loadTourPreviews();'));
 assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
