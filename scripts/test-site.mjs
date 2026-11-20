@@ -58,7 +58,7 @@ assert.ok(account.includes('PAID_RECHECK_REQUIRED'));
 assert.ok(account.includes('BOOKING_RECONCILIATION_REQUIRED'));
 for(const [name,source] of [['account',account],['quote',quotePage]]){
   assert.ok(!forbidden.test(source),'supplier branding: '+name);
-  const scripts=[...source.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)]
+  const scripts=[...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
       .map(m=>m[1]).filter(x=>x.includes('(function(){'));
   assert.equal(scripts.length,1);
   new vm.Script(scripts[0],{filename:name+'.js'});
