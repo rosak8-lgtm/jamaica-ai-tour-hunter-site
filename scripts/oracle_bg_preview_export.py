@@ -93,7 +93,8 @@ def build(directory, api, max_countries=5, per_country=2):
         if len(statuses) >= max_countries:
             break
         stats = {"country": bg.clean(country.get("name"), 70),
-                 "lists_read": 0, "previews": 0, "status": "NO_CONFIRMED_LIST"}
+                 "lists_read": 0, "previews": 0, "rows_scanned": 0,
+                 "known_hotel_ids": 0, "status": "NO_CONFIRMED_LIST"}
         try:
             q = urllib.parse.urlencode({"action": "files",
                                         "flt": country["id"],
@@ -112,6 +113,9 @@ def build(directory, api, max_countries=5, per_country=2):
                     raise bg.SyncHold("PRICE_LIST_SCHEMA_OR_SIZE")
                 stats["lists_read"] += 1
                 for row in rows:
+                    stats["rows_scanned"] += 1
+                    if isinstance(row, dict) and str(row.get("id_hotel", "")) in hotel_by_id:
+                        stats["known_hotel_ids"] += 1
                     candidate = safe_preview(row, country["name"], hotel_by_id)
                     if candidate and candidate["id"] not in ids:
                         ids.add(candidate["id"])
@@ -155,6 +159,10 @@ def main():
     result = build(catalog, bg.ApiClient(login, password),
                    args.max_countries, args.per_country)
     if not result["previews"]:
+        for i, stats in enumerate(result["countries_status"], 1):
+            print("COUNTRY_"+str(i)+"="+stats["country"])
+            print("ROWS_SCANNED_"+str(i)+"="+str(stats["rows_scanned"]))
+            print("HOTEL_IDS_MATCHED_"+str(i)+"="+str(stats["known_hotel_ids"]))
         raise bg.SyncHold("NO_MATCHED_HOTEL_PREVIEWS_DO_NOT_PUBLISH_EMPTY")
     destination = Path(args.output)
     if destination.is_symlink():
@@ -168,6 +176,13 @@ def main():
     print("COUNTRIES_ATTEMPTED="+str(len(result["countries_status"])))
     print("COUNTRIES_WITH_PREVIEWS="+str(len({p["country"] for p in result["previews"]})))
     print("PREVIEW_COUNT="+str(len(result["previews"])))
+    for i, stats in enumerate(result["countries_status"], 1):
+        print("COUNTRY_"+str(i)+"="+stats["country"])
+        print("STATUS_"+str(i)+"="+stats["status"])
+        print("PRICE_LISTS_"+str(i)+"="+str(stats["lists_read"]))
+        print("ROWS_SCANNED_"+str(i)+"="+str(stats["rows_scanned"]))
+        print("HOTEL_IDS_MATCHED_"+str(i)+"="+str(stats["known_hotel_ids"]))
+        print("PUBLIC_PREVIEWS_"+str(i)+"="+str(stats["previews"]))
     print("NO_PRICE_NO_SECRET_NO_BOOKING_EXPORTED=YES")
 
 if __name__ == "__main__":
