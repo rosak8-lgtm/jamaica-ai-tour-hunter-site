@@ -49,6 +49,20 @@ class Tests(unittest.TestCase):
                        "operator","session","total_rub"):
             self.assertNotIn(banned,p)
         self.assertNotIn("130000",json.dumps(p))
+    def test_indicative_rub_reference_for_two_adults(self):
+        p=exporter.safe_preview(row(),COUNTRY,self.hotels,"EUR")
+        self.assertEqual(p["price_reference_rub"],130000)
+        self.assertEqual(p["price_reference_party"],"TWO_ADULTS")
+        self.assertFalse(p["bookable"])
+        self.assertFalse(p["quote_verified"])
+        self.assertNotIn("href2",p)
+    def test_no_reference_without_currency(self):
+        p=exporter.safe_preview(row(),COUNTRY,self.hotels)
+        self.assertIsNone(p["price_reference_rub"])
+        self.assertEqual(p["price_reference_party"],"UNVERIFIED")
+    def test_no_reference_for_child_scope(self):
+        p=exporter.safe_preview(row(prices=[{"amount":"1500","RUR":"100000","ag":"12+,2-11"}]),COUNTRY,self.hotels,"EUR")
+        self.assertIsNone(p["price_reference_rub"])
     def test_skip_unmatched_hotel(self):
         self.assertIsNone(exporter.safe_preview(row(id_hotel="99999999999"),COUNTRY,self.hotels))
     def test_skip_empty_price(self):
@@ -69,12 +83,14 @@ class Tests(unittest.TestCase):
                         "date":DATE,"url":"https://export.bgoperator.ru/partners?action=price&tid=211&flt=100410000051&flt2="
                          +bg.CITY_ID+"&id_price=121132934133&data="+DATE+"&xml=11"
                     }]}).encode()
-                return json.dumps({"entries":[row()]}).encode()
+                return json.dumps({"cur":"EUR","entries":[row()]}).encode()
         directory={"schema":"jamaica.destination-directory.v1",
                    "countries":[{"name":COUNTRY,"id":"100410000051","has_tour_catalog":True,"origins":[bg.CITY_ID]}],
                    "hotels":list(self.hotels.values())}
         result=exporter.build(directory,Api(),max_countries=1,per_country=1)
         self.assertEqual(len(result["previews"]),1)
+        self.assertEqual(result["indicative_two_adult_rub_count"],1)
+        self.assertEqual(result["previews"][0]["price_reference_rub"],130000)
         self.assertFalse(result["bookable"])
         self.assertEqual(result["countries_status"][0]["status"],"CHECKED")
 
