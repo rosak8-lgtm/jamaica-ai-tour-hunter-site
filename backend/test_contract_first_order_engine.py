@@ -226,8 +226,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.repo.orders[id]["status"],"BOOKING_RECONCILIATION_REQUIRED")
         self.assertEqual(self.psp.refunds,[])
         self.assertEqual(len(self.supplier.bookings),1)
-        with self.assertRaises(BadOrder):
-            self.engine.reconcile_payment_and_book(id)
+        self.assertEqual(self.engine.reconcile_payment_and_book(id),"BOOKING_RECONCILIATION_REQUIRED")
         self.assertEqual(len(self.supplier.bookings),1)
     def test_notification_failure_cannot_refund_successful_booking(self):
         class BrokenOutbox:
@@ -295,6 +294,25 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.engine.reconcile_supplier_status(id),"BOOKING_RECONCILIATION_REQUIRED")
         self.assertEqual(self.psp.refunds,[])
         self.assertEqual(len(self.supplier.bookings),1)
+    def test_operator_submission_requires_later_confirmation(self):
+        oid=self.paid()
+        self.supplier.booking_result={"status":"SUBMITTED","supplier_booking_id":"application-321"}
+        self.assertEqual(self.engine.reconcile_payment_and_book(oid),"SUPPLIER_SUBMITTED")
+        self.assertEqual(len(self.supplier.bookings),1)
+        self.assertEqual(self.engine.reconcile_payment_and_book(oid),"SUPPLIER_SUBMITTED")
+        self.assertEqual(len(self.supplier.bookings),1)
+        self.assertEqual(list(self.outbox.events.values())[0]["type"],"TOUR_SUBMITTED_WAITING_OPERATOR")
+        self.supplier.lookup_booking=lambda key:{"status":"CONFIRMED","supplier_booking_id":"application-321"}
+        self.assertEqual(self.engine.reconcile_supplier_status(oid),"BOOKED")
+        self.assertEqual(len(self.outbox.events),2)
+        self.assertEqual(len(self.supplier.bookings),1)
+    def test_operator_submission_rejected_then_refund(self):
+        oid=self.paid()
+        self.supplier.booking_result={"status":"SUBMITTED","supplier_booking_id":"application-321"}
+        self.engine.reconcile_payment_and_book(oid)
+        self.supplier.lookup_booking=lambda key:{"status":"REJECTED","definitive":True}
+        self.assertEqual(self.engine.reconcile_supplier_status(oid),"REFUND_REQUIRED")
+        self.assertEqual(len(self.psp.refunds),1)
     def test_contract_digest_is_stable_and_tamper_evident(self):
         a={"buyer_id":"customer_1","total_rub":100}
         self.assertEqual(contract_digest(a),contract_digest(dict(reversed(list(a.items())))))
