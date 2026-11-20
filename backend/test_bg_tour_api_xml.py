@@ -38,6 +38,41 @@ class Tests(unittest.TestCase):
   self.assertEqual(item.findtext("groups/group/startDate"),"11.12.2026")
   self.assertEqual(item.find("groups/group/roommeal").get("duration"),"7")
   self.assertEqual(len(item.findall("groups/group/persons/person")),2)
+ def test_customer_identity_optional_private_gais_ep_fields(self):
+  customer={
+    "first_name":"IVAN","last_name":"IVANOV","middle_name":"IVANOVICH",
+    "address":"MOSCOW, 14 TEST STREET","citizenship":"100410000050",
+    "passport_series":"AA","passport_number":"12345678",
+    "phone":"+79990000000","email":"ivan@example.org"
+  }
+  _,data=build_price_request(TOUR,PASSENGERS,customer)
+  root=ET.fromstring(data)
+  self.assertEqual(root.findtext("tour/customerFirstName"),"IVAN")
+  self.assertEqual(root.findtext("tour/customerAddress"),"MOSCOW, 14 TEST STREET")
+  self.assertEqual(root.findtext("tour/customerCitizen"),"100410000050")
+  self.assertEqual(root.findtext("tour/customerEmail"),"ivan@example.org")
+  self.assertIsNone(root.find("tour/confirm"))
+  self.assertEqual(len(root.findall("tour/groups/group/persons/person")),2)
+ def test_reject_invalid_gais_ep_customer(self):
+  base={"first_name":"IVAN","last_name":"TESTOV","address":"TEST ADDRESS 21",
+        "citizenship":"100410000050","passport_series":"AA",
+        "passport_number":"12345678"}
+  for wrong in (
+     {**base,"citizenship":"bad"},
+     {**base,"address":"<script>alert(1)</script>"},
+     {**base,"email":"not-email"},
+  ):
+   with self.assertRaises(BadOrder):
+    build_price_request(TOUR,PASSENGERS,wrong)
+ def test_passenger_middle_name_and_absent_middle_name(self):
+  people=[dict(p) for p in PASSENGERS]
+  people[0]["middle_name"]="IVANOVICH"
+  people[1]["no_middle_name"]=True
+  _,data=build_price_request(TOUR,people)
+  root=ET.fromstring(data)
+  person=root.findall("tour/groups/group/persons/person")
+  self.assertEqual(person[0].findtext("middleName"),"IVANOVICH")
+  self.assertEqual(person[1].findtext("notHaveMiddleName"),"1")
  def test_private_confirm_needs_all_three_independent_gates(self):
   for flags in (
    {"paid_and_verified":False,"third_quote_exact":True,"buyer_contract_signature_verified":True},
