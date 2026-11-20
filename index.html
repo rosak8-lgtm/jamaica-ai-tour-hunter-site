@@ -46,6 +46,7 @@
 <div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
 <div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
+<div class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки. Обновление данных в браузере — каждые 5 минут.</div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 </div></section>
@@ -428,10 +429,10 @@ function renderTourPreviews(reset=true){
    card.append(el("small","",x.room));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
-     card.append(el("strong","", "Ориентир на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
+     card.append(el("strong","", "Цена по прайс-листу на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
      card.append(el("small","", "В среднем при поездке вдвоём: "+new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+" ₽ на человека. Цена одного туриста рассчитывается отдельно."));
      card.append(el("small","",
-       (previewPriceFresh?"Свежий ориентир":"Цена могла измениться")+
+       (previewPriceFresh?"Цена актуальна на момент выгрузки":"Цена могла измениться")+
        ". По прайс-листу на "+previewPriceAsOf+
        ". Итоговая стоимость, рейсы и свободные номера перепроверяются перед договором и покупкой."));
    }else{
@@ -464,6 +465,9 @@ async function loadTourPreviews(){
   previewPriceListed=Number.isFinite(refreshed)&&age>=-60000&&age<=24*60*60*1000;
   previewPriceAsOf=Number.isFinite(refreshed)?
     new Date(refreshed).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"}):"неизвестную дату";
+  $("previewUpdatedAt").textContent="Выгрузка: "+previewPriceAsOf+
+    ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
+    ". Браузер проверяет новый каталог каждые 5 минут; расписание серверного импорта задаётся отдельно.";
   previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
     typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
@@ -477,9 +481,18 @@ async function loadTourPreviews(){
      (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
       x.price_reference_party==="TWO_ADULTS")));
   previewsLoaded=true;renderTourPreviews(true);
- }catch(e){previewsLoaded=false;renderTourPreviews(true);}
+ }catch(e){
+  $("previewUpdatedAt").textContent="Не удалось проверить обновление каталога. Последняя загруженная копия может быть устаревшей.";
+  if(!previewsLoaded)renderTourPreviews(true);
+ }
 }
 loadTourPreviews();
+setInterval(()=>{
+ if(document.visibilityState==="visible")loadTourPreviews();
+},5*60*1000);
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="visible")loadTourPreviews();
+});
 loadRouteDiscovery();
 })();
 </script>
