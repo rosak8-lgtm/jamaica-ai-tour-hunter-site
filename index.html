@@ -401,12 +401,17 @@ function renderTourPreviews(reset=true){
  const date=$("dateFrom").value;
  const nights=Number($("nights").value);
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
+ const adults=Number($("adults").value),children=Number($("kids").value);
+ const budget=Number($("budget").value)||0;
+ const partyTwoAdults=adults===2&&children===0;
  let list=previewRecords.filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
    (!date||x.depart_date===date)&&
    (!nights||x.nights===nights)&&
-   (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))
+   (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
+   (!budget||(partyTwoAdults&&referencePrice(x)!==null&&
+                referencePrice(x)<=budget*2))
  );
  list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
  if(!country)list=interleaveCountries(list);
@@ -418,7 +423,7 @@ function renderTourPreviews(reset=true){
    card.append(el("small","",x.origin+" · "+x.depart_date+" · "+x.nights+" ночей"));
    card.append(el("div","",x.resort||x.country));
    card.append(el("small","",x.room));
-   const reference=referencePrice(x);
+   const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      card.append(el("strong","", "Ориентир на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
      card.append(el("small","", "Цена из прайс-листа, не окончательная. Перед покупкой необходим расчёт и подтверждение мест."));
