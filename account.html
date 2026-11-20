@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#35194f">
+<title>Заказ и договор — JAMAICA</title>
+<style>
+:root{--ink:#2e2241;--purple:#35194f;--teal:#007f86;--line:#e5dbe8;--bg:#fbfaf7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Arial,sans-serif}
+nav{background:var(--purple);padding:20px}nav a{color:white;text-decoration:none;font-weight:800}
+main{max-width:820px;margin:34px auto 80px;padding:0 16px}h1{font-size:clamp(28px,5vw,43px);margin:0 0 8px}
+h2{font-size:20px}.sub{color:#756b7c}section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;margin:20px 0}
+button,.btn{display:inline-block;padding:13px 19px;border:0;border-radius:11px;color:#fff;background:var(--teal);cursor:pointer;font:700 15px system-ui;text-decoration:none;margin:7px 8px 7px 0}
+button:disabled{opacity:.45;cursor:not-allowed}button.secondary{color:var(--teal);border:1px solid var(--teal);background:white}
+.note{border-radius:12px;border:1px solid #e9d8a5;background:#fff7dc;padding:14px;margin-top:12px}
+ol{padding-left:25px}li{margin:12px 0}.hide{display:none!important}
+iframe{border:1px solid var(--line);border-radius:14px;width:100%;height:580px}
+a:focus-visible,button:focus-visible{outline:3px solid #f5c452;outline-offset:3px}
+</style></head>
+<body><nav><a href="./">🦜 JAMAICA · К поиску путешествий</a></nav>
+<main>
+<h1>Договор и оформление заказа</h1>
+<p class="sub">Раздел личного кабинета заказа. Доступ возможен только после подключения авторизации покупателя и защищённого сервера JAMAICA.</p>
+<section>
+<h2>Этапы вашего заказа</h2>
+<ol>
+<li>Проверка цены, перелётов и отсутствия стоп-продажи перед договором</li>
+<li>Формирование договора и подтверждение электронной подписи</li>
+<li>Повторная проверка стоимости перед оплатой</li>
+<li>Оплата через защищённого платёжного провайдера</li>
+<li>Проверка поступления денег и третья проверка цены, рейсов и гостиницы</li>
+<li>Создание заявки в агентском кабинете туроператора и уведомление</li>
+</ol>
+<div class="note" id="orderMessage" role="status" aria-live="polite">Загружаем сведения о договоре…</div>
+<div id="currentOrder" class="sub"></div>
+<div id="actions" class="hide">
+<a id="signLink" class="btn hide" rel="noopener noreferrer" target="_blank">Открыть договор для электронной подписи</a>
+<button id="verifySign" class="secondary hide">Проверить подпись у провайдера</button>
+<button id="initiatePay" class="hide">Проверить цену № 2 и оплатить подписанный договор</button>
+<button id="refreshOrder" class="secondary">Обновить статус заказа</button>
+</div>
+<div id="payment" class="hide"><h2>Оплата после проверенной подписи</h2>
+<p class="sub">Сумма повторно сверяется с подписанным договором. Платёж подтверждается только сервером; возврат с платёжной страницы не доказывает оплату.</p>
+<iframe title="Форма оплаты платёжного провайдера" id="providerFrame" referrerpolicy="no-referrer" sandbox="allow-forms allow-scripts allow-same-origin"></iframe></div>
+</section>
+<p class="sub">Если отель имеет статус «под запрос», это не подтверждённая бронь. После оплаты заявка может ожидать ответа гостиницы. При изменении цены или отказе предусмотрена процедура возврата.</p>
+</main>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+let api="",pspOrigin="",signOrigin="",order=null,authToken="";
+const msg=value=>$("orderMessage").textContent=value;
+function allowedUrl(raw,expected){
+ try{
+  const url=new URL(raw),origin=new URL(expected);
+  if(url.protocol!=="https:"||url.username||url.password||url.origin!==origin.origin)return null;
+  return url.href;
+ }catch(e){return null;}
+}
+function authHeaders(json=false){
+ const headers={"Authorization":"Bearer "+authToken,"X-Jamaica-Order-Access":order.status_token};
+ if(json)headers["Content-Type"]="application/json";
+ return headers;
+}
+async function server(method,path,body){
+ const response=await fetch(api+path,{method,credentials:"omit",cache:"no-store",
+   headers:authHeaders(body!==undefined),body:body===undefined?undefined:JSON.stringify(body)});
+ if(!response.ok)throw Error("ORDER_API_REJECTED");
+ return response.json();
+}
+function showStatus(status){
+ const labels={
+  "CONTRACT_CREATING":"Формируется договор",
+  "AWAITING_SIGNATURE":"Договор создан. Подпишите его с помощью проверяемого провайдера",
+  "CONTRACT_SIGNED":"Электронная подпись проверена сервером. Можно повторно проверить цену и перейти к оплате",
+  "PAYMENT_CREATING":"Создаётся платёж",
+  "PAYMENT_PENDING":"Ожидается подтверждение поступления денег",
+  "PAID_RECHECK_REQUIRED":"Деньги получены, выполняется третья проверка перед заявкой",
+  "BOOKING_IN_PROGRESS":"Создаётся заявка у туроператора",
+  "BOOKED":"Бронирование подтверждено туроператором",
+  "SUPPLIER_ON_REQUEST":"Заявка создана, гостиница ещё ожидает подтверждения",
+  "BOOKING_RECONCILIATION_REQUIRED":"Требуется проверка заявки у туроператора. Не оплачивайте повторно",
+  "REFUND_REQUIRED":"Оплата получена, но бронирование не состоялось. Запущена процедура возврата",
+  "REFUND_PENDING":"Возврат запрошен у платёжного провайдера; ожидается подтверждение",
+  "REFUNDED":"Возврат подтверждён",
+  "PAYMENT_FAILED":"Оплата не подтверждена",
+  "CONTRACT_FAILED":"Не удалось сформировать договор"
+ };
+ msg(labels[status]||"Статус заказа уточняется. Не оплачивайте повторно без проверки.");
+ $("signLink").classList.toggle("hide",status!=="AWAITING_SIGNATURE");
+ $("verifySign").classList.toggle("hide",status!=="AWAITING_SIGNATURE");
+ $("initiatePay").classList.toggle("hide",status!=="CONTRACT_SIGNED");
+ if(status==="BOOKED"||status==="REFUNDED"){
+   $("signLink").classList.add("hide");
+   $("initiatePay").classList.add("hide");
+ }
+}
+async function status(){
+ const result=await server("GET","/v1/contract-orders/"+encodeURIComponent(order.order_id));
+ if(typeof result.status!=="string")throw Error("INVALID_ORDER_STATE");
+ showStatus(result.status);
+ return result.status;
+}
+async function init(){
+ try{
+  const raw=sessionStorage.getItem("jamaica_current_order");
+  const configResponse=await fetch("./checkout-config.json",{cache:"no-store"});
+  if(!configResponse.ok)throw Error("CONFIG_UNAVAILABLE");
+  const cfg=await configResponse.json();
+  authToken=sessionStorage.getItem("jamaica_auth_token")||"";
+  order=JSON.parse(raw||"null");
+  if(!cfg||cfg.contract_first_enabled!==true||cfg.trusted_signature_enabled!==true||
+     cfg.auth_api_enabled!==true||cfg.live_booking_enabled!==true||
+     cfg.payments_enabled!==true||!order||
+     !/^[a-zA-Z0-9_-]{8,100}$/.test(order.order_id||"")||
+     typeof order.status_token!=="string"||order.status_token.length<32||
+     authToken.length<32)throw Error("ACCOUNT_NOT_CONFIGURED");
+  const u=new URL(cfg.api_base_url);
+  if(u.protocol!=="https:"||u.username||u.password||u.search||u.hash)throw Error("UNSAFE_API");
+  api=u.href.replace(/\/$/,"");
+  pspOrigin=cfg.payment_iframe_origin;
+  signOrigin=cfg.signing_origin;
+  const link=allowedUrl(order.signing_url,signOrigin);
+  if(!link||!allowedUrl(pspOrigin,pspOrigin))throw Error("UNTRUSTED_PROVIDER");
+  $("signLink").href=link;
+  $("currentOrder").textContent="Заказ: "+order.order_id;
+  $("actions").classList.remove("hide");
+  await status();
+ }catch(e){
+  msg("Личный кабинет или договор пока недоступны. Требуются защищённая авторизация, подтверждённый договор и подключённый сервер заказов. Оплата не выполняется.");
+ }
+}
+$("verifySign").addEventListener("click",async()=>{
+ $("verifySign").disabled=true;
+ try{
+  const result=await server("POST","/v1/contract-orders/"+encodeURIComponent(order.order_id)+"/verify-signature",{});
+  if(result.status!=="CONTRACT_SIGNED")throw Error("SIGNATURE_NOT_CONFIRMED");
+  showStatus("CONTRACT_SIGNED");
+ }catch(e){msg("Провайдер ещё не подтвердил электронную подпись. Оплата запрещена.");}
+ finally{$("verifySign").disabled=false;}
+});
+$("initiatePay").addEventListener("click",async()=>{
+ $("initiatePay").disabled=true;
+ try{
+  const response=await server("POST","/v1/contract-orders/"+encodeURIComponent(order.order_id)+"/payment",{});
+  if(response.status!=="PAYMENT_READY"||
+     !Number.isSafeInteger(response.total_rub)||response.total_rub<=0)
+     throw Error("PAYMENT_NOT_READY");
+  const url=allowedUrl(response.payment_iframe_url,pspOrigin);
+  if(!url)throw Error("PSP_ORIGIN_REJECTED");
+  $("providerFrame").src=url;
+  $("payment").classList.remove("hide");
+  showStatus("PAYMENT_PENDING");
+ }catch(e){msg("Нет подтверждения подписи, повторной цены, рейсов, номера или платёжного провайдера. Оплата не началась.");}
+ finally{$("initiatePay").disabled=false;}
+});
+$("refreshOrder").addEventListener("click",async()=>{
+ $("refreshOrder").disabled=true;
+ try{await status();}
+ catch(e){msg("Не удалось получить подтверждённый статус. Не оплачивайте повторно.");}
+ finally{$("refreshOrder").disabled=false;}
+});
+init();
+})();
+</script>
+</body></html>
