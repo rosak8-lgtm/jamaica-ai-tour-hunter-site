@@ -134,6 +134,11 @@ assert.ok(page.includes('id="previewCards"'));
 assert.ok(page.includes('id="previewMore"'));
 assert.ok(page.includes('tour-previews.json'));
 assert.ok(page.includes('function renderTourPreviews('));
+assert.ok(page.includes('id="previewCountryChips"'));
+assert.ok(page.includes('function renderPreviewCountryChips()'));
+assert.ok(page.includes('function interleaveCountries(rows)'));
+assert.ok(page.includes('if(!country)list=interleaveCountries(list)'));
+
 assert.ok(page.includes('preview.html?id='));
 const previewDetail=fs.readFileSync('preview.html','utf8');
 for(const id of ['heading','subtitle','notice','facts','hotelInfo','hotelLink','bookingStatus','alternatives']){
