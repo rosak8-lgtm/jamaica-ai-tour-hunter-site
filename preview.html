@@ -30,7 +30,8 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 <section class="card"><h2>Информация об отеле</h2><p class="sub" id="hotelInfo">Загружаем справочник гостиниц…</p><a class="btn secondary" id="hotelLink" href="./#hotels">Подробнее об отеле</a></section>
 <section class="card"><h2>Оформление</h2><p>Выбранные даты и тип номера сохранены на этой странице. Для оплаты требуется подтверждённый поставщиком расчёт, доступность мест, договор и действующая система бронирования.</p>
 <div id="bookingStatus" class="notice">Сейчас предложение нельзя оплатить: подтверждённая котировка и бронирование ещё не подключены.</div>
-<a class="btn" href="./#offers">Выбрать другой вариант</a></section>
+<a class="btn" id="quoteLink" href="./#offers">Проверить стоимость и перейти к договору</a>
+<a class="btn secondary" href="./#offers">Выбрать другой вариант</a></section>
 <section class="card"><h2>Похожие варианты по другим странам и датам</h2><div id="alternatives" class="other"></div></section>
 </main>
 <script>
@@ -58,6 +59,7 @@ async function init(){
     x.depart_date>=new Date().toISOString().slice(0,10));
   if(!p){$("heading").textContent="Вариант больше не актуален";$("subtitle").textContent="Вернитесь в поиск и выберите свежую дату.";return;}
   $("heading").textContent=p.country+" — "+p.hotel;
+  $("quoteLink").href="quote.html?preview="+encodeURIComponent(p.id);
   $("subtitle").textContent=p.resort||p.country;
   fact("Город вылета",p.origin);
   fact("Дата вылета",p.depart_date);
