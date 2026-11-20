@@ -49,7 +49,7 @@ for row in rows:
             raise SystemExit("STOP_UNVERIFIED_REFERENCE_PRICE")
     elif row.get("price_reference_party")!="UNVERIFIED":
         raise SystemExit("STOP_REFERENCE_PRICE_SCOPE_INVALID")
-payload={"message":"Refresh real read-only hotel date and room previews without prices","branch":"main",
+payload={"message":"Refresh travel previews with clearly labelled indicative two-adult RUB prices","branch":"main",
          "content":base64.b64encode(source.read_bytes()).decode("ascii")}
 pathlib.Path(sys.argv[2]).write_text(json.dumps(payload,separators=(",",":")))
 print("PREVIEW_EXPORT_VALIDATED="+str(len(rows)))
@@ -65,4 +65,4 @@ fi
 echo "=== PUBLISH SANITIZED HOTEL-DATE PREVIEWS ==="
 gh api -X PUT "repos/$REPO/contents/tour-previews.json" --input "$TMP/upload.json" --jq '.commit.sha'
 echo "JAMAICA_TOUR_PREVIEWS_PUBLISHED=YES"
-echo "NO_PRICE_NO_BOOKING_NO_SECRET_EXPORTED=YES"
+echo "NO_CONFIRMED_SALE_NO_BOOKING_NO_SECRET_EXPORTED=YES"
