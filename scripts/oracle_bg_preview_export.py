@@ -20,7 +20,7 @@ from pathlib import Path
 import oracle_bg_route_sync as bg
 import oracle_bg_price_detail_probe as detail
 
-MAX_ROWS = 2000
+MAX_ROWS = 6000
 MAX_RESPONSE_ROWS = 25000
 MAX_COUNTRIES = 12
 ALLOWED_ORIGIN = "Иркутск"
