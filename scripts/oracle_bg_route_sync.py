@@ -34,13 +34,13 @@ def read_secret(path:Path):
     def find(o,names):
         for name in names:
             if isinstance(o.get(name),str) and o[name].strip():return o[name]
-        for key in ("credentials","auth","bg","account","private"):
+        for key in ("credentials","auth","bg","bg_credentials","account","private","data"):
             if isinstance(o.get(key),dict):
                 v=find(o[key],names)
                 if v:return v
         return None
-    login=find(obj,("login","username","user","agency_login"))
-    password=find(obj,("pwd","password","pass","agency_password"))
+    login=find(obj,("login","username","user","agency_login","bg_login","api_login"))
+    password=find(obj,("pwd","password","pass","agency_password","bg_password","api_password"))
     if not login or not password:raise SyncHold("CREDENTIALS_FIELDS_NOT_IDENTIFIED")
     return login,password
 
@@ -51,6 +51,7 @@ def credentials_path(requested:str):
         home/"jamaica-site-monitor"/"private"/"bg_readonly_credentials.json",
         home/"jamaica-web-pwa"/"jamaica-site-monitor"/"private"/"bg_readonly_credentials.json",
         home/".local"/"share"/"jamaica-site-monitor"/"private"/"bg_readonly_credentials.json",
+        home/".local"/"opt"/"jamaica-site-monitor"/"private"/"bg_readonly_credentials.json",
         home/".config"/"jamaica-site-monitor"/"private"/"bg_readonly_credentials.json",
     ):
         if p.is_file() and not p.is_symlink():return p
