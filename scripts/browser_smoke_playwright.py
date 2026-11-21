@@ -355,6 +355,22 @@ def main():
                 ensure("Вид из гостиницы" not in page.locator("#gallery").inner_text(),
                        "GUANGZHOU_PANORAMAS_MUST_NOT_BE_MISTAKEN_FOR_HOTEL_FACADE")
 
+                # A request for a larger thumbnail may be rate-limited:
+                # display the SAME hotel's verified photo at standard 500px.
+                page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
+                  lambda route: route.abort("failed") if
+                    route.request.url.endswith("width=960")
+                    else route.fulfill(status=200,content_type="image/png",body=pixel))
+                page.goto(base+"hotel.html?id=102667206879",wait_until="domcontentloaded")
+                page.locator("#gallery").scroll_into_view_if_needed()
+                page.wait_for_function(
+                  "()=>[...document.querySelectorAll('#gallery figure.photo img')]"+
+                  ".length===3&&[...document.querySelectorAll('#gallery figure.photo img')]"+
+                  ".every(img=>img.complete&&img.naturalWidth>0&&img.src.endsWith('width=500'))",
+                  timeout=18000)
+                print("WIKIMEDIA_960_TO_500_HOTEL_IMAGE_RETRY_PASS")
+                page.unroute("https://commons.wikimedia.org/wiki/Special:FilePath/**")
+
                 # When the actual hotel images fail, do not replace them
                 # with photos of Guangzhou skyline or unrelated hotels.
                 page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
