@@ -1,0 +1,82 @@
+{
+  "schema": "jamaica.hotel-enrichment.v1",
+  "updated_at_utc": "2026-11-21T04:30:00Z",
+  "notice": "Only manually verified hotel-specific facts and freely licensed photo material. No invented availability, prices or ratings.",
+  "hotels": {
+    "102610001140": {
+      "name": "ADRIATIC PALACE PATTAYA",
+      "country": "Таиланд",
+      "resort": "Паттайя",
+      "source_type": "operator_hotel_information_verified",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Adriatic Palace Pattaya — высотная гостиница в районе Пратамнак города Паттайя, недалеко от побережья Сиамского залива. По опубликованному описанию гостиницы здесь предусмотрены несколько категорий номеров, два бассейна, инфраструктура для семейного отдыха и питание по программам завтраков, полупансиона и полного пансиона. Из части номеров открывается вид на море. Фактическую работу услуг и особенности выбранного номера необходимо уточнять на дату поездки.",
+      "location_details": "469 Moo 2, Khaopratamnak Road, Nongprue, Banglamung, Chonburi 20260, Таиланд.",
+      "year_built": "1997",
+      "rooms_total": "402",
+      "room_categories": [
+        "Superior — около 36 м², 6–22 этажи, двуспальная или две отдельные кровати, балкон с видом на море (по сообщению представителей гостиницы от 18.08.2026)",
+        "Deluxe — около 32 м², 6–22 этажи, две кровати Queen Size, балкон с видом на море (по сообщению представителей гостиницы от 18.08.2026)",
+        "Panorama — около 48 м², 28–29 этажи, две двуспальные кровати, балкон с прямым видом на море (по сообщению представителей гостиницы от 31.10.2026)",
+        "Excellency — категория указана в каталоге; детали проверяются при выборе",
+        "One Bedroom Suite — категория указана в каталоге; детали проверяются при выборе"
+      ],
+      "room_features": [
+        "Кондиционер",
+        "Балкон",
+        "Ванная комната с ванной или душем (зависит от категории)",
+        "Фен",
+        "Телевизор",
+        "Мини-бар"
+      ],
+      "amenities": [
+        "Два бассейна, включая открытый",
+        "Детский бассейн и площадка",
+        "Сауна и массаж",
+        "Теннисный корт",
+        "Конференц-зал",
+        "Пляжные полотенца"
+      ],
+      "meals": [
+        "Завтраки (BB)",
+        "Полупансион (HB)",
+        "Полный пансион (FB)"
+      ],
+      "guest_notes": [
+        "В опубликованном описании размещение с животными запрещено.",
+        "Информация о стоимости шезлонгов и зонтов может меняться.",
+        "В опубликованной карточке поставщика есть запись об изменении звёздности 10.06.2026; используем категорию 3*, указанную в текущем справочнике."
+      ],
+      "photo_note": "Две исторические фотографии сделаны с 20-го этажа отеля в марте 2010 года. Это виды из гостиницы, а не фотографии фасада или современного номера.",
+      "photos": [
+        {
+          "file": "Pattaya_city_view_from_the_20-floor_of_Adriatic_Palace_hotel.jpg",
+          "title": "Вид на Паттайю с 20-го этажа гостиницы, 2010",
+          "author": "KAlexey",
+          "license": "CC BY-SA 3.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Pattaya_city_view_from_the_20-floor_of_Adriatic_Palace_hotel.jpg",
+          "kind": "historical_view_not_property_facade"
+        },
+        {
+          "file": "Sea_view_and_Ko_Lan_island_from_the_20-flor_of_Adriatic_Palace_hotel.jpg",
+          "title": "Вид на море и остров Ко-Лан с 20-го этажа гостиницы, 2010",
+          "author": "KAlexey",
+          "license": "CC BY-SA 3.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Sea_view_and_Ko_Lan_island_from_the_20-flor_of_Adriatic_Palace_hotel.jpg",
+          "kind": "historical_view_not_property_facade"
+        }
+      ],
+      "sources": [
+        {
+          "type": "hotel_information",
+          "url": "https://www.bgoperator.ru/price.shtml?action=shw&code=102610001140&flt=100410000051&page=info&tid=26"
+        },
+        {
+          "type": "hotel_room_information",
+          "url": "https://www.bgoperator.ru/price.shtml?action=shw&code=102610001140&flt=100410000051&page=questions&tid=26"
+        }
+      ]
+    }
+  }
+}
