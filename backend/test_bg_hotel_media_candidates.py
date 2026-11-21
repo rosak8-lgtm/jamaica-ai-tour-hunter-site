@@ -45,8 +45,8 @@ class Tests(unittest.TestCase):
            "hotelPic":self.picture}
         ]
         matches=m.parse_candidates(json.dumps(rows).encode(),self.catalog["hotels"])
-        self.assertEqual([x["hotel_id"] for x in matches],["102610001140"])
-        # The identity is the supplier's explicit hotel ID, never fuzzy name.
+        self.assertEqual(matches,[])
+        # Reject both unknown hotelId and a known ID with a contradictory hotel name.
     def test_url_security(self):
         for value in (
           "https://evil.example/pr_img/a.jpg",
