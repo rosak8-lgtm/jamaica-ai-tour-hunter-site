@@ -24,6 +24,28 @@ for(const filter of ['filterCountry','filterResort','filterNights','filterHotel'
 }
 assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSidebar()'),
   'Search sidebar cannot be a decorative mockup');
+assert.ok(page.includes('id="otherCountries"')&&page.includes('id="catalogBreadth"'),
+ 'Customer must easily discover other published countries');
+assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
+ 'Search must interleave actual countries without inventing availability');
+const mascotAsset=fs.readFileSync('assets/jamaica-parrot-mascot.svg','utf8');
+const mascotMark=fs.readFileSync('assets/jamaica-parrot-mark.svg','utf8');
+for(const a of [mascotAsset,mascotMark]){
+ assert.ok(a.startsWith('<svg ')&&a.includes('viewBox=')&&a.includes('stroke='));
+ assert.ok(!/https?:\/\/|<script|<foreignObject/i.test(a),
+  'Mascot SVG must remain standalone without scripts or remote assets');
+}
+assert.ok(page.includes('src="./assets/jamaica-parrot-mascot.svg"')&&
+ page.includes('src="./assets/jamaica-parrot-mark.svg"'),
+ 'Logo and hero must use the new glasses macaw');
+assert.ok(searchStyle.includes('.heroArt .mascotHero')&&
+ searchStyle.includes('.heroArt::after{display:none!important}'),
+ 'Old stick-like hero overlay must be gone');
+for(const name of ['hotel.html','preview.html','tour.html','quote.html','checkout.html','account.html','route.html']){
+ assert.ok(fs.readFileSync(name,'utf8').includes('src="./assets/jamaica-parrot-mark.svg"'),
+  'Consistent customer pages: '+name);
+}
+
 assert.ok(page.includes('if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({'),
  'The selected country must survive an empty current feed');
 assert.ok(page.includes('id="budgetNotice"')&&page.includes('budgetNotice").textContent=budgetMessage'),
