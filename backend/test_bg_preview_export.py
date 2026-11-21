@@ -169,5 +169,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(result["previews"][0]["price_reference_rub"],130000)
         self.assertFalse(result["bookable"])
         self.assertEqual(result["countries_status"][0]["status"],"CHECKED")
+        month=datetime.strptime(DATE,"%d.%m.%Y").strftime("%Y-%m")
+        self.assertEqual(result["countries_status"][0]["sampled_departure_months"],[month])
 
 if __name__=="__main__": unittest.main()
