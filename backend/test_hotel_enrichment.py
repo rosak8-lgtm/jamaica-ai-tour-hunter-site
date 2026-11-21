@@ -80,6 +80,23 @@ class Tests(unittest.TestCase):
         self.assertIn('img.loading="lazy"',self.page)
         self.assertIn("loadPhotos(true)",self.page)
 
+    def test_fallback_after_broken_remote_commons_images(self):
+        self.assertIn('figure.dataset.photoSource=hotelPhoto?',self.page)
+        self.assertIn('img.addEventListener("error",()=>{',self.page)
+        self.assertIn('if(hotelPhoto)loadDestinationPhotos(place);',self.page)
+        self.assertIn('else showPhotoPlaceholder();',self.page)
+        self.assertIn('img.decoding="async"',self.page)
+        self.assertIn('img.referrerPolicy="no-referrer"',self.page)
+
+    def test_city_scenery_fallback_is_not_a_hotel_photo(self):
+        self.assertIn('"Гуанчжоу":"Guangzhou"',self.page)
+        self.assertIn('"Шанхай":"Shanghai"',self.page)
+        self.assertIn('"Пекин":"Beijing"',self.page)
+        self.assertIn('const isCity=new Set(',self.page)
+        self.assertIn('" skyline filetype:bitmap"',self.page)
+        self.assertIn('hotelPhoto:false,place',self.page)
+        self.assertIn('НЕ фотография гостиницы',self.page)
+
     def test_unlicensed_hotel_photos_never_claimed_to_be_resort_photos(self):
         self.assertIn("async function loadRightsApprovedHotelPhotos()",self.page)
         self.assertIn('entry.commercial_publication_allowed!==true',self.page)
