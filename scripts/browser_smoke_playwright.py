@@ -195,12 +195,17 @@ def main():
                 # official supplier publishes no validated Irkutsk tour.
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
-                selector=page.locator("#allCountrySelector")
-                ensure(selector.locator("option").count()>=251,
-                       "FULL_DESTINATION_DIRECTORY_NOT_IN_TOUR_RESULTS")
-                selector.select_option("Мальдивы")
+                ensure(page.locator("#destinations").count()==0,
+                       "ALL_COUNTRIES_WALL_SHOULD_NOT_BE_ON_HOMEPAGE")
+                ensure(page.locator("#destinationGrid").count()==0,
+                       "EMPTY_COUNTRY_CARDS_SHOULD_NOT_OCCUPY_PAGE")
+                options=page.locator("#countryDatalist option")
+                ensure(options.count()>=251,
+                       "ALL_251_COUNTRIES_MUST_REMAIN_SEARCHABLE")
+                page.locator("#destination").fill("Мальдивы")
+                page.locator('#tourSearchForm button[type="submit"]').click()
                 ensure(page.locator("#destination").input_value()=="Мальдивы",
-                       "COUNTRY_DIRECTORY_FILTER_NOT_CONNECTED")
+                       "COUNTRY_SEARCH_FIELD_NOT_CONNECTED")
                 heads=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 ensure(all(h.startswith("Мальдивы · ") for h in heads),
                        "COUNTRY_FILTER_MIXED_UNRELATED_TOURS")
@@ -211,7 +216,8 @@ def main():
 
                 # Tour results are visible first; the old "0 confirmed bookings"
                 # block cannot be mistaken for zero search matches.
-                page.locator("#allCountrySelector").select_option("")
+                page.locator("#destination").fill("")
+                page.locator('#tourSearchForm button[type="submit"]').click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=20000)
                 ensure(page.locator("#searchResultsCount").is_visible(),
                        "MAIN_RESULTS_COUNT_NOT_VISIBLE")
