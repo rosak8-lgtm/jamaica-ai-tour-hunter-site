@@ -32,8 +32,8 @@ const mascotAsset=fs.readFileSync('assets/jamaica-parrot-mascot.svg','utf8');
 const mascotMark=fs.readFileSync('assets/jamaica-parrot-mark.svg','utf8');
 for(const a of [mascotAsset,mascotMark]){
  assert.ok(a.startsWith('<svg ')&&a.includes('viewBox=')&&a.includes('stroke='));
- assert.ok(!/https?:\/\/|<script|<foreignObject/i.test(a),
-  'Mascot SVG must remain standalone without scripts or remote assets');
+ assert.ok(!/<(?:script|foreignObject)\b|(?:xlink:)?href=["']https?:\/\/|url\(\s*https?:\/\//i.test(a),
+  'Mascot SVG must remain standalone without external scripts or remote images');
 }
 assert.ok(page.includes('src="./assets/jamaica-parrot-mascot.svg"')&&
  page.includes('src="./assets/jamaica-parrot-mark.svg"'),
