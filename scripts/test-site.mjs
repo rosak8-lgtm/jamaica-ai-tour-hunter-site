@@ -307,6 +307,17 @@ assert.ok(page.includes('img.referrerPolicy="no-referrer"'),'Do not leak referra
 assert.ok(page.includes('Проверенная фотография гостиницы пока недоступна'),'Missing hotel photo should be disclosed');
 assert.ok(!page.includes('landscape filetype:bitmap'),'Do not search scenery as hotel photographs');
 assert.ok(page.includes('area.replaceChildren(fallback)'),'Broken external images should fall back without a broken thumbnail');
+assert.ok(page.includes('nextVerifiedPhoto()'),'Card must retry another rights-verified photo of the same hotel');
+assert.ok(page.includes('fallbackSrc:alternate&&alternate!==src?alternate:null'),
+  'Never retry an HTML attribution URL as an image');
+assert.ok(page.includes('"?width=500"')&&page.includes('"?width=330"'),
+  'Commons thumbnails must use Wikimedia-supported widths');
+assert.ok(hotelPage.includes('img.src=fileUrl+"?width=960"')&&
+          hotelPage.includes('img.src=fileUrl+"?width=500"'),
+  'Hotel gallery should load actual IMG nodes and retry standard Commons size');
+const commonsMediaScript=fs.readFileSync('scripts/commons-hotel-media.js','utf8');
+assert.ok(commonsMediaScript.includes('"?width=500"'));
+assert.ok(!commonsMediaScript.includes('"?width=720"'),'Do not revive throttled 720px Commons images');
 const commonsLicenseFn=functionFrom(page,'function approvedCommonsLicense(raw){');
 assert.equal(commonsLicenseFn('CC BY-SA 4.0'),'CC BY-SA 4.0');
 assert.equal(commonsLicenseFn('CC BY 3.0'),'CC BY 3.0');
