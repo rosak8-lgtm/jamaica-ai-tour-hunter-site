@@ -149,28 +149,47 @@ def select_source_countries(directory, *, extra_priority_names=(), probe_slot=0,
 
 
 def fair_catalog(candidates, max_rows=MAX_ROWS):
-    """Interleave by country so early large destinations cannot hide the rest."""
+    """Keep countries and departure dates represented; prefer lower priced rows per date.
+
+    This is a *selection* of source-backed preliminary references, never a quote
+    or a guarantee of available rooms. Preserve fair country mixing at the public cap.
+    """
+    if max_rows <= 0:
+        return []
     groups={}
     for item in candidates:
-        groups.setdefault(item["country"],[]).append(item)
-    for g in groups.values():
-        g.sort(key=lambda x:(x["depart_date"],x["hotel"],x["room"],x["id"]))
-    names=sorted(groups)
-    positions={name:0 for name in names}
+        groups.setdefault(item["country"],{}).setdefault(item["depart_date"],[]).append(item)
+
+    def ranking(item):
+        ref=item.get("price_reference_rub")
+        price=(ref if item.get("price_reference_party")=="TWO_ADULTS"
+               and type(ref) is int and ref>0 else float("inf"))
+        return (price,item["hotel"],item["room"],item["id"])
+
+    by_country={}
+    for country,dates in groups.items():
+        for values in dates.values():
+            values.sort(key=ranking)
+        # Visit each date's best priced record before a second record for a date.
+        date_keys=sorted(dates,key=lambda day:(ranking(dates[day][0])[0],day))
+        chosen=[]
+        for layer in range(max(len(values) for values in dates.values())):
+            for day in date_keys:
+                if layer<len(dates[day]):
+                    chosen.append(dates[day][layer])
+        by_country[country]=chosen
+
+    names=sorted(by_country)
     result=[]
-    while len(result)<max_rows:
-        found=False
-        for name in names:
-            pos=positions[name]
-            if pos<len(groups[name]):
-                result.append(groups[name][pos])
-                positions[name]+=1
-                found=True
-                if len(result)>=max_rows:break
-        if not found:break
+    for layer in range(max((len(values) for values in by_country.values()),default=0)):
+        for country in names:
+            if layer<len(by_country[country]):
+                result.append(by_country[country][layer])
+                if len(result)==max_rows:
+                    result.sort(key=lambda r:(r["depart_date"],r["country"],r["hotel"]))
+                    return result
     result.sort(key=lambda r:(r["depart_date"],r["country"],r["hotel"]))
     return result
-
 
 def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER_COUNTRY,
           *, extra_priority_names=(), probe_slot=0):

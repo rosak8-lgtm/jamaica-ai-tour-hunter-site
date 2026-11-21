@@ -60,6 +60,23 @@ def main():
                 first30=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 shown={text.split(" · ")[0] for text in first30}
                 ensure(len(shown)>=3,"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
+                # Price sort must order known two-adult references, not departure dates.
+                page.locator("#previewSort").select_option("price")
+                texts=page.locator("#previewCards article.offerCard strong").all_text_contents()
+                prices=[]
+                for line in texts:
+                    digits="".join(ch for ch in line.split(":")[-1] if ch.isdigit())
+                    if digits:
+                        prices.append(int(digits))
+                ensure(prices==sorted(prices),"GLOBAL_PRICE_SORT_NOT_ASCENDING")
+                # Multi-country default continues showing other countries on the first page.
+                page.locator("#previewSort").select_option("balanced")
+                shown_again={name.split(" · ")[0] for name in page.locator("#previewCards article.offerCard h3").all_text_contents()}
+                ensure(len(shown_again)>=3,"PRICE_SORT_BROKE_COUNTRY_COVERAGE")
+                if preview.get("truncated_to_public_limit") is True:
+                    ensure("ВАЖНО" in page.locator("#previewCoverage").inner_text(),
+                           "TRUNCATED_CATALOGUE_WARNING_NOT_VISIBLE")
+
                 page.locator("#destination").fill("Турция")
                 page.locator("#tourSearchForm button[type=submit]").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)

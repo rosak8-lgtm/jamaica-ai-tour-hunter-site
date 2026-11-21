@@ -78,7 +78,8 @@ function functionFrom(source,signature){
  assert.ok(match,'Function body not found '+signature);
  return vm.runInNewContext('('+match[0]+')',{
    now:Date.now(),countries,Date,Number,Array,Object,String,RegExp,
-   dataSafe:s=>typeof s==='string'?s.trim():''
+   dataSafe:s=>typeof s==='string'?s.trim():'',
+   referencePrice:x=>Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0?x.price_reference_rub:null
  });
 }
 const now=Date.now();
@@ -97,6 +98,13 @@ assert.equal(valid({...sample,expires_at:new Date(now-1000).toISOString()}),fals
 const strictOffer=functionFrom(page,'function strictOffer(o,now){');
 assert.equal(strictOffer(sample,now),true,'A current confirmed quote must appear in search');
 assert.equal(strictOffer({...sample,quote_verified:false},now),false);
+const previewPriceSort=functionFrom(page,'function previewPriceCompare(a,b){');
+const cheap={depart_date:'2026-12-10',country:'Таиланд',hotel:'A',price_reference_rub:51000};
+const costly={depart_date:'2026-12-01',country:'Китай',hotel:'B',price_reference_rub:99000};
+const unknown={depart_date:'2026-12-02',country:'Вьетнам',hotel:'C',price_reference_rub:null};
+assert.ok(previewPriceSort(cheap,costly)<0,'Cheapest should rank before earliest date');
+assert.ok(previewPriceSort(costly,unknown)<0,'Known reference price before unknown');
+assert.ok(previewPriceSort(unknown,cheap)>0,'Unknown price never ranked as free or cheapest');
 const matching=functionFrom(page,'function matching(o,q){');
 const q={origin:'Иркутск',country:'',date:'',nights:0,adults:2,children:0,budget:0,hotel:''};
 assert.equal(matching(sample,q),true,'Any duration must show verified quotes');
@@ -214,14 +222,20 @@ assert.ok(page.includes('id="sourceCountryPriority"'));
 assert.ok(page.includes('const priorityNames=["Таиланд","Китай","Вьетнам"]'));
 assert.ok(page.includes('id="allCountrySelector"'));
 assert.ok(page.includes('fullCountryNames.length'));
-assert.ok(page.includes('По направлению'));
+assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');
 assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible")loadTourPreviews();'));
 assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
 assert.ok(page.includes('previewPriceFresh'));
 assert.ok(page.includes('Цена по прайс-листу на 2 взрослых'));
-assert.ok(page.includes('if(!country)list=interleaveCountries(list)'));
+assert.ok(page.includes('if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list)'));
+assert.ok(page.includes('id="previewSort"'),'User-selectable tour sorting required');
+assert.ok(page.includes('function previewPriceCompare(a,b)'),'Price comparator required');
+assert.ok(page.includes('referencePrice(x)<=budget*2'),'Budget must honor 24-hour listed price, not 30-minute freshness');
+assert.ok(!page.includes('currentReferencePrice(x)<=budget*2'),'Stale-price budget bug must not return');
+assert.ok(page.includes('data.truncated_to_public_limit===true'),'Truncation must be visible');
+assert.ok(page.includes('previewCandidateTotal.toLocaleString("ru-RU")'),'Candidate count needs visibility');
 
 assert.ok(page.includes('preview.html?id='));
 const previewDetail=fs.readFileSync('preview.html','utf8');

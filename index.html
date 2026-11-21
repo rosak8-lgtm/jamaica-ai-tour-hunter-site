@@ -49,6 +49,15 @@
 <div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
 <p class="micro" id="sourceCountryPriority">Приоритет поиска из Иркутска: Таиланд → Китай → Вьетнам. Все три направления проверяются на сервере каждые 5 минут; доступные варианты появляются только после ответа прайс-листа.</p>
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
+<div class="destToolbar" style="margin:10px 0 16px">
+  <label class="micro" for="previewSort">Порядок предложений:</label>
+  <select id="previewSort" style="max-width:390px;padding:11px;border:1px solid #d9cfe0;border-radius:12px;background:white">
+    <option value="balanced">Разные страны · сначала недорогие</option>
+    <option value="price">Сначала самые дешёвые по всем странам</option>
+    <option value="date">Сначала ближайшие даты</option>
+  </select>
+  <span class="micro">Справочные суммы сопоставимы только для 2 взрослых; итоговая цена проверяется перед покупкой.</span>
+</div>
 <div class="destToolbar" style="margin:12px 0">
   <label for="allCountrySelector" class="micro">Выбрать любое направление из полного справочника:</label>
   <select id="allCountrySelector" aria-label="Все страны для поиска туров" style="max-width:360px;padding:11px;border:1px solid #d9cfe0;border-radius:12px;background:white">
@@ -379,6 +388,7 @@ async function loadRouteDiscovery(){
 
 let previewRecords=[],previewVisible=0;
 let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
+let previewTruncated=false,previewCandidateTotal=0;
 let previewCountryStatus=[];
 const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
   .map(c=>c.n).filter(name=>typeof name==="string");
@@ -400,6 +410,15 @@ function referencePrice(x){
 }
 function currentReferencePrice(x){
  return previewPriceFresh?referencePrice(x):null;
+}
+function previewPriceCompare(a,b){
+ const ap=referencePrice(a),bp=referencePrice(b);
+ const aRank=ap===null?Number.MAX_SAFE_INTEGER:ap;
+ const bRank=bp===null?Number.MAX_SAFE_INTEGER:bp;
+ return aRank-bRank||
+        a.depart_date.localeCompare(b.depart_date)||
+        a.country.localeCompare(b.country,"ru")||
+        a.hotel.localeCompare(b.hotel,"ru");
 }
 function renderPreviewCountryChips(){
  const target=$("previewCountryChips");
@@ -467,23 +486,28 @@ function renderTourPreviews(reset=true){
  const adults=Number($("adults").value),children=Number($("kids").value);
  const budget=Number($("budget").value)||0;
  const partyTwoAdults=adults===2&&children===0;
+ const sortMode=$("previewSort").value;
  let list=previewRecords.filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
    (!date||x.depart_date===date)&&
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
-   (!budget||!partyTwoAdults||currentReferencePrice(x)===null||
-                currentReferencePrice(x)<=budget*2)
+   (!budget||!partyTwoAdults||referencePrice(x)===null||
+                referencePrice(x)<=budget*2)
  );
- list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
- if(!country)list=interleaveCountries(list);
+ if(partyTwoAdults&&sortMode!=="date"){
+   list.sort(previewPriceCompare);
+ }else{
+   list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
+ }
+ if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
  if(reset)renderPreviewCountryChips();
  const frag=document.createDocumentFragment();
  if(!list.length&&previewsLoaded){
    const requested=$("destination").value.trim();
    target.append(el("div","empty",
-      requested?"По направлению «"+requested+"» пока нет подтверждённых дат и рублёвых цен для вылета из Иркутска. Страна остаётся в полном каталоге, а варианты по другим направлениям доступны выше.":"По заданным параметрам нет туров в текущей проверенной выгрузке. Измените дату, страну или длительность."));
+      requested?"В текущей опубликованной выборке нет подходящих вариантов по направлению «"+requested+"». Это не означает, что предложения отсутствуют у всех поставщиков. Попробуйте другие даты и ночи.":"По заданным параметрам нет вариантов в текущей опубликованной выборке. Измените дату, страну или длительность."));
  }
  for(const x of list.slice(previewVisible,previewVisible+30)){
    const card=el("article","offerCard");
@@ -516,7 +540,7 @@ function renderTourPreviews(reset=true){
  target.append(frag);
  previewVisible=Math.min(list.length,previewVisible+30);
  more.hidden=previewVisible>=list.length;
- $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" конкретных вариантов по выбранным параметрам":
+ $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
@@ -527,6 +551,7 @@ function renderTourPreviews(reset=true){
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
+$("previewSort").addEventListener("change",()=>renderTourPreviews(true));
 $("previewMore").addEventListener("click",()=>renderTourPreviews(false));
 async function loadTourPreviews(){
  try{
@@ -550,12 +575,18 @@ async function loadTourPreviews(){
   const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
   const scope=data.source_scope||{};
+  previewTruncated=data.truncated_to_public_limit===true;
+  previewCandidateTotal=Number.isSafeInteger(data.total_candidate_previews)&&data.total_candidate_previews>=data.previews.length?
+    data.total_candidate_previews:data.previews.length;
   $("previewCoverage").textContent="Направлений с туристическим каталогом: "+
     (Number.isInteger(scope.source_tour_countries)?scope.source_tour_countries:"уточняется")+
     "; проверено в этом цикле: "+coverage.length+
     "; реальные варианты опубликованы по "+withTours.size+" странам."+
     (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
-    " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным.";
+    " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным."+
+    (previewTruncated?" ВАЖНО: опубликовано лишь "+data.previews.length.toLocaleString("ru-RU")+
+     " из "+previewCandidateTotal.toLocaleString("ru-RU")+
+     " найденных предварительных записей. Другие варианты могли не попасть в выдачу из-за ограничения размера каталога.":"");
   previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
     typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
