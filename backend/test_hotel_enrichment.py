@@ -86,31 +86,24 @@ class Tests(unittest.TestCase):
         self.assertIn('img.loading="lazy"',self.page)
         self.assertIn("loadPhotos(true)",self.page)
 
-    def test_fallback_after_broken_remote_commons_images(self):
-        self.assertIn('figure.dataset.photoSource=hotelPhoto?',self.page)
-        self.assertIn('img.addEventListener("error",()=>{',self.page)
-        self.assertIn('if(hotelPhoto)loadDestinationPhotos(place);',self.page)
-        self.assertIn('else showPhotoPlaceholder();',self.page)
-        self.assertIn('img.decoding="async"',self.page)
+    def test_only_actual_property_photos_are_eligible_for_hotel_gallery(self):
+        self.assertIn('!["hotel_exterior","hotel_public_area"].includes(p.kind)',self.page)
+        self.assertIn('loadPhotos(true)',self.page)
+        self.assertIn('function showPhotoPlaceholder()',self.page)
+        self.assertIn('showPhotoPlaceholder();',self.page)
+        self.assertNotIn('searchCommons(',self.page)
+        self.assertNotIn('loadDestinationPhotos(',self.page)
+        self.assertNotIn('paintCommonsPhotos(',self.page)
+        self.assertNotIn('skyline filetype:bitmap',self.page)
         self.assertIn('img.referrerPolicy="no-referrer"',self.page)
 
-    def test_city_scenery_fallback_is_not_a_hotel_photo(self):
-        self.assertIn('"Гуанчжоу":"Guangzhou"',self.page)
-        self.assertIn('"Шанхай":"Shanghai"',self.page)
-        self.assertIn('"Пекин":"Beijing"',self.page)
-        self.assertIn('const isCity=new Set(',self.page)
-        self.assertIn('" skyline filetype:bitmap"',self.page)
-        self.assertIn('hotelPhoto:false,place',self.page)
-        self.assertIn('НЕ фотография гостиницы',self.page)
-
-    def test_unlicensed_hotel_photos_never_claimed_to_be_resort_photos(self):
-        self.assertIn("async function loadRightsApprovedHotelPhotos()",self.page)
+    def test_rights_approved_cdn_is_the_only_fallback(self):
+        self.assertIn('async function loadRightsApprovedHotelPhotos()',self.page)
         self.assertIn('entry.commercial_publication_allowed!==true',self.page)
         self.assertIn('hotel-media-approved.json',self.page)
-        self.assertIn("Курорт "+'"',self.page)
-        self.assertIn("НЕ фотография гостиницы",self.page)
-        self.assertIn("paintCommonsPhotos(",self.page)
-        self.assertIn("hotel.resort||hotel.country",self.page)
+        self.assertIn('await loadRightsApprovedHotelPhotos()',self.page)
+        self.assertIn('Показываем только изображения выбранной гостиницы',self.page)
+
     def test_reviews_and_sales_remain_fail_closed(self):
         review=json.loads((ROOT/"hotel-reviews-config.json").read_text(encoding="utf-8"))
         purchase=json.loads((ROOT/"checkout-config.json").read_text(encoding="utf-8"))
