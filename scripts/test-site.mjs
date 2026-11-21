@@ -150,15 +150,19 @@ assert.ok(hotelPage.includes('hotel-reference.json'));
 for(const id of ['gallery','description','rooms','trips','reviewList','reviewForm','reviewSubmit','reviewNotice']){
  assert.ok(hotelPage.includes('id="'+id+'"'),'Hotel page missing: '+id);
 }
-assert.ok(hotelPage.includes('commons.wikimedia.org/w/api.php'));
-assert.ok(hotelPage.includes('upload.wikimedia.org'));
-assert.ok(hotelPage.includes('licenseOK('),'Hotel photographs must have an eligible source license');
+assert.ok(!hotelPage.includes('commons.wikimedia.org/w/api.php'),
+          'Hotel gallery must not guess from text-only name matches');
+assert.ok(!hotelPage.includes('upload.wikimedia.org'),
+          'No broad country search for hotel media');
+assert.ok(!hotelPage.includes('function photoSearchPlaceName('),
+          'Destination media is forbidden in a specific hotel gallery');
+assert.ok(hotelPage.includes('!["hotel_exterior","hotel_public_area"].includes(p.kind)'),
+          'Only actual property photos enter gallery');
+assert.ok(hotelPage.includes('showPhotoPlaceholder()'),
+          'Missing hotel images produce an honest placeholder');
 assert.ok(hotelPage.includes('tour-previews.json'),'Hotel detail must show real date and room references');
 assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend config required');
 assert.ok(hotelPage.includes('hotel-media-approved.json'),'Supplier gallery needs explicit commercial-use grant');
-assert.ok(hotelPage.includes('function photoSearchPlaceName(place)'),'Search licensed photos by international place name');
-assert.ok(hotelPage.includes('"Паттайя":"Pattaya"'),'Cyrillic Pattaya must be mapped to its Commons search name');
-assert.ok(hotelPage.includes('Курорт '+String.fromCharCode(34)),'Fallback destination photos must never be named hotel photos');
 const hotelPhotos=JSON.parse(fs.readFileSync('hotel-media-approved.json','utf8'));
 assert.equal(hotelPhotos.schema,'jamaica.hotel-media-approved.v1');
 assert.deepEqual(hotelPhotos.hotels,{},'Never publish unlicensed operator special-offer images');
