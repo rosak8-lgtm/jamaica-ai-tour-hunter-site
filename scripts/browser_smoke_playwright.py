@@ -118,8 +118,13 @@ def main():
                 shown_again={name.split(" · ")[0] for name in page.locator("#previewCards article.offerCard h3").all_text_contents()}
                 ensure(len(shown_again)>=3,"PRICE_SORT_BROKE_COUNTRY_COVERAGE")
                 if preview.get("truncated_to_public_limit") is True:
+                    # Disclosure exists but is intentionally collapsed BELOW cards.
+                    page.locator("#sourceDetails summary").click()
+                    ensure(page.locator("#sourceDetails").get_attribute("open") is not None,
+                           "SOURCE_TRANSPARENCY_CANNOT_BE_OPENED")
                     ensure("ВАЖНО" in page.locator("#previewCoverage").inner_text(),
-                           "TRUNCATED_CATALOGUE_WARNING_NOT_VISIBLE")
+                           "TRUNCATED_CATALOGUE_WARNING_NOT_AVAILABLE")
+                    page.locator("#sourceDetails summary").click()
 
                 turkey_dates=sorted({r["depart_date"] for r in rows if r["country"]=="Турция"})
                 ensure(bool(turkey_dates),"NO_TURKEY_DATES_FOR_RANGE_TEST")
