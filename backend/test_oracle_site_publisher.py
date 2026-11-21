@@ -98,6 +98,24 @@ class Tests(unittest.TestCase):
         with self.assertRaises(publisher.CatalogHold):
             publisher.directory_check(stale)
 
+    def test_discovered_irkutsk_country_is_promoted_to_regular_server_checks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path=Path(tmp)/"extra_irkutsk_source_countries.json"
+            d=directory()
+            d["countries"].append({"name":"Вьетнам","has_tour_catalog":True,
+                                   "origins":["100510000863"]})
+            actual=feed()
+            actual["countries_status"].append({"country":"Вьетнам",
+                                               "status":"CHECKED","lists_read":1})
+            count=publisher.update_discovered_source_countries(
+                actual,d,state_path=state_path)
+            self.assertEqual(count,1)
+            self.assertEqual(json.loads(state_path.read_text()),["Вьетнам"])
+            count=publisher.update_discovered_source_countries(
+                actual,d,state_path=state_path)
+            self.assertEqual(count,1)
+    def test_server_reads_updated_api_adapters_from_its_github_clone(self):
+        self.assertEqual(publisher.SCRIPTS,publisher.CHECKOUT/"scripts")
     def test_disabled_github_deploy_key_prevents_publish(self):
         with self.assertRaises(publisher.CatalogHold):
             with patch.object(publisher,"KEY",Path("/some/nonexistent/key")):
