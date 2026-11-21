@@ -169,6 +169,21 @@ def build(license_doc, mapping, directory, pages, *, today=None):
                    "published_hotel_ids":len(joined),
                    "public_image_urls":sum(len(v["photos"]) for v in joined.values())}
 
+def require_production_environment(env):
+    """Never route an Evaluation account to the PRODUCTION photo publisher.
+
+    API test keys must be checked separately with hbx_test_probe.py; no
+    test content may be claimed to be licensed public hotel photos.
+    """
+    assert_true(isinstance(env,dict) and
+        env.get("HBX_API_ENV")=="PRODUCTION" and
+        env.get("HBX_LIVE_CONTENT_RIGHTS_CONFIRMED")=="yes",
+        "LIVE_HBX_CREDENTIALS_AND_RIGHTS_NOT_ACTIVATED")
+    assert_true(len(env.get("HBX_API_KEY",""))>=8 and
+        len(env.get("HBX_API_SECRET",""))>=8,
+        "LIVE_HBX_CREDENTIALS_MISSING")
+
+
 def authenticated_pages(api_key,secret,max_pages=MAX_PAGES):
     assert_true(8<=len(api_key)<=512 and 8<=len(secret)<=512,
                 "HBX_API_CREDENTIALS_MISSING")
@@ -250,6 +265,7 @@ def main():
         raw=load_json(args.feed_json,50_000_000)
         pages=raw["pages"] if isinstance(raw,dict) and isinstance(raw.get("pages"),list) else [raw]
     else:
+        require_production_environment(os.environ)
         pages=authenticated_pages(os.environ.get("HBX_API_KEY",""),
                                   os.environ.get("HBX_API_SECRET",""),
                                   max_pages=args.max_pages)
