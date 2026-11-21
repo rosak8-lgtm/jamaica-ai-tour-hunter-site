@@ -142,7 +142,7 @@ async function loadRightsApprovedHotelPhotos(){
   }
   if(!sourceImages.length)return false;
   const gallery=$("gallery");gallery.replaceChildren();
-  const captions={exterior:"Фасад",room:"Номер",pool:"Бассейн",
+  const captions={exterior:"Фасад",room:"Номер (категория может отличаться от выбранной)",pool:"Бассейн",
     restaurant:"Ресторан",lobby:"Лобби",grounds:"Территория",other:"Отель"};
   for(const photo of sourceImages){
    const fig=make("figure","photo");fig.dataset.photoSource="partner";
@@ -174,7 +174,7 @@ async function loadRightsApprovedHotelPhotos(){
    caption.append(link);fig.append(caption);gallery.append(fig);
   }
   text("photoStatus",sourceImages.length+
-      " фотографий выбранного отеля с внешнего сервера по подтверждённому разрешению. Изображения не хранятся в JAMAICA.");
+      " фотографий выбранного отеля с внешнего сервера по подтверждённому разрешению. Изображения не хранятся в JAMAICA. Фотографии номеров показывают категории из каталога поставщика и не гарантируют, что выбранный тур включает именно этот номер.");
   return true;
  }catch(e){return false;}
 }
