@@ -44,6 +44,42 @@ class Tests(unittest.TestCase):
     def test_valid_source_backed_feed_can_be_published(self):
         self.assertEqual(publisher.validate(feed(),directory()),1)
 
+    def test_sharded_60000_catalogue_preserves_rows_and_bounds(self):
+        f=feed()
+        template=f["previews"][0]
+        f["previews"]=[{**template,"id":"p_"+format(i,"024x")}
+                       for i in range(16_432)]
+        self.assertEqual(publisher.validate(f,directory()),16432)
+        root,chunks=publisher.make_sharded_catalog(f)
+        self.assertEqual(len(root["previews"]),8000)
+        self.assertEqual(root["total_published_previews"],16432)
+        self.assertEqual(len(chunks),3)
+        self.assertEqual([x["count"] for x in root["shards"]],[4000,4000,432])
+        self.assertEqual(sum(len(c["previews"]) for c in chunks.values())+8000,16432)
+        self.assertEqual(publisher.validate(root,directory()),8000)
+        self.assertEqual({c["schema"] for c in chunks.values()},
+                         {"jamaica.tour-preview-shard.v1"})
+        self.assertTrue(all(c["bookable"] is False for c in chunks.values()))
+        self.assertTrue(all(c["refreshed_at_utc"]==root["refreshed_at_utc"]
+                            for c in chunks.values()))
+        new=json.loads(json.dumps(f))
+        new["refreshed_at_utc"]=(NOW+timedelta(minutes=5)).isoformat()
+        root_new,_=publisher.make_sharded_catalog(new)
+        self.assertFalse(publisher.needs_publish(root,root_new,
+                         now=NOW+timedelta(minutes=5)))
+        new["previews"][-1]["price_reference_rub"]=42000
+        root_changed,_=publisher.make_sharded_catalog(new)
+        self.assertTrue(publisher.needs_publish(root,root_changed,
+                        now=NOW+timedelta(minutes=5)))
+
+    def test_shard_limit_cannot_silently_overrun(self):
+        with patch.object(publisher,"MAX_SHARDS",0):
+            f=feed()
+            f["previews"]=[{**f["previews"][0],"id":"p_"+format(i,"024x")}
+                            for i in range(8001)]
+            with self.assertRaises(publisher.CatalogHold):
+                publisher.make_sharded_catalog(f)
+
     def test_operator_price_changes_are_published_immediately(self):
         old=feed();new=feed()
         new["previews"][0]["price_reference_rub"]=89000
