@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="66 43 205 193" fill="none" aria-hidden="true"><defs>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe878"/><stop offset=".52" stop-color="#ffbb22"/><stop offset="1" stop-color="#ed7e23"/></linearGradient>
+ <linearGradient id="green" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#82e45c"/><stop offset=".5" stop-color="#16ba86"/><stop offset="1" stop-color="#077c88"/></linearGradient>
+ <linearGradient id="aqua" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#76edf0"/><stop offset=".48" stop-color="#11b5c8"/><stop offset="1" stop-color="#244fae"/></linearGradient>
+ <linearGradient id="plum" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#a85dca"/><stop offset=".5" stop-color="#502570"/><stop offset="1" stop-color="#1c1739"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#59ddf5"/><stop offset=".44" stop-color="#187b9f"/><stop offset="1" stop-color="#232047"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#1a133c" flood-opacity=".23"/></filter>
+</defs>
+<g stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)">
+ <!-- long tail and feet -->
+ <path d="M131 270 Q110 324 66 393 Q82 331 77 291 Q94 269 131 270Z" fill="url(#plum)" stroke="#371c56" stroke-width="3"/>
+ <path d="M159 271 Q152 344 122 394 Q123 335 104 286Z" fill="url(#aqua)" stroke="#145c87" stroke-width="3"/>
+ <path d="M173 283 Q173 338 157 380 Q149 327 137 286Z" fill="#f7b335"/>
+ <path d="M151 315 Q147 335 141 349 M180 307 Q175 326 169 335" fill="none" stroke="#27213b" stroke-width="9"/>
+ <path d="M125 347 q-16 2-26 17 M140 346 q-3 13-2 21 M168 348 q-9 13-7 22 M185 345 q3 12 11 21" fill="none" stroke="#413849" stroke-width="9"/>
+ <!-- body -->
+ <path d="M92 176 Q62 186 55 243 Q51 298 112 319 Q172 333 213 286 Q241 246 211 191 Q173 157 92 176Z" fill="url(#green)" stroke="#074f6e" stroke-width="5"/>
+ <path d="M131 186 Q183 161 210 197 Q234 238 193 286 Q153 313 112 290 Q148 266 131 186Z" fill="url(#gold)" stroke="#d57c27" stroke-width="3"/>
+ <!-- tail-side feathers / folded wing -->
+ <path d="M65 214 Q42 230 37 267 Q63 297 92 286 Q121 252 119 202 Q92 186 65 214Z" fill="url(#aqua)" stroke="#0b688a" stroke-width="4"/>
+ <path d="M49 260 Q79 267 114 222 Q106 281 72 302 Q58 291 49 260Z" fill="#1b85bc"/>
+ <path d="M66 288 Q91 295 111 259 Q104 307 76 320Z" fill="#f7b62e" stroke="#bd7622" stroke-width="2"/>
+ <!-- raised welcoming wing -->
+ <path d="M214 221 Q253 213 268 168 Q280 126 319 110 Q310 150 291 174 Q330 164 351 147 Q343 182 307 206 Q345 209 359 196 Q351 236 297 238 Q266 272 224 270Z" fill="url(#aqua)" stroke="#0b6b8a" stroke-width="4"/>
+ <path d="M266 180 Q296 165 320 113 Q317 169 286 198 Q313 192 342 171" fill="none" stroke="#5be2c3" stroke-width="14"/>
+ <path d="M287 215 Q325 216 345 201 Q327 230 300 234" fill="none" stroke="#ffd24b" stroke-width="11"/>
+ <!-- head with stylish crest -->
+ <path d="M81 93 Q65 63 66 39 Q92 62 101 67 Q92 37 98 17 Q122 52 131 62 Q142 30 161 21 Q158 53 154 67 Q186 45 218 52 Q193 72 188 91Z" fill="url(#green)" stroke="#067b77" stroke-width="4"/>
+ <path d="M90 87 Q111 58 165 65 Q226 73 240 130 Q244 188 197 215 Q138 240 95 202 Q55 162 90 87Z" fill="url(#gold)" stroke="#c97b24" stroke-width="5"/>
+ <path d="M91 135 Q91 99 126 82 Q153 68 190 94 Q166 107 163 132 Q152 167 122 184 Q87 174 91 135Z" fill="#fff2cf"/>
+ <path d="M85 184 Q120 203 160 197 Q176 213 192 216 Q142 244 101 206Z" fill="#ffe7aa"/>
+ <!-- smiling beak, mouth, tongue -->
+ <path d="M185 139 Q213 126 249 143 Q282 153 282 177 Q258 185 246 208 Q228 232 196 217 Q217 196 215 178 Q194 173 185 139Z" fill="url(#plum)" stroke="#33204d" stroke-width="5"/>
+ <path d="M214 180 Q238 178 262 183 Q251 206 225 208 Q218 199 214 180Z" fill="#341d41"/>
+ <path d="M227 199 Q240 187 251 199 Q245 210 226 211Z" fill="#fb758b"/>
+ <path d="M237 151 Q259 158 268 165" fill="none" stroke="#e8a6e8" stroke-width="5"/>
+ <!-- spectacles -->
+ <path d="M92 122 Q104 108 151 114 L164 118 Q176 114 188 111 Q213 107 233 115 Q244 121 244 132" fill="none" stroke="#40204d" stroke-width="9"/>
+ <rect x="94" y="114" width="65" height="49" rx="17" fill="url(#glass)" fill-opacity=".83" stroke="#662b86" stroke-width="9" transform="rotate(-5 126 138)"/>
+ <rect x="172" y="111" width="62" height="49" rx="17" fill="url(#glass)" fill-opacity=".83" stroke="#662b86" stroke-width="9" transform="rotate(-5 202 135)"/>
+ <path d="M156 130 Q162 123 174 126" fill="none" stroke="#7d418d" stroke-width="8"/>
+ <path d="M104 126 l19 -7 M183 123 l18 -8" stroke="#d4ffff" stroke-opacity=".75" stroke-width="6"/>
+ <path d="M137 131 Q145 143 137 149" fill="none" stroke="#ffffff" stroke-opacity=".8" stroke-width="6"/>
+ <!-- eye peeking through lenses -->
+ <circle cx="202" cy="138" r="8" fill="#1b1541"/><circle cx="205" cy="135" r="3" fill="white"/>
+ <path d="M79 127 Q84 122 94 123" stroke="#672982" stroke-width="9"/>
+</g></svg>
