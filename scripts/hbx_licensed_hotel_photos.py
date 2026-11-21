@@ -174,7 +174,12 @@ def hotel_photos(hotel, item, grant):
             if existing>=limits[category]:break
             if p["kind"]!=category or p["path"] in used:continue
             selected.append(p);used.add(p["path"]);existing+=1
-    for p in collected:
+    # Remaining slot goes first to broad hotel pictures; only fall back
+    # to another room/restaurant photo if general property images run out.
+    remaining=sorted(collected,key=lambda p:(
+        {"other":0,"room":1,"restaurant":2}[p["kind"]],
+        p["visual"],p["order"],p["path"]))
+    for p in remaining:
         if len(selected)>=MAX_PHOTOS:break
         if p["path"] in used:continue
         selected.append(p);used.add(p["path"])
