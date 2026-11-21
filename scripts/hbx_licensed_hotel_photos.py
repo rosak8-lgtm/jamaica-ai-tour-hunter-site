@@ -107,30 +107,99 @@ def get_records(payload):
     assert_true(isinstance(rows,list) and len(rows)<=1200,"HBX_RESPONSE_HOTELS_INVALID")
     return rows
 
+def supplier_photo_order(raw):
+    """HBX visualOrder=0 means MAIN hotel photo; missing ranks after known."""
+    if type(raw) is int and 0<=raw<=1_000_000:
+        return raw
+    if isinstance(raw,str) and raw.isascii() and raw.isdecimal() and len(raw)<=7:
+        value=int(raw)
+        if value<=1_000_000:return value
+    return 10_000_000
+
+
+def supplier_photo_kind(record):
+    """Only image categories documented by HBX are named explicitly.
+
+    GEN means a general hotel picture, NOT proven facade, so never claim
+    'exterior'. HAB is a room photo, not necessarily the priced room.
+    """
+    nested=record.get("type")
+    code=record.get("imageTypeCode")
+    if not isinstance(code,str) and isinstance(nested,dict):
+        code=nested.get("code")
+    if code=="HAB":return "room"
+    if code=="RES":return "restaurant"
+    return "other"
+
+
 def hotel_photos(hotel, item, grant):
-    photos=[];seen=set()
     name=item["hotel_name"]
     records=hotel.get("images")
     if not isinstance(records,list):
-        return photos
-    for record in records[:120]:
+        return []
+    collected=[]
+    seen=set()
+    for record in records[:400]:
         if not isinstance(record,dict):continue
         path=record.get("path")
         if not isinstance(path,str) or not PATH.fullmatch(path) or ".." in path or path.startswith("/"):
             continue
-        src=IMG+"bigger/"+path
-        original=IMG+path
-        if src in seen:continue
-        seen.add(src)
+        if path in seen:continue
+        seen.add(path)
+        kind=supplier_photo_kind(record)
+        visual=supplier_photo_order(record.get("visualOrder"))
+        order=supplier_photo_order(record.get("order"))
+        type_code=record.get("imageTypeCode")
+        if not isinstance(type_code,str):
+            nested=record.get("type")
+            type_code=nested.get("code") if isinstance(nested,dict) else None
+        if not isinstance(type_code,str) or not re.fullmatch(r"[A-Z0-9]{2,5}",type_code):
+            type_code="UNKNOWN"
+        room_code=record.get("roomCode")
+        if not isinstance(room_code,str) or not re.fullmatch(r"[A-Z0-9.-]{2,24}",room_code):
+            room_code=None
+        collected.append({"path":path,"kind":kind,"visual":visual,
+            "order":order,"image_type_code":type_code,
+            "supplier_room_code":room_code})
+    if not collected:return []
+    collected.sort(key=lambda p:(p["visual"],p["order"],p["path"]))
+    # First supplier photo with visualOrder=0 is officially the main image.
+    # A balanced gallery avoids 12 near-identical rooms or one restaurant.
+    selected=[collected[0]]
+    used={selected[0]["path"]}
+    limits={"other":5,"room":4,"restaurant":2}
+    for category in ("other","room","restaurant"):
+        existing=sum(1 for p in selected if p["kind"]==category)
+        for p in collected:
+            if existing>=limits[category]:break
+            if p["kind"]!=category or p["path"] in used:continue
+            selected.append(p);used.add(p["path"]);existing+=1
+    # Remaining slot goes first to broad hotel pictures; only fall back
+    # to another room/restaurant photo if general property images run out.
+    remaining=sorted(collected,key=lambda p:(
+        {"other":0,"room":1,"restaurant":2}[p["kind"]],
+        p["visual"],p["order"],p["path"]))
+    for p in remaining:
+        if len(selected)>=MAX_PHOTOS:break
+        if p["path"] in used:continue
+        selected.append(p);used.add(p["path"])
+    labels={"other":"Фото гостиницы","room":"Фото номера гостиницы",
+            "restaurant":"Фото ресторана гостиницы"}
+    photos=[]
+    for p in selected[:MAX_PHOTOS]:
+        path=p["path"]
         photos.append({
-            "src":src,"source":original,
+            "src":IMG+"bigger/"+path,"source":IMG+path,
             "license":"contract-authorized",
-            "alt":"Фото гостиницы "+name+" — источник HBX Group",
-            "credit":grant["attribution_text"],
-            "kind":"other"
+            "alt":labels[p["kind"]]+" "+name+
+                  (" (не гарантия выбранной категории номера)" if p["kind"]=="room" else ""),
+            "credit":grant["attribution_text"],"kind":p["kind"],
+            "image_type_code":p["image_type_code"],
+            "supplier_visual_order":None if p["visual"]==10_000_000 else p["visual"],
+            "supplier_room_code":p["supplier_room_code"]
         })
-        if len(photos)>=MAX_PHOTOS:break
     return photos
+
 
 def build(license_doc, mapping, directory, pages, *, today=None):
     grant=license_gate(license_doc,today=today)

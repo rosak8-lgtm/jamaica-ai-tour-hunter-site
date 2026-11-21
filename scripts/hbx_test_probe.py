@@ -15,6 +15,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections import Counter
 
 TEST_URL = ("https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels"
             "?fields=all&language=ENG&from=1&to=10")
@@ -52,15 +53,43 @@ def parse_summary(raw):
         raise ProbeHold("TEST_RESPONSE_SCHEMA_INVALID")
     photos=0
     property_count=0
+    hotels_with_photos=0
+    main_pictures=0
+    distinct=set()
+    type_codes=Counter()
+    by_country=Counter()
     for hotel in rows:
         if not isinstance(hotel,dict):
             continue
         property_count+=1
+        code=hotel.get("countryCode")
+        if isinstance(code,str) and len(code)==2 and code.isalpha():
+            by_country[code.upper()]+=1
         images=hotel.get("images")
-        if isinstance(images,list):
-            photos+=sum(1 for image in images if isinstance(image,dict)
-                       and isinstance(image.get("path"),str))
-    return {"hotels":property_count,"photo_paths":photos}
+        if isinstance(images,list) and images:
+            hotels_with_photos+=1
+            for image in images[:1200]:
+                if not isinstance(image,dict):continue
+                path=image.get("path")
+                if not isinstance(path,str):continue
+                photos+=1
+                if len(path)<=250:distinct.add(path)
+                order=image.get("visualOrder")
+                if order==0 or order=="0":main_pictures+=1
+                type_code=image.get("imageTypeCode")
+                if not isinstance(type_code,str):
+                    nested=image.get("type")
+                    type_code=nested.get("code") if isinstance(nested,dict) else None
+                if (isinstance(type_code,str) and type_code.isascii() and
+                    type_code.isalnum() and 2<=len(type_code)<=5):
+                    type_codes[type_code]+=1
+    common_types=dict(type_codes.most_common(8))
+    return {"hotels":property_count,"photo_paths":photos,
+            "hotels_with_photos":hotels_with_photos,
+            "distinct_paths":len(distinct),
+            "main_photo_candidates":main_pictures,
+            "image_type_counts":common_types,
+            "country_counts":dict(by_country.most_common(12))}
 
 def check(*,key,secret,opener=None,now=None):
     request=signed_request(key,secret,now=now)
@@ -92,6 +121,13 @@ def main():
     print("JAMAICA_HBX_TEST_CONTENT_API=PASS")
     print("JAMAICA_HBX_TEST_SAMPLE_HOTELS="+str(result["hotels"]))
     print("JAMAICA_HBX_TEST_SAMPLE_PHOTO_PATHS="+str(result["photo_paths"]))
+    print("JAMAICA_HBX_TEST_HOTELS_WITH_PHOTOS="+str(result["hotels_with_photos"]))
+    print("JAMAICA_HBX_TEST_DISTINCT_IMAGE_PATHS="+str(result["distinct_paths"]))
+    print("JAMAICA_HBX_TEST_MAIN_IMAGES_VISUAL_ORDER_ZERO="+str(result["main_photo_candidates"]))
+    print("JAMAICA_HBX_TEST_IMAGE_TYPE_COUNTS="+
+          ",".join(str(key)+":"+str(value) for key,value in result["image_type_counts"].items()))
+    print("JAMAICA_HBX_TEST_COUNTRIES="+
+          ",".join(key+":"+str(value) for key,value in result["country_counts"].items()))
     print("JAMAICA_HBX_TEST_REQUESTS_USED=1")
     print("JAMAICA_HBX_IMAGE_BYTES_DOWNLOADED=0")
     print("JAMAICA_HBX_COMMERCIAL_PUBLICATION=DISABLED")

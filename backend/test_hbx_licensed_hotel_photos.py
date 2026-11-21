@@ -61,6 +61,48 @@ class Tests(unittest.TestCase):
         self.assertNotIn("HBX_API_SECRET",serial)
         self.assertNotIn("HBX_API_KEY",serial)
 
+ def test_main_image_and_balanced_galleries_from_real_hbx_types(self):
+    # HBX's visualOrder=0 is the main property image, NOT the first API row.
+    imgs=[]
+    for i in range(24):
+        type_code="HAB" if i<12 else "RES" if i<16 else "GEN"
+        photo={"path":f"00/004200/example_{i:03d}.jpg",
+            "visualOrder":30+i,
+            "order":i,
+            "imageTypeCode":type_code}
+        if type_code=="HAB":photo["roomCode"]="ROO.ST"
+        imgs.append(photo)
+    imgs[23]["visualOrder"]=0
+    enhanced={**HOTEL,"images":imgs}
+    result,_=hbx.build(GRANT,CROSSWALK,DIRECTORY,
+        [{"hotels":[enhanced]}],today=TODAY)
+    photos=result[HOTEL_ID]["photos"]
+    self.assertEqual(len(photos),12)
+    self.assertEqual(photos[0]["supplier_visual_order"],0)
+    self.assertTrue(photos[0]["src"].endswith("example_023.jpg"))
+    self.assertEqual(photos[0]["kind"],"other")
+    self.assertEqual(photos[0]["image_type_code"],"GEN")
+    self.assertEqual(sum(p["kind"]=="room" for p in photos),4)
+    self.assertEqual(sum(p["kind"]=="restaurant" for p in photos),2)
+    self.assertEqual(sum(p["kind"]=="other" for p in photos),6)
+    self.assertTrue(all(p["source"].startswith("https://photos.hotelbeds.com/giata/")
+        and p["src"].startswith("https://photos.hotelbeds.com/giata/bigger/")
+        for p in photos))
+    rooms=[p for p in photos if p["kind"]=="room"]
+    self.assertTrue(all(p["supplier_room_code"]=="ROO.ST" for p in rooms))
+    self.assertTrue(all("не гарантия выбранной категории" in p["alt"]
+         for p in rooms))
+
+ def test_main_image_zero_and_missing_image_order_safety(self):
+    self.assertEqual(hbx.supplier_photo_order(0),0)
+    self.assertEqual(hbx.supplier_photo_order("0"),0)
+    self.assertGreater(hbx.supplier_photo_order(None),100000)
+    self.assertGreater(hbx.supplier_photo_order("bad"),100000)
+    self.assertEqual(hbx.supplier_photo_kind({"type":{"code":"HAB"}}),"room")
+    self.assertEqual(hbx.supplier_photo_kind({"imageTypeCode":"RES"}),"restaurant")
+    self.assertEqual(hbx.supplier_photo_kind({"imageTypeCode":"GEN"}),"other")
+    self.assertEqual(hbx.supplier_photo_kind({"imageTypeCode":"DEP"}),"other")
+
  def test_evaluation_key_is_never_accepted_for_production(self):
     for env in (
       {"HBX_API_KEY":"abc-production-key","HBX_API_SECRET":"abc-production-secret",
