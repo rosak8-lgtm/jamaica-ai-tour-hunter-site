@@ -399,7 +399,7 @@ async function loadEnrichment(){
   };
   const validPhotos=photos.filter(p=>{
     if(!p||typeof p.file!=="string"||
-       !/^[\p{L}\p{N}_. -]{5,170}\.(?:jpe?g|png|webp)$/iu.test(p.file)||
+       !/^[\p{L}\p{N}_." -]{5,170}\.(?:jpe?g|png|webp)$/iu.test(p.file)||
        p.file.includes("..")||typeof p.title!=="string"||p.title.length<18||
        typeof p.author!=="string"||p.author.length<1||
        !["hotel_exterior","hotel_public_area"].includes(p.kind)||
