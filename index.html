@@ -458,6 +458,86 @@ async function loadRouteDiscovery(){
 }
 
 let previewRecords=[],previewVisible=0;
+/* Functional Tourvisor-style sidebar, driven ONLY by published source rows. */
+const sidebarCountry=$("filterCountry"),sidebarResort=$("filterResort");
+const sidebarNights=$("filterNights"),sidebarHotel=$("filterHotel");
+const sidebarBudget=$("filterBudget");
+let lastFilterCountry="";
+function replaceFilterOptions(select,items,placeholder,wanted){
+ const frag=document.createDocumentFragment();
+ const empty=document.createElement("option");
+ empty.value=select===sidebarNights?"0":"";
+ empty.textContent=placeholder;frag.append(empty);
+ for(const item of items){
+  const option=document.createElement("option");
+  option.value=String(item.value);option.textContent=item.label;
+  frag.append(option);
+ }
+ select.replaceChildren(frag);
+ select.value=items.some(x=>String(x.value)===wanted)?wanted:empty.value;
+}
+function sourceFilterOptions(){
+ const countryCounts=new Map(),resorts=new Set(),lengths=new Set();
+ const formCountry=$("destination").value.trim();
+ const countryCompare=(a,b)=>a.localeCompare(b,"ru");
+ for(const row of previewRecords){
+  countryCounts.set(row.country,(countryCounts.get(row.country)||0)+1);
+  if(!formCountry||row.country===formCountry){
+    if(row.resort)resorts.add(row.resort);
+    lengths.add(row.nights);
+  }
+ }
+ const priorities=new Map([["Таиланд",0],["Китай",1],["Вьетнам",2]]);
+ const names=[...countryCounts.keys()].sort((a,b)=>
+   (priorities.get(a)??999)-(priorities.get(b)??999)||countryCompare(a,b));
+ replaceFilterOptions(sidebarCountry,names.map(name=>({
+   value:name,label:name+" ("+countryCounts.get(name).toLocaleString("ru-RU")+")"
+ })), "Все страны с предложениями",formCountry);
+ if(lastFilterCountry!==formCountry)sidebarResort.value="";
+ const oldResort=lastFilterCountry===formCountry?sidebarResort.value:"";
+ replaceFilterOptions(sidebarResort,[...resorts].sort(countryCompare).map(x=>({
+   value:x,label:x
+ })), "Любой курорт",oldResort);
+ replaceFilterOptions(sidebarNights,[...lengths].sort((a,b)=>a-b).map(n=>({
+   value:n,label:n+" ночей"
+ })), "Любое число ночей",$("nights").value);
+ sidebarHotel.value=$("hotelSearch").value;
+ sidebarBudget.value=$("budget").value;
+ lastFilterCountry=formCountry;
+}
+function applyTourSidebar(){
+ $("destination").value=sidebarCountry.value;
+ $("nights").value=sidebarNights.value;
+ $("hotelSearch").value=sidebarHotel.value.trim();
+ $("budget").value=sidebarBudget.value;
+ lastFilterCountry=sidebarCountry.value;
+ form.requestSubmit();
+}
+sidebarCountry.addEventListener("change",()=>{
+ // A resort in one destination must never be silently attached to another.
+ $("destination").value=sidebarCountry.value;
+ sidebarResort.value="";
+ sourceFilterOptions();
+});
+$("filterApply").addEventListener("click",applyTourSidebar);
+$("filterReset").addEventListener("click",()=>{
+ sidebarCountry.value="";sidebarResort.value="";sidebarNights.value="0";
+ sidebarHotel.value="";sidebarBudget.value="";
+ lastFilterCountry="";
+ $("destination").value="";$("nights").value="0";
+ $("hotelSearch").value="";$("budget").value="";
+ sourceFilterOptions();form.requestSubmit();
+});
+form.addEventListener("submit",()=>sourceFilterOptions());
+const filtersMedia=window.matchMedia("(min-width:791px)");
+const filtersDisclosure=$("filtersDisclosure");
+filtersDisclosure.open=filtersMedia.matches;
+filtersMedia.addEventListener("change",event=>{
+ filtersDisclosure.open=event.matches;
+});
+const paramsHotel=new URLSearchParams(location.search);
+if(paramsHotel.has("hotel"))$("advancedFilters").open=true;
+
 let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
 let previewTruncated=false,previewCandidateTotal=0;
 let previewLoadSerial=0,previewFullLoaded=true;
@@ -654,6 +734,7 @@ function renderTourPreviews(reset=true){
  const date=$("dateFrom").value,dateTo=$("dateTo").value;
  const nights=Number($("nights").value);
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
+ const resortFilter=sidebarResort.value.trim().toLocaleLowerCase("ru");
  const adults=Number($("adults").value),children=Number($("kids").value);
  const budget=Number($("budget").value)||0;
  const partyTwoAdults=adults===2&&children===0;
@@ -664,6 +745,7 @@ function renderTourPreviews(reset=true){
    (!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)&&
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
+   (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
    (!budget||!partyTwoAdults||referencePrice(x)===null||
                 referencePrice(x)<=budget*2)
  );
@@ -681,32 +763,51 @@ function renderTourPreviews(reset=true){
       requested?"В текущей опубликованной выборке нет подходящих вариантов по направлению «"+requested+"». Это не означает, что предложения отсутствуют у всех поставщиков. Попробуйте другие даты и ночи.":"По заданным параметрам нет вариантов в текущей опубликованной выборке. Измените дату, страну или длительность."));
  }
  for(const x of list.slice(previewVisible,previewVisible+30)){
-   const card=el("article","offerCard");
+   const card=el("article","offerCard tourResultCard");
    card.append(previewCardPhoto(x));
-   card.append(el("h3","",x.country+" · "+x.hotel));
-   card.append(el("small","",x.origin+" · "+x.depart_date+" · "+x.nights+" ночей"));
-   card.append(el("div","",x.resort||x.country));
-   card.append(el("small","",x.room));
+
+   const info=el("div","tourResultMain");
+   info.append(el("span","countryBadge",x.country));
+   info.append(el("h3","",x.country+" · "+x.hotel));
+   info.append(el("div","hotelLocation",x.resort||x.country));
+   const facts=el("div","travelFacts");
+   facts.append(el("span","", "✈ "+x.origin+" → "+x.country));
+   facts.append(el("span","", "📅 "+x.depart_date));
+   facts.append(el("span","", "◷ "+x.nights+" ночей"));
+   info.append(facts);
+   info.append(el("div","roomKind","Размещение: "+x.room));
+   if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
+     const hotelLink=el("a","hotelLink","Фотографии, описание и отзывы гостиницы");
+     hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
+     info.append(hotelLink);
+   }
+   card.append(info);
+
+   const priceBox=el("div","tourResultPrice");
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
-     card.append(el("strong","", "Цена по прайс-листу на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
-     card.append(el("small","", "В среднем при поездке вдвоём: "+new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+" ₽ на человека. Цена одного туриста рассчитывается отдельно."));
-     card.append(el("small","",
-       (previewPriceFresh?"Цена актуальна на момент выгрузки":"Цена могла измениться")+
-       ". По прайс-листу на "+previewPriceAsOf+
-       ". Итоговая стоимость, рейсы и свободные номера перепроверяются перед договором и покупкой."));
+     const priceTitle=el("strong","", "Цена по прайс-листу на 2 взрослых: ");
+     priceTitle.append(el("span","referenceAmount",
+       new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
+     priceBox.append(priceTitle);
+     priceBox.append(el("small","",
+       "Справочно на человека при поездке вдвоём: "+
+       new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+
+       " ₽. Одиночное размещение рассчитывается отдельно."));
+     priceBox.append(el("small","",
+       (previewPriceFresh?"Данные последней выгрузки":"Цена могла измениться")+
+       " · "+previewPriceAsOf+
+       ". Наличие номера и рейса не подтверждено."));
    }else{
-     card.append(el("small","", "Цена пока не подтверждена; если указан бюджет, соответствие ему требует расчёта. Рейсы и места также не подтверждены."));
+     priceBox.append(el("div","roomKind","Стоимость требует отдельного расчёта для выбранного состава путешественников."));
+     priceBox.append(el("small","",
+       "Без проверенной цены и подтверждения мест оплата недоступна."));
    }
-   const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
-   a.href="preview.html?id="+encodeURIComponent(x.id)+
+   const details=el("a","btn btnWhite","Посмотреть тур →");
+   details.href="preview.html?id="+encodeURIComponent(x.id)+
       "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(children);
-   card.append(a);
-   if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
-     const hotelLink=el("a","btn btnWhite","Подробнее об отеле, фото и отзывы");
-     hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
-     card.append(hotelLink);
-   }
+   priceBox.append(details);
+   card.append(priceBox);
    frag.append(card);
  }
  target.append(frag);
@@ -782,7 +883,7 @@ async function loadTourPreviews(){
     (x.price_reference_rub==null||
      (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
       x.price_reference_party==="TWO_ADULTS")));
-  previewsLoaded=true;renderTourPreviews(true);
+  previewsLoaded=true;sourceFilterOptions();renderTourPreviews(true);
   if(!previewFullLoaded){
    try{
     const all=await window.JamaicaCatalog.allPreviews(data);
@@ -790,6 +891,7 @@ async function loadTourPreviews(){
     previewRecords=all.filter(x=>window.JamaicaCatalog.validRow(x)&&
        x.depart_date>=new Date().toISOString().slice(0,10));
     previewFullLoaded=true;
+    sourceFilterOptions();
     const completeCountries=new Set(all.map(x=>x.country));
     const absentAfterComplete=coverage.filter(x=>!completeCountries.has(x.country))
        .map(x=>x.country);
