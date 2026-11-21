@@ -49,7 +49,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 <p class="sub" id="detailExplanation">Гостиничные услуги и комплектация номеров проверяются по актуальной карточке объекта; подробности, которых нет в источнике, не выдумываются.</p></section>
 <section class="box"><h2>Фотографии отеля и курорта</h2><p class="sub">Сначала ищем лицензированные снимки именно выбранной гостиницы. Если их нет, можем показать отдельные <strong>фотографии курорта с явной пометкой «не фото отеля»</strong>. Чужие отельные снимки и изображения без прав не выдаются за гостиницу.</p>
 <div id="gallery" class="photoGrid"><div class="hero"><div><span aria-hidden="true">🏨</span><p>Проверяем наличие фотографий именно этого отеля…</p></div></div></div>
-<p id="photoStatus" class="status" role="status">Поиск фотографий в открытом медиакаталоге…</p></section>
+<p id="photoStatus" class="status" role="status">Проверяем подтверждённые фотографии этой гостиницы…</p></section>
 <section class="box"><h2>Номера, размещение и питание</h2><div id="curatedRooms"></div><div id="rooms"></div>
 <p class="sub">Показанные категории номеров встречались в опубликованных прайс-листах, но не означают свободный номер сегодня.</p></section>
 <section class="box"><h2>Найденные даты и цены туров</h2>
@@ -73,6 +73,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 </section>
 </main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
 <script src="./scripts/catalog-shards.js"></script>
+<script src="./scripts/hotel-media-feed.js"></script>
 <script>
 (function(){
 "use strict";
@@ -107,7 +108,10 @@ async function loadRightsApprovedHotelPhotos(){
   const manifest=await response.json();
   if(manifest.schema!=="jamaica.hotel-media-approved.v1"||
      !manifest.hotels||typeof manifest.hotels!=="object")return false;
-  const entry=manifest.hotels[id];
+  let entry=manifest.hotels[id];
+  if(!entry&&window.JamaicaHotelMedia)
+     entry=await window.JamaicaHotelMedia.getApprovedEntry(
+       id,hotel.country,hotel.name);
   if(!entry||entry.hotel_name!==hotel.name||entry.country!==hotel.country||
      entry.rights_verified!==true||entry.commercial_publication_allowed!==true||
      typeof entry.permission_reference!=="string"||
@@ -146,13 +150,18 @@ async function loadRightsApprovedHotelPhotos(){
    // No image files are saved in the JAMAICA repository or on Oracle.
    img.src=photo.src;img.alt=photo.alt;
    img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
+   let triedLowerResolution=false;
    img.addEventListener("error",()=>{
+     // Same hotel and same licensed media path, 800px -> 320px only.
+     if(!triedLowerResolution&&photo.source!==photo.src){
+       triedLowerResolution=true;img.src=photo.source;return;
+     }
      fig.remove();
      if(!gallery.querySelector('figure[data-photo-source="partner"]')){
-       text("photoStatus","Внешний сервер не отдал фотографии. Пробуем открытые лицензированные изображения.");
+       text("photoStatus","Внешний сервер не отдал фотографии этой гостиницы.");
        loadPhotos(true);
      }
-   },{once:true});
+   });
    fig.append(img);
    const caption=make("figcaption");
    caption.append(make("strong","",captions[photo.kind]+" · "));
