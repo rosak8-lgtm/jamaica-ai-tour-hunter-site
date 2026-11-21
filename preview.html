@@ -34,6 +34,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 <a class="btn secondary" href="./#offers">Выбрать другой вариант</a></section>
 <section class="card"><h2>Похожие варианты по другим странам и датам</h2><div id="alternatives" class="other"></div></section>
 </main>
+<script src="./scripts/catalog-shards.js"></script>
 <script>
 (function(){
 "use strict";
@@ -67,9 +68,10 @@ async function init(){
      feed.quote_verified!==false||feed.availability_verified!==false||
      !Array.isArray(feed.previews)||directory.schema!=="jamaica.destination-directory.v1"||
      !Array.isArray(directory.hotels))throw Error("INVALID_FEED");
-  const p=feed.previews.find(x=>x&&x.id===id&&x.bookable===false&&x.quote_verified===false&&
-    x.availability_verified===false&&x.flight_verified===false&&
-    x.depart_date>=new Date().toISOString().slice(0,10));
+  const found=await window.JamaicaCatalog.findPreview(feed,id);
+  const p=found&&found.bookable===false&&found.quote_verified===false&&
+    found.availability_verified===false&&found.flight_verified===false&&
+    found.depart_date>=new Date().toISOString().slice(0,10)?found:null;
   if(!p){$("heading").textContent="Вариант больше не актуален";$("subtitle").textContent="Вернитесь в поиск и выберите свежую дату.";return;}
   $("heading").textContent=p.country+" — "+p.hotel;
   if(adults===null||kids===null){
