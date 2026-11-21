@@ -23,7 +23,10 @@ RUNROOT = Path.home()/".local"/"share"/"jamaica-oracle-catalog"
 CHECKOUT = RUNROOT/"site"
 KEY = Path.home()/".ssh"/"jamaica_catalog_deploy_ed25519"
 KNOWN_HOSTS = Path.home()/".ssh"/"jamaica_catalog_known_hosts"
-SCRIPTS = Path(__file__).resolve().parent
+# After the first updated installation, the server reads source adapters from
+# its verified GitHub clone, so future catalog fixes apply automatically.
+SCRIPTS = CHECKOUT/"scripts"
+DISCOVERY_STATE = RUNROOT/"extra_irkutsk_source_countries.json"
 MAX_BYTES = 8_000_000
 MAX_ITEMS = 8_000
 HEARTBEAT = timedelta(minutes=30)
@@ -168,6 +171,36 @@ def needs_publish(previous,current,*,now=None):
     prev_time=timestamp(previous.get("refreshed_at_utc"))
     return not prev_time or now-prev_time>=HEARTBEAT
 
+def update_discovered_source_countries(feed,directory,*,state_path=DISCOVERY_STATE):
+    """Promote any actual Irkutsk price-list country to the 5-minute core scan.
+
+    Keep only country names, never prices, URLs, cookies or supplier identifiers.
+    """
+    old=[]
+    if state_path.is_file():
+        if state_path.is_symlink() or state_path.stat().st_size>10000:
+            raise CatalogHold("DISCOVERY_STATE_INVALID")
+        value=json.loads(state_path.read_text(encoding="utf-8"))
+        if not isinstance(value,list) or len(value)>40:
+            raise CatalogHold("DISCOVERY_STATE_SCHEMA_INVALID")
+        old=[v for v in value if isinstance(v,str)]
+    source={c["name"] for c in directory["countries"]
+            if isinstance(c,dict) and c.get("has_tour_catalog") and
+            "100510397223" not in c.get("origins",[]) and isinstance(c.get("name"),str)}
+    names=set(old)&source
+    for st in feed.get("countries_status",[]):
+        if isinstance(st,dict) and st.get("country") in source and
+                type(st.get("lists_read")) is int and st["lists_read"]>0:
+            names.add(st["country"])
+    updated=sorted(names)[:40]
+    if old!=updated:
+        target=state_path.with_suffix(".tmp")
+        target.write_text(json.dumps(updated,ensure_ascii=False)+"\\n",encoding="utf-8")
+        target.chmod(0o600)
+        target.replace(state_path)
+    return len(updated)
+
+
 def publish(env):
     # Destination directory is in this clone. Source secrets remain outside Git.
     refresh_directory()
@@ -180,12 +213,18 @@ def publish(env):
         generated.unlink()
     command=[sys.executable,"-B",str(SCRIPTS/"oracle_bg_preview_export.py"),
              "--directory",str(CHECKOUT/"destination-directory.json"),
-             "--output",str(generated),"--max-countries","80","--per-country","3"]
+             "--output",str(generated),"--max-countries","120",
+             "--per-country","5","--discover-state",str(DISCOVERY_STATE)]
     run(command,cwd=SCRIPTS,timeout=200,expose=True)
     if not generated.is_file() or generated.stat().st_size>MAX_BYTES:
         raise CatalogHold("GENERATED_FEED_INVALID_SIZE")
     new=json.loads(generated.read_text(encoding="utf-8"))
     count=validate(new,directory)
+    promoted=update_discovered_source_countries(new,directory)
+    log("JAMAICA_SOURCE_COUNTRIES_TOTAL",new.get("source_scope",{}).get("source_tour_countries","UNKNOWN"))
+    log("JAMAICA_OTHER_COUNTRIES_PROBED",new.get("source_scope",{}).get("other_countries_probed_this_cycle","UNKNOWN"))
+    log("JAMAICA_DISCOVERED_EXTRA_COUNTRIES",promoted)
+    log("JAMAICA_PUBLIC_PREVIEWS_TRUNCATED",new.get("truncated_to_public_limit",False))
     log("JAMAICA_ORACLE_COUNTRY_COUNT",len({x["country"] for x in new["previews"]}))
     log("JAMAICA_ORACLE_TOUR_COUNT",count)
     log("JAMAICA_ORACLE_INDICATIVE_RUB_COUNT",sum(type(x["price_reference_rub"]) is int for x in new["previews"]))
