@@ -32,6 +32,28 @@ class Tests(unittest.TestCase):
                     entry(3,"c"),entry(8,"d")]
         chosen=exporter.choose_price_lists(candidates,2,today=today)
         self.assertEqual([x["file"] for x in chosen],["a","c"])
+    def test_spread_5_lists_over_departure_horizons(self):
+        from datetime import date, timedelta
+        today=date(2026,11,20)
+        def e(days):
+            return {"date":(today+timedelta(days=days)).strftime("%d.%m.%Y"),"name":str(days)}
+        items=[e(x) for x in (1,2,3,4,5,9,14,25,45,80,110)]
+        chosen=exporter.choose_price_lists(items,5,today=today)
+        days=[int(x["name"]) for x in chosen]
+        self.assertEqual(len(days),5)
+        self.assertTrue(any(1<=x<=7 for x in days))
+        self.assertTrue(any(8<=x<=21 for x in days))
+        self.assertTrue(any(22<=x<=60 for x in days))
+        self.assertTrue(any(61<=x<=180 for x in days))
+
+    def test_spread_never_repeats_date_or_exceeds_cap(self):
+        from datetime import date, timedelta
+        today=date(2026,11,20)
+        items=[{"date":(today+timedelta(days=x)).strftime("%d.%m.%Y")} for x in (1,1,8,8,29,90)]
+        chosen=exporter.choose_price_lists(items,5,today=today)
+        self.assertEqual(len(chosen),4)
+        self.assertEqual(len({x["date"] for x in chosen}),4)
+
     def test_no_past_or_today_only_listings(self):
         from datetime import date,timedelta
         today=date(2026,11,20)

@@ -90,7 +90,13 @@ def safe_preview(entry, country, hotel_by_id, price_currency=None):
     }
 
 def choose_price_lists(entries, limit=2, today=None):
-    """Prefer future departures on separate dates over same-day duplicate files."""
+    """Sample distinct departure horizons without increasing the API request cap.
+
+    Keep the historical nearest-date behavior for small (1-2) probes.
+    For 3-5 lists, choose one from each available horizon, then fill
+    remaining slots with the earliest distinct dates. Price-list rows are
+    still PRELIMINARY, not live quotes or flight/room availability.
+    """
     today=today or datetime.now(timezone.utc).date()
     candidates=[]
     for entry in entries:
@@ -101,16 +107,31 @@ def choose_price_lists(entries, limit=2, today=None):
             continue
         candidates.append((d,entry))
     candidates.sort(key=lambda pair:pair[0])
+    distinct=[]
     seen=set()
-    selected=[]
     for day,entry in candidates:
-        if day in seen:
-            continue
-        selected.append(entry)
-        seen.add(day)
-        if len(selected)==limit:
-            break
-    return selected
+        if day not in seen:
+            distinct.append((day,entry))
+            seen.add(day)
+    if limit<=2:
+        return [entry for _,entry in distinct[:max(0,limit)]]
+    windows=((1,7),(8,21),(22,60),(61,180))
+    selected=[]
+    chosen_days=set()
+    for low,high in windows:
+        for day,entry in distinct:
+            age=(day-today).days
+            if low<=age<=high:
+                selected.append((day,entry))
+                chosen_days.add(day)
+                break
+        if len(selected)>=limit:break
+    for day,entry in distinct:
+        if len(selected)>=limit:break
+        if day not in chosen_days:
+            selected.append((day,entry))
+            chosen_days.add(day)
+    return [entry for day,entry in sorted(selected,key=lambda x:x[0])]
 
 
 def select_source_countries(directory, *, extra_priority_names=(), probe_slot=0,
