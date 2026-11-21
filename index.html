@@ -491,8 +491,8 @@ function partnerPhotoURL(raw,hosts,{image=false}={}){
   const u=new URL(raw);
   if(u.protocol!=="https:"||u.username||u.password||u.port||
      u.search||u.hash||u.href!==raw||!hosts.includes(u.hostname)||
-     u.hostname==="localhost"||/^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(u.hostname))return null;
-  if(image&&!/\\.(?:jpe?g|png|webp|avif)$/i.test(u.pathname))return null;
+     u.hostname==="localhost"||/^\d{1,3}(?:\.\d{1,3}){3}$/.test(u.hostname))return null;
+  if(image&&!/\.(?:jpe?g|png|webp|avif)$/i.test(u.pathname))return null;
   return u.href;
  }catch(e){return null;}
 }
@@ -509,10 +509,10 @@ async function approvedPartnerPreviewPhoto(x){
   if(!e||e.hotel_name!==x.hotel||e.country!==x.country||
      e.rights_verified!==true||e.commercial_publication_allowed!==true||
      typeof e.permission_reference!=="string"||e.permission_reference.trim().length<12||
-     typeof e.rights_verified_at!=="string"||!/^\\d{4}-\\d{2}-\\d{2}$/.test(e.rights_verified_at)||
+     typeof e.rights_verified_at!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(e.rights_verified_at)||
      !Array.isArray(e.approved_image_hosts)||!Array.isArray(e.approved_source_hosts)||
      !Array.isArray(e.photos))return null;
-  if(e.rights_expires_at&&(!/^\\d{4}-\\d{2}-\\d{2}$/.test(e.rights_expires_at)||
+  if(e.rights_expires_at&&(!/^\d{4}-\d{2}-\d{2}$/.test(e.rights_expires_at)||
      Date.now()>Date.parse(e.rights_expires_at+"T23:59:59Z")))return null;
   for(const p of e.photos.slice(0,16)){
    if(!p||p.license!=="contract-authorized"||
