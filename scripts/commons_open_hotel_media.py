@@ -164,10 +164,10 @@ def _validated_file(resp,file):
         mime=record.get("mime")
         if mime and mime not in ("image/jpeg","image/png","image/webp"):continue
         source="https://commons.wikimedia.org/wiki/File:"+urllib.parse.quote(
-                    file.replace(" ","_"),safe="()_-.,")
+                    file.replace(" ","_"),safe="!'()*-._~")
         if page.get("title","").replace("_"," ")!="File:"+file.replace("_"," "):
             continue
-        src="https://commons.wikimedia.org/wiki/Special:FilePath/"+urllib.parse.quote(file,safe="")+"?width=720"
+        src="https://commons.wikimedia.org/wiki/Special:FilePath/"+urllib.parse.quote(file,safe="!'()*-._~")+"?width=720"
         return {"file":file,"src":src,"source":source,
           "license":lic,"license_url":expected or "https://commons.wikimedia.org/wiki/Commons:Licensing",
           "author":author,"alt":"Фотография конкретной гостиницы: "+file[:120],
