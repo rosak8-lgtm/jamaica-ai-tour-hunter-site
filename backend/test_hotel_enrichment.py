@@ -46,6 +46,25 @@ class Tests(unittest.TestCase):
         self.assertLess(self.page.index('id="gallery"'),self.page.index('id="hotelDescriptionSection"'))
         for id_ in ("enrichedFeatures","curatedRooms","facts","rooms","gallery","reviewForm"):
             self.assertIn('id="'+id_+'"',self.page)
+    def test_exact_commercial_commons_images_for_four_more_hotels(self):
+        checked={
+          "102610001177":("ROYAL CLIFF BEACH HOTEL","Таиланд","CC BY-SA 4.0","hotel_exterior"),
+          "102610001141":("AMARI PATTAYA","Таиланд","CC BY-SA 4.0","hotel_exterior"),
+          "102616490643":("INTERCONTINENTAL NHA TRANG","Вьетнам","CC BY-SA 3.0","hotel_exterior"),
+          "102667202290":("GRAND HYATT SHANGHAI (上海金茂君悦大酒店)","Китай","CC BY 2.0","hotel_public_area"),
+        }
+        for key,(name,country,license,kind) in checked.items():
+            with self.subTest(hotel=key):
+                entry=self.data["hotels"][key]
+                self.assertEqual((entry["name"],entry["country"]),(name,country))
+                self.assertGreater(len(entry["editorial_description"]),100)
+                self.assertEqual(len(entry["photos"]),1)
+                p=entry["photos"][0]
+                self.assertEqual((p["license"],p["kind"]),(license,kind))
+                self.assertEqual(p["source"],
+                    "https://commons.wikimedia.org/wiki/File:"+p["file"].replace(" ","_"))
+                self.assertEqual(len(entry["sources"]),1)
+                self.assertEqual(entry["sources"][0]["url"],p["source"])
     def test_basaya_source_backed_room_and_facility_details(self):
         basaya=self.data["hotels"]["102623766108"]
         self.assertEqual(basaya["name"],"BASAYA BEACH HOTEL & RESORT")
