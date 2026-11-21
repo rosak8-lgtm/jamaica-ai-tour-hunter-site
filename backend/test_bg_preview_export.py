@@ -114,6 +114,47 @@ class Tests(unittest.TestCase):
         ]
         self.assertEqual(exporter.fair_catalog(rows,max_rows=1)[0]["id"],"known")
 
+    def test_large_early_list_cannot_hide_cheaper_later_month_under_country_cap(self):
+        from unittest.mock import patch
+        from urllib.parse import parse_qs,urlparse
+        second_date=(datetime.now(timezone.utc)+timedelta(days=60)).strftime("%d.%m.%Y")
+        country_id="100410000051"
+        def price_file(day,id_price):
+            return {"date":day,
+                "url":"https://export.bgoperator.ru/partners?action=price&tid=211&flt="+
+                country_id+"&flt2="+bg.CITY_ID+"&id_price="+id_price+
+                "&data="+day+"&xml=11"}
+        class Api:
+            def get(self,url):
+                if "/yandex?" in url:
+                    return json.dumps({"entries":[
+                        price_file(DATE,"121132934133"),
+                        price_file(second_date,"121132934134")]}).encode()
+                day=parse_qs(urlparse(url).query).get("data",[""])[0]
+                if day==DATE:
+                    data=[row(room="NEAR EXPENSIVE",prices=[{"amount":"1200","RUR":"145000","ag":"12+,12+"}]),
+                          row(room="NEAR CHEAPER",prices=[{"amount":"1200","RUR":"90000","ag":"12+,12+"}])]
+                else:
+                    data=[row(tour_date=second_date,room="LATER CHEAPEST",
+                              prices=[{"amount":"1200","RUR":"75000","ag":"12+,12+"}]),
+                          row(tour_date=second_date,room="LATER OTHER",
+                              prices=[{"amount":"1200","RUR":"135000","ag":"12+,12+"}])]
+                return json.dumps({"cur":"EUR","entries":data}).encode()
+        directory={"schema":"jamaica.destination-directory.v1",
+                   "countries":[{"name":COUNTRY,"id":country_id,
+                                 "has_tour_catalog":True,"origins":[bg.CITY_ID]}],
+                   "hotels":list(self.hotels.values())}
+        with patch.object(exporter,"MAX_PER_COUNTRY",2):
+            result=exporter.build(directory,Api(),max_countries=1,per_country=2)
+        self.assertEqual(len(result["previews"]),2)
+        self.assertEqual({x["depart_date"] for x in result["previews"]},
+                         {datetime.strptime(DATE,"%d.%m.%Y").strftime("%Y-%m-%d"),
+                          datetime.strptime(second_date,"%d.%m.%Y").strftime("%Y-%m-%d")})
+        self.assertEqual(result["total_candidate_previews"],4)
+        self.assertTrue(result["truncated_to_public_limit"])
+        self.assertEqual(result["countries_status"][0]["candidate_previews"],4)
+        self.assertEqual(result["countries_status"][0]["lists_read"],2)
+
     def test_preview_contains_only_safe_descriptive_fields(self):
         p=exporter.safe_preview(row(),COUNTRY,self.hotels)
         self.assertEqual(p["hotel"],"Verified Catalog Hotel")

@@ -244,8 +244,11 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
                  if isinstance(h,dict) and h.get("id") and h.get("country")}
     countries,scope=select_source_countries(
         directory,extra_priority_names=extra_priority_names,probe_slot=probe_slot)
-    results,statuses,by_id=[],[],{}
+    results,statuses=[],[]
+    total_candidates_before_country_cap=0
     for country in countries[:max_countries]:
+        # Enforce country cap only AFTER sampling independent source lists.
+        country_by_id={}
         stats={"country":bg.clean(country.get("name"),70),
                "lists_read":0,"previews":0,"candidate_previews":0,"rows_scanned":0,
                "known_hotel_ids":0,"sampled_departure_months":[],
@@ -263,6 +266,7 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
                 for item in selected_lists
             })
             for listed in selected_lists:
+                new_from_this_list=0
                 url=detail.safe_url(listed,country["id"])
                 payload=json.loads(api.get(url))
                 rows=payload.get("entries") if isinstance(payload,dict) else None
@@ -276,17 +280,20 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
                         stats["known_hotel_ids"]+=1
                     candidate=safe_preview(row,country["name"],hotel_by_id,currency)
                     if not candidate:continue
-                    old=by_id.get(candidate["id"])
+                    old=country_by_id.get(candidate["id"])
                     if old is not None:
                         incoming=candidate["price_reference_rub"]
                         previous=old["price_reference_rub"]
                         if incoming is not None and (previous is None or incoming<previous):
                             old["price_reference_rub"]=incoming
                             old["price_reference_party"]="TWO_ADULTS"
-                    elif stats["candidate_previews"]<MAX_PER_COUNTRY:
-                        by_id[candidate["id"]]=candidate
-                        results.append(candidate)
-                        stats["candidate_previews"]+=1
+                    elif new_from_this_list<MAX_PER_COUNTRY:
+                        country_by_id[candidate["id"]]=candidate
+                        new_from_this_list+=1
+            stats["candidate_previews"]=len(country_by_id)
+            total_candidates_before_country_cap+=len(country_by_id)
+            # Favor cheaper known prices and date coverage before final cap.
+            results.extend(fair_catalog(list(country_by_id.values()),max_rows=MAX_PER_COUNTRY))
             stats["status"]="CHECKED" if stats["lists_read"] else "NO_FUTURE_LIST"
         except (bg.SyncHold,urllib.error.HTTPError,urllib.error.URLError,
                 ValueError,TimeoutError,KeyError):
@@ -305,8 +312,8 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
             "origin":ALLOWED_ORIGIN,
             "countries_status":statuses,
             "source_scope":scope,
-            "total_candidate_previews":len(results),
-            "truncated_to_public_limit":len(results)>len(selected),
+            "total_candidate_previews":total_candidates_before_country_cap,
+            "truncated_to_public_limit":total_candidates_before_country_cap>len(selected),
             "previews":selected,
             "indicative_two_adult_rub_count":indicative,
             "quote_verified":False,"availability_verified":False,"bookable":False}
