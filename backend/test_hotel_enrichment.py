@@ -61,13 +61,19 @@ class Tests(unittest.TestCase):
         self.assertEqual(china["country"],"Китай")
         self.assertEqual(china["resort"],"Гуанчжоу")
         self.assertIn("Юэсю",china["editorial_description"])
-        self.assertEqual(len(china["photos"]),3)
+        self.assertEqual(len(china["photos"]),6)
+        self.assertEqual([p["kind"] for p in china["photos"]].count("hotel_exterior"),3)
+        self.assertEqual([p["kind"] for p in china["photos"]].count("view_from_hotel"),3)
+        self.assertIn("НЕ являются фотографиями номеров",china["photo_note"])
         for photo in china["photos"]:
             self.assertEqual(photo["author"],"中少")
             self.assertEqual(photo["license"],"CC BY-SA 4.0")
             self.assertEqual(photo["license_url"],
                 "https://creativecommons.org/licenses/by-sa/4.0/")
-            self.assertEqual(photo["kind"],"hotel_exterior")
+            self.assertIn(photo["kind"],("hotel_exterior","view_from_hotel"))
+            if photo["kind"]=="view_from_hotel":
+                self.assertIn("45F Revolving Restaurant",photo["file"])
+                self.assertIn("Гуанчжоу",photo["title"])
             self.assertEqual(photo["source"],
                 "https://commons.wikimedia.org/wiki/File:"+photo["file"].replace(" ","_"))
         self.assertIn("CC BY-SA 4.0",self.page)
