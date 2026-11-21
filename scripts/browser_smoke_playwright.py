@@ -417,7 +417,7 @@ def main():
                     page.goto(base+"?"+urlencode({"country":country,"hotel":name}),
                               wait_until="domcontentloaded")
                     page.locator("#previewCards .previewMedia img").first.wait_for(timeout=22000)
-                    page.locator("#previewCards .previewMedia").first.scroll_into_view_if_needed()
+                    page.locator("#previewCards .previewMedia img").first.scroll_into_view_if_needed()
                     try:
                         page.wait_for_function(
                           "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
