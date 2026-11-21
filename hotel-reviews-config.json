@@ -1,0 +1,6 @@
+{
+  "schema": "jamaica.hotel-reviews.v1",
+  "enabled": false,
+  "api_base_url": "",
+  "notice": "Reviews require a trusted HTTPS endpoint on Oracle, a private SQLite database, spam controls and moderation. This static GitHub Pages file does not store reviews itself."
+}
