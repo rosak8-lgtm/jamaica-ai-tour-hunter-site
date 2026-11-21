@@ -44,6 +44,7 @@
 <div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Выберите страну и параметры поездки. Туры с проверенной стоимостью появятся здесь после загрузки.</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
 <div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
 <div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
+<p class="micro" id="sourceCountryPriority">Приоритет поиска из Иркутска: Таиланд → Китай → Вьетнам. Все три направления проверяются на сервере каждые 5 минут; доступные варианты появляются только после ответа прайс-листа.</p>
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
 <div class="destToolbar" style="margin:12px 0">
   <label for="allCountrySelector" class="micro">Выбрать любое направление из полного справочника:</label>
@@ -381,10 +382,13 @@ function renderPreviewCountryChips(){
  target.replaceChildren();
  const counts=new Map();
  for(const x of previewRecords)counts.set(x.country,(counts.get(x.country)||0)+1);
- const names=[...new Set([...counts.keys(),
+ const priorityNames=["Таиланд","Китай","Вьетнам"];
+ const names=[...new Set([...priorityNames,...counts.keys(),
      ...previewCountryStatus.map(x=>x.country).filter(Boolean)])].sort((a,b)=>{
+       const ai=priorityNames.indexOf(a),bi=priorityNames.indexOf(b);
+       if(ai>=0||bi>=0)return ai>=0&&bi>=0?ai-bi:ai>=0?-1:1;
        const ca=counts.get(a)||0,cb=counts.get(b)||0;
-       return (cb>0?1:0)-(ca>0?1:0) || a.localeCompare(b,"ru");
+       return (cb>0?1:0)-(ca>0?1:0)||a.localeCompare(b,"ru");
      });
  const current=$("destination").value.trim();
  $("allCountrySelector").value=fullCountryNames.includes(current)?current:"";
