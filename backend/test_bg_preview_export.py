@@ -32,6 +32,50 @@ class Tests(unittest.TestCase):
                     entry(3,"c"),entry(8,"d")]
         chosen=exporter.choose_price_lists(candidates,2,today=today)
         self.assertEqual([x["file"] for x in chosen],["a","c"])
+    def test_five_list_scans_cover_near_and_later_calendar_months(self):
+        from datetime import date, timedelta
+        today=date(2026,11,21)
+        def listing(delta):
+            when=today+timedelta(days=delta)
+            return {"date":when.strftime("%d.%m.%Y"),"file":str(delta)}
+        # Seven calendar months in the future 180-day horizon.
+        rows=[listing(delta) for delta in range(1,181)]
+        selected=exporter.choose_price_lists(rows,5,today=today,probe_slot=0)
+        self.assertLessEqual(len(selected),5)
+        self.assertEqual(selected[0]["file"],"1")
+        future_months={ (today+timedelta(days=int(x["file"]))).strftime("%Y-%m")
+                        for x in selected }
+        self.assertGreaterEqual(len(future_months),4)
+        # A week of scans must revisit all months actually advertised by source.
+        expected={ (today+timedelta(days=d)).strftime("%Y-%m")
+                   for d in range(1,181) }
+        observed=set()
+        later_dates=set()
+        for cycle in range(14):
+            chosen=exporter.choose_price_lists(rows,5,today=today,probe_slot=cycle)
+            self.assertLessEqual(len(chosen),5)
+            self.assertEqual(chosen[0]["file"],"1")
+            for x in chosen:
+                day=today+timedelta(days=int(x["file"]))
+                observed.add(day.strftime("%Y-%m"))
+                later_dates.add(day)
+        self.assertEqual(observed,expected)
+        self.assertGreater(len(later_dates),5)
+
+    def test_source_read_limit_and_invalid_dates_are_respected(self):
+        from datetime import date,timedelta
+        today=date(2026,11,21)
+        rows=[{"date":(today+timedelta(days=d)).strftime("%d.%m.%Y"),"file":str(d)}
+              for d in range(-5,190)]
+        rows.extend([{"date":"not-a-date"},{"stop":True,"date":"02.12.2026"}])
+        for cap in (1,2,3,4,5):
+            picked=exporter.choose_price_lists(rows,cap,today=today,probe_slot=19)
+            self.assertLessEqual(len(picked),cap)
+            for row_ in picked:
+                from_date=exporter.bg.date_iso(row_["date"])
+                self.assertTrue(today<from_date<=today+timedelta(days=180))
+        self.assertEqual(exporter.choose_price_lists(rows,0,today=today),[])
+
     def test_no_past_or_today_only_listings(self):
         from datetime import date,timedelta
         today=date(2026,11,20)
