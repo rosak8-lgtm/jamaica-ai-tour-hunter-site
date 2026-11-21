@@ -24,6 +24,17 @@ for(const filter of ['filterCountry','filterResort','filterNights','filterHotel'
 }
 assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSidebar()'),
   'Search sidebar cannot be a decorative mockup');
+assert.ok(page.includes('if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({'),
+ 'The selected country must survive an empty current feed');
+assert.ok(page.includes('id="budgetNotice"')&&page.includes('budgetNotice").textContent=budgetMessage'),
+ 'Traveler must be informed when a budget cannot be applied');
+assert.ok(page.includes('referencePrice(x)!==null&&')&&page.includes('referencePrice(x)<=budget*2'),
+ 'A selected budget may only match known prices for two adults');
+assert.ok(!page.includes('!budget||!partyTwoAdults||referencePrice(x)===null'),
+ 'Unknown-price offers must not masquerade as within budget');
+assert.ok(!page.includes('онлайн-бронирование туров</title>'),
+ 'SEO must not promise unconfigured booking');
+
 assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
 assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
 assert.ok(page.includes('Цена пока не подтверждена;'),
