@@ -362,6 +362,76 @@ def main():
                 ensure("BASAYA BEACH HOTEL & RESORT" in page.locator("#name").inner_text(),
                        "HBX_PHOTO_WAS_ATTACHED_TO_WRONG_HOTEL")
                 print("LICENSED_HBX_HOTEL_ID_MEDIA_SHARD_IN_BROWSER=PASS")
+                # Open commercial license and verified identity: no HBX
+                # credentials or photo files stored on Oracle.
+                page.unroute("**/hotel-media-feed/index.json")
+                page.unroute("**/hotel-media-feed/part-0001.json")
+                name="BASAYA BEACH HOTEL & RESORT"
+                filename="Basaya Beach Hotel - Verified Exterior.jpg"
+                from urllib.parse import quote
+                media_photo={
+                 "file":filename,
+                 "src":"https://commons.wikimedia.org/wiki/Special:FilePath/"+
+                    quote(filename,safe="!'()*-._~")+"?width=720",
+                 "source":"https://commons.wikimedia.org/wiki/File:"+
+                    quote(filename.replace(" ","_"),safe="!'()*-._~"),
+                 "license":"CC BY-SA 4.0",
+                 "license_url":"https://creativecommons.org/licenses/by-sa/4.0/",
+                 "author":"Verified photographer",
+                 "alt":"Фотография конкретной гостиницы Basaya Beach Hotel & Resort",
+                 "kind":"hotel_property","wikidata_qid":"Q123456"}
+                open_media_index={
+                  "schema":"jamaica.hotel-open-media-index.v1",
+                  "total_hotels":1,
+                  "entries":{"102623766108":"hotel-open-media/part-0001.json"}}
+                open_media_part={
+                  "schema":"jamaica.hotel-open-media-part.v1",
+                  "hotels":{"102623766108":{
+                    "hotel_name":name,"country":"Таиланд",
+                    "wikidata_qid":"Q123456",
+                    "identity_reviewed":True,
+                    "identity_review_reference":"https://www.wikidata.org/wiki/Q123456",
+                    "photos":[media_photo]}}}
+                page.route("**/hotel-open-media/index.json",
+                   lambda route:route.fulfill(status=200,content_type="application/json",
+                       body=json.dumps(open_media_index,ensure_ascii=False)))
+                page.route("**/hotel-open-media/part-0001.json",
+                   lambda route:route.fulfill(status=200,content_type="application/json",
+                       body=json.dumps(open_media_part,ensure_ascii=False)))
+                page.route(media_photo["src"],
+                   lambda route:route.fulfill(status=200,content_type="image/png",body=pixel))
+                page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
+                page.locator('#gallery figure[data-photo-source="commons-open"]').wait_for(timeout=12000)
+                ensure(page.locator('#gallery a[href="https://creativecommons.org/licenses/by-sa/4.0/"]').count()==1,
+                   "COMMERCIAL_CC_LICENSE_LINK_NOT_VISIBLE")
+                ensure(page.locator('#gallery').inner_text().find("Verified photographer")>=0,
+                   "COMMONS_PROPERTY_PHOTO_AUTHOR_MISSING")
+                ensure(page.locator('#gallery img').count()==1,
+                   "VERIFIED_WIKIDATA_COMMONS_PHOTO_NOT_SHOWN")
+                print("COMMONS_EXACT_PROPERTY_COMMERCIAL_LICENSE_BROWSER_PASS")
+                # Independent safe alternative: direct link to the VERIFIED
+                # official hotel gallery, never copy its image bytes into JAMAICA.
+                approved_link={"schema":"jamaica.hotel-official-sites.v1",
+                  "hotels":{"102623766108":{
+                  "hotel_name":"BASAYA BEACH HOTEL & RESORT",
+                  "country":"Таиланд",
+                  "identity_verified":True,
+                  "identity_evidence_url":"https://hotel.example/official-details",
+                  "official_site_url":"https://hotel.example/",
+                  "gallery_url":"https://hotel.example/gallery",
+                  "reviewed_at":"2026-11-21"}}}
+                page.route("**/hotel-official-sites.json",
+                  lambda route:route.fulfill(status=200,content_type="application/json",
+                     body=json.dumps(approved_link,ensure_ascii=False)))
+                page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
+                page.locator('#officialGallery a[href="https://hotel.example/gallery"]').wait_for(timeout=12000)
+                ensure(page.locator("#officialGallery").is_visible(),
+                  "SAFE_OFFICIAL_HOTEL_GALLERY_LINK_MISSING")
+                ensure(page.locator("#officialGallery img").count()==0,
+                  "OFFICIAL_SITE_IMAGE_COPYING_NOT_ALLOWED")
+                print("LINK_TO_REVIEWED_OFFICIAL_HOTEL_GALLERY_BROWSER_PASS")
+
+
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")

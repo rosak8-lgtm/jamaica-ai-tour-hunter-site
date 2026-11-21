@@ -47,9 +47,9 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 <section class="box" id="hotelDescriptionSection"><h2>Об отеле</h2><p id="description"></p><div id="facts" class="facts"></div>
 <div id="enrichedFeatures"></div>
 <p class="sub" id="detailExplanation">Гостиничные услуги и комплектация номеров проверяются по актуальной карточке объекта; подробности, которых нет в источнике, не выдумываются.</p></section>
-<section class="box"><h2>Фотографии отеля и курорта</h2><p class="sub">Сначала ищем лицензированные снимки именно выбранной гостиницы. Если их нет, можем показать отдельные <strong>фотографии курорта с явной пометкой «не фото отеля»</strong>. Чужие отельные снимки и изображения без прав не выдаются за гостиницу.</p>
+<section class="box"><h2>Фотографии выбранного отеля</h2><p class="sub">Показываем только подтверждённые фотографии самой гостиницы, на которые есть разрешение или лицензия для коммерческого использования. Если снимков нет, можно перейти к официальной галерее отеля при наличии проверенной ссылки. Пейзажи курорта и чужие гостиницы за фотографии номера или здания не выдаются.</p>
 <div id="gallery" class="photoGrid"><div class="hero"><div><span aria-hidden="true">🏨</span><p>Проверяем наличие фотографий именно этого отеля…</p></div></div></div>
-<p id="photoStatus" class="status" role="status">Проверяем подтверждённые фотографии этой гостиницы…</p></section>
+<p id="photoStatus" class="status" role="status">Проверяем подтверждённые фотографии этой гостиницы…</p><p id="officialGallery" class="sub" hidden></p></section>
 <section class="box"><h2>Номера, размещение и питание</h2><div id="curatedRooms"></div><div id="rooms"></div>
 <p class="sub">Показанные категории номеров встречались в опубликованных прайс-листах, но не означают свободный номер сегодня.</p></section>
 <section class="box"><h2>Найденные даты и цены туров</h2>
@@ -74,6 +74,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 </main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
+<script src="./scripts/commons-hotel-media.js"></script>
 <script>
 (function(){
 "use strict";
@@ -178,6 +179,81 @@ async function loadRightsApprovedHotelPhotos(){
  }catch(e){return false;}
 }
 
+async function loadOpenLicensedHotelPhotos(){
+ if(!official||!hotel||!window.JamaicaOpenHotelMedia)return false;
+ const photos=await window.JamaicaOpenHotelMedia.get(
+   id,hotel.country,hotel.name);
+ if(!photos||!photos.length)return false;
+ const gallery=$("gallery");gallery.replaceChildren();
+ for(const p of photos){
+   const fig=make("figure","photo");fig.dataset.photoSource="commons-open";
+   const img=make("img");
+   img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
+   img.alt=p.alt;
+   img.addEventListener("error",()=>{
+      fig.remove();
+      if(!gallery.querySelector('figure[data-photo-source="commons-open"]')){
+        showPhotoPlaceholder();
+      }
+   },{once:true});
+   const caption=make("figcaption");
+   caption.append(make("span","",
+      "Фотография выбранной гостиницы · "+p.author+" · "+p.license+" · "));
+   const license=make("a","","Лицензия");
+   license.href=p.license_url;license.target="_blank";
+   license.rel="noopener noreferrer";
+   caption.append(license,make("span",""," · "));
+   const source=make("a","","Автор и оригинал");
+   source.href=p.source;source.target="_blank";
+   source.rel="noopener noreferrer";
+   caption.append(source);
+   fig.append(img,caption);
+   gallery.append(fig);
+   img.src=p.src;
+ }
+ text("photoStatus",photos.length+
+   " фотографий этой гостиницы со свободной коммерческой лицензией Wikimedia Commons.");
+ return true;
+}
+
+function safeOfficialGalleryUrl(raw,entry){
+ try{
+   if(typeof raw!=="string"||raw.length>1200||
+      typeof entry.official_site_url!=="string")return null;
+   const u=new URL(raw),site=new URL(entry.official_site_url);
+   if(u.protocol!=="https:"||site.protocol!=="https:"||
+      u.hostname!==site.hostname||!u.hostname.includes(".")||
+      u.username||u.password||u.port||u.hash||
+      site.username||site.password||site.port||site.hash||
+      /^\d{1,3}(?:\.\d{1,3}){3}$/.test(u.hostname))return null;
+   return u.href;
+ }catch(e){return null;}
+}
+async function showVerifiedOfficialGallery(){
+ if(!official||!hotel)return;
+ try{
+  const response=await fetch("./hotel-official-sites.json",{cache:"force-cache"});
+  if(!response.ok)return;
+  const data=await response.json();
+  if(data.schema!=="jamaica.hotel-official-sites.v1"||
+     !data.hotels||typeof data.hotels!=="object")return;
+  const entry=data.hotels[id];
+  if(!entry||entry.hotel_name!==hotel.name||entry.country!==hotel.country||
+     entry.identity_verified!==true||
+     typeof entry.identity_evidence_url!=="string"||
+     !entry.identity_evidence_url.startsWith("https://")||
+     typeof entry.reviewed_at!=="string"||
+     !/^\d{4}-\d{2}-\d{2}$/.test(entry.reviewed_at))return;
+  const url=safeOfficialGalleryUrl(entry.gallery_url,entry);
+  if(!url)return;
+  const status=$("officialGallery");status.replaceChildren();
+  status.append("У этого отеля есть проверенная официальная фотогалерея: ");
+  const link=make("a","","Посмотреть фотографии на сайте отеля");
+  link.href=url;link.target="_blank";link.rel="noopener noreferrer";
+  status.append(link);status.hidden=false;
+ }catch(e){}
+}
+
 function showPhotoPlaceholder(){
  const target=$("gallery");target.replaceChildren();
  const card=make("div","hero");
@@ -190,6 +266,7 @@ function showPhotoPlaceholder(){
 async function loadPhotos(skipApproved=false){
  if(!hotel){text("photoStatus","Не выбран отель");return;}
  if(!skipApproved&&await loadRightsApprovedHotelPhotos())return;
+ if(await loadOpenLicensedHotelPhotos())return;
  showPhotoPlaceholder();
 }
 
@@ -347,6 +424,7 @@ function setHotelInfo(h,older=false){
  loadEnrichment().then(curatedPhotosUsed=>{
     if(!curatedPhotosUsed)loadPhotos();
  });
+ showVerifiedOfficialGallery();
  getCurrentTrips();
  loadReviews();
 }
