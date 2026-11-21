@@ -40,9 +40,12 @@
 <div class="destToolbar"><input id="destSearch" type="search" placeholder="Поиск страны: Египет, Индонезия, Греция…" aria-label="Поиск страны"><span class="count" id="dirCount" aria-live="polite"></span></div>
 <div class="destinationGrid" id="destinationGrid" aria-live="polite" style="margin-top:20px"></div><button class="loadMore" type="button" id="loadMore">Показать ещё страны</button>
 <p class="micro" style="margin-top:18px">Отметка о городе вылета в справочнике не означает наличия рейса или тура на выбранную дату. Направления без подходящего готового маршрута проверяются индивидуально.</p></div></section>
-<section class="section offerSection" id="offers"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div><h2>Результаты поиска путешествий</h2><p>Сначала отображаются подтверждённые туры, затем ниже — варианты отелей по всем направлениям. Без указания страны показывается полный справочник; фильтры сужают результаты.</p></div><div class="micro" id="offerCount">0 предложений</div></div>
-<div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong id="noOffersTitle">Поиск готов к работе</strong><p id="noOffersText">Выберите страну и параметры поездки. Туры с проверенной стоимостью появятся здесь после загрузки.</p></div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
-<div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
+<section class="section offerSection" id="offers"><div class="wrap">
+<div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div>
+<h2>Найденные туры и цены по странам</h2>
+<p>Сначала реальные варианты из прайс-листов: страна, отель, дата, номер и цена на момент проверки. Нажмите «Подробнее», чтобы открыть гостиницу и поездку. Окончательная цена и наличие проверяются перед договором.</p></div>
+<div class="count" id="searchResultsCount" role="status">Загрузка вариантов…</div></div>
+<div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Поиск туров работает</strong><p>Проверяем последние опубликованные варианты из прайс-листов. Данные обновляются сервером каждые пять минут.</p></div></div>
 <div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
 <p class="micro" id="sourceCountryPriority">Приоритет поиска из Иркутска: Таиланд → Китай → Вьетнам. Все три направления проверяются на сервере каждые 5 минут; доступные варианты появляются только после ответа прайс-листа.</p>
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
@@ -58,7 +61,17 @@
 <div class="micro" id="previewCoverage" role="status">Проверяем наличие туров по направлениям и странам…</div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
-</div></section>
+
+<div id="confirmedSection" class="hide" style="margin-top:24px">
+ <h3>Предложения с окончательно подтверждённой возможностью оформления</h3>
+ <div class="micro" id="offerCount">Загрузка статусов бронирования…</div>
+ <div class="offerBox" id="noOffers"><span class="offerIcon" aria-hidden="true">🔎</span><div>
+  <strong id="noOffersTitle">Подтверждённая бронь пока недоступна</strong>
+  <p id="noOffersText">Для покупки необходима повторная проверка цены, перелётов и отеля.</p>
+ </div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
+ <div class="offerCards" id="offerCards" aria-live="polite"></div>
+ <div class="micro" id="offerStatus" role="status"></div>
+</div></div></section>
 <section class="section" id="routes"><div class="wrap">
 <div class="sectionHead"><div><div class="sectionTag">Маршруты и даты</div><h2>Возможные вылеты и продолжительность</h2><p>После авторизованного обновления здесь появятся маршруты и даты из прайс-листов. Это предварительные варианты: подтверждение мест, отеля и итоговой цены производится отдельно.</p></div><span class="count" id="routeCount">Загрузка направлений…</span></div>
 <div class="offerBox" id="routeEmpty"><div><strong>Подключаем актуальные маршруты</strong><p id="routeStatus" class="micro">Данные о датах требуют защищённой синхронизации. Справочник гостиниц ниже уже загружен.</p></div></div>
@@ -174,6 +187,7 @@ function runSearch(scroll=false){
  const found=activeOffers.filter(o=>matching(o,q)).sort((a,b)=>a.total_rub-b.total_rub);
  const cards=$("offerCards");cards.replaceChildren();
  $("offerCount").textContent=found.length+" подтверждённых предложений";
+ $("confirmedSection").classList.toggle("hide",found.length===0);
  if(inventoryLoading){
   setEmpty("Загружаем варианты путешествий…","Проверяем каталог опубликованных предложений. Поиск по всем направлениям доступен уже сейчас.");
  }else if(!inventoryLoaded){
@@ -486,8 +500,15 @@ function renderTourPreviews(reset=true){
  target.append(frag);
  previewVisible=Math.min(list.length,previewVisible+30);
  more.hidden=previewVisible>=list.length;
- $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" конкретных предварительных вариантов по выбранным параметрам":
+ $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" конкретных вариантов по выбранным параметрам":
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
+ $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
+ $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
+ if(previewsLoaded&&list.length===0){
+   $("searchProgress").classList.remove("hide");
+   $("searchProgress").querySelector("strong").textContent="По заданным параметрам нет вариантов в текущем прайс-листе";
+   $("searchProgress").querySelector("p").textContent="Измените дату, страну, гостиницу или число ночей. Справочник гостиниц доступен ниже.";
+ }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
 $("previewMore").addEventListener("click",()=>renderTourPreviews(false));
