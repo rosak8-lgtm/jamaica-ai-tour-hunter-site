@@ -177,7 +177,7 @@ def _validated_file(resp,file):
                     file.replace(" ","_"),safe="!'()*-._~")
         if page.get("title","").replace("_"," ")!="File:"+file.replace("_"," "):
             continue
-        src="https://commons.wikimedia.org/wiki/Special:FilePath/"+urllib.parse.quote(file,safe="!'()*-._~")+"?width=720"
+        src="https://commons.wikimedia.org/wiki/Special:FilePath/"+urllib.parse.quote(file,safe="!'()*-._~")+"?width=500"
         return {"file":file,"src":src,"source":source,
           "license":lic,"license_url":expected or "https://commons.wikimedia.org/wiki/Commons:Licensing",
           "author":author,"alt":"Фотография конкретной гостиницы: "+file[:120],
