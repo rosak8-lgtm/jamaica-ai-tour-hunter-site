@@ -589,7 +589,7 @@ async function loadTourPreviews(){
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
   const sampledMonths=[...new Set(coverage.flatMap(row=>
     Array.isArray(row.sampled_departure_months)?row.sampled_departure_months:[])
-    .filter(m=>/^\\d{4}-\\d{2}$/.test(m)))].sort();
+    .filter(m=>/^\d{4}-\d{2}$/.test(m)))].sort();
   const scope=data.source_scope||{};
   previewTruncated=data.truncated_to_public_limit===true;
   previewCandidateTotal=Number.isSafeInteger(data.total_candidate_previews)&&data.total_candidate_previews>=data.previews.length?
