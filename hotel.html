@@ -84,91 +84,6 @@ const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.classNam
 function fact(label,value){
  const node=make("div","fact");node.append(make("b","",label),make("span","",value||"Не указано"));$("facts").append(node);
 }
-function safeCommonsUrl(raw,host){
- try{
-   const u=new URL(raw);return u.protocol==="https:"&&u.hostname===host&&!u.username&&!u.password?u.href:null;
- }catch(e){return null;}
-}
-function normalize(name){
- return String(name||"").normalize("NFKD").toLowerCase()
-   .replace(/[\u0300-\u036f]/g,"").replace(/[^a-zа-яё0-9]+/gi," ").replace(/\s+/g," ").trim();
-}
-function exactHotelTitleMatch(fileTitle,name){
- const raw=normalize(fileTitle.replace(/^File:/i,"").replace(/\.[^.]+$/,""));
- const hotelName=normalize(name).replace(/^(the |hotel |отель )/,"").trim();
- const words=hotelName.split(" ").filter(x=>x.length>=3&&!["hotel","resort","spa","отель","and","the","by"].includes(x));
- return hotelName.length>=6&&words.length>=1&&
-   (raw.includes(hotelName)||words.slice(0,Math.min(3,words.length)).every(w=>raw.split(" ").includes(w)));
-}
-function licenseOK(metadata){
- const license=(metadata.LicenseShortName&&metadata.LicenseShortName.value)||"";
- return /^(CC BY(?:-SA)?(?: \d\.\d)?|CC0(?: 1\.0)?|Public domain|PD-old|PD-self)$/i.test(license.trim())?license:"";
-}
-async function searchCommons(query,match,limit=6){
- const params=new URLSearchParams({
-  action:"query",generator:"search",gsrsearch:query,
-  gsrnamespace:"6",gsrlimit:"25",prop:"imageinfo",
-  iiprop:"url|extmetadata",iiurlwidth:"900",format:"json",origin:"*"
- });
- const response=await fetch("https://commons.wikimedia.org/w/api.php?"+params.toString(),
-                            {cache:"force-cache"});
- if(!response.ok)throw Error("LICENSED_MEDIA_SOURCE_UNAVAILABLE");
- const data=await response.json();
- const photos=[];
- for(const page of Object.values(data.query?.pages||{})){
-  if(!page||!match(page.title||""))continue;
-  const info=page.imageinfo?.[0];
-  if(!info)continue;
-  const src=safeCommonsUrl(info.thumburl||info.url,"upload.wikimedia.org");
-  const permalink=safeCommonsUrl(info.descriptionurl,"commons.wikimedia.org");
-  const license=licenseOK(info.extmetadata||{});
-  if(!src||!permalink||!license)continue;
-  const artist=String(info.extmetadata?.Artist?.value||"")
-    .replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,90);
-  if(photos.some(p=>p.page===permalink))continue;
-  photos.push({src,page:permalink,license,artist,title:String(page.title||"").slice(0,160)});
-  if(photos.length>=limit)break;
- }
- return photos;
-}
-function paintCommonsPhotos(photos,{hotelPhoto,place}){
- const target=$("gallery");target.replaceChildren();
- let visible=photos.length,loaded=0;
- for(const photo of photos){
-  const figure=make("figure","photo");
-  figure.dataset.photoSource=hotelPhoto?"commons-hotel":"commons-destination";
-  const img=make("img");
-  img.alt=hotelPhoto?"Фото гостиницы "+hotel.name:"Фото курорта "+place+" (НЕ фотография гостиницы)";
-  img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
-  img.addEventListener("load",()=>{
-   loaded++;
-   text("photoStatus",hotelPhoto?
-     loaded+" лицензированных фото выбранной гостиницы загружено с Wikimedia Commons.":
-     loaded+" лицензированных фото курорта "+place+" загружено. Это НЕ фотография гостиницы.");
-  },{once:true});
-  img.addEventListener("error",()=>{
-   figure.remove();visible--;
-   if(visible===0){
-    text("photoStatus",hotelPhoto?
-      "Фотографии гостиницы недоступны на внешнем сервере. Проверяем отдельные фото курорта.":
-      "Фотографии курорта не загрузились. Проверенных изображений пока нет.");
-    if(hotelPhoto)loadDestinationPhotos(place);
-    else showPhotoPlaceholder();
-   }else if(!loaded){
-    text("photoStatus","Часть внешних изображений не загрузилась. Проверяем остальные.");
-   }
-  },{once:true});
-  img.src=photo.src;
-  figure.append(img);
-  const caption=make("figcaption");
-  caption.append(make("strong","",hotelPhoto?"Фото гостиницы":"Курорт "+place+" — НЕ фотография гостиницы"));
-  caption.append(make("span","",
-    " · "+(photo.artist||"Автор указан на Wikimedia Commons")+" · "+photo.license+" · "));
-  const link=make("a","","Лицензия и оригинал");
-  link.href=photo.page;link.target="_blank";link.rel="noopener noreferrer";
-  caption.append(link);figure.append(caption);target.append(figure);
- }
-}
 function strictExternalPhotoUrl(raw,hosts,{image=false}={}){
  try{
   if(typeof raw!=="string"||raw.length>900)return null;
@@ -253,89 +168,19 @@ async function loadRightsApprovedHotelPhotos(){
  }catch(e){return false;}
 }
 
-function photoSearchPlaceName(place){
- const common={
-  "Паттайя":"Pattaya","Пхукет":"Phuket","Нячанг":"Nha Trang",
-  "Гуанчжоу":"Guangzhou","Шанхай":"Shanghai","Пекин":"Beijing",
-  "Хайнань":"Hainan","Санья":"Sanya","Ханой":"Hanoi",
-  "Хургада":"Hurghada","Анталия":"Antalya",
-  "Шарм-эль-Шейх":"Sharm el Sheikh","Дубай":"Dubai",
-  "Бангкок":"Bangkok","Бали":"Bali","Кемер":"Kemer",
-  "Сочи":"Sochi","Алания":"Alanya",
-  "Стамбул":"Istanbul","Самуи":"Koh Samui",
-  "Пханг Нга":"Phang Nga","Кута":"Kuta"
- };
- if(Object.prototype.hasOwnProperty.call(common,place))return common[place];
- const translit={
-  "а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"yo",
-  "ж":"zh","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m",
-  "н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u",
-  "ф":"f","х":"kh","ц":"ts","ч":"ch","ш":"sh","щ":"shch",
-  "ъ":"","ы":"y","ь":"","э":"e","ю":"yu","я":"ya"
- };
- return String(place).toLowerCase().split("").map(x=>translit[x]??x).join("");
-}
 function showPhotoPlaceholder(){
  const target=$("gallery");target.replaceChildren();
  const card=make("div","hero");
  const child=make("div");
  child.append(make("span","","🏨"),
-  make("p","","Проверенных фотографий именно этого отеля пока нет"));
+  make("p","","Подтверждённые фотографии этой гостиницы пока отсутствуют"));
  card.append(child);target.append(card);
- text("photoStatus","Внешние изображения недоступны или не подтверждены для коммерческого показа. Чужие фотографии гостиниц не подставляются.");
-}
-async function loadDestinationPhotos(place,hotelName){
- // The only fallback is an expressly labeled destination gallery, never a hotel photo.
- const english=photoSearchPlaceName(place);
- const token=normalize(english);
- const localToken=normalize(place);
- const isCity=new Set(["Guangzhou","Shanghai","Beijing","Bangkok","Dubai",
-   "Istanbul","Hanoi","Hong Kong","Kuala Lumpur"]).has(english);
- const terms=isCity?[" skyline filetype:bitmap"," city filetype:bitmap"]:
-   [" beach filetype:bitmap"," coast filetype:bitmap"];
- const photos=[];
- try{
-  for(const term of terms){
-   const matches=await searchCommons(english+term,
-     title=>(token.length>=4&&normalize(title).includes(token))||
-            (localToken.length>=4&&normalize(title).includes(localToken)),4);
-   for(const p of matches)if(!photos.some(x=>x.page===p.page))photos.push(p);
-   if(photos.length>=3)break;
-  }
- }catch(e){}
- if(photos.length){
-  paintCommonsPhotos(photos.slice(0,4),{hotelPhoto:false,place});
-  text("photoStatus","Точных лицензированных фотографий «"+hotelName+
-   "» пока нет. Ниже — курорт "+place+" (НЕ фотография гостиницы).");
-  return;
- }
- showPhotoPlaceholder();
+ text("photoStatus","Показываем только изображения выбранной гостиницы с подтверждёнными правами. Фото чужих отелей, курортов и случайные совпадения по названию исключены.");
 }
 async function loadPhotos(skipApproved=false){
  if(!hotel){text("photoStatus","Не выбран отель");return;}
  if(!skipApproved&&await loadRightsApprovedHotelPhotos())return;
- const hotelName=hotel.name||hotel.hotel;
- const destination=hotel.resort||hotel.country;
- let hotelPhotos=[];
- const names=[hotelName.replace(/[&"\\]/g," ").trim()];
- const distinctive=hotelName.split(/[&-]/)[0].replace(/\bHOTEL\b|\bRESORT\b/gi,"").trim();
- if(distinctive.length>=7&&distinctive!==names[0])names.push(distinctive);
- try{
-  for(const q of names.slice(0,2)){
-   const result=await searchCommons(q+" filetype:bitmap",
-     title=>exactHotelTitleMatch(title,hotelName),6);
-   for(const photo of result)
-    if(!hotelPhotos.some(existing=>existing.page===photo.page))hotelPhotos.push(photo);
-   if(hotelPhotos.length>=3)break;
-  }
- }catch(e){hotelPhotos=[];}
- if(hotelPhotos.length){
-  paintCommonsPhotos(hotelPhotos.slice(0,6),{hotelPhoto:true,place:destination});
-  text("photoStatus",hotelPhotos.length+
-    " фото, совпадающих по названию гостиницы, из лицензированной библиотеки. Автор и условия использования приведены под каждой фотографией.");
-  return;
- }
- await loadDestinationPhotos(destination,hotelName);
+ showPhotoPlaceholder();
 }
 
 function showTrips(rows){
@@ -433,7 +278,7 @@ async function loadEnrichment(){
        !/^[\p{L}\p{N}_. -]{5,170}\.(?:jpe?g|png|webp)$/iu.test(p.file)||
        p.file.includes("..")||typeof p.title!=="string"||p.title.length<18||
        typeof p.author!=="string"||p.author.length<1||
-       !Object.prototype.hasOwnProperty.call(approvedKinds,p.kind)||
+       !["hotel_exterior","hotel_public_area"].includes(p.kind)||
        !Object.prototype.hasOwnProperty.call(allowedLicenses,p.license)||
        p.license_url!==allowedLicenses[p.license])return false;
     return p.source==="https://commons.wikimedia.org/wiki/File:"+
@@ -465,7 +310,7 @@ async function loadEnrichment(){
    cap.append(license);
    fig.append(cap);target.append(fig);
   }
-  text("photoStatus",entry.photo_note||"Найдены фотографии с подтверждённым авторством и лицензией.");
+  text("photoStatus",validPhotos.length+" подтверждённых фотографий здания или помещений выбранного отеля. Виды города и исторические виды не подменяют фото гостиницы.");
   return true;
  }catch(e){return false;}
 }

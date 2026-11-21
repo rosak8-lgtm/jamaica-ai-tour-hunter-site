@@ -150,15 +150,19 @@ assert.ok(hotelPage.includes('hotel-reference.json'));
 for(const id of ['gallery','description','rooms','trips','reviewList','reviewForm','reviewSubmit','reviewNotice']){
  assert.ok(hotelPage.includes('id="'+id+'"'),'Hotel page missing: '+id);
 }
-assert.ok(hotelPage.includes('commons.wikimedia.org/w/api.php'));
-assert.ok(hotelPage.includes('upload.wikimedia.org'));
-assert.ok(hotelPage.includes('licenseOK('),'Hotel photographs must have an eligible source license');
+assert.ok(!hotelPage.includes('commons.wikimedia.org/w/api.php'),
+          'Hotel gallery must not guess from text-only name matches');
+assert.ok(!hotelPage.includes('upload.wikimedia.org'),
+          'No broad country search for hotel media');
+assert.ok(!hotelPage.includes('function photoSearchPlaceName('),
+          'Destination media is forbidden in a specific hotel gallery');
+assert.ok(hotelPage.includes('!["hotel_exterior","hotel_public_area"].includes(p.kind)'),
+          'Only actual property photos enter gallery');
+assert.ok(hotelPage.includes('showPhotoPlaceholder()'),
+          'Missing hotel images produce an honest placeholder');
 assert.ok(hotelPage.includes('tour-previews.json'),'Hotel detail must show real date and room references');
 assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend config required');
 assert.ok(hotelPage.includes('hotel-media-approved.json'),'Supplier gallery needs explicit commercial-use grant');
-assert.ok(hotelPage.includes('function photoSearchPlaceName(place)'),'Search licensed photos by international place name');
-assert.ok(hotelPage.includes('"Паттайя":"Pattaya"'),'Cyrillic Pattaya must be mapped to its Commons search name');
-assert.ok(hotelPage.includes('Курорт '+String.fromCharCode(34)),'Fallback destination photos must never be named hotel photos');
 const hotelPhotos=JSON.parse(fs.readFileSync('hotel-media-approved.json','utf8'));
 assert.equal(hotelPhotos.schema,'jamaica.hotel-media-approved.v1');
 assert.deepEqual(hotelPhotos.hotels,{},'Never publish unlicensed operator special-offer images');
@@ -225,11 +229,15 @@ assert.equal(previews.availability_verified,false);
 assert.ok(Array.isArray(previews.previews)&&previews.previews.length<=8000);
 assert.ok(previews.previews.every(x=>x.bookable===false&&x.quote_verified===false&&x.availability_verified===false));
 assert.ok(page.includes('id="previewCards"'));
-assert.ok(page.includes('function previewCardPhoto(x)'),'Preview cards need visual hotel/country media');
+assert.ok(page.includes('function previewCardPhoto(x)'),'Preview cards need identity-verified hotel photo or honest placeholder');
 assert.ok(page.includes('function curatedPreviewPhoto(x)'),'Use verified hotel-specific Commons photos where known');
-assert.ok(page.includes('function licensedDestinationScene(country)'),'Use only independently licensed destination photos');
+assert.ok(!page.includes('function licensedDestinationScene(country)'),'Never substitute a country photo for a hotel');
+assert.ok(!page.includes('countrySceneNames'),'Country imagery must not replace hotel pictures');
+assert.ok(page.includes('async function approvedPartnerPreviewPhoto(x)'),'Allow only individually approved hotel CDN image feeds');
+assert.ok(page.includes('e.rights_verified!==true'),'Hotel partner rights must be checked');
 assert.ok(page.includes('img.referrerPolicy="no-referrer"'),'Do not leak referral context to photo host');
-assert.ok(page.includes('НЕ фото отеля'),'Destination scenery must never be described as selected hotel');
+assert.ok(page.includes('Проверенная фотография гостиницы пока недоступна'),'Missing hotel photo should be disclosed');
+assert.ok(!page.includes('landscape filetype:bitmap'),'Do not search scenery as hotel photographs');
 assert.ok(page.includes('area.replaceChildren(fallback)'),'Broken external images should fall back without a broken thumbnail');
 const commonsLicenseFn=functionFrom(page,'function approvedCommonsLicense(raw){');
 assert.equal(commonsLicenseFn('CC BY-SA 4.0'),'CC BY-SA 4.0');
