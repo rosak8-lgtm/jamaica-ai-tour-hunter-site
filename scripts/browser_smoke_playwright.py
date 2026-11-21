@@ -131,6 +131,24 @@ def main():
                 ensure(page.locator("#checkQuote").is_disabled(),
                        "UNSUPPORTED_TRAVELERS_ENTERED_TWO_ADULT_CHECKOUT")
                 print("CUSTOM_TRAVELER_PARTY_1_ADULT_1_CHILD_PROTECTED=YES")
+
+                # All reference destinations remain selectable even when the
+                # official supplier publishes no validated Irkutsk tour.
+                page.goto(base,wait_until="domcontentloaded")
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                selector=page.locator("#allCountrySelector")
+                ensure(selector.locator("option").count()>=251,
+                       "FULL_DESTINATION_DIRECTORY_NOT_IN_TOUR_RESULTS")
+                selector.select_option("Мальдивы")
+                ensure(page.locator("#destination").input_value()=="Мальдивы",
+                       "COUNTRY_DIRECTORY_FILTER_NOT_CONNECTED")
+                heads=page.locator("#previewCards article.offerCard h3").all_text_contents()
+                ensure(all(h.startswith("Мальдивы · ") for h in heads),
+                       "COUNTRY_FILTER_MIXED_UNRELATED_TOURS")
+                if not heads:
+                    ensure("нет подтверждённых" in page.locator("#previewCards").inner_text(),
+                           "UNAVAILABLE_COUNTRY_NOT_EXPLAINED")
+                print("FULL_COUNTRY_DIRECTORY_SEARCH_IN_RESULTS=PASS")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
