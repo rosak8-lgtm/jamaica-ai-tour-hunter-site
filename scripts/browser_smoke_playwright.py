@@ -400,6 +400,46 @@ def main():
                     ensure(page.locator('#gallery a').filter(has_text="Оригинал").count()>=1,
                            "MISSING_ORIGINAL_LICENSE_CREDIT_"+hid)
                 print("FOUR_EXTRA_EXACT_HOTEL_PHOTOS_DECODED_PASS")
+                # The prior fallback test intentionally called unroute() on all
+                # Commons handlers. Restore the deterministic licensed-photo
+                # network fixture before checking public tour preview cards.
+                page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
+                  lambda route: route.fulfill(
+                     status=200,content_type="image/png",body=pixel))
+                # Three of the real published preview hotels now have exact,
+                # licensed Wikimedia photos (not only unrelated directory pages).
+                from urllib.parse import urlencode
+                for country,name,hid in (
+                    ("Китай","BAIYUN HOTEL GUANGZHOU","102618075164"),
+                    ("Китай","CHINA HOTEL GUANGZHOU","102624989868"),
+                    ("Россия","КРАСНОЯРСК, гостиница","102625907920"),
+                ):
+                    page.goto(base+"?"+urlencode({"country":country,"hotel":name}),
+                              wait_until="domcontentloaded")
+                    page.locator("#previewCards .previewMedia img").first.wait_for(timeout=22000)
+                    page.locator("#previewCards .previewMedia img").first.scroll_into_view_if_needed()
+                    try:
+                        page.wait_for_function(
+                          "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
+                          ".some(img=>img.complete&&img.naturalWidth>0)",timeout=20000)
+                    except Exception:
+                        details=page.evaluate("""() => ({
+                         country:document.getElementById('destination').value,
+                         hotel:document.getElementById('hotelSearch').value,
+                         cardCount:document.querySelectorAll('#previewCards article').length,
+                         cards:[...document.querySelectorAll('#previewCards article')].slice(0,2).map(c=>c.innerText.slice(0,140)),
+                         imgs:[...document.querySelectorAll('#previewCards .previewMedia img')].slice(0,4).map(img=>({
+                           src:img.src,complete:img.complete,width:img.naturalWidth
+                         })),
+                         placeholders:[...document.querySelectorAll('#previewCards .previewScenePlaceholder')].slice(0,2).map(e=>e.textContent),
+                         notice:document.getElementById('previewCount')?.textContent
+                        })""")
+                        print("EXACT_HOTEL_PHOTO_DEBUG="+str((hid,details)),flush=True)
+                        raise
+                    ensure(page.locator("#previewCards .mediaSourceCredit").count()>=1,
+                           "EXACT_PREVIEW_HOTEL_PHOTO_SOURCE_MISSING_"+hid)
+                print("LIVE_PREVIEW_EXACT_HOTEL_PHOTOS_THREE_PROPERTIES_PASS")
+
                 # When the actual hotel images fail, do not replace them
                 # with photos of Guangzhou skyline or unrelated hotels.
                 page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",

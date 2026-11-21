@@ -560,7 +560,7 @@ async function curatedPreviewPhoto(x){
   const candidates=[];
   for(const photo of entry.photos){
    if(!photo||typeof photo.file!=="string"||
-      !/^[\p{L}\p{N}_. -]{5,170}\.(?:jpe?g|png|webp)$/iu.test(photo.file)||
+      !/^[\p{L}\p{N}_." -]{5,170}\.(?:jpe?g|png|webp)$/iu.test(photo.file)||
       photo.file.includes("..")||
       !["hotel_exterior","hotel_public_area"].includes(photo.kind))continue;
    const license=approvedCommonsLicense(photo.license);

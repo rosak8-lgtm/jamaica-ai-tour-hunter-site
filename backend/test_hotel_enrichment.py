@@ -65,6 +65,21 @@ class Tests(unittest.TestCase):
                     "https://commons.wikimedia.org/wiki/File:"+p["file"].replace(" ","_"))
                 self.assertEqual(len(entry["sources"]),1)
                 self.assertEqual(entry["sources"][0]["url"],p["source"])
+    def test_photos_on_current_live_tour_preview_hotels(self):
+        verified={
+          "102618075164":("Китай","Guangzhou Baiyun Hotel 20211210-03.jpg"),
+          "102624989868":("Китай","广州中国大酒店.jpg"),
+          "102625907920":("Россия",'Гостиница "Красноярск".JPG'),
+        }
+        for hotel_id,(country,file) in verified.items():
+            with self.subTest(id=hotel_id):
+                entry=self.data["hotels"][hotel_id]
+                self.assertEqual(entry["country"],country)
+                self.assertEqual(entry["photos"][0]["file"],file)
+                self.assertEqual(entry["photos"][0]["kind"],"hotel_exterior")
+                self.assertEqual(entry["photos"][0]["license"],"CC BY-SA 4.0")
+                self.assertEqual(entry["photos"][0]["source"],
+                    "https://commons.wikimedia.org/wiki/File:"+file.replace(" ","_"))
     def test_basaya_source_backed_room_and_facility_details(self):
         basaya=self.data["hotels"]["102623766108"]
         self.assertEqual(basaya["name"],"BASAYA BEACH HOTEL & RESORT")
