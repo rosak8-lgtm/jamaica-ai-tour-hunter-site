@@ -1,83 +1,293 @@
 <!doctype html><html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#35194f"><meta name="robots" content="noindex,follow">
-<title>Информация об отеле — JAMAICA</title>
+<meta name="theme-color" content="#35194f"><meta name="robots" content="index,follow">
+<title>Отель — JAMAICA | Фотографии, размещение и отзывы</title>
+<meta name="description" content="Подробности гостиницы: страна, курорт, категория, варианты номеров, найденные даты туров, фотографии с указанием авторства и отзывы путешественников.">
 <style>
-:root{--violet:#35194f;--teal:#007f86;--ink:#2d2140;--muted:#75687e;--bg:#fcfaf6;--border:#e5dae9}
-*{box-sizing:border-box}body{margin:0;font:16px/1.6 system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-header{background:var(--violet);color:white;padding:20px 0}header a{color:white;text-decoration:none;font-weight:850}
-.wrap{width:min(1000px,calc(100% - 34px));margin:auto}.nav{display:flex;justify-content:space-between;gap:20px}.logo{font-size:23px}
-main{padding:40px 0 75px}.eyebrow{text-transform:uppercase;color:var(--teal);font-size:12px;font-weight:900;letter-spacing:1px}h1{font-size:clamp(29px,4.7vw,45px);line-height:1.1;margin:15px 0}h2{font-size:23px;margin:0 0 15px}
-.box{background:white;border:1px solid var(--border);border-radius:20px;padding:25px;margin:20px 0;box-shadow:0 12px 33px #28134e0c}
-.hero{height:235px;background:radial-gradient(circle at 78% 30%,#f3dc82,transparent 35%),linear-gradient(125deg,#3f95ae,#9be0bc 65%,#f1d3a1);display:grid;place-items:center;border-radius:17px;font-size:72px;position:relative}.hero small{position:absolute;left:14px;right:14px;bottom:13px;text-align:center;background:#ffffffd9;border-radius:10px;font-size:13px;padding:8px;color:#494056;font-weight:750}
-ul{padding-left:20px}.meta{color:var(--muted)}.alert{border:1px solid #eedaaa;background:#fff9e7;border-radius:15px;padding:16px;font-size:14px;color:#634b21}.pill{display:inline-block;border:1px solid #c3dfda;background:#ecf8f6;padding:6px 12px;border-radius:30px;font-size:13px;font-weight:750;margin:0 8px 8px 0}
-.link{display:inline-block;background:var(--teal);color:white;text-decoration:none;padding:13px 20px;border-radius:12px;font-weight:850}.link:focus-visible{outline:3px solid #f3c55d;outline-offset:2px}
-footer{color:var(--muted);font-size:12px;padding:18px 0}.hide{display:none}
+:root{--purple:#35194f;--ink:#30213b;--muted:#6c6477;--teal:#007e83;--line:#e5dce7;--bg:#fbfaf7}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);font:16px/1.6 system-ui,-apple-system,Arial,sans-serif;color:var(--ink)}
+a{color:var(--teal)}header{background:var(--purple);color:white;padding:17px 0}header a{color:#fff;text-decoration:none;font-weight:800}
+.wrap{width:min(1100px,calc(100% - 36px));margin:auto}.nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+main{padding:35px 0 60px}h1{font-size:clamp(30px,4.5vw,48px);line-height:1.14;margin:6px 0 10px}h2{font-size:24px;margin:0 0 13px}p{margin:9px 0}
+.eyebrow{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.09em;color:var(--teal)}
+.sub{color:var(--muted)}.box{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;margin:19px 0;box-shadow:0 8px 30px #28134b0a}
+.hero{background:linear-gradient(125deg,#477d97,#badfbf,#eacf89);min-height:235px;border-radius:16px;display:grid;place-items:center;color:#243440;padding:16px;text-align:center}
+.hero span{font-size:55px}.hero p{font-weight:800}.photoGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}
+.photo{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f9f9f9}
+.photo img{display:block;width:100%;height:235px;object-fit:cover}
+.photo figcaption{padding:11px;font-size:12px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px}
+.fact{border:1px solid var(--line);padding:14px;border-radius:12px;background:#fcfafc}
+.fact b{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}.fact span{font-weight:750}
+.alert{border:1px solid #e7d5a8;border-radius:13px;background:#fff9e9;padding:15px;color:#614b27}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.tour{border:1px solid var(--line);padding:16px;border-radius:14px}.tour strong{display:block}
+.btn{display:inline-block;padding:12px 18px;background:var(--teal);border:0;border-radius:11px;color:white!important;font:800 15px system-ui;text-decoration:none;cursor:pointer}
+.btn[disabled]{opacity:.55;cursor:not-allowed}.btn.alt{background:#efedf2;color:var(--purple)!important}
+.pill{display:inline-block;background:#e9f5f4;border-radius:18px;padding:6px 12px;margin:4px 6px 2px 0;font-size:13px}
+label{display:block;font-weight:700;margin:15px 0 4px}input,textarea,select{font:inherit;width:100%;padding:11px;border:1px solid #cfc4d8;border-radius:10px}
+textarea{min-height:125px;resize:vertical}.review{border-bottom:1px solid var(--line);padding:12px 0}.review:last-child{border:0}
+.status{font-size:14px;color:var(--muted)}.hide{display:none!important}
+footer{padding-bottom:30px;color:var(--muted);font-size:13px}
+@media(max-width:600px){.box{padding:18px}.photo img{height:210px}}
 </style></head><body>
-<header><div class="wrap nav"><a class="logo" href="./">🦜 JAMAICA</a><a href="./#hotels">← Назад к отелям</a></div></header>
-<main class="wrap"><div class="eyebrow">Справочная информация</div>
-<h1 id="name">Загружаем данные об отеле…</h1><p class="meta" id="location"></p>
-<div class="alert" id="warning">Эти сведения получены из исторических наблюдений. Наличие номеров, даты туров, цены и право бронирования сейчас не подтверждены.</div>
-<div class="box"><div class="hero" aria-label="Стилизованная заставка без фотографий отеля"><span aria-hidden="true">🏝️</span><small>Фотографии именно этого отеля пока не загружены</small></div>
-<h2 style="margin-top:24px">Об отеле</h2>
-<p id="description">Информация об отеле пока загружается.</p>
-<div id="meals"></div></div>
-<div class="box"><h2>Сведения о размещении и категории</h2><ul id="rooms"></ul><p class="meta">Этот справочник не отображает актуальные свободные номера. Выбор доступного предложения происходит в поиске туров.</p></div>
-<a href="./#request" class="link">Найти доступные туры в JAMAICA</a>
-</main><footer class="wrap">JAMAICA · Справочный каталог отелей не является предложением к продаже. Реальное оформление доступно только по свежим подтверждённым турам.</footer>
+<header><div class="wrap nav"><a href="./">🦜 JAMAICA · Все путешествия</a><a href="./#hotels">Каталог гостиниц</a></div></header>
+<main class="wrap">
+<div class="eyebrow">Гостиница · подробная карточка</div>
+<h1 id="name">Загружаем гостиницу…</h1><p class="sub" id="location"></p>
+<p id="warning" class="alert" role="status">Загружаем сведения из официального каталога.</p>
+<section class="box"><h2>Фотографии гостиницы</h2><p class="sub">Фотографии показываются только при совпадении названия гостиницы и наличии разрешённой лицензии. Автор и источник указаны под фотографией.</p>
+<div id="gallery" class="photoGrid"><div class="hero"><div><span aria-hidden="true">🏨</span><p>Проверяем наличие фотографий именно этого отеля…</p></div></div></div>
+<p id="photoStatus" class="status" role="status">Поиск фотографий в открытом медиакаталоге…</p></section>
+<section class="box"><h2>Об отеле</h2><p id="description"></p><div id="facts" class="facts"></div>
+<p class="sub" id="detailExplanation">В справочнике могут отсутствовать сведения об удобствах и услугах гостиницы; такие характеристики не будут додуманы.</p></section>
+<section class="box"><h2>Номера, размещение и питание</h2><div id="rooms"></div>
+<p class="sub">Показанные категории номеров встречались в опубликованных прайс-листах, но не означают свободный номер сегодня.</p></section>
+<section class="box"><h2>Найденные даты и цены туров</h2>
+<p class="sub" id="tourStatus">Ищем туры для выбранной гостиницы…</p><div id="trips" class="grid"></div>
+<p><a class="btn" id="searchHotel" href="./#offers">Найти поездку в этот отель</a></p></section>
+<section class="box" id="reviews"><h2>Отзывы путешественников</h2>
+<p class="sub">На JAMAICA отображаются только опубликованные после модерации отзывы. Отзывы не подменяются выдуманными оценками или рейтингами.</p>
+<p id="reviewSummary" class="status">Загружаем отзывы…</p><div id="reviewList"></div>
+<h3>Написать отзыв об этом отеле</h3>
+<form id="reviewForm">
+<label for="reviewAuthor">Как вас представить</label><input id="reviewAuthor" maxlength="60" minlength="2" autocomplete="nickname" required placeholder="Имя или псевдоним">
+<label for="reviewStars">Оценка отеля</label>
+<select id="reviewStars" required><option value="">Выберите оценку</option><option value="5">5 — Отлично</option><option value="4">4 — Хорошо</option><option value="3">3 — Нормально</option><option value="2">2 — Плохо</option><option value="1">1 — Очень плохо</option></select>
+<label for="reviewVisit">Когда посещали (необязательно)</label><input id="reviewVisit" type="month" min="2000-01" max="2035-12">
+<label for="reviewBody">Ваш реальный опыт проживания</label><textarea id="reviewBody" required minlength="40" maxlength="2500" placeholder="Расскажите о номере, сервисе, питании и впечатлениях. Не указывайте телефоны, адреса и паспортные данные."></textarea>
+<label><input id="reviewAgreement" type="checkbox" required style="width:auto"> Я рассказываю о личном опыте и согласен на публичное отображение текста после модерации</label>
+<div class="hide"><label for="reviewWebsite">Сайт</label><input id="reviewWebsite" tabindex="-1" autocomplete="off"></div>
+<button class="btn" id="reviewSubmit" type="submit" disabled>Отправить отзыв на модерацию</button>
+<p id="reviewNotice" role="status" class="status">Система отзывов требует подключения защищённого сервера. До этого отправка недоступна.</p>
+</form>
+</section>
+</main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
 <script>
 (function(){
 "use strict";
-const $=id=>document.getElementById(id),id=new URLSearchParams(location.search).get("id")||"";
-function text(id,v){$(id).textContent=v;}
-async function load(){
- const official=/^\d{7,20}$/.test(id);
- const legacy=/^hotel_ref_\d{4}$/.test(id);
+const $=id=>document.getElementById(id);
+const id=new URLSearchParams(location.search).get("id")||"";
+const official=/^\d{7,20}$/.test(id),legacy=/^hotel_ref_\d{4}$/.test(id);
+const text=(name,value)=>{$(name).textContent=String(value||"");};
+let hotel=null,reviewConfig=null,tripRecords=[];
+const make=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
+function fact(label,value){
+ const node=make("div","fact");node.append(make("b","",label),make("span","",value||"Не указано"));$("facts").append(node);
+}
+function safeCommonsUrl(raw,host){
+ try{
+   const u=new URL(raw);return u.protocol==="https:"&&u.hostname===host&&!u.username&&!u.password?u.href:null;
+ }catch(e){return null;}
+}
+function normalize(name){
+ return String(name||"").normalize("NFKD").toLowerCase()
+   .replace(/[\u0300-\u036f]/g,"").replace(/[^a-zа-яё0-9]+/gi," ").replace(/\s+/g," ").trim();
+}
+function exactHotelTitleMatch(fileTitle,name){
+ const raw=normalize(fileTitle.replace(/^File:/i,"").replace(/\.[^.]+$/,""));
+ const hotelName=normalize(name).replace(/^(the |hotel |отель )/,"").trim();
+ const words=hotelName.split(" ").filter(x=>x.length>=3&&!["hotel","resort","spa","отель","and","the","by"].includes(x));
+ return hotelName.length>=6&&words.length>=1&&
+   (raw.includes(hotelName)||words.slice(0,Math.min(3,words.length)).every(w=>raw.split(" ").includes(w)));
+}
+function licenseOK(metadata){
+ const license=(metadata.LicenseShortName&&metadata.LicenseShortName.value)||"";
+ return /^(CC BY(?:-SA)?(?: \d\.\d)?|CC0(?: 1\.0)?|Public domain|PD-old|PD-self)$/i.test(license.trim())?license:"";
+}
+async function loadPhotos(){
+ const target=$("gallery");
+ if(!hotel){text("photoStatus","Не выбран отель");return;}
+ const hotelName=hotel.name||hotel.hotel;
+ try{
+  const query='intitle:"'+hotelName.replace(/["\\]/g," ").slice(0,100)+'" filetype:bitmap';
+  const params=new URLSearchParams({action:"query",generator:"search",gsrsearch:query,
+    gsrnamespace:"6",gsrlimit:"12",prop:"imageinfo",iiprop:"url|extmetadata",
+    iiurlwidth:"900",format:"json",origin:"*"});
+  const response=await fetch("https://commons.wikimedia.org/w/api.php?"+params.toString(),{cache:"force-cache"});
+  if(!response.ok)throw Error("PHOTO_SOURCE_UNAVAILABLE");
+  const data=await response.json();
+  const pages=Object.values(data.query?.pages||{}).filter(Boolean);
+  const photos=[];
+  for(const item of pages){
+   const info=item.imageinfo?.[0];if(!info||!exactHotelTitleMatch(item.title||"",hotelName))continue;
+   const src=safeCommonsUrl(info.thumburl||info.url,"upload.wikimedia.org");
+   const page=safeCommonsUrl(info.descriptionurl,"commons.wikimedia.org");
+   const license=licenseOK(info.extmetadata||{});
+   if(!src||!page||!license)continue;
+   const artist=String(info.extmetadata?.Artist?.value||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,90);
+   photos.push({src,page,license,artist});
+   if(photos.length>=6)break;
+  }
+  target.replaceChildren();
+  if(photos.length===0)throw Error("NO_MATCHED_LICENSED_HOTEL_PHOTOS");
+  for(const image of photos){
+   const fig=make("figure","photo");
+   const im=make("img");im.src=image.src;im.alt="Фотография гостиницы "+hotelName;
+   im.loading="lazy";im.referrerPolicy="no-referrer";fig.append(im);
+   const credit=make("figcaption");
+   credit.append(make("span","",image.artist||"Автор указан на Wikimedia Commons"));
+   credit.append(make("span","", " · "+image.license+" · "));
+   const link=make("a","","Источник и лицензия");link.href=image.page;link.target="_blank";
+   link.rel="noopener noreferrer";credit.append(link);fig.append(credit);target.append(fig);
+  }
+  text("photoStatus",photos.length+" фотографий по совпадающему названию, из открытой библиотеки Wikimedia Commons. Проверьте снимки и источник перед покупкой.");
+ }catch(e){
+  target.replaceChildren();
+  const card=make("div","hero");
+  const child=make("div");child.append(make("span","","🏨"),make("p","","Проверенных фотографий именно этого отеля пока нет"));
+  card.append(child);target.append(card);
+  text("photoStatus","Для этой гостиницы пока не найдено изображений с проверяемой открытой лицензией. Мы не показываем фотографии другого отеля вместо нужного.");
+ }
+}
+function showTrips(rows){
+ const target=$("trips");target.replaceChildren();
+ if(!rows.length){text("tourStatus","В опубликованных данных сейчас нет подходящих дат и комнат для этой гостиницы. Отель остаётся в справочнике.");return;}
+ const ordered=[...rows].sort((a,b)=>a.depart_date.localeCompare(b.depart_date));
+ const unique=new Map();
+ for(const r of ordered)unique.set(r.room,r);
+ const rooms=[...unique.keys()];
+ text("tourStatus",rows.length+" найденных вариантов, "+rooms.length+" типов номеров. Цены указаны за двух взрослых на момент выгрузки.");
+ const tags=$("rooms");
+ for(const name of rooms.slice(0,30))tags.append(make("span","pill",name));
+ for(const item of ordered.slice(0,15)){
+  const card=make("article","tour");
+  card.append(make("strong","",item.depart_date+" · "+item.nights+" ночей"),
+    make("p","",item.room+" · "+(item.resort||item.country)));
+  if(typeNumber(item.price_reference_rub))
+   card.append(make("strong","",new Intl.NumberFormat("ru-RU").format(item.price_reference_rub)+" ₽ · 2 взрослых, по прайс-листу"));
+  else card.append(make("p","sub","Рублёвая цена для двух взрослых пока отсутствует"));
+  const link=make("a","btn alt","Подробнее о поездке");
+  link.href="preview.html?id="+encodeURIComponent(item.id)+"&adults=2&kids=0";
+  card.append(link);target.append(card);
+ }
+}
+function typeNumber(v){return Number.isSafeInteger(v)&&v>0;}
+async function getCurrentTrips(){
+ if(!official)return;
+ try{
+  const response=await fetch("./tour-previews.json",{cache:"no-store"});
+  if(!response.ok)throw Error("FEED");
+  const data=await response.json();
+  if(data.schema!=="jamaica.tour-previews.v1"||!Array.isArray(data.previews))throw Error("FEED_SCHEMA");
+  tripRecords=data.previews.filter(p=>p&&p.hotel_id===id&&p.bookable===false);
+ }catch(e){tripRecords=[];text("tourStatus","Временная ошибка загрузки прайс-листов. Карточка гостиницы доступна.");}
+ showTrips(tripRecords);
+}
+function setHotelInfo(h,older=false){
+ hotel=h;
+ const name=h.name||h.hotel;
+ text("name",name);
+ text("location",h.country+" · "+(h.resort||h.region||"Курорт не указан")+(h.stars?" · "+h.stars:""));
+ text("description",older?
+   "Гостиница встречалась в ранее собранном каталоге туров JAMAICA. Данные о курорте, размещении и типах питания приведены только в объёме обнаруженных записей.":
+   "Гостиница "+name+" находится в туристическом справочнике направления «"+h.country+"»"+
+    (h.resort?", курорт «"+h.resort+"»":"")+
+    (h.stars?", категория — "+h.stars:"")+
+    ". Ниже показаны известные справочные сведения и найденные варианты поездок из актуальных прайс-листов. Услуги, инфраструктура и описание номеров требуют подтверждения от гостиницы.");
+ fact("Страна",h.country);
+ fact("Курорт / регион",h.resort||h.region||"Не указан");
+ fact("Категория",h.stars||"Не указана");
+ fact("Идентификатор гостиницы",id);
+ text("warning","Важное условие: цена в прайс-листе не фиксирует наличие мест. Перед договором, оплатой и созданием заявки Jamaica должен повторно проверить рейсы, номер и полную стоимость.");
+ $("searchHotel").href="./?country="+encodeURIComponent(h.country)+
+   "&hotel="+encodeURIComponent(name)+"#offers";
+ loadPhotos();
+ getCurrentTrips();
+ loadReviews();
+}
+function apiBase(){
+ try{
+  if(!reviewConfig||reviewConfig.enabled!==true)return null;
+  const u=new URL(reviewConfig.api_base_url);
+  if(u.protocol!=="https:"||!u.hostname||u.username||u.password||u.search||u.hash)return null;
+  return u.href.replace(/\/$/,"");
+ }catch(e){return null;}
+}
+async function loadReviews(){
+ const api=apiBase();
+ if(!api||!official){
+  text("reviewSummary","Проверенных отзывов пока нет в доступном сервисе.");
+  text("reviewNotice","Публикация отзывов станет доступна после подключения защищённого серверного хранилища и модерации.");
+  $("reviewSubmit").disabled=true;
+  return;
+ }
+ try{
+   const response=await fetch(api+"/v1/hotels/"+encodeURIComponent(id)+"/reviews",
+       {method:"GET",mode:"cors",cache:"no-store"});
+   if(!response.ok)throw Error("REVIEWS_OFFLINE");
+   const data=await response.json();
+   if(!Array.isArray(data.reviews))throw Error("INVALID_REVIEW_RESPONSE");
+   $("reviewList").replaceChildren();
+   for(const review of data.reviews.slice(0,30)){
+    const el=make("article","review");
+    const stars=Math.max(1,Math.min(5,Number(review.rating)||0));
+    el.append(make("strong","",String(review.display_name||"Путешественник").slice(0,60)+
+       " · "+("★".repeat(stars))+(review.visit_month?" · "+review.visit_month:"")));
+    el.append(make("p","",String(review.text||"").slice(0,2500)));
+    $("reviewList").append(el);
+   }
+   text("reviewSummary",data.reviews.length?data.reviews.length+" опубликованных отзывов":"Первых опубликованных отзывов пока нет.");
+   $("reviewSubmit").disabled=false;
+   text("reviewNotice","Новые отзывы сначала попадают на модерацию. Не публикуйте личные данные.");
+ }catch(e){
+   text("reviewSummary","Сервис отзывов временно недоступен.");
+   text("reviewNotice","Отправка недоступна, чтобы ваш отзыв не потерялся.");
+   $("reviewSubmit").disabled=true;
+ }
+}
+$("reviewForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const api=apiBase();
+ if(!api||!official||$("reviewSubmit").disabled)return;
+ const body={hotel_id:id,display_name:$("reviewAuthor").value.trim(),
+   rating:Number($("reviewStars").value),text:$("reviewBody").value.trim(),
+   visit_month:$("reviewVisit").value||null,consent:$("reviewAgreement").checked,
+   website:$("reviewWebsite").value.trim()};
+ $("reviewSubmit").disabled=true;
+ try{
+  const response=await fetch(api+"/v1/hotels/"+encodeURIComponent(id)+"/reviews",{
+    method:"POST",mode:"cors",credentials:"omit",
+    headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(response.status!==202)throw Error("NOT_ACCEPTED");
+  text("reviewNotice","Отзыв принят на модерацию. Он появится только после проверки.");
+  $("reviewForm").reset();
+ }catch(err){
+  text("reviewNotice","Отзыв не отправлен. Повторите позже; данные не были опубликованы.");
+ }finally{$("reviewSubmit").disabled=false;}
+});
+async function init(){
  if(!official&&!legacy){
-   text("name","Отель не выбран");
-   text("description","Вернитесь к каталогу и выберите гостиницу.");
+   text("name","Выберите гостиницу в каталоге");
+   text("photoStatus","Гостиница не выбрана");
    return;
  }
  try{
+  const cfg=await fetch("./hotel-reviews-config.json",{cache:"no-store"});
+  if(cfg.ok)reviewConfig=await cfg.json();
+ }catch(e){reviewConfig=null;}
+ try{
   const path=official?"./destination-directory.json":"./hotel-reference.json";
   const response=await fetch(path,{cache:"no-store"});
-  if(!response.ok)throw Error("DIRECTORY_NOT_AVAILABLE");
+  if(!response.ok)throw Error("DIRECTORY_HTTP");
   const data=await response.json();
   if(official){
-   if(data.schema!=="jamaica.destination-directory.v1"||
-     data.quote_verified!==false||data.availability_verified!==false||
-     !Array.isArray(data.hotels)||!Array.isArray(data.countries))throw Error("DIRECTORY_INVALID");
-   const hotel=data.hotels.find(h=>h&&h.id===id);
-   if(!hotel||typeof hotel.name!=="string"||hotel.name.length<2)throw Error("HOTEL_NOT_FOUND");
-   text("name",hotel.name);
-   text("location",hotel.country+(hotel.resort?" · "+hotel.resort:"")+(hotel.stars?" · "+hotel.stars:""));
-   text("description","Отель есть в обновлённом справочнике. Это подтверждает его присутствие в каталоге, но не подтверждает наличие мест, конкретные условия размещения или цену на выбранную дату.");
-   const tags=[["Страна",hotel.country],["Курорт",hotel.resort||"Не указан"],["Категория",hotel.stars||"Не указана"]];
-   for(const [key,value] of tags){
-    const li=document.createElement("li");li.textContent=key+": "+value;$("rooms").append(li);
-   }
-   text("warning","Справочная карточка: наличие номеров, даты, туры, питание и итоговые цены не подтверждены. Уточняйте конкретные предложения в разделе поиска.");
+   if(data.schema!=="jamaica.destination-directory.v1"||!Array.isArray(data.hotels))throw Error("INVALID_DIRECTORY");
+   const matched=data.hotels.find(h=>h&&h.id===id);
+   if(!matched)throw Error("HOTEL_NOT_IN_DIRECTORY");
+   setHotelInfo(matched,false);
   }else{
-   if(data.schema!=="jamaica.hotel-reference.v1"||data.bookable!==false||!Array.isArray(data.hotels))throw Error("ARCHIVED_DIRECTORY_INVALID");
-   const hotel=data.hotels.find(h=>h&&h.id===id);
-   if(!hotel||typeof hotel.hotel!=="string"||hotel.bookable!==false)throw Error("HOTEL_NOT_FOUND");
-   text("name",hotel.hotel);
-   text("location",hotel.country+(hotel.region?" · "+hotel.region:""));
-   text("description","Отель встречался в ранее найденных вариантах путешествий. Текущие условия размещения, доступные даты и стоимость в исторических записях не подтверждены.");
-   for(const meal of Array.isArray(hotel.meals)?hotel.meals:[]){
-    if(!/^(BB|HB|FB|AI|AO|RO|UAI)$/.test(meal))continue;
-    const tag=document.createElement("span");tag.className="pill";tag.textContent="Ранее встречался вариант питания: "+meal;$("meals").append(tag);
-   }
-   for(const room of (Array.isArray(hotel.rooms)?hotel.rooms:[]).slice(0,6)){
-    const li=document.createElement("li");li.textContent=room;$("rooms").append(li);
-   }
+   if(data.schema!=="jamaica.hotel-reference.v1")throw Error("INVALID_LEGACY_DIRECTORY");
+   const matched=data.hotels.find(h=>h&&h.id===id);
+   if(!matched)throw Error("LEGACY_HOTEL_MISSING");
+   setHotelInfo(matched,true);
   }
- }catch(err){
-   text("name","Не удалось загрузить сведения");
-   text("description","Информация об отеле временно недоступна. Вернитесь к поиску направлений.");
+ }catch(e){
+  text("name","Не удалось загрузить информацию об отеле");
+  text("description","Попробуйте открыть карточку повторно из каталога гостиниц.");
+  text("photoStatus","Фотографии недоступны");
  }
 }
-load();
+init();
 })();
-</script>
-</body></html>
+</script></body></html>
