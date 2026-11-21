@@ -381,25 +381,54 @@ async function loadEnrichment(){
    details.append(make("p","sub","Сведения по отдельным категориям основаны на ответах представителей гостиницы; фото, кровати и площадь уточняются для выбранного размещения."));
   }
   const photos=Array.isArray(entry.photos)?entry.photos:[];
-  const validPhotos=photos.filter(p=>
-     p&&typeof p.file==="string"&&/^[A-Za-z0-9_-]+\.jpg$/i.test(p.file)&&
-     p.license==="CC BY-SA 3.0"&&p.author==="KAlexey"&&
-     p.kind==="historical_view_not_property_facade"&&
-     typeof p.source==="string"&&
-     p.source==="https://commons.wikimedia.org/wiki/File:"+p.file);
+  const allowedLicenses={
+    "CC BY-SA 3.0":"https://creativecommons.org/licenses/by-sa/3.0/",
+    "CC BY-SA 4.0":"https://creativecommons.org/licenses/by-sa/4.0/",
+    "CC BY 4.0":"https://creativecommons.org/licenses/by/4.0/",
+    "CC0 1.0":"https://creativecommons.org/publicdomain/zero/1.0/"
+  };
+  const approvedKinds={
+    historical_view_not_property_facade:"Исторический вид из гостиницы",
+    hotel_exterior:"Фасад или здание гостиницы",
+    hotel_public_area:"Общественное пространство гостиницы",
+    view_from_hotel:"Вид из гостиницы"
+  };
+  const validPhotos=photos.filter(p=>{
+    if(!p||typeof p.file!=="string"||
+       !/^[\p{L}\p{N}_. -]{5,170}\.(?:jpe?g|png|webp)$/iu.test(p.file)||
+       p.file.includes("..")||typeof p.title!=="string"||p.title.length<18||
+       typeof p.author!=="string"||p.author.length<1||
+       !Object.prototype.hasOwnProperty.call(approvedKinds,p.kind)||
+       !Object.prototype.hasOwnProperty.call(allowedLicenses,p.license)||
+       p.license_url!==allowedLicenses[p.license])return false;
+    return p.source==="https://commons.wikimedia.org/wiki/File:"+
+        p.file.replaceAll(" ","_");
+  });
   if(!validPhotos.length)return false;
   const target=$("gallery");target.replaceChildren();
-  for(const photo of validPhotos){
+  for(const photo of validPhotos.slice(0,12)){
    const fig=make("figure","photo");
    const img=make("img");
+   // Direct browser-to-Wikimedia image request. Oracle stores no image bytes.
    img.src="https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(photo.file)+"?width=960";
-   img.alt=photo.title;img.loading="lazy";img.referrerPolicy="no-referrer";
+   img.alt=photo.title;img.loading="lazy";
+   img.decoding="async";img.referrerPolicy="no-referrer";
+   img.addEventListener("error",()=>{
+     fig.remove();
+     if(!target.querySelector("figure.photo"))loadPhotos(true);
+   },{once:true});
    fig.append(img);
    const cap=make("figcaption");
-   cap.append(make("span","",photo.title+" · Фото "+photo.author+" · "+photo.license+" · "));
-   const link=make("a","","Оригинал и лицензия");
-   link.href=photo.source;link.target="_blank";link.rel="noopener noreferrer";
-   cap.append(link);fig.append(cap);target.append(fig);
+   cap.append(make("strong","",approvedKinds[photo.kind]+" · "));
+   cap.append(make("span","",photo.title+" · "+photo.author+" · "));
+   const src=make("a","","Оригинал");src.href=photo.source;
+   src.target="_blank";src.rel="noopener noreferrer";
+   cap.append(src,make("span",""," · "));
+   const license=make("a","",photo.license);
+   license.href=photo.license_url;
+   license.target="_blank";license.rel="noopener noreferrer";
+   cap.append(license);
+   fig.append(cap);target.append(fig);
   }
   text("photoStatus",entry.photo_note||"Найдены фотографии с подтверждённым авторством и лицензией.");
   return true;
