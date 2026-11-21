@@ -53,6 +53,13 @@ def main():
                 return 2
             try:
                 page=browser.new_page(viewport={"width":1365,"height":900})
+                # Keep image-load tests deterministic: external photos stay on their
+                # licensed origin in production, but CI serves only a valid pixel.
+                pixel=b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/QRYAAAAASUVORK5CYII=")
+                page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
+                  lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
+                page.route("https://upload.wikimedia.org/**",
+                  lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
                 errors=[]
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
@@ -250,6 +257,34 @@ def main():
                 ensure(page.locator("#gallery img").count()==3,
                        "GUANGZHOU_HOTEL_GALLERY_MISSING")
                 print("GUANGZHOU_HOTEL_THREE_COMMONS_CC4_DIRECT_EXTERNAL_PHOTOS=PASS")
+
+                # All verified hotel photos fail to load: no broken <img> should
+                # remain, and Guangzhou must have only separately labeled city views.
+                city_result={"query":{"pages":{"2":{
+                  "title":"File:Guangzhou skyline panorama.jpg",
+                  "imageinfo":[{
+                    "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/guangzhou.jpg/800px-guangzhou.jpg",
+                    "descriptionurl":"https://commons.wikimedia.org/wiki/File:Guangzhou_skyline_panorama.jpg",
+                    "extmetadata":{"LicenseShortName":{"value":"CC BY 4.0"},
+                                   "Artist":{"value":"Test city photographer"}}}
+                  ]}}}}
+                page.route("https://commons.wikimedia.org/w/api.php?*",
+                  lambda route: route.fulfill(status=200,content_type="application/json",
+                                              body=json.dumps(city_result)))
+                page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
+                  lambda route: route.abort("failed"))
+                page.goto(base+"hotel.html?id=102667206879",wait_until="domcontentloaded")
+                page.locator("#gallery").scroll_into_view_if_needed()
+                page.wait_for_function(
+                  "()=>document.querySelector('#gallery figure[data-photo-source=commons-destination]')!==null",
+                  timeout=22000)
+                gallery_text=page.locator("#gallery").inner_text()
+                ensure("НЕ фотография гостиницы" in gallery_text,
+                       "BROKEN_GUANGZHOU_HOTEL_PHOTO_WAS_MISREPRESENTED_AS_REAL")
+                ensure(page.locator('#gallery img[src*="Special:FilePath"]').count()==0,
+                       "BROKEN_EXTERNAL_HOTEL_PHOTO_WAS_NOT_REMOVED")
+                print("GUANGZHOU_BROKEN_CDN_FALLS_BACK_TO_LABELED_CITY_PHOTOS=PASS")
+
 
                 # Confirm a commercially authorized external hotel's image
                 # can be displayed by URL without downloading to Oracle.
