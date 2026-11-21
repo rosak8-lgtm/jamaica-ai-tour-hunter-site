@@ -319,6 +319,49 @@ def main():
                        "EXTERNAL_HOTEL_PHOTO_MISSING_RIGHTS_ATTRIBUTION")
                 page.unroute("**/hotel-media-approved.json")
                 print("EXTERNAL_HOTEL_CDN_IMAGE_URL_WITH_EXPLICIT_RIGHTS=PASS")
+
+                # Licensed HBX content can be found via id -> shard lookup. The
+                # site must NEVER guess a source photo using similar hotel names.
+                media_entry={
+                  "hotel_name":"BASAYA BEACH HOTEL & RESORT","country":"Таиланд",
+                  "rights_verified":True,"commercial_publication_allowed":True,
+                  "rights_verified_at":"2026-11-21",
+                  "rights_expires_at":"2099-12-31",
+                  "permission_reference":"TEST_REAL_HBX_LICENSE_REQUIRED",
+                  "approved_image_hosts":["photos.hotelbeds.com"],
+                  "approved_source_hosts":["photos.hotelbeds.com"],
+                  "photos":[{
+                    "src":"https://photos.hotelbeds.com/giata/bigger/00/004200/photo.jpg",
+                    "source":"https://photos.hotelbeds.com/giata/00/004200/photo.jpg",
+                    "license":"contract-authorized",
+                    "alt":"Фото гостиницы BASAYA BEACH HOTEL & RESORT от правообладателя",
+                    "credit":"HBX Group licensed property photographer",
+                    "kind":"other"
+                  }]
+                }
+                media_index={"schema":"jamaica.hotel-media-feed-index.v1",
+                             "total_hotels":1,
+                             "entries":{"102623766108":
+                                        "hotel-media-feed/part-0001.json"}}
+                media_part={"schema":"jamaica.hotel-media-feed-part.v1",
+                            "hotels":{"102623766108":media_entry}}
+                page.route("**/hotel-media-feed/index.json",
+                  lambda route: route.fulfill(status=200,content_type="application/json",
+                                             body=json.dumps(media_index)))
+                page.route("**/hotel-media-feed/part-0001.json",
+                  lambda route: route.fulfill(status=200,content_type="application/json",
+                                             body=json.dumps(media_part,ensure_ascii=False)))
+                page.route("https://photos.hotelbeds.com/giata/bigger/00/004200/photo.jpg",
+                  lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
+                page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
+                page.locator('img[src="https://photos.hotelbeds.com/giata/bigger/00/004200/photo.jpg"]').wait_for(timeout=12000)
+                ensure(page.locator("#gallery figure[data-photo-source=partner]").count()==1,
+                       "LICENSED_HBX_SHARD_PHOTO_NOT_DISPLAYED")
+                ensure("HBX Group" in page.locator("#gallery").inner_text(),
+                       "LICENSED_HBX_PHOTO_CREDIT_MISSING")
+                ensure("BASAYA BEACH HOTEL & RESORT" in page.locator("#name").inner_text(),
+                       "HBX_PHOTO_WAS_ATTACHED_TO_WRONG_HOTEL")
+                print("LICENSED_HBX_HOTEL_ID_MEDIA_SHARD_IN_BROWSER=PASS")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
