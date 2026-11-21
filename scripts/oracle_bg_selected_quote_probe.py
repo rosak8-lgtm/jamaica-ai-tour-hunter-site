@@ -50,7 +50,18 @@ def adult_pair_marker(value):
     return True
 
 
-def inspect_match(rows, selected, hotels):
+def rub_option_amount(price, currency=None):
+    """Interpret RUB operator price-list amount, or explicit RUR converted field.
+
+    This is only a preliminary price-list signal. NEVER a verified quote.
+    """
+    cur=currency.strip().upper() if isinstance(currency,str) else ""
+    if cur in ("RUB","RUR"):
+        return valid_positive_amount(price.get("amount"))
+    return valid_positive_amount(price.get("RUR"))
+
+
+def inspect_match(rows, selected, hotels, currency=None):
     """Match real operator rows to the exact selected site preview ID."""
     matches = 0
     prices = 0
@@ -75,7 +86,7 @@ def inspect_match(rows, selected, hotels):
                 blocked += 1
                 continue
             prices += 1
-            if valid_positive_amount(p.get("RUR")):
+            if rub_option_amount(p,currency):
                 rub_price_fields += 1
             age=str(p.get("ag", "")).strip()
             if age:
@@ -85,7 +96,7 @@ def inspect_match(rows, selected, hotels):
                 age_marker_unrecognized += 1
             if adult_pair:
                 exact_two_adults += 1
-                if valid_positive_amount(p.get("RUR")):
+                if rub_option_amount(p,currency):
                     two_adults_with_rub += 1
                 elif valid_positive_amount(p.get("amount")):
                     two_adults_amount_only += 1
@@ -147,7 +158,7 @@ def inspect_selected(directory, public_feed, chosen_id, api):
         if not isinstance(rows,list) or len(rows)>preview.MAX_RESPONSE_ROWS:
             continue
         detail_lists+=1
-        result=inspect_match(rows, selected, hotels)
+        result=inspect_match(rows, selected, hotels, data.get('cur'))
         for key, value in result.items():
             summary[key]+=value
     return {"preview_id":chosen_id,"country":selected["country"],
