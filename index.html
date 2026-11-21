@@ -2,10 +2,10 @@
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#33184d">
-<meta name="description" content="JAMAICA — подбор путешествий из Иркутска и других городов. Поиск подтверждённых предложений по странам, датам, отелям и цене.">
+<meta name="description" content="JAMAICA — поиск туров и отелей из Иркутска и других городов. Сравнение предварительных предложений по странам, датам, отелям и ценам.">
 <meta property="og:title" content="JAMAICA — путешествия начинаются здесь">
-<meta property="og:description" content="Поиск туров, сравнение гостиниц и дат, оформление покупки на JAMAICA.">
-<title>JAMAICA — поиск и онлайн-бронирование туров</title>
+<meta property="og:description" content="Поиск туров, сравнение гостиниц и дат. Окончательная стоимость и наличие проверяются перед покупкой.">
+<title>JAMAICA — поиск туров и отелей</title>
 <style>
 :root{--purple:#35194f;--purple2:#512575;--ink:#2d2140;--muted:#776d83;--teal:#007f86;--teal2:#00a6a9;--gold:#f5c452;--bg:#fcfaf6;--line:#e9e1e8;--white:#fff;--shadow:0 16px 45px rgba(39,20,56,.085)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Arial,sans-serif}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
@@ -143,6 +143,7 @@
    <span>♡ Избранное <b id="favoritesCount">0</b></span></label>
   <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
+<p id="budgetNotice" class="micro" role="status" aria-live="polite" hidden></p>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 <details class="sourceDetails" id="sourceDetails">
@@ -518,9 +519,14 @@ function sourceFilterOptions(){
  const priorities=new Map([["Таиланд",0],["Китай",1],["Вьетнам",2]]);
  const names=[...countryCounts.keys()].sort((a,b)=>
    (priorities.get(a)??999)-(priorities.get(b)??999)||countryCompare(a,b));
- replaceFilterOptions(sidebarCountry,names.map(name=>({
+ const countryOptions=names.map(name=>({
    value:name,label:name+" ("+countryCounts.get(name).toLocaleString("ru-RU")+")"
- })), "Все страны с предложениями",formCountry);
+ }));
+ // Preserve the selected destination even when no published tours currently match.
+ if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({
+   value:formCountry,label:formCountry+" (нет в текущей выгрузке)"
+ });
+ replaceFilterOptions(sidebarCountry,countryOptions,"Все страны с предложениями",formCountry);
  if(lastFilterCountry!==formCountry)sidebarResort.value="";
  const oldResort=lastFilterCountry===formCountry?sidebarResort.value:"";
  replaceFilterOptions(sidebarResort,[...resorts].sort(countryCompare).map(x=>({
@@ -766,6 +772,11 @@ function renderTourPreviews(reset=true){
  const adults=Number($("adults").value),children=Number($("kids").value);
  const budget=Number($("budget").value)||0;
  const partyTwoAdults=adults===2&&children===0;
+ const budgetMessage=!budget?"":!partyTwoAdults?
+   "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
+   "Бюджет: только туры с известной справочной ценой за двух взрослых. Неоценённые туры исключены; окончательная стоимость и места не подтверждены.";
+ $("budgetNotice").textContent=budgetMessage;
+ $("budgetNotice").hidden=!budgetMessage;
  const sortMode=$("previewSort").value;
  let list=previewRecords.filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
@@ -774,8 +785,8 @@ function renderTourPreviews(reset=true){
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
    (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
-   (!budget||!partyTwoAdults||referencePrice(x)===null||
-                referencePrice(x)<=budget*2)
+   (!budget||!partyTwoAdults||(referencePrice(x)!==null&&
+                referencePrice(x)<=budget*2))
  );
  if(partyTwoAdults&&sortMode!=="date"){
    list.sort(previewPriceCompare);
