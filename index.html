@@ -587,6 +587,9 @@ async function loadTourPreviews(){
   previewCountryStatus=coverage;
   const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
+  const sampledMonths=[...new Set(coverage.flatMap(row=>
+    Array.isArray(row.sampled_departure_months)?row.sampled_departure_months:[])
+    .filter(m=>/^\\d{4}-\\d{2}$/.test(m)))].sort();
   const scope=data.source_scope||{};
   previewTruncated=data.truncated_to_public_limit===true;
   previewCandidateTotal=Number.isSafeInteger(data.total_candidate_previews)&&data.total_candidate_previews>=data.previews.length?
@@ -597,6 +600,7 @@ async function loadTourPreviews(){
     "; реальные варианты опубликованы по "+withTours.size+" странам."+
     (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
     " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным."+
+    (sampledMonths.length?" Месяцы, из которых проверялись прайс-листы в этом цикле: "+sampledMonths.join(", ")+". Даты и цены меняются; остальные месяцы проверяются в последующих циклах.":"")+
     (previewTruncated?" ВАЖНО: опубликовано лишь "+data.previews.length.toLocaleString("ru-RU")+
      " из "+previewCandidateTotal.toLocaleString("ru-RU")+
      " найденных предварительных записей. Другие варианты могли не попасть в выдачу из-за ограничения размера каталога.":"");
