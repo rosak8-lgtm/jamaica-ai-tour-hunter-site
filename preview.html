@@ -18,21 +18,49 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 .btn:hover{color:white}.btn.secondary{background:white;color:var(--teal)}.other{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .other a{display:block;border:1px solid var(--line);padding:13px;border-radius:13px;background:#fff}
 @media(max-width:700px){.grid,.other{grid-template-columns:1fr}}
-</style></head>
-<body>
-<nav><div class="nav"><a href="./">🦜 JAMAICA</a><a href="./#offers">← Все варианты</a></div></nav>
+</style>
+<link rel="stylesheet" href="./assets/jamaica-detail-ui.css">
+</head>
+<body class="selectionView">
+<nav class="topDetail" aria-label="Главная навигация">
+ <div class="nav">
+  <a href="./" class="detailLogo"><span aria-hidden="true">🦜</span>JAMAICA</a>
+  <div class="detailNavLinks">
+   <a href="./#offers">Туры</a><a href="./#hotels">Отели</a>
+   <a class="detailSearch" href="./#request">Новый поиск</a>
+  </div>
+ </div>
+</nav>
 <main>
-<div class="tag">Выбранное путешествие</div>
-<h1 id="heading">Загружаем выбранный вариант…</h1>
-<p class="sub" id="subtitle">Данные подбираются по конкретному прайс-листу</p>
-<div class="notice" id="notice" role="status">Это предварительный вариант, а не подтверждённый тур. Итоговая цена, номер, рейсы и наличие подлежат повторной проверке перед оформлением.</div>
-<section class="card"><h2>Сведения о путешествии</h2><div class="grid" id="facts"></div></section>
-<section class="card"><h2>Информация об отеле</h2><p class="sub" id="hotelInfo">Загружаем справочник гостиниц…</p><a class="btn secondary" id="hotelLink" href="./#hotels">Подробнее об отеле</a></section>
-<section class="card"><h2>Оформление</h2><p>Выбранные даты и тип номера сохранены на этой странице. Для оплаты требуется подтверждённый поставщиком расчёт, доступность мест, договор и действующая система бронирования.</p>
-<div id="bookingStatus" class="notice">Сейчас предложение нельзя оплатить: подтверждённая котировка и бронирование ещё не подключены.</div>
-<a class="btn" id="quoteLink" href="./#offers">Проверить стоимость и перейти к договору</a>
-<a class="btn secondary" href="./#offers">Выбрать другой вариант</a></section>
-<section class="card"><h2>Похожие варианты по другим странам и датам</h2><div id="alternatives" class="other"></div></section>
+ <nav class="selectionBreadcrumb" aria-label="Путь к выбранному туру">
+  <a href="./">Главная</a> / <a href="./#offers">Поиск туров</a> / Выбранный вариант
+ </nav>
+ <div class="selectionLayout">
+  <div class="selectionMain">
+   <div class="tag">Подробности предложения</div>
+   <h1 id="heading">Загружаем выбранный вариант…</h1>
+   <p class="sub" id="subtitle">Данные подбираются по конкретному прайс-листу</p>
+   <div class="notice" id="notice" role="status">Это предварительный вариант, а не подтверждённый тур. Итоговая цена, номер, рейсы и наличие подлежат повторной проверке перед оформлением.</div>
+   <section class="card"><h2>Параметры поездки</h2><div class="grid" id="facts"></div></section>
+   <section class="card"><h2>Отель и размещение</h2>
+    <p class="sub" id="hotelInfo">Загружаем справочник гостиниц…</p>
+    <a class="btn secondary" id="hotelLink" href="./#hotels">Фотографии и описание отеля</a>
+   </section>
+  </div>
+  <aside class="selectionAside" aria-label="Проверка цены и оформление">
+   <section class="card" id="bookingPanel">
+    <div class="tag">Следующий шаг</div>
+    <h2>Проверка стоимости</h2>
+    <p class="sub">Даты и тип номера сохранены. Для оплаты необходима подтверждённая поставщиком стоимость, места, договор и действующее бронирование.</p>
+    <div id="bookingStatus" class="notice">Сейчас предложение нельзя оплатить: подтверждённая котировка и бронирование ещё не подключены.</div>
+    <a class="btn" id="quoteLink" href="./#offers">Проверить стоимость и условия</a>
+    <a class="btn secondary" href="./#offers">Выбрать другой вариант</a>
+   </section>
+  </aside>
+ </div>
+ <section class="card"><h2>Похожие туры и другие даты</h2>
+  <div id="alternatives" class="other"></div>
+ </section>
 </main>
 <script src="./scripts/catalog-shards.js"></script>
 <script>
