@@ -1,6 +1,6 @@
 {
   "schema": "jamaica.hotel-enrichment.v1",
-  "updated_at_utc": "2026-11-21T04:30:00Z",
+  "updated_at_utc": "2026-11-21T05:46:32.089Z",
   "notice": "Only manually verified hotel-specific facts and freely licensed photo material. No invented availability, prices or ratings.",
   "hotels": {
     "102610001140": {
@@ -166,7 +166,8 @@
         "Район Юэсю — деловая часть Гуанчжоу.",
         "Категория 5* взята из справочника гостиниц Jamaica.",
         "Количество номеров в различных открытых источниках различается; точное значение не приводится.",
-        "Фотографии ниже сделаны в 2021 году и не являются гарантией текущего вида всех номеров."
+        "Фотографии ниже сделаны в 2021 году и не являются гарантией текущего вида всех номеров.",
+        "Добавленные панорамы с 45-го этажа показывают вид на город из ресторана отеля в 2021 году, а не интерьеры гостиничных номеров."
       ],
       "photos": [
         {
@@ -195,9 +196,36 @@
           "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
           "source": "https://commons.wikimedia.org/wiki/File:Guangdong_Asia_International_Hotel_20211217-01.jpg",
           "kind": "hotel_exterior"
+        },
+        {
+          "file": "Views from Guangdong Asia International Hotel 45F Revolving Restaurant to Guangzhou Central City Area on 20211217-01.jpg",
+          "title": "Панорама центра Гуанчжоу из вращающегося ресторана гостиницы на 45-м этаже, 17 декабря 2021 г. (кадр 01)",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Views_from_Guangdong_Asia_International_Hotel_45F_Revolving_Restaurant_to_Guangzhou_Central_City_Area_on_20211217-01.jpg",
+          "kind": "view_from_hotel"
+        },
+        {
+          "file": "Views from Guangdong Asia International Hotel 45F Revolving Restaurant to Guangzhou Central City Area on 20211217-05.jpg",
+          "title": "Панорама города с 45-го этажа ресторана гостиницы, 17 декабря 2021 г. (кадр 05)",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Views_from_Guangdong_Asia_International_Hotel_45F_Revolving_Restaurant_to_Guangzhou_Central_City_Area_on_20211217-05.jpg",
+          "kind": "view_from_hotel"
+        },
+        {
+          "file": "Views from Guangdong Asia International Hotel 45F Revolving Restaurant to Guangzhou Central City Area on 20211217-33.jpg",
+          "title": "Вид на городской центр Гуанчжоу из ресторана гостиницы на 45-м этаже, 17 декабря 2021 г. (кадр 33)",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Views_from_Guangdong_Asia_International_Hotel_45F_Revolving_Restaurant_to_Guangzhou_Central_City_Area_on_20211217-33.jpg",
+          "kind": "view_from_hotel"
         }
       ],
-      "photo_note": "Три фотографии здания гостиницы из Wikimedia Commons, декабрь 2021 года. Автор 中少. Лицензия CC BY-SA 4.0; актуальный внешний вид и интерьеры могут отличаться.",
+      "photo_note": "Три фотографии здания и три панорамы города, снятые из ресторана гостиницы на 45-м этаже (декабрь 2021 года). Виды из ресторана НЕ являются фотографиями номеров или современного интерьера. Автор 中少; лицензия CC BY-SA 4.0. Актуальные интерьеры и инфраструктура требуют отдельной проверки.",
       "sources": [
         {
           "type": "published_hotel_information",
