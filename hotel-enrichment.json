@@ -128,6 +128,90 @@
           "url": "https://www.bgoperator.ru/price.shtml?action=shw&code=102623766108&flt=100410000051&page=info&tid=26"
         }
       ]
+    },
+    "102667206879": {
+      "name": "ASIA INTERNATIONAL HOTEL GUANGDONG (广东亚洲国际大酒店)",
+      "country": "Китай",
+      "resort": "Гуанчжоу",
+      "source_type": "public_hotel_information_and_commons_license_verified",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Asia International Hotel (Guangdong) — пятизвёздочный городской отель в деловом районе Юэсю города Гуанчжоу, на улице Хуаньши-Дунлу. Отель рассчитан на деловые и туристические поездки: опубликованные гостиничные описания указывают на несколько ресторанов китайской и международной кухни, конференц-площадки, фитнес-зону и бассейн. Отдельно упоминается панорамный вращающийся ресторан Sky Café на верхнем этаже. Наличие и режим работы каждого объекта инфраструктуры, вид из конкретного номера и стоимость дополнительных услуг следует уточнять на даты путешествия.",
+      "location_details": "326-1 Huanshi East Road, Yuexiu District, Guangzhou, Guangdong, Китай",
+      "room_categories": [
+        "Superior — категория упоминается в гостиничном описании; площадь уточняется",
+        "Deluxe — категория упоминается в гостиничном описании; площадь уточняется",
+        "Business Room — категория упоминается в гостиничном описании",
+        "Suite — категория люксов; планировку и площадь требуется уточнить",
+        "Apartment Suite — апартаментный тип размещения; детали зависят от категории"
+      ],
+      "room_features": [
+        "Кондиционер и отдельная ванная комната",
+        "Интернет (условия проверяются на дату заезда)",
+        "Сейф (по опубликованному описанию гостиницы)",
+        "Телевизор",
+        "Часть номеров имеет панорамный вид на город"
+      ],
+      "amenities": [
+        "Несколько ресторанов, китайская и международная кухня",
+        "Панорамный вращающийся ресторан Sky Café",
+        "Помещения для деловых мероприятий и конференций",
+        "Бизнес-центр",
+        "Бассейн (режим работы уточняется)",
+        "Фитнес-центр и площадки для спорта"
+      ],
+      "meals": [
+        "Рестораны на территории; тип питания и включённые при бронировании услуги зависят от предложения"
+      ],
+      "guest_notes": [
+        "Район Юэсю — деловая часть Гуанчжоу.",
+        "Категория 5* взята из справочника гостиниц Jamaica.",
+        "Количество номеров в различных открытых источниках различается; точное значение не приводится.",
+        "Фотографии ниже сделаны в 2021 году и не являются гарантией текущего вида всех номеров."
+      ],
+      "photos": [
+        {
+          "file": "Guangdong Asia International Hotel 20211210-01.jpg",
+          "title": "Guangdong Asia International Hotel, фасад здания, декабрь 2021 года",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Guangdong_Asia_International_Hotel_20211210-01.jpg",
+          "kind": "hotel_exterior"
+        },
+        {
+          "file": "Guangdong Asia International Hotel 20211210-02.jpg",
+          "title": "Guangdong Asia International Hotel, вид на здание, декабрь 2021 года",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Guangdong_Asia_International_Hotel_20211210-02.jpg",
+          "kind": "hotel_exterior"
+        },
+        {
+          "file": "Guangdong Asia International Hotel 20211217-01.jpg",
+          "title": "Guangdong Asia International Hotel, архитектура гостиницы, декабрь 2021 года",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Guangdong_Asia_International_Hotel_20211217-01.jpg",
+          "kind": "hotel_exterior"
+        }
+      ],
+      "photo_note": "Три фотографии здания гостиницы из Wikimedia Commons, декабрь 2021 года. Автор 中少. Лицензия CC BY-SA 4.0; актуальный внешний вид и интерьеры могут отличаться.",
+      "sources": [
+        {
+          "type": "published_hotel_information",
+          "url": "https://asiainternational.hotelcanton.cn/en"
+        },
+        {
+          "type": "hotel_address_public_event_directory",
+          "url": "https://cospub.cantonfair.org.cn/461100754573217792/1706689358571-6c4b7be1-399a-496d-9f9d-082bf1779a1a.pdf"
+        },
+        {
+          "type": "commons_hotel_media_category",
+          "url": "https://commons.wikimedia.org/wiki/Category:2021_at_Guangdong_Asia_International_Hotel"
+        }
+      ]
     }
   }
 }
