@@ -149,8 +149,62 @@ function paintCommonsPhotos(photos,{hotelPhoto,place}){
   caption.append(link);figure.append(caption);target.append(figure);
  }
 }
+async function loadRightsApprovedHotelPhotos(){
+ if(!official||!hotel)return false;
+ try{
+  const response=await fetch("./hotel-media-approved.json",{cache:"no-store"});
+  if(!response.ok)return false;
+  const manifest=await response.json();
+  if(manifest.schema!=="jamaica.hotel-media-approved.v1"||
+     !manifest.hotels||typeof manifest.hotels!=="object")return false;
+  const entry=manifest.hotels[id];
+  if(!entry||entry.hotel_name!==hotel.name||entry.country!==hotel.country||
+     entry.rights_verified!==true||entry.commercial_publication_allowed!==true||
+     typeof entry.permission_reference!=="string"||
+     entry.permission_reference.trim().length<12||
+     !Array.isArray(entry.photos))return false;
+  const sourceImages=[];
+  for(const p of entry.photos.slice(0,12)){
+   if(!p||p.license!=="contract-authorized"||
+      typeof p.alt!=="string"||p.alt.length<15||
+      typeof p.credit!=="string"||p.credit.length<3||
+      typeof p.source!=="string"||p.source.length<10)continue;
+   try{
+    const u=new URL(p.src);
+    const source=new URL(p.source);
+    if(u.protocol!=="https:"||u.hostname!=="www.bgoperator.ru"||
+       !/^\/pr_img\/[A-Za-z0-9._\/-]+\.(?:jpe?g|png|webp)$/i.test(u.pathname)||
+       u.pathname.includes("..")||u.search||u.hash||
+       source.protocol!=="https:"||source.hostname!=="www.bgoperator.ru")continue;
+    sourceImages.push({
+     src:u.href,source:source.href,alt:p.alt.slice(0,180),
+     credit:p.credit.slice(0,120)
+    });
+   }catch(e){}
+  }
+  if(!sourceImages.length)return false;
+  const gallery=$("gallery");gallery.replaceChildren();
+  for(const photo of sourceImages){
+   const fig=make("figure","photo");
+   const img=make("img");
+   img.src=photo.src;img.alt=photo.alt;img.loading="lazy";
+   img.referrerPolicy="no-referrer";
+   fig.append(img);
+   const caption=make("figcaption");
+   caption.append(make("span","",photo.credit+" · использовано с разрешения правообладателя · "));
+   const link=make("a","","Источник");link.href=photo.source;
+   link.target="_blank";link.rel="noopener noreferrer";
+   caption.append(link);fig.append(caption);gallery.append(fig);
+  }
+  text("photoStatus",sourceImages.length+
+      " подтверждённых фотографий гостиницы, опубликованных по документированному разрешению правообладателя.");
+  return true;
+ }catch(e){return false;}
+}
+
 async function loadPhotos(){
  if(!hotel){text("photoStatus","Не выбран отель");return;}
+ if(await loadRightsApprovedHotelPhotos())return;
  const hotelName=hotel.name||hotel.hotel;
  const destination=hotel.resort||hotel.country;
  let hotelPhotos=[];
