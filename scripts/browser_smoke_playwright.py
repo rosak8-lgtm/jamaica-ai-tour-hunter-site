@@ -409,6 +409,28 @@ def main():
                 ensure(page.locator('#gallery img').count()==1,
                    "VERIFIED_WIKIDATA_COMMONS_PHOTO_NOT_SHOWN")
                 print("COMMONS_EXACT_PROPERTY_COMMERCIAL_LICENSE_BROWSER_PASS")
+                # Independent safe alternative: direct link to the VERIFIED
+                # official hotel gallery, never copy its image bytes into JAMAICA.
+                approved_link={"schema":"jamaica.hotel-official-sites.v1",
+                  "hotels":{"102623766108":{
+                  "hotel_name":"BASAYA BEACH HOTEL & RESORT",
+                  "country":"Таиланд",
+                  "identity_verified":True,
+                  "identity_evidence_url":"https://hotel.example/official-details",
+                  "official_site_url":"https://hotel.example/",
+                  "gallery_url":"https://hotel.example/gallery",
+                  "reviewed_at":"2026-11-21"}}}
+                page.route("**/hotel-official-sites.json",
+                  lambda route:route.fulfill(status=200,content_type="application/json",
+                     body=json.dumps(approved_link,ensure_ascii=False)))
+                page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
+                page.locator('#officialGallery a[href="https://hotel.example/gallery"]').wait_for(timeout=12000)
+                ensure(page.locator("#officialGallery").is_visible(),
+                  "SAFE_OFFICIAL_HOTEL_GALLERY_LINK_MISSING")
+                ensure(page.locator("#officialGallery img").count()==0,
+                  "OFFICIAL_SITE_IMAGE_COPYING_NOT_ALLOWED")
+                print("LINK_TO_REVIEWED_OFFICIAL_HOTEL_GALLERY_BROWSER_PASS")
+
 
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
