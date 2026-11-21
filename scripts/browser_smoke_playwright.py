@@ -418,9 +418,24 @@ def main():
                               wait_until="domcontentloaded")
                     page.locator("#previewCards .previewMedia img").first.wait_for(timeout=22000)
                     page.locator("#previewCards .previewMedia").first.scroll_into_view_if_needed()
-                    page.wait_for_function(
-                      "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
-                      ".some(img=>img.complete&&img.naturalWidth>0)",timeout=20000)
+                    try:
+                        page.wait_for_function(
+                          "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
+                          ".some(img=>img.complete&&img.naturalWidth>0)",timeout=20000)
+                    except Exception:
+                        details=page.evaluate("""() => ({
+                         country:document.getElementById('destination').value,
+                         hotel:document.getElementById('hotelSearch').value,
+                         cardCount:document.querySelectorAll('#previewCards article').length,
+                         cards:[...document.querySelectorAll('#previewCards article')].slice(0,2).map(c=>c.innerText.slice(0,140)),
+                         imgs:[...document.querySelectorAll('#previewCards .previewMedia img')].slice(0,4).map(img=>({
+                           src:img.src,complete:img.complete,width:img.naturalWidth
+                         })),
+                         placeholders:[...document.querySelectorAll('#previewCards .previewScenePlaceholder')].slice(0,2).map(e=>e.textContent),
+                         notice:document.getElementById('previewCount')?.textContent
+                        })""")
+                        print("EXACT_HOTEL_PHOTO_DEBUG="+str((hid,details)),flush=True)
+                        raise
                     ensure(page.locator("#previewCards .mediaSourceCredit").count()>=1,
                            "EXACT_PREVIEW_HOTEL_PHOTO_SOURCE_MISSING_"+hid)
                 print("LIVE_PREVIEW_EXACT_HOTEL_PHOTOS_THREE_PROPERTIES_PASS")
