@@ -155,8 +155,13 @@ async function loadRightsApprovedHotelPhotos(){
    const src=strictExternalPhotoUrl(p.src,entry.approved_image_hosts,{image:true});
    const source=strictExternalPhotoUrl(p.source,entry.approved_source_hosts);
    if(!src||!source||sourceImages.some(x=>x.src===src))continue;
+   // A credit/source page is usually HTML, not an image. Only retry a
+   // source URL if it is itself an allowed image on a licensed image host.
+   const fallbackSrc=strictExternalPhotoUrl(
+     p.source,entry.approved_image_hosts,{image:true});
    sourceImages.push({
-     src,source,kind:p.kind,alt:p.alt.slice(0,180),
+     src,source,fallbackSrc:fallbackSrc&&fallbackSrc!==src?fallbackSrc:null,
+     kind:p.kind,alt:p.alt.slice(0,180),
      credit:p.credit.slice(0,140)
    });
   }
@@ -169,13 +174,13 @@ async function loadRightsApprovedHotelPhotos(){
    const img=make("img");
    // Browsers request the image DIRECTLY from the authorized CDN.
    // No image files are saved in the JAMAICA repository or on Oracle.
-   img.src=photo.src;img.alt=photo.alt;
+   img.alt=photo.alt;
    img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
    let triedLowerResolution=false;
    img.addEventListener("error",()=>{
-     // Same hotel and same licensed media path, 800px -> 320px only.
-     if(!triedLowerResolution&&photo.source!==photo.src){
-       triedLowerResolution=true;img.src=photo.source;return;
+     // Retry only licensed image bytes, never the HTML attribution page.
+     if(!triedLowerResolution&&photo.fallbackSrc){
+       triedLowerResolution=true;img.src=photo.fallbackSrc;return;
      }
      fig.remove();
      if(!gallery.querySelector('figure[data-photo-source="partner"]')){
@@ -192,6 +197,8 @@ async function loadRightsApprovedHotelPhotos(){
    link.href=photo.source;link.target="_blank";
    link.rel="noopener noreferrer";
    caption.append(link);fig.append(caption);gallery.append(fig);
+   // Install listeners and attach the image before initiating its request.
+   img.src=photo.src;
   }
   text("photoStatus",sourceImages.length+
       " фотографий выбранного отеля с внешнего сервера по подтверждённому разрешению. Изображения не хранятся в JAMAICA. Фотографии номеров показывают категории из каталога поставщика и не гарантируют, что выбранный тур включает именно этот номер.");
@@ -210,12 +217,20 @@ async function loadOpenLicensedHotelPhotos(){
    const img=make("img");
    img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
    img.alt=p.alt;
+   let retriedSmallCommons=false;
    img.addEventListener("error",()=>{
+      // Wikimedia rate-limits nonstandard thumbnail widths; 330px is a
+      // supported size and still shows the same verified hotel photo.
+      if(!retriedSmallCommons&&p.src.endsWith("?width=500")){
+        retriedSmallCommons=true;
+        img.src=p.src.slice(0,-"500".length)+"330";
+        return;
+      }
       fig.remove();
       if(!gallery.querySelector('figure[data-photo-source="commons-open"]')){
         showPhotoPlaceholder();
       }
-   },{once:true});
+   });
    const caption=make("figcaption");
    caption.append(make("span","",
       "Фотография выбранной гостиницы · "+p.author+" · "+p.license+" · "));
@@ -397,14 +412,20 @@ async function loadEnrichment(){
   for(const photo of validPhotos.slice(0,12)){
    const fig=make("figure","photo");
    const img=make("img");
-   // Direct browser-to-Wikimedia image request. Oracle stores no image bytes.
-   img.src="https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(photo.file)+"?width=960";
+   // Direct browser-to-Wikimedia. The CDN recommends 960px, 500px and
+   // 330px; avoid custom sizes throttled since 2026.
+   const fileUrl="https://commons.wikimedia.org/wiki/Special:FilePath/"+
+     encodeURIComponent(photo.file);
    img.alt=photo.title;img.loading="lazy";
    img.decoding="async";img.referrerPolicy="no-referrer";
+   let retriedCommons=false;
    img.addEventListener("error",()=>{
+     if(!retriedCommons){
+       retriedCommons=true;img.src=fileUrl+"?width=500";return;
+     }
      fig.remove();
      if(!target.querySelector("figure.photo"))loadPhotos(true);
-   },{once:true});
+   });
    fig.append(img);
    const cap=make("figcaption");
    cap.append(make("strong","",approvedKinds[photo.kind]+" · "));
@@ -417,6 +438,8 @@ async function loadEnrichment(){
    license.target="_blank";license.rel="noopener noreferrer";
    cap.append(license);
    fig.append(cap);target.append(fig);
+   // Loading starts only after the IMG is present in its figure.
+   img.src=fileUrl+"?width=960";
   }
   text("photoStatus",validPhotos.length+" подтверждённых фотографий здания или помещений выбранного отеля. Виды города и исторические виды не подменяют фото гостиницы.");
   return true;
