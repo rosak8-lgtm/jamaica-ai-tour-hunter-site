@@ -212,14 +212,21 @@ def main():
                   lambda route: route.fulfill(status=200,content_type="application/json",
                                               body=json.dumps(image_result)))
                 page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
-                page.wait_for_function(
-                  "()=>document.getElementById('description').textContent.includes('Basaya Beach Hotel') && "+
-                  "document.getElementById('curatedRooms').textContent.includes('NEW STANDARD')",
-                  timeout=15000)
-                page.wait_for_function(
-                  "()=>document.getElementById('photoStatus').textContent.includes('НЕ') || "+
-                  "document.getElementById('photoStatus').textContent.includes('а НЕ')",
-                  timeout=15000)
+                page.locator("#facts .fact").first.wait_for(timeout=15000)
+                page.wait_for_timeout(1600)
+                debug=page.evaluate("""() => ({
+                    title: document.getElementById('name')?.textContent,
+                    desc: document.getElementById('description')?.textContent.slice(0,220),
+                    rooms: document.getElementById('curatedRooms')?.textContent.slice(0,220),
+                    photos: document.getElementById('photoStatus')?.textContent.slice(0,300),
+                    gallery: document.getElementById('gallery')?.textContent.slice(0,240)
+                })""")
+                print("BASAYA_BROWSER_DIAGNOSTIC="+json.dumps(debug,ensure_ascii=False))
+                ensure("basaya beach" in str(debug["desc"]).lower() and
+                       "NEW STANDARD" in str(debug["rooms"]),
+                       "BASAYA_SOURCE_DETAIL_MISSING")
+                ensure("НЕ" in str(debug["photos"]),
+                       "BASAYA_RESORT_FALLBACK_MISSING")
                 ensure(page.locator("#facts .fact").count()>=6,
                        "BASAYA_HOTEL_DESCRIPTION_NOT_ENRICHED")
                 ensure("НЕ фотография гостиницы" in page.locator("#gallery").inner_text(),
