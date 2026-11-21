@@ -143,6 +143,27 @@ assert.deepEqual(hotelPhotos.hotels,{},'Never publish unlicensed operator specia
 const enriched=JSON.parse(fs.readFileSync('hotel-enrichment.json','utf8'));
 assert.equal(enriched.hotels['102623766108'].rooms_total,'110');
 assert.equal(enriched.hotels['102623766108'].photos.length,0);
+assert.equal(enriched.hotels['102667206879'].photos.length,3,'Guangzhou hotel must have three verified CC4 photos');
+assert.ok(enriched.hotels['102667206879'].photos.every(p=>p.license==='CC BY-SA 4.0'));
+const remotePhotoUrlFn=hotelPage.match(/function strictExternalPhotoUrl\([\s\S]*?\n\}/);
+assert.ok(remotePhotoUrlFn,'Required HTTPS exact-host safe remote image linking');
+const strictExternalPhotoUrl=vm.runInNewContext(
+ '('+remotePhotoUrlFn[0]+')',{URL});
+const hosts=['cdn.partnerhotel.example'];
+assert.equal(
+ strictExternalPhotoUrl('https://cdn.partnerhotel.example/asia/pool.jpg',hosts,{image:true}),
+ 'https://cdn.partnerhotel.example/asia/pool.jpg');
+for(const invalid of [
+ 'http://cdn.partnerhotel.example/asia/pool.jpg',
+ 'https://evil.example/asia/pool.jpg',
+ 'https://cdn.partnerhotel.example/asia/pool.jpg?jwt=secret',
+ 'https://user:pass@cdn.partnerhotel.example/asia/pool.jpg',
+ 'https://cdn.partnerhotel.example/asia/source.html',
+ 'javascript:alert(1)',
+ 'data:image/png;base64,test'
+]){
+ assert.equal(strictExternalPhotoUrl(invalid,hosts,{image:true}),null,invalid);
+}
 
 const reviewsConfig=JSON.parse(fs.readFileSync('hotel-reviews-config.json','utf8'));
 assert.equal(reviewsConfig.schema,'jamaica.hotel-reviews.v1');
