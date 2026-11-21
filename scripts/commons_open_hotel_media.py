@@ -156,7 +156,7 @@ def _validated_file(resp,file):
             continue
         lic_url=meta("LicenseUrl")
         expected=LICENSES.get(lic)
-        if expected and not lic_url.startswith(expected):
+        if expected and (not isinstance(lic_url,str) or lic_url.rstrip("/")!=expected.rstrip("/")):
             continue
         # Public domain still needs accurate provenance, source file and author.
         author=plain(meta("Artist")) or plain(meta("Credit"))
