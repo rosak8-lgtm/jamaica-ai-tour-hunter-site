@@ -26,7 +26,7 @@ for(const [name,source] of [['index',page],['tour',detail],['checkout',checkout]
  assert.equal(scripts.length,1,name+' script required');
  new vm.Script(scripts[0],{filename:name+'.js'});
 }
-for(const id of ['tourSearchForm','departure','destination','dateFrom','nights','adults','kids','budget','hotelSearch','countryDatalist','destinationGrid','destSearch','offerCards','offerCount']){
+for(const id of ['tourSearchForm','departure','destination','dateFrom','nights','adults','kids','budget','hotelSearch','countryDatalist','offerCards','offerCount']){
  assert.ok(page.includes('id="'+id+'"'),'Missing search control: '+id);
 }
 assert.ok(page.includes('value="0" selected>Любая длительность'));
@@ -37,7 +37,15 @@ assert.ok(page.includes('(!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=
 assert.ok(page.includes('sampled_departure_months'),'Source-backed months sampled this cycle should be visible');
 assert.ok(page.includes('Месяцы, из которых проверялись прайс-листы'),'Do not claim all months were checked');
 
-assert.ok(page.includes('slice(visible,visible+300)'),'All 251 countries must be rendered');
+assert.ok(!page.includes('id="destinations"'),'Do not put 251 empty country cards between search and real tours');
+assert.ok(!page.includes('id="destinationGrid"'),'Country-card wall must be absent');
+assert.ok(!page.includes('id="allCountrySelector"'),'Avoid redundant full country selector in results');
+assert.ok(page.includes('for(const c of sorted){const e=document.createElement("option");e.value=c.n;datalist.append(e);}' ),
+          'All 251 countries must still be available in search datalist');
+assert.ok(page.indexOf('id="offers"')>page.indexOf('id="tourSearchForm"'),
+          'Search results should directly follow the compact search');
+assert.ok(page.indexOf('id="offers"')<page.indexOf('id="hotels"'),
+          'Real offers have priority over additional hotel directory');
 assert.ok(page.includes('tour.html?offer='));
 assert.ok(!page.includes('button.href="checkout.html?offer="'));
 assert.ok(page.includes('setInterval(loadOffers,60000)'));
