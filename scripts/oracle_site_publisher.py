@@ -251,11 +251,40 @@ def publish(env):
     log("JAMAICA_ORACLE_PUBLISH","PUSHED_TO_GITHUB_PAGES_SOURCE")
     log("JAMAICA_LAST_PUBLISH_AT_UTC",datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
+def discover_hotel_media_daily():
+    """Stage official hotelPic URLs in a PRIVATE rights-pending inventory.
+
+    Does NOT publish, show, download, cache, or grant rights to images.
+    Failure never changes the actual sales catalog or its 5-minute timer.
+    """
+    last=RUNROOT/".hotel-media-last-attempt"
+    now=datetime.now(timezone.utc).timestamp()
+    if last.is_file() and now-last.stat().st_mtime<24*3600:
+        return
+    last.touch(mode=0o600,exist_ok=True)
+    os.chmod(last,0o600)
+    destination=RUNROOT/"private-hotel-media-candidates.json"
+    args=[
+        sys.executable,"-B",str(SCRIPTS/"oracle_bg_hotel_media_candidates.py"),
+        "--directory",str(CHECKOUT/"destination-directory.json"),
+        "--output-private",str(destination),
+    ]
+    try:
+        outcome=run(args,cwd=SCRIPTS,timeout=55,check=False,expose=True)
+        if outcome.returncode:
+            log("JAMAICA_HOTEL_MEDIA_DISCOVERY","SOURCE_UNAVAILABLE_OR_SCHEMA_CHANGED")
+        else:
+            log("JAMAICA_HOTEL_MEDIA_DISCOVERY","PRIVATE_CANDIDATES_ONLY")
+    except (subprocess.TimeoutExpired,OSError):
+        log("JAMAICA_HOTEL_MEDIA_DISCOVERY","TEMPORARILY_UNAVAILABLE")
+
+
 def main():
     log("JAMAICA_ORACLE_5MIN_IMPORT_START",datetime.now(timezone.utc).isoformat(timespec="seconds"))
     env=git_env()
     checkout(env)
     publish(env)
+    discover_hotel_media_daily()
     log("JAMAICA_ORACLE_5MIN_IMPORT_PASS","YES")
 
 if __name__=="__main__":
