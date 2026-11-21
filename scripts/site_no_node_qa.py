@@ -6,6 +6,7 @@ This is NOT a JS parser and NOT a browser checkout test. CI runs the Node checks
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 from collections import Counter
 from datetime import date, datetime, timezone
@@ -87,6 +88,37 @@ def main():
             "PREVIEWS_WRONG_STATUS")
     records=preview.get("previews")
     require(isinstance(records,list) and 0<len(records)<=8000,"PREVIEWS_EMPTY")
+    shards=preview.get("shards",[])
+    require(isinstance(shards,list) and len(shards)<=13,"SHARD_MANIFEST_INVALID")
+    count=len(records)
+    for i,meta in enumerate(shards,1):
+        path="tour-previews-shards/part-"+format(i,"03d")+".json"
+        require(isinstance(meta,dict) and meta.get("path")==path and
+                type(meta.get("count")) is int and 0<meta["count"]<=4000 and
+                isinstance(meta.get("sha256"),str) and
+                re.fullmatch(r"[a-f0-9]{64}",meta["sha256"]),
+                "SHARD_METADATA_INVALID")
+        file=ROOT/path
+        require(file.is_file() and not file.is_symlink() and
+                file.stat().st_size<4_000_000,"SHARD_FILE_INVALID")
+        payload=json.loads(file.read_text(encoding="utf-8"))
+        part=payload.get("previews")
+        require(payload.get("schema")=="jamaica.tour-preview-shard.v1" and
+                payload.get("refreshed_at_utc")==preview.get("refreshed_at_utc") and
+                payload.get("bookable") is False and
+                payload.get("quote_verified") is False and
+                payload.get("availability_verified") is False and
+                isinstance(part,list) and len(part)==meta["count"],
+                "SHARD_CONTENT_INVALID")
+        signature=hashlib.sha256(json.dumps(part,ensure_ascii=False,
+            sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
+        require(signature==meta["sha256"],"SHARD_CONTENT_HASH_MISMATCH")
+        records.extend(part)
+        count+=len(part)
+    require(len(records)<=60000,"TOTAL_PREVIEW_CAP_EXCEEDED")
+    if "total_published_previews" in preview:
+        require(preview["total_published_previews"]==len(records),
+                "PUBLIC_SHARD_COUNT_MISMATCH")
     require(directory.get("schema")=="jamaica.destination-directory.v1" and
             directory.get("total_countries")==251,"DIRECTORY_INVALID")
     require(routes.get("schema")=="jamaica.route-discovery.v1" and
