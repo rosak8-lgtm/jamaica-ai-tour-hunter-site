@@ -45,6 +45,10 @@ WantedBy=default.target
 EOF
 chmod 600 "$UNIT"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+# The installer can be invoked from any folder via SSH. Python modules must
+# resolve against the actual verified repository root.
+cd "$ROOT"
+export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
 python3 -B -m unittest backend.test_hotel_reviews -v
 systemctl --user daemon-reload
 systemctl --user enable --now jamaica-hotel-reviews-api.service
