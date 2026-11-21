@@ -1,6 +1,6 @@
 {
   "schema": "jamaica.hotel-enrichment.v1",
-  "updated_at_utc": "2026-11-21T17:30:00Z",
+  "updated_at_utc": "2026-11-21T17:55:00Z",
   "notice": "Only manually verified hotel-specific facts and freely licensed photo material. No invented availability, prices or ratings.",
   "hotels": {
     "102610001140": {
@@ -338,6 +338,81 @@
           "license_url": "https://creativecommons.org/licenses/by/2.0/",
           "source": "https://commons.wikimedia.org/wiki/File:Grand_Hyatt_Shanghai_I.jpg",
           "kind": "hotel_public_area"
+        }
+      ]
+    },
+    "102618075164": {
+      "name": "BAIYUN HOTEL GUANGZHOU (广州白云宾馆)",
+      "country": "Китай",
+      "resort": "Гуанчжоу",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Baiyun Hotel Guangzhou — гостиница в районе Юэсю города Гуанчжоу, Китай. Фотография здания подтверждена собственным снимком автора на Wikimedia Commons и категорией Baiyun Hotel. Внешний вид может отличаться от состояния на дату поездки; номер, услуги, перелёт, цену и наличие необходимо проверять отдельно.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:Guangzhou_Baiyun_Hotel_20211210-03.jpg",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "Guangzhou Baiyun Hotel 20211210-03.jpg",
+          "title": "Фотография здания Baiyun Hotel Guangzhou, 10 декабря 2021 года",
+          "author": "中少",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Guangzhou_Baiyun_Hotel_20211210-03.jpg",
+          "kind": "hotel_exterior"
+        }
+      ]
+    },
+    "102624989868": {
+      "name": "CHINA HOTEL GUANGZHOU (广州中国大酒店 )",
+      "country": "Китай",
+      "resort": "Гуанчжоу",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "China Hotel Guangzhou — гостиница в городе Гуанчжоу, Китай. Фотография опубликована в Wikimedia Commons с указанием China Hotel как изображённого объекта и свободной коммерческой лицензией. Снимок исторический и не подтверждает современное состояние гостиницы, условия размещения, цену или доступность выбранного тура.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:广州中国大酒店.jpg",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "广州中国大酒店.jpg",
+          "title": "Фотография Guangzhou China Hotel, апрель 2009 года",
+          "author": "董辰兴",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:广州中国大酒店.jpg",
+          "kind": "hotel_exterior"
+        }
+      ]
+    },
+    "102625907920": {
+      "name": "КРАСНОЯРСК, гостиница",
+      "country": "Россия",
+      "resort": "Красноярск",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Гостиница «Красноярск» расположена в Красноярске, Россия, рядом с Театральной площадью. Фотография здания опубликована в Wikimedia Commons и отнесена к категории Krasnoyarsk Hotel. Снимок показывает состояние здания на дату съёмки; услуги гостиницы, доступность номера и цену конкретного тура требуется подтверждать отдельно.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:Гостиница_\"Красноярск\".JPG",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "Гостиница \"Красноярск\".JPG",
+          "title": "Здание гостиницы Красноярск на Театральной площади, 2013 год",
+          "author": "Alava",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Гостиница_\"Красноярск\".JPG",
+          "kind": "hotel_exterior"
         }
       ]
     }
