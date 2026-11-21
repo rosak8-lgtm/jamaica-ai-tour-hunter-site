@@ -150,13 +150,18 @@ async function loadRightsApprovedHotelPhotos(){
    // No image files are saved in the JAMAICA repository or on Oracle.
    img.src=photo.src;img.alt=photo.alt;
    img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
+   let triedLowerResolution=false;
    img.addEventListener("error",()=>{
+     // Same hotel and same licensed media path, 800px -> 320px only.
+     if(!triedLowerResolution&&photo.source!==photo.src){
+       triedLowerResolution=true;img.src=photo.source;return;
+     }
      fig.remove();
      if(!gallery.querySelector('figure[data-photo-source="partner"]')){
-       text("photoStatus","Внешний сервер не отдал фотографии. Пробуем открытые лицензированные изображения.");
+       text("photoStatus","Внешний сервер не отдал фотографии этой гостиницы.");
        loadPhotos(true);
      }
-   },{once:true});
+   });
    fig.append(img);
    const caption=make("figcaption");
    caption.append(make("strong","",captions[photo.kind]+" · "));
