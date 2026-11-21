@@ -10,6 +10,31 @@ const quotePage=fs.readFileSync('quote.html','utf8');
 const previewSelection=fs.readFileSync('preview.html','utf8');
 const feed=JSON.parse(fs.readFileSync('verified-offers.json','utf8'));
 const config=JSON.parse(fs.readFileSync('checkout-config.json','utf8'));
+/* JAMAICA-only modern aggregator-style search layout regressions */
+const searchStyle=fs.readFileSync('assets/jamaica-search-ui.css','utf8');
+const detailStyle=fs.readFileSync('assets/jamaica-detail-ui.css','utf8');
+assert.ok(page.includes('./assets/jamaica-search-ui.css'));
+assert.ok(page.includes('class="utilityBar"')&&page.includes('class="searchModeTabs"'));
+assert.ok(page.includes('class="fields fieldsMain"'));
+assert.ok(page.includes('id="advancedFilters"')&&page.includes('id="budget"'));
+assert.ok(page.includes('class="resultsLayout"')&&page.includes('id="filtersDisclosure"'));
+for(const filter of ['filterCountry','filterResort','filterNights','filterHotel',
+  'filterBudget','filterApply','filterReset','favoritesOnly','favoritesCount']){
+ assert.ok(page.includes('id="'+filter+'"'),'Missing functional search filter '+filter);
+}
+assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSidebar()'),
+  'Search sidebar cannot be a decorative mockup');
+assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
+assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
+assert.ok(page.includes('Цена пока не подтверждена;'),
+ 'Never imply a price or supplier booking where neither is verified');
+assert.ok(searchStyle.includes('.tourResultCard')&&searchStyle.includes('.fieldsMain'));
+assert.ok(searchStyle.includes('@media(max-width:580px)'),
+ 'Mobile travel search layout is required');
+assert.ok(!searchStyle.includes('url(http'),'No external potentially unlicensed photos');
+assert.equal(config.live_booking_enabled,false,'Cannot fake live supplier bookings');
+assert.equal(config.payments_enabled,false,'Cannot fake secure live payments');
+
 const data=page.match(/<script id="countries-data" type="application\/json">([\s\S]*?)<\/script>/);
 assert.ok(data,'Country data must exist');
 const countries=JSON.parse(data[1]);
@@ -139,6 +164,15 @@ assert.equal(matching(sample,{...q,dateTo:'2020-01-01'}),false,
 
 const guide=JSON.parse(fs.readFileSync('hotel-reference.json','utf8'));
 const hotelPage=fs.readFileSync('hotel.html','utf8');
+assert.ok(hotelPage.includes('./assets/jamaica-detail-ui.css'));
+assert.ok(previewSelection.includes('./assets/jamaica-detail-ui.css'));
+assert.ok(detailStyle.includes('.selectionLayout')&&detailStyle.includes('#gallery'));
+assert.ok(hotelPage.indexOf('id="hotelPhotos"')<
+  hotelPage.indexOf('id="hotelDescriptionSection"'),
+  'Only verified property photos first, hotel source detail later');
+assert.ok(previewSelection.includes('id="bookingPanel"'),
+  'Tour price verification must remain prominent and truthful');
+
 assert.equal(guide.schema,'jamaica.hotel-reference.v1');
 assert.equal(guide.bookable,false);
 assert.equal(guide.hotels.length,159,'Actual historic hotel names, no synthetic hotels');
