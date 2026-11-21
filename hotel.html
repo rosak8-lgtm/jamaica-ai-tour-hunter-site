@@ -74,6 +74,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 </main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
+<script src="./scripts/commons-hotel-media.js"></script>
 <script>
 (function(){
 "use strict";
@@ -178,6 +179,43 @@ async function loadRightsApprovedHotelPhotos(){
  }catch(e){return false;}
 }
 
+async function loadOpenLicensedHotelPhotos(){
+ if(!official||!hotel||!window.JamaicaOpenHotelMedia)return false;
+ const photos=await window.JamaicaOpenHotelMedia.get(
+   id,hotel.country,hotel.name);
+ if(!photos||!photos.length)return false;
+ const gallery=$("gallery");gallery.replaceChildren();
+ for(const p of photos){
+   const fig=make("figure","photo");fig.dataset.photoSource="commons-open";
+   const img=make("img");
+   img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
+   img.alt=p.alt;
+   img.addEventListener("error",()=>{
+      fig.remove();
+      if(!gallery.querySelector('figure[data-photo-source="commons-open"]')){
+        showPhotoPlaceholder();
+      }
+   },{once:true});
+   const caption=make("figcaption");
+   caption.append(make("span","",
+      "Фотография выбранной гостиницы · "+p.author+" · "+p.license+" · "));
+   const license=make("a","","Лицензия");
+   license.href=p.license_url;license.target="_blank";
+   license.rel="noopener noreferrer";
+   caption.append(license,make("span",""," · "));
+   const source=make("a","","Автор и оригинал");
+   source.href=p.source;source.target="_blank";
+   source.rel="noopener noreferrer";
+   caption.append(source);
+   fig.append(img,caption);
+   gallery.append(fig);
+   img.src=p.src;
+ }
+ text("photoStatus",photos.length+
+   " фотографий этой гостиницы со свободной коммерческой лицензией Wikimedia Commons.");
+ return true;
+}
+
 function showPhotoPlaceholder(){
  const target=$("gallery");target.replaceChildren();
  const card=make("div","hero");
@@ -190,6 +228,7 @@ function showPhotoPlaceholder(){
 async function loadPhotos(skipApproved=false){
  if(!hotel){text("photoStatus","Не выбран отель");return;}
  if(!skipApproved&&await loadRightsApprovedHotelPhotos())return;
+ if(await loadOpenLicensedHotelPhotos())return;
  showPhotoPlaceholder();
 }
 
