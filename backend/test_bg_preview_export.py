@@ -76,6 +76,52 @@ class Tests(unittest.TestCase):
                 self.assertTrue(today<from_date<=today+timedelta(days=180))
         self.assertEqual(exporter.choose_price_lists(rows,0,today=today),[])
 
+    def test_bg_files_duration_metadata_preserves_all_nights(self):
+        # BG officially defines /n/n/n under FILES.duration for this route.
+        self.assertEqual(exporter.advertised_nights(
+            {"duration":"/7/11/14/18/21"}),[7,11,14,18,21])
+        self.assertEqual(exporter.advertised_nights(
+            {"duration":"/2/3/11/180/181"}),[3,11,180])
+        self.assertEqual(exporter.advertised_nights(
+            {"duration":"7 nights; token=secret"}),[])
+        self.assertEqual(exporter.advertised_nights(
+            {"duration":None}),[])
+
+    def test_same_date_distinct_bg_routes_not_dropped(self):
+        from datetime import date,timedelta
+        today=date(2026,11,21)
+        day=(today+timedelta(days=7)).strftime("%d.%m.%Y")
+        a={"date":day,"id_price":"121100000001","route":"Irkutsk Phuket",
+           "duration":"/7/11/14"}
+        b={"date":day,"id_price":"121100000002","route":"Irkutsk Phuket",
+           "duration":"/18/21"}
+        c={"date":day,"id_price":"121100000003","route":"Irkutsk Bangkok",
+           "duration":"/6/10/12"}
+        rows=[a,b,c,dict(a)]
+        selected=exporter.choose_price_lists(rows,5,today=today)
+        self.assertEqual(len(selected),3)
+        self.assertEqual({v["id_price"] for v in selected},
+                         {"121100000001","121100000002","121100000003"})
+        self.assertEqual({x for v in selected
+                          for x in exporter.advertised_nights(v)},
+                         {6,7,10,11,12,14,18,21})
+
+    def test_bounded_round_robin_reaches_unseen_same_day_routes(self):
+        from datetime import date,timedelta
+        today=date(2026,11,21)
+        day=(today+timedelta(days=7)).strftime("%d.%m.%Y")
+        routes=[{"date":day,"id_price":str(121100000001+i),
+                 "duration":"/"+str(7+i)}
+                for i in range(12)]
+        seen=set()
+        for cycle in range(24):
+            selected=exporter.choose_price_lists(routes,5,today=today,
+                                                 probe_slot=cycle)
+            self.assertLessEqual(len(selected),5)
+            seen.update(v["id_price"] for v in selected)
+        self.assertEqual(seen,{v["id_price"] for v in routes})
+        self.assertEqual(len(routes),12)
+
     def test_no_past_or_today_only_listings(self):
         from datetime import date,timedelta
         today=date(2026,11,20)

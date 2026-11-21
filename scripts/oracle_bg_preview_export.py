@@ -89,71 +89,108 @@ def safe_preview(entry, country, hotel_by_id, price_currency=None):
         "bookable": False,
     }
 
-def choose_price_lists(entries, limit=2, today=None, *, probe_slot=0):
-    """Rotate source price-list dates across *all* available calendar months.
-
-    The real source can advertise dozens of future departure lists while the
-    authenticated read-only importer may fetch at most five per country per
-    cycle. Always sample the nearest date; sample distinct later months next,
-    rotating both eligible months and dates within each month across 5-minute
-    cycles. This is coverage sampling, NOT a claim of exhaustive inventory.
-    Preserve legacy nearest-date behavior for very small one/two-list probes.
-    """
-    today=today or datetime.now(timezone.utc).date()
-    if type(limit) is not int or limit<=0 or type(probe_slot) is not int or probe_slot<0:
+def advertised_nights(entry):
+    """Only real nights from BG FILES metadata, NEVER inferred tour availability."""
+    raw=entry.get("duration") if isinstance(entry,dict) else None
+    if type(raw) is int:raw=str(raw)
+    if not isinstance(raw,str) or len(raw)>1200 or not re.fullmatch(r"[0-9/,;\s]+",raw):
         return []
-    candidates=[]
+    return sorted({int(x) for x in re.findall(r"\d+",raw) if 3<=int(x)<=180})
+
+
+def _listing_identity(day,entry):
+    """Different id_price on the same date is NOT a duplicate."""
+    ident=str(entry.get("id_price","")).strip()
+    if re.fullmatch(r"\d{4,25}",ident):
+        return (day,"id",ident)
+    url=entry.get("url")
+    if isinstance(url,str) and len(url)<=2048:
+        try:
+            p=urllib.parse.urlsplit(url)
+            if p.hostname in ("export.bgoperator.ru","www.bgoperator.ru") and p.scheme in ("http","https"):
+                ids=urllib.parse.parse_qs(p.query).get("id_price",[])
+                if len(ids)==1 and re.fullmatch(r"\d{4,25}",ids[0]):
+                    return (day,"id",ids[0])
+        except ValueError:
+            pass
+    route=entry.get("route")
+    if isinstance(route,str) and 0<len(route)<=500:
+        return (day,"route",route)
+    return (day,"anonymous","")
+
+
+def _future_listings(entries,today):
+    rows=[]
+    if not isinstance(entries,list):return rows
     for entry in entries:
         if not isinstance(entry,dict) or entry.get("stop") is not None:
             continue
         d=bg.date_iso(entry.get("date"))
-        if d is None or d<=today or d>today+timedelta(days=180):
-            continue
-        candidates.append((d,entry))
-    candidates.sort(key=lambda pair:pair[0])
-    distinct=[]
+        if d is not None and today<d<=today+timedelta(days=180):
+            rows.append((d,entry,_listing_identity(d,entry)))
+    rows.sort(key=lambda x:x[0])
     seen=set()
-    for day,entry in candidates:
-        if day not in seen:
-            distinct.append((day,entry))
-            seen.add(day)
-    if len(distinct)<=limit or limit<=2:
-        return [entry for _,entry in distinct[:limit]]
+    result=[]
+    for row in rows:
+        if row[2] not in seen:
+            result.append(row)
+            seen.add(row[2])
+    return result
 
+
+def choose_price_lists(entries, limit=2, today=None, *, probe_slot=0):
+    """Rotate real lists across dates/months/routes under the unchanged 5-list cap.
+
+    A departure date may contain multiple id_price values AND different sets
+    of durations. Never remove those on date equality alone. Source metadata
+    is only a PREVIEW, not verified seats/room/price.
+    """
+    today=today or datetime.now(timezone.utc).date()
+    if type(limit) is not int or not 1<=limit<=MAX_LISTS_PER_COUNTRY:
+        return []
+    if type(probe_slot) is not int or probe_slot<0:return []
+    rows=_future_listings(entries,today)
+    if not rows:return []
+    if limit<=2:
+        out=[]
+        days=set()
+        for day,entry,_ in rows:
+            if day not in days:
+                out.append(entry)
+                days.add(day)
+                if len(out)==limit:break
+        return out
+    if len(rows)<=limit:return [r[1] for r in rows]
+    nearest=rows[0][0]
+    first_options=[r for r in rows if r[0]==nearest]
+    first=first_options[probe_slot%len(first_options)]
+    chosen=[first]
+    keys={first[2]}
     months={}
-    for day,entry in distinct:
-        months.setdefault((day.year,day.month),[]).append((day,entry))
-    first_day,first_entry=distinct[0]
-    first_month=(first_day.year,first_day.month)
-    selected=[(first_day,first_entry)]
-    chosen={first_day}
-    later_months=sorted(m for m in months if m!=first_month)
-    if later_months:
-        offset=probe_slot%len(later_months)
-        rotated=later_months[offset:]+later_months[:offset]
-        for month in rotated:
-            options=months[month]
-            # Cycling the exact departure within the month exposes later dates
-            # instead of repeatedly sampling only the first price-list file.
-            day,entry=options[(probe_slot//len(later_months))%len(options)]
-            selected.append((day,entry))
-            chosen.add(day)
-            if len(selected)>=limit:
-                break
+    for row in rows:
+        months.setdefault((row[0].year,row[0].month),[]).append(row)
+    later=sorted(m for m in months if m!=(nearest.year,nearest.month))
+    if later:
+        offset=probe_slot%len(later)
+        for month in later[offset:]+later[:offset]:
+            opts=months[month]
+            pick=opts[(probe_slot//len(later))%len(opts)]
+            if pick[2] not in keys:
+                chosen.append(pick)
+                keys.add(pick[2])
+            if len(chosen)==limit:break
+    while len(chosen)<limit and len(keys)<len(rows):
+        rest=[r for r in rows if r[2] not in keys]
+        offset=probe_slot%len(rest)
+        rest=rest[offset:]+rest[:offset]
+        covered={n for _,entry,_ in chosen for n in advertised_nights(entry)}
+        used_days={r[0] for r in chosen}
+        pick=max(rest,key=lambda r:(len(set(advertised_nights(r[1]))-covered),
+                                     int(r[0] not in used_days)))
+        chosen.append(pick)
+        keys.add(pick[2])
+    return [r[1] for r in sorted(chosen,key=lambda x:x[0])]
 
-    # When the source has fewer months than our read cap, rotate additional
-    # distinct days without wasting supplier requests on duplicate dates.
-    if len(selected)<limit:
-        extra=distinct[1:]
-        offset=probe_slot%len(extra) if extra else 0
-        for day,entry in extra[offset:]+extra[:offset]:
-            if day in chosen:
-                continue
-            selected.append((day,entry))
-            chosen.add(day)
-            if len(selected)>=limit:
-                break
-    return [entry for _,entry in sorted(selected,key=lambda pair:pair[0])]
 
 
 def select_source_countries(directory, *, extra_priority_names=(), probe_slot=0,
@@ -273,6 +310,8 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
         stats={"country":bg.clean(country.get("name"),70),
                "lists_read":0,"previews":0,"candidate_previews":0,"rows_scanned":0,
                "known_hotel_ids":0,"sampled_departure_months":[],
+               "source_price_lists":0,"source_advertised_nights":[],
+               "selected_price_lists":0,"selected_advertised_nights":[],
                "status":"NO_CONFIRMED_LIST"}
         try:
             q=urllib.parse.urlencode({"action":"files","flt":country["id"],
@@ -281,7 +320,14 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
             entries=listings.get("entries") if isinstance(listings,dict) else None
             if not isinstance(entries,list):
                 raise bg.SyncHold("FILES_SCHEMA_UNKNOWN")
+            source_lists=_future_listings(entries,datetime.now(timezone.utc).date())
+            stats["source_price_lists"]=len(source_lists)
+            stats["source_advertised_nights"]=sorted({
+                n for _,entry,_ in source_lists for n in advertised_nights(entry)})
             selected_lists=choose_price_lists(entries,per_country,probe_slot=probe_slot)
+            stats["selected_price_lists"]=len(selected_lists)
+            stats["selected_advertised_nights"]=sorted({
+                n for entry in selected_lists for n in advertised_nights(entry)})
             stats["sampled_departure_months"]=sorted({
                 bg.date_iso(item["date"]).strftime("%Y-%m")
                 for item in selected_lists
