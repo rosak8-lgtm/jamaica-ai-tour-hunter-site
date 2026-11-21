@@ -222,7 +222,7 @@ assert.ok(page.includes('id="sourceCountryPriority"'));
 assert.ok(page.includes('const priorityNames=["Таиланд","Китай","Вьетнам"]'));
 assert.ok(page.includes('id="allCountrySelector"'));
 assert.ok(page.includes('fullCountryNames.length'));
-assert.ok(page.includes('По направлению'));
+assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');
 assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible")loadTourPreviews();'));
 assert.ok(page.includes('5*60*1000'));
