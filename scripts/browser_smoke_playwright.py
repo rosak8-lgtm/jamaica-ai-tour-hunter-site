@@ -400,6 +400,12 @@ def main():
                     ensure(page.locator('#gallery a').filter(has_text="Оригинал").count()>=1,
                            "MISSING_ORIGINAL_LICENSE_CREDIT_"+hid)
                 print("FOUR_EXTRA_EXACT_HOTEL_PHOTOS_DECODED_PASS")
+                # The prior fallback test intentionally called unroute() on all
+                # Commons handlers. Restore the deterministic licensed-photo
+                # network fixture before checking public tour preview cards.
+                page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
+                  lambda route: route.fulfill(
+                     status=200,content_type="image/png",body=pixel))
                 # Three of the real published preview hotels now have exact,
                 # licensed Wikimedia photos (not only unrelated directory pages).
                 from urllib.parse import urlencode
