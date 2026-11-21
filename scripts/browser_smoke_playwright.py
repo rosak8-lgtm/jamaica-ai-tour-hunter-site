@@ -196,6 +196,37 @@ def main():
                 ensure("CC BY-SA 3.0" in page.locator("#gallery").inner_text(),
                        "ADRIATIC_PHOTO_CREDITS_MISSING")
                 print("ADRIATIC_PATTAYA_VERIFIED_DESCRIPTION_AND_LICENSED_VIEWS=PASS")
+
+                # Basaya has verified supplier facts but no permitted hotel
+                # photography. Mock an explicitly licensed *resort* photo:
+                # it must never be labeled as a photo of Basaya itself.
+                image_result={"query":{"pages":{"1":{
+                  "title":"File:Pattaya Beach licensed landscape.jpg",
+                  "imageinfo":[{
+                    "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Pattaya_Beach.jpg/640px-Pattaya_Beach.jpg",
+                    "descriptionurl":"https://commons.wikimedia.org/wiki/File:Pattaya_Beach_licensed_landscape.jpg",
+                    "extmetadata":{"LicenseShortName":{"value":"CC BY-SA 3.0"},
+                                   "Artist":{"value":"CC Test Photographer"}}}
+                  ]}}}}
+                page.route("https://commons.wikimedia.org/w/api.php?*",
+                  lambda route: route.fulfill(status=200,content_type="application/json",
+                                              body=json.dumps(image_result)))
+                page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
+                page.wait_for_function(
+                  "()=>document.getElementById('description').textContent.includes('Basaya Beach Hotel') && "+
+                  "document.getElementById('curatedRooms').textContent.includes('NEW STANDARD')",
+                  timeout=15000)
+                page.wait_for_function(
+                  "()=>document.getElementById('photoStatus').textContent.includes('НЕ') || "+
+                  "document.getElementById('photoStatus').textContent.includes('а НЕ')",
+                  timeout=15000)
+                ensure(page.locator("#facts .fact").count()>=6,
+                       "BASAYA_HOTEL_DESCRIPTION_NOT_ENRICHED")
+                ensure("НЕ фотография гостиницы" in page.locator("#gallery").inner_text(),
+                       "RESORT_PHOTO_MUST_NOT_PRETEND_TO_BE_A_BASAYA_HOTEL_PHOTO")
+                ensure("CC BY-SA 3.0" in page.locator("#gallery").inner_text(),
+                       "LICENSED_RESORT_PHOTO_CREDIT_MISSING")
+                print("BASAYA_HOTEL_DESCRIPTION_AND_HONEST_LICENSED_RESORT_PHOTOS=PASS")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
