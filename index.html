@@ -27,8 +27,8 @@
 @media(max-width:500px){.destinationGrid{grid-template-columns:1fr}.searchHead{flex-direction:column;align-items:flex-start}.searchPanel{margin-top:-39px}.fields{grid-template-columns:1fr}.field,.field.wide,.field.short{grid-column:1}.destToolbar{flex-direction:column;align-items:stretch}.destToolbar input{width:100%}.nav{min-height:70px}.navLinks{justify-content:flex-end}.navLinks a{font-size:12px;padding:8px}.hero h1{letter-spacing:-.8px}.heroArt{min-height:198px}.artBubble{left:5%;right:5%}.offerBox{flex-direction:column;align-items:flex-start}.finalCta{padding:25px}.sectionHead{display:block}}
 </style></head>
 <body>
-<header class="top"><div class="wrap"><nav class="nav" aria-label="Навигация"><a class="logo" href="#top"><span class="bird" aria-hidden="true">🦜</span><span>JAMAICA</span></a><div class="navLinks"><a href="#destinations">Направления</a><a href="#how">Как оформить</a><a class="contactNav" href="#request">Поиск туров</a><a href="account.html">Личный кабинет</a></div></nav></div></header>
-<main><section class="hero" id="top"><div class="wrap heroGrid"><div><span class="kicker">☀ Путешествия из Иркутска и других городов</span><h1>Мир открыт.<br><em>Ваш отпуск ждёт.</em></h1><p>Выбирайте направление и конкретный отель, сравнивайте даты и предварительные цены. Договор, личный кабинет и будущая покупка — непосредственно на JAMAICA после подключения защищённого бронирования.</p><div class="heroActions"><a class="btn btnGold" href="#request">Найти тур ↗</a><a class="btn btnLine" href="#destinations">Смотреть направления</a></div><div class="heroFine">Выберите конкретный тур; окончательная стоимость и наличие проверяются до договора, оплаты и бронирования.</div></div><div class="heroArt" aria-label="Тропический стиль Jamaica: солнце и попугай" role="img"><div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span><div class="artBubble"><div><b>Выберите. Сравните. Купите.</b><span>Поиск предложений по датам и бюджету</span></div><strong>✈</strong></div></div></div></section>
+<header class="top"><div class="wrap"><nav class="nav" aria-label="Навигация"><a class="logo" href="#top"><span class="bird" aria-hidden="true">🦜</span><span>JAMAICA</span></a><div class="navLinks"><a href="#offers">Туры</a><a href="#how">Как оформить</a><a class="contactNav" href="#request">Поиск туров</a><a href="account.html">Личный кабинет</a></div></nav></div></header>
+<main><section class="hero" id="top"><div class="wrap heroGrid"><div><span class="kicker">☀ Путешествия из Иркутска и других городов</span><h1>Мир открыт.<br><em>Ваш отпуск ждёт.</em></h1><p>Выбирайте направление и конкретный отель, сравнивайте даты и предварительные цены. Договор, личный кабинет и будущая покупка — непосредственно на JAMAICA после подключения защищённого бронирования.</p><div class="heroActions"><a class="btn btnGold" href="#request">Найти тур ↗</a><a class="btn btnLine" href="#offers">Смотреть туры</a></div><div class="heroFine">Выберите конкретный тур; окончательная стоимость и наличие проверяются до договора, оплаты и бронирования.</div></div><div class="heroArt" aria-label="Тропический стиль Jamaica: солнце и попугай" role="img"><div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span><div class="artBubble"><div><b>Выберите. Сравните. Купите.</b><span>Поиск предложений по датам и бюджету</span></div><strong>✈</strong></div></div></div></section>
 <div class="wrap"><section class="searchPanel" id="request"><div class="searchHead"><div><div class="sectionTag">Поиск путешествий</div><h2>Найдите тур под ваши даты</h2></div><div class="micro">Поиск и выбор — на сайте JAMAICA. Никаких мессенджеров или запросов.</div></div>
 <form id="tourSearchForm"><div class="fields">
 <div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
@@ -41,18 +41,13 @@
 <div class="field wide"><label for="budget">Максимальная цена на человека, ₽</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Без ограничения"></div>
 <div class="field wide"><label for="hotelSearch">Отель (необязательно)</label><input id="hotelSearch" name="hotelSearch" type="search" maxlength="100" placeholder="Название отеля или курорта"></div>
 </div><div class="formBottom"><button class="btn btnTeal" type="submit">Показать варианты туров ↗</button><span class="hint">Поиск показывает варианты из текущих прайс-листов. До договора цена и рейсы проверяются заново; бронирование только после подписи договора и подтверждённой оплаты.</span></div></form></section></div>
-<section class="section" id="destinations"><div class="wrap"><div class="sectionHead"><div><div class="sectionTag">Куда отправиться</div><h2>Страны и направления</h2><p>Выбирайте из каталога направлений. Все направления доступны для поиска. Наличие туров зависит от даты, города вылета и текущей цены.</p></div><div class="micro" id="dirTotal">Загрузка направлений…</div></div>
-<div class="chips" role="group" aria-label="Фильтр направлений"><button type="button" class="chip active" data-filter="all" aria-pressed="true">Все направления</button><button type="button" class="chip" data-filter="irk" aria-pressed="false">Иркутск в каталоге</button><button type="button" class="chip" data-filter="routes" aria-pressed="false">С маршрутами в каталоге</button><button type="button" class="chip" data-filter="other" aria-pressed="false">Другие страны</button></div>
-<div class="destToolbar"><input id="destSearch" type="search" placeholder="Поиск страны: Египет, Индонезия, Греция…" aria-label="Поиск страны"><span class="count" id="dirCount" aria-live="polite"></span></div>
-<div class="destinationGrid" id="destinationGrid" aria-live="polite" style="margin-top:20px"></div><button class="loadMore" type="button" id="loadMore">Показать ещё страны</button>
-<p class="micro" style="margin-top:18px">Отметка о городе вылета в справочнике не означает наличия рейса или тура на выбранную дату. Направления без подходящего готового маршрута проверяются индивидуально.</p></div></section>
 <section class="section offerSection" id="offers"><div class="wrap">
 <div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div>
-<h2>Найденные туры и цены по странам</h2>
+<h2>Найденные туры и предварительные цены</h2>
 <p>Сначала реальные варианты из прайс-листов: страна, отель, дата, номер и цена на момент проверки. Нажмите «Подробнее», чтобы открыть гостиницу и поездку. Окончательная цена и наличие проверяются перед договором.</p></div>
 <div class="count" id="searchResultsCount" role="status">Загрузка вариантов…</div></div>
 <div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Поиск туров работает</strong><p>Проверяем последние опубликованные варианты из прайс-листов. Данные обновляются сервером каждые пять минут.</p></div></div>
-<div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
+<div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Конкретные отели, номера и даты</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
 <p class="micro" id="sourceCountryPriority">Приоритет поиска из Иркутска: Таиланд → Китай → Вьетнам. Все три направления проверяются на сервере каждые 5 минут; доступные варианты появляются только после ответа прайс-листа.</p>
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
 <div class="destToolbar" style="margin:10px 0 16px">
@@ -63,13 +58,6 @@
     <option value="date">Сначала ближайшие даты</option>
   </select>
   <span class="micro">Справочные суммы сопоставимы только для 2 взрослых; итоговая цена проверяется перед покупкой.</span>
-</div>
-<div class="destToolbar" style="margin:12px 0">
-  <label for="allCountrySelector" class="micro">Выбрать любое направление из полного справочника:</label>
-  <select id="allCountrySelector" aria-label="Все страны для поиска туров" style="max-width:360px;padding:11px;border:1px solid #d9cfe0;border-radius:12px;background:white">
-    <option value="">Все страны</option>
-  </select>
-  <a href="#destinations" class="micro">Просмотреть полный каталог стран и гостиниц</a>
 </div>
 <div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
 <div class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки. Обновление данных в браузере — каждые 5 минут.</div>
@@ -144,33 +132,9 @@ if(directHotelSearch.has("hotel")||directHotelSearch.has("country")){
 }
 const datalist=$("countryDatalist");
 for(const c of sorted){const e=document.createElement("option");e.value=c.n;datalist.append(e);}
-$("dirTotal").textContent=countries.length+" направлений";
-let mode="all",visible=0,filtered=[],activeOffers=[],inventoryLoaded=false,inventoryError=false,inventoryLoading=true;
+// The 251-country lookup remains in the search datalist; no 251-card wall.
+let activeOffers=[],inventoryLoaded=false,inventoryError=false,inventoryLoading=true;
 function scrollToResults(){$("offers").scrollIntoView({behavior:"smooth",block:"start"});}
-function selectCountry(name){$("destination").value=name;runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();}
-function showCountries(){
- const search=$("destSearch").value.trim().toLocaleLowerCase("ru");
- filtered=sorted.filter(c=>(!search||c.n.toLocaleLowerCase("ru").includes(search))&&(mode==="all"||mode==="irk"&&c.i||mode==="routes"&&c.a||mode==="other"&&!c.i));
- visible=0;$("destinationGrid").replaceChildren();
- $("dirCount").textContent="Найдено направлений: "+filtered.length;
- if(!filtered.length)$("destinationGrid").append(el("div","empty","Направления не найдены. Измените поисковый запрос."));
- else appendCountries();
-}
-function appendCountries(){
- const part=filtered.slice(visible,visible+300),frag=document.createDocumentFragment();
- for(const c of part){
-  const article=el("article","destination");
-  article.append(el("div","destMark",c.i?"✈":"🌴"));
-  article.append(el("h3","",c.n));
-  article.append(el("p","",c.i?"Иркутск указан среди городов вылета — конкретные даты проверяются поиском":c.a?"Направление есть в каталоге — поиск покажет доступные туры":"Направление в общем справочнике; доступность не подтверждена"));
-  const b=el("button","askCountry","Посмотреть туры →");b.type="button";b.addEventListener("click",()=>selectCountry(c.n));article.append(b);frag.append(article);
- }
- $("destinationGrid").append(frag);visible+=part.length;$("loadMore").hidden=visible>=filtered.length;
-}
-document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>{x.classList.toggle("active",x===b);x.setAttribute("aria-pressed",x===b?"true":"false");});showCountries();}));
-$("destSearch").addEventListener("input",showCountries);
-$("loadMore").addEventListener("click",appendCountries);
-showCountries();
 function strictOffer(o,now){
  if(!o||typeof o!=="object")return false;
  if(!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
@@ -414,17 +378,6 @@ let previewLoadSerial=0,previewFullLoaded=true;
 let previewCountryStatus=[];
 const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
   .map(c=>c.n).filter(name=>typeof name==="string");
-for(const name of fullCountryNames){
- const item=document.createElement("option");
- item.value=name;item.textContent=name;
- $("allCountrySelector").append(item);
-}
-$("allCountrySelector").addEventListener("change",()=>{
- $("destination").value=$("allCountrySelector").value;
- renderTourPreviews(true);
- if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();
- if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
-});
 function referencePrice(x){
  if(!previewPriceListed||x.price_reference_party!=="TWO_ADULTS"||
     !Number.isSafeInteger(x.price_reference_rub)||x.price_reference_rub<=0)return null;
@@ -599,7 +552,6 @@ function renderPreviewCountryChips(){
        return (cb>0?1:0)-(ca>0?1:0)||a.localeCompare(b,"ru");
      });
  const current=$("destination").value.trim();
- $("allCountrySelector").value=fullCountryNames.includes(current)?current:"";
  for(const name of ["Все страны",...names]){
   const num=counts.get(name)||0;
   const button=el("button","chip",name==="Все страны"?name:num?name+" ("+num+")":name+" · проверяется");
