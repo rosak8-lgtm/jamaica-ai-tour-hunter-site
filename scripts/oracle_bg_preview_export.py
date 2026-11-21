@@ -248,7 +248,8 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
     for country in countries[:max_countries]:
         stats={"country":bg.clean(country.get("name"),70),
                "lists_read":0,"previews":0,"candidate_previews":0,"rows_scanned":0,
-               "known_hotel_ids":0,"status":"NO_CONFIRMED_LIST"}
+               "known_hotel_ids":0,"sampled_departure_months":[],
+               "status":"NO_CONFIRMED_LIST"}
         try:
             q=urllib.parse.urlencode({"action":"files","flt":country["id"],
                                        "flt2":bg.CITY_ID,"xml":"11"})
@@ -257,6 +258,10 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
             if not isinstance(entries,list):
                 raise bg.SyncHold("FILES_SCHEMA_UNKNOWN")
             selected_lists=choose_price_lists(entries,per_country,probe_slot=probe_slot)
+            stats["sampled_departure_months"]=sorted({
+                bg.date_iso(item["date"]).strftime("%Y-%m")
+                for item in selected_lists
+            })
             for listed in selected_lists:
                 url=detail.safe_url(listed,country["id"])
                 payload=json.loads(api.get(url))
