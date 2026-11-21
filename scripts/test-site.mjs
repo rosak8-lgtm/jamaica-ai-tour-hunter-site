@@ -151,7 +151,9 @@ assert.deepEqual(hotelPhotos.hotels,{},'Never publish unlicensed operator specia
 const enriched=JSON.parse(fs.readFileSync('hotel-enrichment.json','utf8'));
 assert.equal(enriched.hotels['102623766108'].rooms_total,'110');
 assert.equal(enriched.hotels['102623766108'].photos.length,0);
-assert.equal(enriched.hotels['102667206879'].photos.length,3,'Guangzhou hotel must have three verified CC4 photos');
+assert.equal(enriched.hotels['102667206879'].photos.length,6,'Guangzhou hotel must have six verified CC4 photos');
+assert.equal(enriched.hotels['102667206879'].photos.filter(p=>p.kind==='hotel_exterior').length,3);
+assert.equal(enriched.hotels['102667206879'].photos.filter(p=>p.kind==='view_from_hotel').length,3);
 assert.ok(enriched.hotels['102667206879'].photos.every(p=>p.license==='CC BY-SA 4.0'));
 const remotePhotoUrlFn=hotelPage.match(/function strictExternalPhotoUrl\([\s\S]*?\n\}/);
 assert.ok(remotePhotoUrlFn,'Required HTTPS exact-host safe remote image linking');
