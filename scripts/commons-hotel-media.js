@@ -23,7 +23,7 @@ function photoOK(p){
     typeof p.wikidata_qid!=="string"||!/^Q[1-9]\d{0,14}$/.test(p.wikidata_qid))
      return false;
  const src="https://commons.wikimedia.org/wiki/Special:FilePath/"+
-     encodeURIComponent(p.file)+"?width=720";
+     encodeURIComponent(p.file)+"?width=500";
  const source="https://commons.wikimedia.org/wiki/File:"+
      encodeURIComponent(p.file.replaceAll(" ","_"))
       .replaceAll("%28","(").replaceAll("%29",")");
