@@ -43,7 +43,9 @@ def select_candidates(feed,today=None,limit=MAX_CANDIDATES):
         rank=(day,item["id"])
         if country not in found or rank<(found[country][0],found[country][1]["id"]):
             found[country]=(day,item)
-    priority=("Индонезия","Турция","Шри-Ланка","Таиланд")
+    # Approved Irkutsk search priority: these destinations first, then every other country.
+    # This controls only bounded READ-ONLY preview sampling, not tour verification or publishing.
+    priority=("Таиланд","Китай","Вьетнам")
     countries=sorted(found,key=lambda name:(priority.index(name) if name in priority else 100,name))
     return [found[name][1] for name in countries[:limit]]
 

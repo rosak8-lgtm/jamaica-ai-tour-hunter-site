@@ -25,6 +25,19 @@ class Tests(unittest.TestCase):
         rows=scan.select_candidates(f,today=TODAY,limit=3)
         self.assertEqual([x["country"] for x in rows],["Индонезия","Турция","Шри-Ланка"])
         self.assertEqual(rows[0]["id"],"p_"+"b"*24)
+    def test_approved_priority_with_all_other_countries_retained(self):
+        # Other-country preview dates may be earlier, but approved priorities lead
+        # a bounded diagnostic sample when present; unprioritized countries remain.
+        f=feed([item("Индонезия",1,"a"),item("Турция",2,"b"),
+                item("Китай",11,"c"),item("Вьетнам",12,"d"),
+                item("Таиланд",13,"e"),item("Шри-Ланка",3,"f")])
+        rows=scan.select_candidates(f,today=TODAY,limit=4)
+        self.assertEqual([x["country"] for x in rows],
+                         ["Таиланд","Китай","Вьетнам","Индонезия"])
+        all_rows=scan.select_candidates(f,today=TODAY,limit=6)
+        self.assertEqual(set(x["country"] for x in all_rows),
+                         {"Таиланд","Китай","Вьетнам","Индонезия","Турция","Шри-Ланка"})
+
     def test_skip_unsupported_and_no_fabricated_booking(self):
         f=feed([item("Индонезия",5,"a",bookable=True),
                 item("Турция",6,"b",availability_verified=True),
