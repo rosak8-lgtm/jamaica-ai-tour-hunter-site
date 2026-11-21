@@ -69,6 +69,16 @@ def main():
                 # two-column filter + horizontal card travel shopping interface.
                 ensure(page.locator(".resultsLayout").count()==1,
                        "PRO_SEARCH_RESULT_LAYOUT_MISSING")
+                ensure(page.locator("#routes").count()==0 and
+                       page.locator("#routeCards").count()==0 and
+                       page.locator("#routeCountryChips").count()==0,
+                       "NON_BOOKABLE_ROUTE_WALL_MUST_NOT_OCCUPY_CUSTOMER_PAGE")
+                ensure(page.locator("#hotelDirectoryDisclosure").count()==1,
+                       "OPTIONAL_HOTEL_REFERENCE_MISSING")
+                ensure(page.locator("#hotelDirectoryDisclosure").get_attribute("open") is None,
+                       "HOTEL_REFERENCE_MUST_BE_COLLAPSED_BY_DEFAULT")
+                ensure(page.locator("#hotelGuideCards .destination").count()==0,
+                       "HEAVY_HOTEL_DIRECTORY_SHOULD_BE_LOADED_ON_DEMAND")
                 ensure(page.locator("#previewCards .tourResultCard").count()>0,
                        "HORIZONTAL_TOUR_RESULT_CARD_MISSING")
                 ensure(page.locator("#filtersDisclosure").get_attribute("open") is not None,
@@ -112,6 +122,11 @@ def main():
                        "REAL_TOUR_CARDS_MUST_APPEAR_BEFORE_TECHNICAL_DETAILS")
                 ensure(page.locator("#countryDatalist option").count()>=251,
                        "FULL_COUNTRY_SEARCH_MUST_STAY_AVAILABLE")
+                page.locator("#hotelDirectoryDisclosure summary").click()
+                page.locator("#hotelGuideCards .destination").first.wait_for(timeout=25000)
+                ensure(page.locator("#hotelDirectoryDisclosure").get_attribute("open") is not None,
+                       "HOTEL_DIRECTORY_DISCLOSURE_FAILED")
+                page.locator("#hotelDirectoryDisclosure summary").click()
                 ensure(page.locator('#nights option[value="8"]').count()==1,
                        "EIGHT_NIGHT_OPTION_MISSING")
                 ensure(page.locator('#nights option[value="9"]').count()==1,
