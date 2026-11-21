@@ -40,7 +40,7 @@ class Tests(unittest.TestCase):
     def test_page_fails_closed_if_enrichment_wrong_hotel(self):
         self.assertIn('entry.name!==hotel.name||entry.country!==hotel.country',self.page)
         self.assertIn('entry.source_checked_at',self.page)
-        self.assertIn('p.kind==="historical_view_not_property_facade"',self.page)
+        self.assertIn('historical_view_not_property_facade:"Исторический вид из гостиницы"',self.page)
     def test_page_description_precedes_gallery(self):
         self.assertLess(self.page.index('id="hotelDescriptionSection"'),self.page.index('id="gallery"'))
         for id_ in ("enrichedFeatures","curatedRooms","facts","rooms","gallery","reviewForm"):
@@ -55,6 +55,31 @@ class Tests(unittest.TestCase):
             self.assertIn(name," ".join(basaya["room_categories"]))
         self.assertEqual(basaya["photos"],[])
         self.assertEqual(len(basaya["sources"]),1)
+    def test_guangzhou_hotel_with_three_commercially_reusable_external_photos(self):
+        china=self.data["hotels"]["102667206879"]
+        self.assertEqual(china["name"],"ASIA INTERNATIONAL HOTEL GUANGDONG (广东亚洲国际大酒店)")
+        self.assertEqual(china["country"],"Китай")
+        self.assertEqual(china["resort"],"Гуанчжоу")
+        self.assertIn("Юэсю",china["editorial_description"])
+        self.assertEqual(len(china["photos"]),3)
+        for photo in china["photos"]:
+            self.assertEqual(photo["author"],"中少")
+            self.assertEqual(photo["license"],"CC BY-SA 4.0")
+            self.assertEqual(photo["license_url"],
+                "https://creativecommons.org/licenses/by-sa/4.0/")
+            self.assertEqual(photo["kind"],"hotel_exterior")
+            self.assertEqual(photo["source"],
+                "https://commons.wikimedia.org/wiki/File:"+photo["file"].replace(" ","_"))
+        self.assertIn("CC BY-SA 4.0",self.page)
+        self.assertIn("encodeURIComponent(photo.file)",self.page)
+    def test_external_approved_hotel_photos_use_remote_https_link_only(self):
+        self.assertIn("function strictExternalPhotoUrl(",self.page)
+        self.assertIn("entry.approved_image_hosts",self.page)
+        self.assertIn("entry.rights_verified_at",self.page)
+        self.assertIn('p.license!=="contract-authorized"',self.page)
+        self.assertIn('img.loading="lazy"',self.page)
+        self.assertIn("loadPhotos(true)",self.page)
+
     def test_unlicensed_hotel_photos_never_claimed_to_be_resort_photos(self):
         self.assertIn("async function loadRightsApprovedHotelPhotos()",self.page)
         self.assertIn('entry.commercial_publication_allowed!==true',self.page)
