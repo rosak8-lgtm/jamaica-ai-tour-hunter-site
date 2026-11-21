@@ -45,7 +45,7 @@ def safe_operator_image(raw):
 def normalized_hotel_name(value):
     if not isinstance(value,str):
         return ""
-    value=re.sub(r"(?i)\\b[1-5]\\*"," ",value).lower()
+    value=re.sub(r"(?i)\b[1-5]\*"," ",value).lower()
     return re.sub(r"[^a-z0-9а-яё]+"," ",value).strip()
 
 
