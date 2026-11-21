@@ -4,11 +4,13 @@ on:
     branches: [main]
     paths-ignore:
       - tour-previews.json
+      - 'tour-previews-shards/**'
       - destination-directory.json
   pull_request:
     branches: [main]
     paths-ignore:
       - tour-previews.json
+      - 'tour-previews-shards/**'
       - destination-directory.json
   workflow_dispatch:
 permissions:
