@@ -45,6 +45,13 @@
 <div class="offerCards" id="offerCards" aria-live="polite"></div><div class="micro" id="offerStatus" role="status" aria-live="polite" style="margin-top:13px"></div>
 <div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Отели, номера и даты по разным странам</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
 <div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
+<div class="destToolbar" style="margin:12px 0">
+  <label for="allCountrySelector" class="micro">Выбрать любое направление из полного справочника:</label>
+  <select id="allCountrySelector" aria-label="Все страны для поиска туров" style="max-width:360px;padding:11px;border:1px solid #d9cfe0;border-radius:12px;background:white">
+    <option value="">Все страны</option>
+  </select>
+  <a href="#destinations" class="micro">Просмотреть полный каталог стран и гостиниц</a>
+</div>
 <div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
 <div class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки. Обновление данных в браузере — каждые 5 минут.</div>
 <div class="micro" id="previewCoverage" role="status">Проверяем наличие туров по направлениям и странам…</div>
@@ -347,6 +354,20 @@ async function loadRouteDiscovery(){
 
 let previewRecords=[],previewVisible=0;
 let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
+let previewCountryStatus=[];
+const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
+  .map(c=>c.n).filter(name=>typeof name==="string");
+for(const name of fullCountryNames){
+ const item=document.createElement("option");
+ item.value=name;item.textContent=name;
+ $("allCountrySelector").append(item);
+}
+$("allCountrySelector").addEventListener("change",()=>{
+ $("destination").value=$("allCountrySelector").value;
+ renderTourPreviews(true);
+ if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();
+ if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
+});
 function referencePrice(x){
  if(!previewPriceListed||x.price_reference_party!=="TWO_ADULTS"||
     !Number.isSafeInteger(x.price_reference_rub)||x.price_reference_rub<=0)return null;
@@ -358,11 +379,20 @@ function currentReferencePrice(x){
 function renderPreviewCountryChips(){
  const target=$("previewCountryChips");
  target.replaceChildren();
- const names=[...new Set(previewRecords.map(x=>x.country))].sort((a,b)=>a.localeCompare(b,"ru"));
+ const counts=new Map();
+ for(const x of previewRecords)counts.set(x.country,(counts.get(x.country)||0)+1);
+ const names=[...new Set([...counts.keys(),
+     ...previewCountryStatus.map(x=>x.country).filter(Boolean)])].sort((a,b)=>{
+       const ca=counts.get(a)||0,cb=counts.get(b)||0;
+       return (cb>0?1:0)-(ca>0?1:0) || a.localeCompare(b,"ru");
+     });
  const current=$("destination").value.trim();
+ $("allCountrySelector").value=fullCountryNames.includes(current)?current:"";
  for(const name of ["Все страны",...names]){
-  const button=el("button","chip",name);
+  const num=counts.get(name)||0;
+  const button=el("button","chip",name==="Все страны"?name:num?name+" ("+num+")":name+" · проверяется");
   button.type="button";
+  if(!num&&name!=="Все страны")button.title="В текущем прайс-листе нет подтверждённых вариантов из Иркутска";
   const active=name==="Все страны"?!current:current.toLocaleLowerCase("ru")===name.toLocaleLowerCase("ru");
   if(active)button.classList.add("active");
   button.setAttribute("aria-pressed",String(active));
@@ -422,6 +452,11 @@ function renderTourPreviews(reset=true){
  if(!country)list=interleaveCountries(list);
  if(reset)renderPreviewCountryChips();
  const frag=document.createDocumentFragment();
+ if(!list.length&&previewsLoaded){
+   const requested=$("destination").value.trim();
+   target.append(el("div","empty",
+      requested?"По направлению «"+requested+"» пока нет подтверждённых дат и рублёвых цен для вылета из Иркутска. Страна остаётся в полном каталоге, а варианты по другим направлениям доступны выше.":"По заданным параметрам нет туров в текущей проверенной выгрузке. Измените дату, страну или длительность."));
+ }
  for(const x of list.slice(previewVisible,previewVisible+30)){
    const card=el("article","offerCard");
    card.append(el("h3","",x.country+" · "+x.hotel));
@@ -470,12 +505,16 @@ async function loadTourPreviews(){
     ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
     ". Браузер проверяет новый каталог каждые 5 минут; расписание серверного импорта задаётся отдельно.";
   const coverage=Array.isArray(data.countries_status)?data.countries_status.filter(x=>x&&typeof x.country==="string"):[];
+  previewCountryStatus=coverage;
   const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
-  $("previewCoverage").textContent="Проверено направлений с вылетом из Иркутска: "+coverage.length+
+  const scope=data.source_scope||{};
+  $("previewCoverage").textContent="Направлений с туристическим каталогом: "+
+    (Number.isInteger(scope.source_tour_countries)?scope.source_tour_countries:"уточняется")+
+    "; проверено в этом цикле: "+coverage.length+
     "; реальные варианты опубликованы по "+withTours.size+" странам."+
-    (missing.length?" Пока нет подтверждённых прайс-листов или подходящих дат: "+missing.join(", ")+".":"")+
-    " Всего стран в справочнике: 251; наличие туров зависит от официальной выгрузки.";
+    (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
+    " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным.";
   previewRecords=data.previews.filter(x=>x&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
     typeof x.country==="string"&&typeof x.hotel==="string"&&typeof x.room==="string"&&
