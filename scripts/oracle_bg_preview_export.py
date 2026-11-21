@@ -89,9 +89,19 @@ def safe_preview(entry, country, hotel_by_id, price_currency=None):
         "bookable": False,
     }
 
-def choose_price_lists(entries, limit=2, today=None):
-    """Prefer future departures on separate dates over same-day duplicate files."""
+def choose_price_lists(entries, limit=2, today=None, *, probe_slot=0):
+    """Rotate source price-list dates across *all* available calendar months.
+
+    The real source can advertise dozens of future departure lists while the
+    authenticated read-only importer may fetch at most five per country per
+    cycle. Always sample the nearest date; sample distinct later months next,
+    rotating both eligible months and dates within each month across 5-minute
+    cycles. This is coverage sampling, NOT a claim of exhaustive inventory.
+    Preserve legacy nearest-date behavior for very small one/two-list probes.
+    """
     today=today or datetime.now(timezone.utc).date()
+    if type(limit) is not int or limit<=0 or type(probe_slot) is not int or probe_slot<0:
+        return []
     candidates=[]
     for entry in entries:
         if not isinstance(entry,dict) or entry.get("stop") is not None:
@@ -101,16 +111,49 @@ def choose_price_lists(entries, limit=2, today=None):
             continue
         candidates.append((d,entry))
     candidates.sort(key=lambda pair:pair[0])
+    distinct=[]
     seen=set()
-    selected=[]
     for day,entry in candidates:
-        if day in seen:
-            continue
-        selected.append(entry)
-        seen.add(day)
-        if len(selected)==limit:
-            break
-    return selected
+        if day not in seen:
+            distinct.append((day,entry))
+            seen.add(day)
+    if len(distinct)<=limit or limit<=2:
+        return [entry for _,entry in distinct[:limit]]
+
+    months={}
+    for day,entry in distinct:
+        months.setdefault((day.year,day.month),[]).append((day,entry))
+    first_day,first_entry=distinct[0]
+    first_month=(first_day.year,first_day.month)
+    selected=[(first_day,first_entry)]
+    chosen={first_day}
+    later_months=sorted(m for m in months if m!=first_month)
+    if later_months:
+        offset=probe_slot%len(later_months)
+        rotated=later_months[offset:]+later_months[:offset]
+        for month in rotated:
+            options=months[month]
+            # Cycling the exact departure within the month exposes later dates
+            # instead of repeatedly sampling only the first price-list file.
+            day,entry=options[(probe_slot//len(later_months))%len(options)]
+            selected.append((day,entry))
+            chosen.add(day)
+            if len(selected)>=limit:
+                break
+
+    # When the source has fewer months than our read cap, rotate additional
+    # distinct days without wasting supplier requests on duplicate dates.
+    if len(selected)<limit:
+        extra=distinct[1:]
+        offset=probe_slot%len(extra) if extra else 0
+        for day,entry in extra[offset:]+extra[:offset]:
+            if day in chosen:
+                continue
+            selected.append((day,entry))
+            chosen.add(day)
+            if len(selected)>=limit:
+                break
+    return [entry for _,entry in sorted(selected,key=lambda pair:pair[0])]
 
 
 def select_source_countries(directory, *, extra_priority_names=(), probe_slot=0,
@@ -213,7 +256,7 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
             entries=listings.get("entries") if isinstance(listings,dict) else None
             if not isinstance(entries,list):
                 raise bg.SyncHold("FILES_SCHEMA_UNKNOWN")
-            selected_lists=choose_price_lists(entries,per_country)
+            selected_lists=choose_price_lists(entries,per_country,probe_slot=probe_slot)
             for listed in selected_lists:
                 url=detail.safe_url(listed,country["id"])
                 payload=json.loads(api.get(url))
