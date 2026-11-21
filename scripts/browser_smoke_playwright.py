@@ -387,6 +387,19 @@ def main():
                 print("WIKIMEDIA_960_TO_500_HOTEL_IMAGE_RETRY_PASS")
                 page.unroute("https://commons.wikimedia.org/wiki/Special:FilePath/**")
 
+                # Check actual decoded photos for four additional, exactly
+                # identified hotels in Thailand, Vietnam and China.
+                for hid in ("102610001177","102610001141",
+                            "102616490643","102667202290"):
+                    page.goto(base+"hotel.html?id="+hid,wait_until="domcontentloaded")
+                    page.locator("#gallery figure.photo img").first.wait_for(timeout=18000)
+                    page.locator("#gallery").scroll_into_view_if_needed()
+                    page.wait_for_function(
+                       "()=>[...document.querySelectorAll('#gallery figure.photo img')]"+
+                       ".some(img=>img.complete&&img.naturalWidth>0)",timeout=15000)
+                    ensure(page.locator('#gallery a').filter(has_text="Оригинал").count()>=1,
+                           "MISSING_ORIGINAL_LICENSE_CREDIT_"+hid)
+                print("FOUR_EXTRA_EXACT_HOTEL_PHOTOS_DECODED_PASS")
                 # When the actual hotel images fail, do not replace them
                 # with photos of Guangzhou skyline or unrelated hotels.
                 page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
