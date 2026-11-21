@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Dependency-free JAMAICA deployment preflight; never changes live booking."""
 import json
+import hashlib
+import re
 import sys
 from pathlib import Path
 from datetime import date
@@ -19,6 +21,37 @@ def main():
     offers=load("verified-offers.json")
     routes=load("route-discovery.json")
     previews=load("tour-previews.json")
+    # Oracle now publishes a fast 8k index plus verified 4k-row JSON parts.
+    # Validate *all* parts before comparing official price/booking counts.
+    shards=previews.get("shards",[])
+    require(isinstance(shards,list) and len(shards)<=13,"unsafe shard manifest")
+    for i,meta in enumerate(shards,1):
+        name="tour-previews-shards/part-"+format(i,"03d")+".json"
+        require(isinstance(meta,dict) and meta.get("path")==name and
+                type(meta.get("count")) is int and 0<meta["count"]<=4000 and
+                isinstance(meta.get("sha256"),str) and
+                re.fullmatch(r"[a-f0-9]{64}",meta["sha256"]),
+                "invalid catalog shard metadata")
+        path=ROOT/name
+        require(path.is_file() and not path.is_symlink() and
+                path.stat().st_size<=4_000_000,"invalid catalog shard file")
+        payload=json.loads(path.read_text(encoding="utf-8"))
+        rows=payload.get("previews")
+        require(payload.get("schema")=="jamaica.tour-preview-shard.v1" and
+                payload.get("bookable") is False and
+                payload.get("quote_verified") is False and
+                payload.get("availability_verified") is False and
+                payload.get("refreshed_at_utc")==previews.get("refreshed_at_utc") and
+                isinstance(rows,list) and len(rows)==meta["count"],
+                "stale or invalid shard contents")
+        digest=hashlib.sha256(json.dumps(rows,ensure_ascii=False,
+            sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
+        require(digest==meta["sha256"],"shard digest mismatch")
+        previews["previews"].extend(rows)
+    require(len(previews.get("previews",[]))<=60_000,"publication limit exceeded")
+    if "total_published_previews" in previews:
+        require(previews["total_published_previews"]==len(previews["previews"]),
+                "catalog total does not match published shards")
     config=load("checkout-config.json")
     require(directory.get("schema")=="jamaica.destination-directory.v1","directory schema")
     require(directory.get("total_countries")==251,"countries missing")
