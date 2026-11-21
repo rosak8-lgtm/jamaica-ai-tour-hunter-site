@@ -61,6 +61,18 @@ def plain(value):
     p=PlainText();p.feed(str(value or ""))
     return " ".join(" ".join(p.parts).split())[:140]
 
+def valid_evidence_url(raw):
+    if not isinstance(raw,str) or len(raw)>1200:
+        return False
+    try:
+        x=urllib.parse.urlsplit(raw)
+        return (x.scheme=="https" and
+                bool(x.hostname) and "." in x.hostname and
+                not x.username and not x.password and x.port is None and
+                not x.fragment)
+    except ValueError:
+        return False
+
 def safe_file(name):
     if not isinstance(name,str) or not IMAGE.fullmatch(name) or ".." in name:
         return None
@@ -92,8 +104,7 @@ def check_identities(data,directory):
             not QID.fullmatch(str(qid)) or qid in used or
             COUNTRIES.get(item.get("country"))!=item.get("wikidata_country_qid") or
             item.get("identity_reviewed") is not True or
-            not isinstance(item.get("review_reference"),str) or
-            not item["review_reference"].startswith("https://") or
+            not valid_evidence_url(item.get("review_reference")) or
             not isinstance(item.get("reviewed_at"),str)):
             raise Hold("HOTEL_WIKIDATA_IDENTITY_NOT_VERIFIED")
         try:dt=date.fromisoformat(item["reviewed_at"])
@@ -106,8 +117,7 @@ def check_identities(data,directory):
             if (not isinstance(photo,dict) or not safe_file(photo.get("file")) or
                 photo.get("kind") not in ("hotel_exterior","hotel_public_area") or
                 photo.get("property_photo_reviewed") is not True or
-                not isinstance(photo.get("review_reference"),str) or
-                not photo["review_reference"].startswith("https://")):
+                not valid_evidence_url(photo.get("review_reference"))):
                 raise Hold("UNVERIFIED_EXTRA_PROPERTY_PHOTO")
         used.add(qid);valid[hotel_id]=item
     return valid
