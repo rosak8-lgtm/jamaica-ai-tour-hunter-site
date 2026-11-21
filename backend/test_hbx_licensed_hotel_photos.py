@@ -61,6 +61,22 @@ class Tests(unittest.TestCase):
         self.assertNotIn("HBX_API_SECRET",serial)
         self.assertNotIn("HBX_API_KEY",serial)
 
+ def test_evaluation_key_is_never_accepted_for_production(self):
+    for env in (
+      {"HBX_API_KEY":"abc-production-key","HBX_API_SECRET":"abc-production-secret",
+       "HBX_API_ENV":"TEST","HBX_LIVE_CONTENT_RIGHTS_CONFIRMED":"yes"},
+      {"HBX_API_KEY":"abc-production-key","HBX_API_SECRET":"abc-production-secret",
+       "HBX_API_ENV":"PRODUCTION","HBX_LIVE_CONTENT_RIGHTS_CONFIRMED":"no"},
+      {"HBX_API_KEY":"abc-production-key","HBX_API_SECRET":"abc-production-secret",
+       "HBX_API_ENV":"EVALUATION","HBX_LIVE_CONTENT_RIGHTS_CONFIRMED":"yes"},
+      {},
+    ):
+        with self.assertRaises(hbx.MediaHold):
+            hbx.require_production_environment(env)
+    hbx.require_production_environment({
+      "HBX_API_KEY":"abc-production-key","HBX_API_SECRET":"abc-production-secret",
+      "HBX_API_ENV":"PRODUCTION","HBX_LIVE_CONTENT_RIGHTS_CONFIRMED":"yes"})
+
  def test_no_publication_rights_fails_closed(self):
     for key,value in (
         ("commercial_publication_allowed",False),
