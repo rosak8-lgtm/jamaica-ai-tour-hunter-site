@@ -48,7 +48,7 @@ def main():
     root=pages["index.html"][1]
     for key in ("tourSearchForm","departure","destination","dateFrom","nights",
                 "adults","kids","budget","hotelSearch","offerCards",
-                "previewCards","sourceDetails","countryDatalist","routeCards","noOffers"):
+                "previewCards","sourceDetails","countryDatalist","hotelDirectoryDisclosure","noOffers"):
         require(root.ids.get(key)==1,"MISSING_UI_ID_"+key)
     for key in ("heading","facts","bookingStatus","hotelLink","alternatives"):
         require(pages["preview.html"][1].ids.get(key)==1,"MISSING_PREVIEW_ID_"+key)
@@ -63,6 +63,14 @@ def main():
     require("v1/checkout/prepare" not in pages["checkout.html"][0],
             "UNSAFE_LEGACY_PAYMENT_PATH")
     main_src=pages["index.html"][0]
+    require('id="routes"' not in main_src and
+            'id="routeCards"' not in main_src and
+            'id="routeCountryChips"' not in main_src and
+            'loadRouteDiscovery();' not in main_src,
+            "NOISY_ROUTE_DIRECTORY_ON_HOMEPAGE")
+    require('id="hotelDirectoryDisclosure"' in main_src and
+            'openHotelDirectory()' in main_src,
+            "OPTIONAL_HOTEL_DIRECTORY_MISSING")
     require('window.jamaicaUpdatePreviews()' in main_src and
             'form.addEventListener("submit"' in main_src,
             "SEARCH_DOES_NOT_UPDATE_TOURS")

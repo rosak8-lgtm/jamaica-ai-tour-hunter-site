@@ -24,6 +24,17 @@ for(const filter of ['filterCountry','filterResort','filterNights','filterHotel'
 }
 assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSidebar()'),
   'Search sidebar cannot be a decorative mockup');
+assert.ok(page.includes('if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({'),
+ 'The selected country must survive an empty current feed');
+assert.ok(page.includes('id="budgetNotice"')&&page.includes('budgetNotice").textContent=budgetMessage'),
+ 'Traveler must be informed when a budget cannot be applied');
+assert.ok(page.includes('referencePrice(x)!==null&&')&&page.includes('referencePrice(x)<=budget*2'),
+ 'A selected budget may only match known prices for two adults');
+assert.ok(!page.includes('!budget||!partyTwoAdults||referencePrice(x)===null'),
+ 'Unknown-price offers must not masquerade as within budget');
+assert.ok(!page.includes('онлайн-бронирование туров</title>'),
+ 'SEO must not promise unconfigured booking');
+
 assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
 assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
 assert.ok(page.includes('Цена пока не подтверждена;'),
@@ -355,13 +366,18 @@ const previewScripts=[...previewDetail.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<
 assert.equal(previewScripts.length,1);
 new vm.Script(previewScripts[0],{filename:'preview-details.js'});
 
-assert.ok(page.includes('id="routeCards"'));
-assert.ok(page.includes('id="routeCountryChips"'));
-assert.ok(page.includes('function renderRouteCountryChips()'));
-assert.ok(page.includes('renderRouteCountryChips();'));
-
-assert.ok(page.includes('route.html?id='));
-assert.ok(page.includes('route-discovery.json'));
+// The route data still powers deep links, but its huge, non-bookable directory
+// must not crowd the customer search page or create an extra network request.
+assert.ok(!page.includes('id="routes"'),'Unbookable route wall must not be public');
+assert.ok(!page.includes('id="routeCards"'),'No route cards under search results');
+assert.ok(!page.includes('id="routeCountryChips"'),'No route-country chips under the offers');
+assert.ok(!page.includes('loadRouteDiscovery();'),'Homepage must not fetch route directory');
+assert.ok(page.includes('id="hotelDirectoryDisclosure"'),
+  'Hotel reference remains reachable in an optional expandable section');
+assert.ok(page.includes('if(location.hash==="#hotels")openHotelDirectory()'),
+  'Direct hotel directory deep links must still work');
+assert.ok(!page.includes('loadHotelReference();\nlet previewRecords='),
+  'Full hotel reference must not load by default');
 assert.ok(routePage.includes('destination-directory.json'));
 assert.ok(routePage.includes('id="routePreviewSection"'));
 assert.ok(routePage.includes('id="routePreviewList"'));

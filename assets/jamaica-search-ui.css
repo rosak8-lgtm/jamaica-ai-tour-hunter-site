@@ -109,9 +109,20 @@ body{background:var(--bg);color:var(--ink)}
 #previewCards .empty{width:100%;text-align:center}
 .sourceDetails{margin-top:15px;background:#fff;border-color:#e7e2ed}
 #previewMore{margin:19px auto 9px}
-#routes,#hotels{background:#fff}
-#routes{padding-top:45px}
-#hotels{background:#faf9fc;border-top:1px solid #eae8ee}
+#hotels{background:#faf9fc;border-top:1px solid #eae8ee;padding:38px 0 45px}
+.hotelDirectoryDisclosure{background:#fff;border:1px solid #e4dfe9;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px #321a4b0b}
+.hotelDirectorySummary{display:flex;justify-content:space-between;align-items:center;gap:22px;padding:24px 27px;cursor:pointer;list-style:none}
+.hotelDirectorySummary::-webkit-details-marker{display:none}
+.hotelDirectorySummaryText{display:flex;flex-direction:column;gap:6px;min-width:0}
+.hotelDirectorySummaryText strong{font-size:clamp(21px,2.2vw,27px);line-height:1.2;color:var(--purple)}
+.hotelDirectorySummaryText .sectionTag{margin:0}
+.hotelDirectorySummaryText .micro{font-size:13px;line-height:1.6}
+.hotelDirectorySummaryAction{flex-shrink:0;padding:10px 14px;border:1px solid #cbdeda;border-radius:10px;color:var(--teal);font-weight:800;font-size:13px}
+.hotelDirectoryDisclosure[open] .hotelDirectorySummaryAction{background:#e9f6f4}
+.hotelDirectoryBody{padding:0 27px 25px}
+.hotelDirectoryBody .sectionHead{margin:8px 0 18px}
+.hotelDirectoryBody .sectionHead h2{font-size:23px}
+@media(max-width:580px){.hotelDirectorySummary{align-items:flex-start;flex-direction:column;padding:19px;gap:12px}.hotelDirectoryBody{padding:0 17px 18px}.hotelDirectorySummaryAction{align-self:flex-start}}
 #hotelGuideCards .destination{min-height:185px}
 #how{background:#fff}
 .finalCta{border-radius:20px;box-shadow:0 14px 45px #36225a22}
