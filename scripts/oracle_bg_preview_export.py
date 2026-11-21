@@ -21,10 +21,10 @@ import oracle_bg_route_sync as bg
 import oracle_bg_price_detail_probe as detail
 import tour_price_reference as price_ref
 
-MAX_ROWS = 8000
+MAX_ROWS = 60000
 MAX_RESPONSE_ROWS = 25000
 MAX_COUNTRIES = 120
-MAX_PER_COUNTRY = 2800
+MAX_PER_COUNTRY = 12000
 MAX_LISTS_PER_COUNTRY = 5
 EXTRA_DISCOVERY_BATCH = 8
 PRIORITY_ADDITIONAL_COUNTRIES = ("Китай","Вьетнам")

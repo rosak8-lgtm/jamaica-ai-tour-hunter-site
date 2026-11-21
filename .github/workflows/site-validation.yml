@@ -4,11 +4,13 @@ on:
     branches: [main]
     paths-ignore:
       - tour-previews.json
+      - 'tour-previews-shards/**'
       - destination-directory.json
   pull_request:
     branches: [main]
     paths-ignore:
       - tour-previews.json
+      - 'tour-previews-shards/**'
       - destination-directory.json
   workflow_dispatch:
 permissions:
@@ -19,7 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate destinations, public wording and JavaScript
-        run: node scripts/test-site.mjs
+        run: |
+          node scripts/test-site.mjs
+          node scripts/test-catalog-shards.mjs
       - name: Validate current public tour feed and multi-country customer path without Node
         run: python3 -B scripts/site_no_node_qa.py
       - name: Verify server-side quote, booking and payment state machine

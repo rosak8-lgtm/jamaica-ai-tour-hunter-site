@@ -27,8 +27,12 @@ KNOWN_HOSTS = Path.home()/".ssh"/"jamaica_catalog_known_hosts"
 # its verified GitHub clone, so future catalog fixes apply automatically.
 SCRIPTS = CHECKOUT/"scripts"
 DISCOVERY_STATE = RUNROOT/"extra_irkutsk_source_countries.json"
-MAX_BYTES = 8_000_000
-MAX_ITEMS = 8_000
+MAX_BYTES = 45_000_000
+MAX_ITEMS = 60_000
+ROOT_ITEMS = 8_000
+SHARD_ITEMS = 4_000
+MAX_SHARDS = 13
+SHARD_FOLDER = "tour-previews-shards"
 HEARTBEAT = timedelta(minutes=30)
 MAX_DIRECTORY_AGE = timedelta(days=7)
 DIRECTORY_REFRESH = timedelta(hours=24)
@@ -159,6 +163,9 @@ def comparable(feed):
     # price, hotel, date, room, stop or source coverage changes.
     return {
         "previews":feed.get("previews"),
+        "shards":feed.get("shards",[]),
+        "total_published_previews":feed.get("total_published_previews",len(feed.get("previews",[]))),
+        "truncated_to_public_limit":feed.get("truncated_to_public_limit"),
         "countries_status":feed.get("countries_status"),
     }
 
@@ -170,6 +177,39 @@ def needs_publish(previous,current,*,now=None):
         return True
     prev_time=timestamp(previous.get("refreshed_at_utc"))
     return not prev_time or now-prev_time>=HEARTBEAT
+
+def make_sharded_catalog(feed):
+    """Publish ≤8k fast initial rows plus bounded separate source-backed shards.
+
+    The root JSON is compatible with old readers. Manifest hashes are based
+    on *rows alone*, so timestamp-only server probes do not create commits
+    every five minutes. All assets are staged in ONE Git commit.
+    """
+    rows=feed.get("previews")
+    if not isinstance(rows,list) or not 0<len(rows)<=MAX_ITEMS:
+        raise CatalogHold("CATALOG_SHARD_SOURCE_SIZE_INVALID")
+    root=dict(feed)
+    root["previews"]=rows[:ROOT_ITEMS]
+    root["total_published_previews"]=len(rows)
+    manifest=[]
+    chunks={}
+    for i,offset in enumerate(range(ROOT_ITEMS,len(rows),SHARD_ITEMS),start=1):
+        if i>MAX_SHARDS:
+            raise CatalogHold("TOO_MANY_PUBLIC_SHARDS")
+        part=rows[offset:offset+SHARD_ITEMS]
+        path=f"{SHARD_FOLDER}/part-{i:03d}.json"
+        signature=hashlib.sha256(json.dumps(part,ensure_ascii=False,
+            sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
+        manifest.append({"path":path,"count":len(part),"sha256":signature})
+        chunks[path]={"schema":"jamaica.tour-preview-shard.v1",
+            "refreshed_at_utc":feed["refreshed_at_utc"],
+            "bookable":False,"quote_verified":False,
+            "availability_verified":False,"previews":part}
+    root["shards"]=manifest
+    if sum(item["count"] for item in manifest)+len(root["previews"])!=len(rows):
+        raise CatalogHold("SHARD_COUNTS_MISMATCH")
+    return root,chunks
+
 
 def update_discovered_source_countries(feed,directory,*,state_path=DISCOVERY_STATE):
     """Promote any actual Irkutsk price-list country to the 5-minute core scan.
@@ -220,6 +260,8 @@ def publish(env):
         raise CatalogHold("GENERATED_FEED_INVALID_SIZE")
     new=json.loads(generated.read_text(encoding="utf-8"))
     count=validate(new,directory)
+    public_root,public_chunks=make_sharded_catalog(new)
+    validate(public_root,directory)
     promoted=update_discovered_source_countries(new,directory)
     log("JAMAICA_SOURCE_COUNTRIES_TOTAL",new.get("source_scope",{}).get("source_tour_countries","UNKNOWN"))
     log("JAMAICA_OTHER_COUNTRIES_PROBED",new.get("source_scope",{}).get("other_countries_probed_this_cycle","UNKNOWN"))
@@ -227,15 +269,41 @@ def publish(env):
     log("JAMAICA_PUBLIC_PREVIEWS_TRUNCATED",new.get("truncated_to_public_limit",False))
     log("JAMAICA_ORACLE_COUNTRY_COUNT",len({x["country"] for x in new["previews"]}))
     log("JAMAICA_ORACLE_TOUR_COUNT",count)
+    log("JAMAICA_PUBLIC_SHARD_COUNT",len(public_chunks))
     log("JAMAICA_ORACLE_INDICATIVE_RUB_COUNT",sum(type(x["price_reference_rub"]) is int for x in new["previews"]))
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
-    if not changed_dir and not needs_publish(previous,new):
+    if not changed_dir and not needs_publish(previous,public_root):
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
-    # Write only generated PUBLIC source-backed JSON after strict validation.
-    feed_path.write_bytes(generated.read_bytes())
-    run(["git","add","--","tour-previews.json","destination-directory.json"],cwd=CHECKOUT,env=env)
+    # Keep the legacy fast index small; publish the remainder in verifiable
+    # sibling chunks. All URLs are pinned filenames from our own generator.
+    target_folder=CHECKOUT/SHARD_FOLDER
+    if target_folder.is_symlink():
+        raise CatalogHold("PUBLIC_SHARD_FOLDER_SYMLINK")
+    target_folder.mkdir(exist_ok=True)
+    expected=set()
+    aggregate_size=0
+    for rel,chunk in public_chunks.items():
+        path=CHECKOUT/rel
+        if path.is_symlink() or path.parent!=target_folder:
+            raise CatalogHold("UNSAFE_SHARD_OUTPUT_PATH")
+        data=json.dumps(chunk,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
+        if len(data)>4_000_000:
+            raise CatalogHold("SHARD_TOO_LARGE")
+        aggregate_size+=len(data)
+        path.write_bytes(data)
+        expected.add(path.name)
+    for stale in target_folder.glob("part-*.json"):
+        if stale.name not in expected:
+            if stale.is_symlink():raise CatalogHold("STALE_SHARD_SYMLINK")
+            stale.unlink()
+    root_bytes=json.dumps(public_root,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
+    if len(root_bytes)>8_000_000 or aggregate_size+len(root_bytes)>MAX_BYTES:
+        raise CatalogHold("PUBLIC_BUNDLE_TOO_LARGE")
+    feed_path.write_bytes(root_bytes)
+    run(["git","add","-A","--","tour-previews.json","destination-directory.json",SHARD_FOLDER],
+        cwd=CHECKOUT,env=env)
     staged=run(["git","diff","--cached","--quiet"],cwd=CHECKOUT,env=env,check=False)
     if staged.returncode==0:
         log("JAMAICA_ORACLE_PUBLISH","NOTHING_TO_COMMIT")
