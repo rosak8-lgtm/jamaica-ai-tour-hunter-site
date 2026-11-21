@@ -60,6 +60,20 @@ def main():
                   lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
                 page.route("https://upload.wikimedia.org/**",
                   lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
+                # Search-card country scenes are Commons-licensed and clearly
+                # labeled as *destination* photos, never hotel rooms/facades.
+                mock_scene={"query":{"pages":{"1":{
+                  "title":"File:Thailand blue coastal landscape.jpg",
+                  "imageinfo":[{
+                   "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Thailand_landscape.jpg/720px-Thailand_landscape.jpg",
+                   "descriptionurl":"https://commons.wikimedia.org/wiki/File:Thailand_blue_coastal_landscape.jpg",
+                   "extmetadata":{"LicenseShortName":{"value":"CC BY-SA 4.0"},
+                                  "Artist":{"value":"Licensed test photographer"}}}
+                  ]}}}}
+                page.route("https://commons.wikimedia.org/w/api.php?*",
+                  lambda route: route.fulfill(status=200,content_type="application/json",
+                                              body=json.dumps(mock_scene)))
+
                 errors=[]
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
@@ -78,6 +92,18 @@ def main():
                 first30=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 shown={text.split(" · ")[0] for text in first30}
                 ensure(len(shown)>=3,"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
+                ensure(page.locator("#previewCards .previewMedia").count()>0,
+                       "VISUAL_TOUR_CARD_MISSING")
+                if counts.get("Таиланд",0)>0:
+                    thai_cards=page.locator("#previewCards article.offerCard").filter(has_text="Таиланд ·")
+                    ensure(thai_cards.count()>0,"THAILAND_CARD_MISSING")
+                    thai_cards.first.locator(".previewMedia img").first.wait_for(timeout=20000)
+                    ensure("CC BY" in thai_cards.first.locator(".mediaSourceCredit").inner_text(),
+                           "THAILAND_LICENSE_CREDIT_MISSING")
+                    ensure(thai_cards.first.locator(".mediaSourceCredit").get_attribute("href").startswith(
+                            "https://commons.wikimedia.org/wiki/File:"),
+                           "CARD_PHOTO_SOURCE_NOT_COMMONS")
+
                 # Price sort must order known two-adult references, not departure dates.
                 page.locator("#previewSort").select_option("price")
                 texts=page.locator("#previewCards article.offerCard strong").all_text_contents()
