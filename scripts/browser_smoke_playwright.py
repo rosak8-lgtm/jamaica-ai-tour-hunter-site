@@ -175,6 +175,27 @@ def main():
                 ensure(page.locator("#reviewSubmit").is_disabled(),
                        "REVIEW_SUBMISSION_ENABLED_WITHOUT_HTTPS_BACKEND")
                 print("REAL_TOUR_TO_HOTEL_PHOTOS_DESCRIPTION_REVIEWS=PASS")
+
+                # Regression: the hotel shown in a real customer screenshot
+                # must display its VERIFIED supplier facts and attributed
+                # historical views, not only a placeholder or name.
+                page.goto(base+"hotel.html?id=102610001140",wait_until="domcontentloaded")
+                page.wait_for_function(
+                   "()=>document.getElementById('description').textContent.includes('Adriatic Palace Pattaya') && "+
+                   "document.getElementById('curatedRooms').textContent.includes('Panorama')",
+                   timeout=15000)
+                ensure("Пратамнак" in page.locator("#description").inner_text(),
+                       "ADRIATIC_HOTEL_DETAIL_STILL_GENERIC")
+                ensure(page.locator("#facts .fact").count()>=6,
+                       "ADRIATIC_HOTEL_MISSING_VERIFIED_FEATURES")
+                page.locator("#gallery figure.photo").first.wait_for(timeout=12000)
+                ensure(page.locator("#gallery figure.photo").count()>=2,
+                       "ADRIATIC_LICENSED_HISTORICAL_PHOTOS_MISSING")
+                ensure("2010" in page.locator("#photoStatus").inner_text(),
+                       "ADRIATIC_HISTORICAL_PHOTO_NOT_EXPLAINED")
+                ensure("CC BY-SA 3.0" in page.locator("#gallery").inner_text(),
+                       "ADRIATIC_PHOTO_CREDITS_MISSING")
+                print("ADRIATIC_PATTAYA_VERIFIED_DESCRIPTION_AND_LICENSED_VIEWS=PASS")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
