@@ -14,23 +14,38 @@
 
 API-key виден на предоставленном скриншоте. Перед боевым применением рекомендована ротация. Не отправляйте API Secret или ключ в чат, не вставляйте их в историю команд и не сохраняйте в GitHub.
 
-Откройте терминал в актуальном клоне JAMAICA и выполните:
+Команду можно выполнять из любого каталога, в том числе из `~/Загрузки`: она **сама создаёт отдельную копию репозитория**, поэтому ошибка `fatal: не найден git репозиторий` больше не возникает. Никакие существующие каталоги JAMAICA не удаляются.
 
 ```bash
 (
 set -Eeuo pipefail
 umask 077
-git pull --ff-only
-read -r -s -p 'HBX TEST Api-key: ' HBX_TEST_API_KEY
+
+REPO="https://github.com/rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
+WORK="$HOME/Загрузки/JAMAICA_HBX_SAFE_TEST"
+
+if [[ -d "$WORK/.git" ]]; then
+  FOUND="$(git -C "$WORK" remote get-url origin)"
+  [[ "$FOUND" == "$REPO" ]] || { echo "STOP_WRONG_GIT_REMOTE"; exit 2; }
+  git -C "$WORK" pull --ff-only
+elif [[ -e "$WORK" ]]; then
+  echo "STOP_WORKDIR_ALREADY_EXISTS_NOT_GIT_REPO"
+  exit 2
+else
+  git clone --depth 1 "$REPO" "$WORK"
+fi
+
+cd "$WORK"
+read -r -s -p "HBX TEST Api-key: " HBX_TEST_API_KEY
 printf '\n'
-read -r -s -p 'HBX TEST API Secret: ' HBX_TEST_API_SECRET
+read -r -s -p "HBX TEST API Secret: " HBX_TEST_API_SECRET
 printf '\n'
 export HBX_TEST_API_KEY HBX_TEST_API_SECRET
 python3 -B scripts/hbx_test_probe.py
+unset HBX_TEST_API_KEY HBX_TEST_API_SECRET
 )
 ```
 
-Ввод скрыт и не попадает в историю команд. Используйте только именно тестовые Hotel key + Secret, выданные одним аккаунтом. Если Secret на странице сразу не виден, откройте карточку Hotel API Key и документацию HBX.
 
 При успехе появятся строки:
 
