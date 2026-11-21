@@ -120,7 +120,22 @@ assert.ok(guide.hotels.every(x=>!('observed_amount_rub' in x)&&!('operator' in x
 assert.ok(!/WhatsApp|wa\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(hotelPage));
 assert.ok(page.includes('id="hotelGuideSearch"')&&page.includes('id="hotelGuideCards"'));
 assert.ok(page.includes('hotel.html?id='));
+assert.ok(page.includes('id="searchResultsCount"'),'Main results count must reflect real tour-source records');
+assert.ok(page.indexOf('id="previewCards"')<page.indexOf('id="offerCards"'),
+          'Actual price-list tour results must appear BEFORE zero confirmed-bookings widget');
+assert.ok(page.includes('Подробнее об отеле, фото и отзывы'));
 assert.ok(hotelPage.includes('hotel-reference.json'));
+for(const id of ['gallery','description','rooms','trips','reviewList','reviewForm','reviewSubmit','reviewNotice']){
+ assert.ok(hotelPage.includes('id="'+id+'"'),'Hotel page missing: '+id);
+}
+assert.ok(hotelPage.includes('commons.wikimedia.org/w/api.php'));
+assert.ok(hotelPage.includes('upload.wikimedia.org'));
+assert.ok(hotelPage.includes('licenseOK('),'Hotel photographs must have an eligible source license');
+assert.ok(hotelPage.includes('tour-previews.json'),'Hotel detail must show real date and room references');
+assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend config required');
+const reviewsConfig=JSON.parse(fs.readFileSync('hotel-reviews-config.json','utf8'));
+assert.equal(reviewsConfig.schema,'jamaica.hotel-reviews.v1');
+assert.equal(reviewsConfig.enabled,false,'Do not enable review POST until a real HTTPS backend exists');
 assert.ok(!hotelPage.includes('checkout.html?offer='));
 const hotelScripts=[...hotelPage.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(x=>x[1]).filter(x=>x.includes('(function(){'));
 assert.equal(hotelScripts.length,1);
