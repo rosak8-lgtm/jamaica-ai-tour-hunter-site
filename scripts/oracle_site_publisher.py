@@ -195,7 +195,7 @@ def update_discovered_source_countries(feed,directory,*,state_path=DISCOVERY_STA
     updated=sorted(names)[:40]
     if old!=updated:
         target=state_path.with_suffix(".tmp")
-        target.write_text(json.dumps(updated,ensure_ascii=False)+"\\n",encoding="utf-8")
+        target.write_text(json.dumps(updated,ensure_ascii=False)+"\n",encoding="utf-8")
         target.chmod(0o600)
         target.replace(state_path)
     return len(updated)
