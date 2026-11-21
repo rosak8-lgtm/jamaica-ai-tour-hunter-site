@@ -60,20 +60,7 @@ def main():
                   lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
                 page.route("https://upload.wikimedia.org/**",
                   lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
-                # Search-card country scenes are Commons-licensed and clearly
-                # labeled as *destination* photos, never hotel rooms/facades.
-                mock_scene={"query":{"pages":{"1":{
-                  "title":"File:Thailand blue coastal landscape.jpg",
-                  "imageinfo":[{
-                   "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Thailand_landscape.jpg/720px-Thailand_landscape.jpg",
-                   "descriptionurl":"https://commons.wikimedia.org/wiki/File:Thailand_blue_coastal_landscape.jpg",
-                   "extmetadata":{"LicenseShortName":{"value":"CC BY-SA 4.0"},
-                                  "Artist":{"value":"Licensed test photographer"}}}
-                  ]}}}}
-                page.route("https://commons.wikimedia.org/w/api.php?*",
-                  lambda route: route.fulfill(status=200,content_type="application/json",
-                                              body=json.dumps(mock_scene)))
-
+                # Hotel photos must be identity verified: no unrelated country scenery.
                 errors=[]
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
@@ -97,12 +84,12 @@ def main():
                 if counts.get("Таиланд",0)>0:
                     thai_cards=page.locator("#previewCards article.offerCard").filter(has_text="Таиланд ·")
                     ensure(thai_cards.count()>0,"THAILAND_CARD_MISSING")
-                    thai_cards.first.locator(".previewMedia img").first.wait_for(timeout=20000)
-                    ensure("CC BY" in thai_cards.first.locator(".mediaSourceCredit").inner_text(),
-                           "THAILAND_LICENSE_CREDIT_MISSING")
-                    ensure(thai_cards.first.locator(".mediaSourceCredit").get_attribute("href").startswith(
-                            "https://commons.wikimedia.org/wiki/File:"),
-                           "CARD_PHOTO_SOURCE_NOT_COMMONS")
+                    # Source catalog has no validated Thai hotel facades.
+                    ensure(thai_cards.first.locator(".previewMedia img").count()==0,
+                           "UNVERIFIED_THAI_HOTEL_PHOTO_WAS_SHOWN")
+                    ensure("фотография гостиницы" in
+                           thai_cards.first.locator(".previewScenePlaceholder").inner_text(),
+                           "HONEST_HOTEL_PLACEHOLDER_MISSING")
 
                 # Price sort must order known two-adult references, not departure dates.
                 page.locator("#previewSort").select_option("price")
@@ -248,9 +235,8 @@ def main():
                        "REVIEW_SUBMISSION_ENABLED_WITHOUT_HTTPS_BACKEND")
                 print("REAL_TOUR_TO_HOTEL_PHOTOS_DESCRIPTION_REVIEWS=PASS")
 
-                # Regression: the hotel shown in a real customer screenshot
-                # must display its VERIFIED supplier facts and attributed
-                # historical views, not only a placeholder or name.
+                # Supplier hotel descriptions remain, but historical views of a
+                # neighborhood and country scenery are NOT actual hotel photos.
                 page.goto(base+"hotel.html?id=102610001140",wait_until="domcontentloaded")
                 page.wait_for_function(
                    "()=>document.getElementById('description').textContent.includes('Adriatic Palace Pattaya') && "+
@@ -258,99 +244,46 @@ def main():
                    timeout=15000)
                 ensure("Пратамнак" in page.locator("#description").inner_text(),
                        "ADRIATIC_HOTEL_DETAIL_STILL_GENERIC")
-                ensure(page.locator("#facts .fact").count()>=6,
-                       "ADRIATIC_HOTEL_MISSING_VERIFIED_FEATURES")
-                page.locator("#gallery figure.photo").first.wait_for(timeout=12000)
-                ensure(page.locator("#gallery figure.photo").count()>=2,
-                       "ADRIATIC_LICENSED_HISTORICAL_PHOTOS_MISSING")
-                ensure("2010" in page.locator("#photoStatus").inner_text(),
-                       "ADRIATIC_HISTORICAL_PHOTO_NOT_EXPLAINED")
-                ensure("CC BY-SA 3.0" in page.locator("#gallery").inner_text(),
-                       "ADRIATIC_PHOTO_CREDITS_MISSING")
-                print("ADRIATIC_PATTAYA_VERIFIED_DESCRIPTION_AND_LICENSED_VIEWS=PASS")
+                page.wait_for_function(
+                  "()=>document.querySelector('#gallery .hero')!==null",timeout=12000)
+                ensure(page.locator("#gallery figure.photo").count()==0,
+                       "HISTORIC_SCENERY_WAS_LABELED_AS_PROPERTY_PHOTO")
+                ensure("Подтверждённые фотографии" in page.locator("#gallery").inner_text(),
+                       "HONEST_HOTEL_MEDIA_PLACEHOLDER_MISSING")
 
-                # Basaya has verified supplier facts but no permitted hotel
-                # photography. Mock an explicitly licensed *resort* photo:
-                # it must never be labeled as a photo of Basaya itself.
-                image_result={"query":{"pages":{"1":{
-                  "title":"File:Pattaya Beach licensed landscape.jpg",
-                  "imageinfo":[{
-                    "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Pattaya_Beach.jpg/640px-Pattaya_Beach.jpg",
-                    "descriptionurl":"https://commons.wikimedia.org/wiki/File:Pattaya_Beach_licensed_landscape.jpg",
-                    "extmetadata":{"LicenseShortName":{"value":"CC BY-SA 3.0"},
-                                   "Artist":{"value":"CC Test Photographer"}}}
-                  ]}}}}
-                page.route("https://commons.wikimedia.org/w/api.php?*",
-                  lambda route: route.fulfill(status=200,content_type="application/json",
-                                              body=json.dumps(image_result)))
                 page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
-                page.locator("#facts .fact").first.wait_for(timeout=15000)
-                page.wait_for_timeout(1600)
-                debug=page.evaluate("""() => ({
-                    title: document.getElementById('name')?.textContent,
-                    desc: document.getElementById('description')?.textContent.slice(0,220),
-                    rooms: document.getElementById('curatedRooms')?.textContent.slice(0,220),
-                    photos: document.getElementById('photoStatus')?.textContent.slice(0,300),
-                    gallery: document.getElementById('gallery')?.textContent.slice(0,240)
-                })""")
-                print("BASAYA_BROWSER_DIAGNOSTIC="+json.dumps(debug,ensure_ascii=False))
-                ensure("basaya beach" in str(debug["desc"]).lower() and
-                       "NEW STANDARD" in str(debug["rooms"]),
-                       "BASAYA_SOURCE_DETAIL_MISSING")
-                ensure("НЕ" in str(debug["photos"]),
-                       "BASAYA_RESORT_FALLBACK_MISSING")
-                ensure(page.locator("#facts .fact").count()>=6,
-                       "BASAYA_HOTEL_DESCRIPTION_NOT_ENRICHED")
-                ensure("НЕ фотография гостиницы" in page.locator("#gallery").inner_text(),
-                       "RESORT_PHOTO_MUST_NOT_PRETEND_TO_BE_A_BASAYA_HOTEL_PHOTO")
-                ensure("CC BY-SA 3.0" in page.locator("#gallery").inner_text(),
-                       "LICENSED_RESORT_PHOTO_CREDIT_MISSING")
-                print("BASAYA_HOTEL_DESCRIPTION_AND_HONEST_LICENSED_RESORT_PHOTOS=PASS")
+                page.wait_for_function(
+                  "()=>document.getElementById('description').textContent.toLowerCase().includes('basaya beach')",
+                  timeout=15000)
+                ensure("NEW STANDARD" in page.locator("#curatedRooms").inner_text(),
+                       "BASAYA_VERIFIED_ROOM_INFO_MISSING")
+                page.wait_for_function(
+                  "()=>document.querySelector('#gallery .hero')!==null",timeout=12000)
+                ensure(page.locator("#gallery img").count()==0,
+                       "BASAYA_MUST_NOT_GET_UNRELATED_RESORT_PHOTO")
+                print("BASAYA_AND_ADRIATIC_HOTEL_ONLY_PHOTO_POLICY_PASS")
 
-                # The Guangzhou hotel has three externally hosted original
-                # CC BY-SA 4.0 hotel photographs, verified on Commons.
                 page.goto(base+"hotel.html?id=102667206879",wait_until="domcontentloaded")
                 page.wait_for_function(
                   "()=>document.getElementById('description').textContent.includes('Asia International Hotel') && "+
-                  "document.getElementById('gallery').querySelectorAll('figure.photo').length===6",
+                  "document.getElementById('gallery').querySelectorAll('figure.photo').length===3",
                   timeout=18000)
-                ensure("Гуанчжоу" in page.locator("#location").inner_text(),
-                       "GUANGZHOU_HOTEL_ID_NOT_MATCHED")
-                ensure(page.locator("#gallery a").filter(has_text="CC BY-SA 4.0").count()==6,
-                       "GUANGZHOU_THREE_LICENSE_CREDITS_MISSING")
-                ensure(page.locator("#gallery img").count()==6,
-                       "GUANGZHOU_HOTEL_GALLERY_MISSING")
-                ensure(page.locator("#gallery").inner_text().count("Вид из гостиницы")==3,
-                       "GUANGZHOU_CITY_VIEWS_MISLABELED_AS_HOTEL_ROOMS")
-                print("GUANGZHOU_HOTEL_SIX_COMMONS_CC4_DIRECT_EXTERNAL_PHOTOS=PASS")
+                ensure(page.locator("#gallery a").filter(has_text="CC BY-SA 4.0").count()==3,
+                       "GUANGZHOU_LICENSED_FACADE_IMAGES_MISSING")
+                ensure("Вид из гостиницы" not in page.locator("#gallery").inner_text(),
+                       "GUANGZHOU_PANORAMAS_MUST_NOT_BE_MISTAKEN_FOR_HOTEL_FACADE")
 
-                # All verified hotel photos fail to load: no broken <img> should
-                # remain, and Guangzhou must have only separately labeled city views.
-                city_result={"query":{"pages":{"2":{
-                  "title":"File:Guangzhou skyline panorama.jpg",
-                  "imageinfo":[{
-                    "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/guangzhou.jpg/800px-guangzhou.jpg",
-                    "descriptionurl":"https://commons.wikimedia.org/wiki/File:Guangzhou_skyline_panorama.jpg",
-                    "extmetadata":{"LicenseShortName":{"value":"CC BY 4.0"},
-                                   "Artist":{"value":"Test city photographer"}}}
-                  ]}}}}
-                page.route("https://commons.wikimedia.org/w/api.php?*",
-                  lambda route: route.fulfill(status=200,content_type="application/json",
-                                              body=json.dumps(city_result)))
+                # When the actual hotel images fail, do not replace them
+                # with photos of Guangzhou skyline or unrelated hotels.
                 page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
                   lambda route: route.abort("failed"))
                 page.goto(base+"hotel.html?id=102667206879",wait_until="domcontentloaded")
                 page.locator("#gallery").scroll_into_view_if_needed()
                 page.wait_for_function(
-                  "()=>document.querySelector('#gallery figure[data-photo-source=commons-destination]')!==null",
-                  timeout=22000)
-                gallery_text=page.locator("#gallery").inner_text()
-                ensure("НЕ фотография гостиницы" in gallery_text,
-                       "BROKEN_GUANGZHOU_HOTEL_PHOTO_WAS_MISREPRESENTED_AS_REAL")
-                ensure(page.locator('#gallery img[src*="Special:FilePath"]').count()==0,
-                       "BROKEN_EXTERNAL_HOTEL_PHOTO_WAS_NOT_REMOVED")
-                print("GUANGZHOU_BROKEN_CDN_FALLS_BACK_TO_LABELED_CITY_PHOTOS=PASS")
-
+                  "()=>document.querySelector('#gallery .hero')!==null",timeout=20000)
+                ensure(page.locator("#gallery img").count()==0,
+                       "BROKEN_HOTEL_PHOTOS_WERE_NOT_CLEARED")
+                print("GUANGZHOU_HOTEL_EXTERIOR_ONLY_AND_FAIL_CLOSED_PASS")
 
                 # Confirm a commercially authorized external hotel's image
                 # can be displayed by URL without downloading to Oracle.
