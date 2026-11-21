@@ -36,7 +36,12 @@ class Tests(unittest.TestCase):
     def test_one_request_only_and_signed_headers(self):
         opener=Opener(FakeResponse(SAMPLE))
         result=probe.check(key=KEY,secret=SECRET,opener=opener,now=123456)
-        self.assertEqual(result,{"hotels":2,"photo_paths":1})
+        self.assertEqual(result["hotels"],2)
+        self.assertEqual(result["photo_paths"],1)
+        self.assertEqual(result["hotels_with_photos"],1)
+        self.assertEqual(result["distinct_paths"],1)
+        self.assertEqual(result["main_photo_candidates"],0)
+        self.assertEqual(result["country_counts"],{"TH":1})
         self.assertEqual(len(opener.requests),1)
         req,timeout=opener.requests[0]
         self.assertEqual(req.full_url,
@@ -64,9 +69,30 @@ class Tests(unittest.TestCase):
             with self.assertRaises(probe.ProbeHold):
                 probe.parse_summary(raw)
 
+    def test_photographic_type_distribution_is_aggregate_only(self):
+        sample={"hotels":{"hotels":[
+            {"countryCode":"TH","images":[
+                {"path":"00/foo.jpg","imageTypeCode":"GEN","visualOrder":0},
+                {"path":"00/foo.jpg","type":{"code":"HAB"},"visualOrder":"15"},
+                {"path":"00/rest.jpg","type":{"code":"RES"},"visualOrder":"5"}
+            ]},
+            {"countryCode":"CN","images":[]}
+        ]}}
+        result=probe.parse_summary(json.dumps(sample).encode())
+        self.assertEqual(result["hotels"],2)
+        self.assertEqual(result["photo_paths"],3)
+        self.assertEqual(result["distinct_paths"],2)
+        self.assertEqual(result["main_photo_candidates"],1)
+        self.assertEqual(result["image_type_counts"],{"GEN":1,"HAB":1,"RES":1})
+        self.assertEqual(result["country_counts"],{"TH":1,"CN":1})
+        self.assertNotIn("foo.jpg",repr(result))
+        self.assertNotIn("rest.jpg",repr(result))
+
     def test_image_details_never_returned_or_downloaded(self):
         result=probe.parse_summary(SAMPLE)
-        self.assertEqual(sorted(result),["hotels","photo_paths"])
+        self.assertEqual(sorted(result),sorted([
+             "hotels","photo_paths","hotels_with_photos","distinct_paths",
+             "main_photo_candidates","image_type_counts","country_counts"]))
         self.assertEqual(result["photo_paths"],1)
         source=(ROOT/"scripts"/"hbx_test_probe.py").read_text(encoding="utf-8")
         self.assertNotIn("hotelbeds.com/giata/",source)
