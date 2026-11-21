@@ -1,5 +1,7 @@
 # JAMAICA — подключение лицензированного фотофида гостиниц (HBX/Hotelbeds)
 
+**Новый тестовый ключ «HOTELBEDS SPAIN — PRUEBAS» не является LIVE-доступом.** Для него используйте безопасную инструкцию [HBX_EVALUATION_TEST_RU.md](HBX_EVALUATION_TEST_RU.md) и `scripts/hbx_test_probe.py` (1 GET к api.test.hotelbeds.com, без публикации и покупки). Указанные ниже команды — только после получения настоящих LIVE credentials и разрешения на коммерческие изображения.
+
 **Что подключено технически:** скрипт `scripts/hbx_licensed_hotel_photos.py` умеет получать официальные метаданные гостиниц по Hotelbeds Content API, сопоставлять их с каталогом JAMAICA по подтверждённой таблице ID и публиковать прямые HTTPS-ссылки из `photos.hotelbeds.com`, **не скачивая сами фотографии на Oracle**.
 
 **Почему сейчас часть отелей без фотографий:** для коммерческого показа нужен отдельный договор с HBX Group (или с другим правообладателем), API Key/Secret и таблица точных соответствий `JAMAICA id -> Hotelbeds code`. Существующий доступ к выгрузке цен Библио-Глобуса не предоставил эти права. До получения прав публичный `hotel-media-feed/index.json` правильно содержит ноль гостиниц.
@@ -47,8 +49,10 @@
 
 ```bash
 umask 077
-export HBX_API_KEY='...'    # взять из закрытого хранилища/EnvironmentFile
-export HBX_API_SECRET='...' # никогда не вставлять в публичные логи
+read -r -s -p 'HBX LIVE API Key: ' HBX_API_KEY; printf '\n'
+read -r -s -p 'HBX LIVE API Secret: ' HBX_API_SECRET; printf '\n'
+export HBX_API_KEY HBX_API_SECRET
+export HBX_API_ENV=PRODUCTION HBX_LIVE_CONTENT_RIGHTS_CONFIRMED=yes
 python3 -B scripts/hbx_licensed_hotel_photos.py \
   --directory destination-directory.json \
   --crosswalk "$HOME/.config/jamaica-hbx/crosswalk.json" \
@@ -67,7 +71,7 @@ chmod 600 "$HOME/.config/jamaica-hbx/grant.json" \
           "$HOME/.config/jamaica-hbx/crosswalk.json"
 ```
 
-Создать приватный `$HOME/.config/jamaica-hbx/credentials.env` со строками `HBX_API_KEY=<реальный ключ>` и `HBX_API_SECRET=<реальный секрет>`. Файл должен иметь режим `600`, каталог — `700`. **Никогда не помещать содержимое в GitHub, логи, переписку или публичный HTML.**
+Создать приватный `$HOME/.config/jamaica-hbx/credentials.env` со строками `HBX_API_KEY=<действующий LIVE ключ>`, `HBX_API_SECRET=<его LIVE секрет>`, `HBX_API_ENV=PRODUCTION` и `HBX_LIVE_CONTENT_RIGHTS_CONFIRMED=yes`. **Evaluation/PRUEBAS ключ здесь запрещён.** Файл должен иметь режим `600`, каталог — `700`. **Никогда не помещать содержимое в GitHub, логи, переписку или публичный HTML.**
 
 После этого (на Oracle, от пользователя `ubuntu`), если актуальный Git checkout уже установлен:
 
