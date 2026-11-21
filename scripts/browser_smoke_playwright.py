@@ -149,6 +149,32 @@ def main():
                     ensure("нет подтверждённых" in page.locator("#previewCards").inner_text(),
                            "UNAVAILABLE_COUNTRY_NOT_EXPLAINED")
                 print("FULL_COUNTRY_DIRECTORY_SEARCH_IN_RESULTS=PASS")
+
+                # Tour results are visible first; the old "0 confirmed bookings"
+                # block cannot be mistaken for zero search matches.
+                page.locator("#allCountrySelector").select_option("")
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=20000)
+                ensure(page.locator("#searchResultsCount").is_visible(),
+                       "MAIN_RESULTS_COUNT_NOT_VISIBLE")
+                ensure(page.locator("#confirmedSection").is_hidden(),
+                       "EMPTY_VERIFIED_BOOKINGS_MISLEAD_CUSTOMER")
+                link=page.locator('#previewCards article.offerCard a[href^="hotel.html?id="]').first
+                ensure(link.count()>0,"REAL_TOUR_MUST_LINK_TO_HOTEL_DESCRIPTION")
+                link.click()
+                page.wait_for_url("**/hotel.html?id=*",timeout=20000)
+                page.wait_for_function(
+                  "()=>document.getElementById('name').textContent.length>2 && "+
+                  "!document.getElementById('name').textContent.includes('Загружаем')",
+                  timeout=15000)
+                ensure(page.locator("#facts .fact").count()>=3,
+                       "HOTEL_DESCRIPTION_FACTS_NOT_LOADED")
+                ensure(page.locator("#gallery").count()==1,
+                       "HOTEL_PHOTO_GALLERY_MISSING")
+                ensure(page.locator("#reviewForm").count()==1,
+                       "HOTEL_REVIEW_FORM_MISSING")
+                ensure(page.locator("#reviewSubmit").is_disabled(),
+                       "REVIEW_SUBMISSION_ENABLED_WITHOUT_HTTPS_BACKEND")
+                print("REAL_TOUR_TO_HOTEL_PHOTOS_DESCRIPTION_REVIEWS=PASS")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
