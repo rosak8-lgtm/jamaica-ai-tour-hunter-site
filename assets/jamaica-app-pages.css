@@ -1,0 +1,31 @@
+/* JAMAICA unified non-bookable app steps: route / quote / tour / contract / checkout.
+   No Tourvisor text, images, widgets or source code reused. */
+body.jamaicaAppPage{--purple:#35194f;--violet:#35194f;--teal:#007f86;--teal2:#0f999c;--gold:#f5c452;--ink:#292237;--line:#e7e2ec;--border:#e7e2ec;--bg:#f7f8fb;--paper:#f7f8fb;background:#f7f8fb;color:#292237;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;line-height:1.6}
+body.jamaicaAppPage nav{background:#fff!important;color:#38234b!important;box-shadow:0 2px 17px #27174013;padding:0}
+body.jamaicaAppPage nav .nav{width:min(1300px,calc(100% - 36px));max-width:1300px;min-height:75px;margin:auto;padding:12px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}
+body.jamaicaAppPage nav>a{display:block;max-width:1180px;margin:auto;padding:22px 18px}
+body.jamaicaAppPage nav a{color:#35194f!important;font-weight:850;text-decoration:none}
+body.jamaicaAppPage nav a.logo,body.jamaicaAppPage nav a.brand{font-weight:950;font-size:23px}
+body.jamaicaAppPage nav .back,body.jamaicaAppPage nav a:not(.logo):not(.brand){font-size:13px}
+body.jamaicaAppPage nav a:hover{color:#007f86!important}
+body.jamaicaAppPage main{width:min(1220px,calc(100% - 38px));max-width:1220px;margin:35px auto 65px;padding:0}
+body.jamaicaAppPage h1{letter-spacing:-.7px;color:#2a2036}
+body.jamaicaAppPage h2{letter-spacing:-.3px}
+body.jamaicaAppPage .card,body.jamaicaAppPage section{background:#fff;border:1px solid #e5e0ea;border-radius:18px;box-shadow:0 8px 32px #221a3d09}
+body.jamaicaAppPage .card{padding:24px}
+body.jamaicaAppPage section{padding:24px}
+body.jamaicaAppPage .card h2,body.jamaicaAppPage section h2{color:#352341}
+body.jamaicaAppPage .note,body.jamaicaAppPage .notice,body.jamaicaAppPage .alert{border:1px solid #f0deac;background:#fff9e8;border-radius:13px;color:#66502f}
+body.jamaicaAppPage .info{border:1px solid #bfe6e1;background:#edfaf8;color:#175b60}
+body.jamaicaAppPage button:not([disabled]),body.jamaicaAppPage .btn:not([disabled]){transition:background .16s ease}
+body.jamaicaAppPage button:not([disabled]):not(.outline):not(.secondary),body.jamaicaAppPage .btn:not([disabled]):not(.outline):not(.secondary){background:#007f86;color:#fff;border-color:#007f86;border-radius:11px;font-weight:820}
+body.jamaicaAppPage button:not([disabled]):hover,body.jamaicaAppPage .btn:not([disabled]):hover{filter:brightness(.96)}
+body.jamaicaAppPage button:disabled{opacity:.52;cursor:not-allowed}
+body.jamaicaAppPage .grid{gap:17px}
+body.jamaicaAppPage .fact,body.jamaicaAppPage .summaryRow,body.jamaicaAppPage .kv div{border-color:#ebe6ef}
+body.jamaicaAppPage .tag,body.jamaicaAppPage .eyebrow{color:#007f86}
+body.jamaicaAppPage .price{color:#35194f}
+body.jamaicaAppPage a:focus-visible,body.jamaicaAppPage button:focus-visible,body.jamaicaAppPage input:focus-visible{outline:3px solid #f5c452;outline-offset:3px}
+body.jamaicaAppPage footer{color:#776d83}
+@media(max-width:780px){body.jamaicaAppPage main{width:calc(100% - 24px);margin-top:22px}body.jamaicaAppPage nav .nav{width:calc(100% - 24px);min-height:62px}body.jamaicaAppPage .card,body.jamaicaAppPage section{padding:18px}}
+@media(max-width:480px){body.jamaicaAppPage nav a.logo,body.jamaicaAppPage nav a.brand{font-size:18px}body.jamaicaAppPage nav .back{font-size:11px}body.jamaicaAppPage main h1{font-size:29px}body.jamaicaAppPage .card,body.jamaicaAppPage section{border-radius:13px}body.jamaicaAppPage .grid,body.jamaicaAppPage .layout{grid-template-columns:1fr}}

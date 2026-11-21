@@ -33,28 +33,105 @@
 @media(max-width:1040px){.destinationGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.heroGrid{grid-template-columns:1fr .85fr}.field{grid-column:span 4}.field.wide{grid-column:span 6}.field.short{grid-column:span 3}}
 @media(max-width:760px){.heroGrid{grid-template-columns:1fr}.heroArt{min-height:230px}.artBird{font-size:90px}.searchPanel{padding:18px}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.field,.field.short,.field.wide{grid-column:span 1}.field.wide{grid-column:span 2}.destinationGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:1fr}.offerCards{grid-template-columns:1fr}.finalCta{flex-direction:column;align-items:flex-start}.hero{padding-top:22px}.section{padding-top:48px}.navLinks a:nth-child(2){display:none}}
 @media(max-width:500px){.destinationGrid{grid-template-columns:1fr}.searchHead{flex-direction:column;align-items:flex-start}.searchPanel{margin-top:-39px}.fields{grid-template-columns:1fr}.field,.field.wide,.field.short{grid-column:1}.destToolbar{flex-direction:column;align-items:stretch}.destToolbar input{width:100%}.nav{min-height:70px}.navLinks{justify-content:flex-end}.navLinks a{font-size:12px;padding:8px}.hero h1{letter-spacing:-.8px}.heroArt{min-height:198px}.artBubble{left:5%;right:5%}.offerBox{flex-direction:column;align-items:flex-start}.finalCta{padding:25px}.sectionHead{display:block}}
-</style></head>
+</style>
+<link rel="stylesheet" href="./assets/jamaica-search-ui.css">
+</head>
 <body>
-<header class="top"><div class="wrap"><nav class="nav" aria-label="Навигация"><a class="logo" href="#top"><span class="bird" aria-hidden="true">🦜</span><span>JAMAICA</span></a><div class="navLinks"><a href="#offers">Туры</a><a href="#how">Как оформить</a><a class="contactNav" href="#request">Поиск туров</a><a href="account.html">Личный кабинет</a></div></nav></div></header>
-<main><section class="hero" id="top"><div class="wrap heroGrid"><div><span class="kicker">☀ Путешествия из Иркутска и других городов</span><h1>Мир открыт.<br><em>Ваш отпуск ждёт.</em></h1><p>Выбирайте направление и конкретный отель, сравнивайте даты и предварительные цены. Договор, личный кабинет и будущая покупка — непосредственно на JAMAICA после подключения защищённого бронирования.</p><div class="heroActions"><a class="btn btnGold" href="#request">Найти тур ↗</a><a class="btn btnLine" href="#offers">Смотреть туры</a></div><div class="heroFine">Выберите конкретный тур; окончательная стоимость и наличие проверяются до договора, оплаты и бронирования.</div></div><div class="heroArt" aria-label="Тропический стиль Jamaica: солнце и попугай" role="img"><div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span><div class="artBubble"><div><b>Выберите. Сравните. Купите.</b><span>Поиск предложений по датам и бюджету</span></div><strong>✈</strong></div></div></div></section>
-<div class="wrap"><section class="searchPanel" id="request"><div class="searchHead"><div><div class="sectionTag">Поиск путешествий</div><h2>Найдите тур под ваши даты</h2></div><div class="micro">Поиск и выбор — на сайте JAMAICA. Никаких мессенджеров или запросов.</div></div>
-<form id="tourSearchForm"><div class="fields">
-<div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
-<div class="field wide"><label for="destination">Страна или направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Любая страна" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
-<div class="field short"><label for="dateFrom">Вылет не ранее</label><input id="dateFrom" name="dateFrom" type="date"></div>
-<div class="field short"><label for="dateTo">Вылет не позднее</label><input id="dateTo" name="dateTo" type="date"></div>
-<div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option></select></div>
-<div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
-<div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
-<div class="field wide"><label for="budget">Максимальная цена на человека, ₽</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Без ограничения"></div>
-<div class="field wide"><label for="hotelSearch">Отель (необязательно)</label><input id="hotelSearch" name="hotelSearch" type="search" maxlength="100" placeholder="Название отеля или курорта"></div>
-</div><div class="formBottom"><button class="btn btnTeal" type="submit">Показать варианты туров ↗</button><span class="hint">Поиск показывает варианты из текущих прайс-листов. До договора цена и рейсы проверяются заново; бронирование только после подписи договора и подтверждённой оплаты.</span></div></form></section></div>
+<header class="top">
+ <div class="utilityBar"><div class="wrap utilityInner">
+  <span>JAMAICA · подбор путешествий из Иркутска и других городов</span>
+  <span>Варианты из опубликованных прайс-листов · стоимость проверяется перед оформлением</span>
+ </div></div>
+ <div class="wrap"><nav class="nav" aria-label="Главная навигация">
+  <a class="logo" href="./" aria-label="JAMAICA — главная">
+   <span class="bird" aria-hidden="true">🦜</span><span class="logoText">JAMAICA<span class="logoSub">Travel search</span></span>
+  </a>
+  <div class="navLinks">
+   <a href="#offers">Туры с перелётом</a><a href="#hotels">Отели</a>
+   <a href="#routes">Даты и маршруты</a><a href="#how">Как это работает</a>
+   <a href="account.html">Личный кабинет</a><a class="contactNav" href="#request">Найти тур</a>
+  </div>
+ </nav></div>
+</header>
+<main><section class="hero" id="top"><div class="wrap heroGrid">
+ <div>
+  <span class="kicker">✈ Туры с перелётом · Иркутск и другие города</span>
+  <h1>Отдых начинается <em>с правильного выбора.</em></h1>
+  <p>Страна, даты, отель и предварительная цена — в одном поиске. Сравнивайте настоящие записи прайс-листов и изучайте отели, не уходя с JAMAICA.</p>
+  <div class="heroFine">Окончательная цена, наличие мест и перелёт проверяются перед договором и оплатой.</div>
+ </div>
+ <div class="heroArt" aria-label="Фирменная иллюстрация JAMAICA: тропический отдых" role="img">
+  <div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span>
+  <div class="artBubble"><div><b>Ваше путешествие</b><span>Поиск по направлениям и датам</span></div><strong>✈</strong></div>
+ </div>
+</div></section>
+<div class="wrap"><section class="searchPanel" id="request">
+ <div class="searchModeTabs" aria-label="Вариант подбора">
+  <a href="#request" aria-current="page">✈ Туры с перелётом</a>
+  <a href="#hotels">🏨 Справочник отелей</a>
+ </div>
+ <div class="searchHead"><div><h2>Поиск туров</h2></div>
+  <div class="micro">Выберите направление, даты и количество туристов</div>
+ </div>
+ <form id="tourSearchForm">
+  <div class="fields fieldsMain">
+   <div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
+   <div class="field wide"><label for="destination">Страна / направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Все страны" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
+   <div class="field short"><label for="dateFrom">Вылет с</label><input id="dateFrom" name="dateFrom" type="date"></div>
+   <div class="field short"><label for="dateTo">Вылет до</label><input id="dateTo" name="dateTo" type="date"></div>
+   <div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option></select></div>
+   <div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
+   <div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
+  </div>
+  <details class="advancedFilters" id="advancedFilters">
+   <summary>Дополнительные параметры: бюджет и название гостиницы</summary>
+   <div class="fields fieldsExtra">
+    <div class="field wide"><label for="budget">Бюджет на человека, ₽</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Не ограничивать"></div>
+    <div class="field wide"><label for="hotelSearch">Гостиница / курорт</label><input id="hotelSearch" name="hotelSearch" type="search" maxlength="100" placeholder="Название отеля или курорта"></div>
+   </div>
+  </details>
+  <div class="formBottom">
+   <button class="btn btnTeal" type="submit">Найти туры <span aria-hidden="true">⌕</span></button>
+   <span class="hint">Отображаются предварительные цены из прайс-листов. Оплата и бронь доступны только после реальной проверки и подключения поставщика.</span>
+  </div>
+ </form>
+</section></div>
 <section class="section offerSection" id="offers"><div class="wrap">
 <div class="sectionHead"><div><div class="sectionTag">Подбор путешествий</div>
 <h2>Туры по вашим параметрам</h2>
 <p>Выберите отель и дату поездки. Указанные цены предварительные; стоимость, рейсы и наличие проверяются до оформления.</p></div>
 <div class="count" id="searchResultsCount" role="status">Загрузка вариантов…</div></div>
 <div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Загружаем предложения</strong><p>Проверяем опубликованные данные прайс-листов. Если подходящих вариантов пока нет, измените параметры поиска.</p></div></div>
+<div class="resultsLayout">
+ <aside class="resultsSidebar" aria-label="Фильтры найденных путешествий">
+  <details class="filtersDisclosure" id="filtersDisclosure">
+   <summary>Фильтры поездок</summary>
+   <div class="filtersContent">
+    <div class="filterGroup"><label for="filterCountry">Страна</label>
+     <select id="filterCountry" aria-label="Отбор страны по опубликованным турам"><option value="">Все страны с предложениями</option></select>
+     <small>Показываются направления из загруженного прайс-листа</small>
+    </div>
+    <div class="filterGroup"><label for="filterResort">Курорт</label>
+     <select id="filterResort" aria-label="Отбор курорта по опубликованным турам"><option value="">Любой курорт</option></select>
+    </div>
+    <div class="filterGroup"><label for="filterNights">Продолжительность</label>
+     <select id="filterNights" aria-label="Отбор количества ночей"><option value="0">Любое число ночей</option></select>
+    </div>
+    <div class="filterGroup"><label for="filterHotel">Название отеля</label>
+     <input id="filterHotel" type="search" maxlength="100" placeholder="Например, Beach Resort">
+    </div>
+    <div class="filterGroup"><label for="filterBudget">Максимальный бюджет на человека, ₽</label>
+     <input id="filterBudget" type="number" min="1000" max="10000000" placeholder="Без ограничения">
+     <small>Применим к справочной цене для двух взрослых. Другой состав требует расчёта.</small>
+    </div>
+    <div class="filtersActions">
+     <button type="button" id="filterApply">Показать варианты</button>
+     <button type="button" id="filterReset" class="filterReset">Сбросить фильтры</button>
+    </div>
+   </div>
+  </details>
+ </aside>
+ <div class="resultsMain">
 <div class="resultsToolbar">
   <label class="micro" for="previewSort">Сортировка:</label>
   <select id="previewSort" aria-label="Сортировка туров">
@@ -62,6 +139,8 @@
     <option value="price">Сначала самые дешёвые по всем странам</option>
     <option value="date">Сначала ближайшие даты</option>
   </select>
+  <label class="favoritesToggle" for="favoritesOnly"><input id="favoritesOnly" type="checkbox" aria-label="Показать только сохранённые туры">
+   <span>♡ Избранное <b id="favoritesCount">0</b></span></label>
   <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
@@ -83,7 +162,7 @@
  </div><a href="#request" class="btn btnWhite">Изменить поиск</a></div>
  <div class="offerCards" id="offerCards" aria-live="polite"></div>
  <div class="micro" id="offerStatus" role="status"></div>
-</div></div></section>
+</div></div></div></div></section>
 <section class="section" id="routes"><div class="wrap">
 <div class="sectionHead"><div><div class="sectionTag">Маршруты и даты</div><h2>Возможные вылеты и продолжительность</h2><p>После авторизованного обновления здесь появятся маршруты и даты из прайс-листов. Это предварительные варианты: подтверждение мест, отеля и итоговой цены производится отдельно.</p></div><span class="count" id="routeCount">Загрузка направлений…</span></div>
 <div class="offerBox" id="routeEmpty"><div><strong>Подключаем актуальные маршруты</strong><p id="routeStatus" class="micro">Данные о датах требуют защищённой синхронизации. Справочник гостиниц ниже уже загружен.</p></div></div>
@@ -215,7 +294,7 @@ function runSearch(scroll=false){
  $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
  if(scroll)scrollToResults();
 }
-form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();});
+form.addEventListener("submit",e=>{e.preventDefault();sourceFilterOptions();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();});
 async function loadOffers(){
  inventoryLoading=true;
  try{
@@ -381,6 +460,112 @@ async function loadRouteDiscovery(){
 }
 
 let previewRecords=[],previewVisible=0;
+/* Simple local browser saved tours; does not make supplier bookings. */
+const favoriteStoreKey="jamaica.favorite-tour-ids.v1";
+const favoriteIds=new Set();
+try{
+ const saved=JSON.parse(localStorage.getItem(favoriteStoreKey)||"[]");
+ if(Array.isArray(saved))for(const id of saved.slice(0,300)){
+  if(typeof id==="string"&&/^p_[a-f0-9]{24}$/.test(id))favoriteIds.add(id);
+ }
+}catch(error){}
+function updateFavoriteCounter(){
+ $("favoritesCount").textContent=String(favoriteIds.size);
+}
+function saveFavorite(id){
+ if(!/^p_[a-f0-9]{24}$/.test(id))return false;
+ if(favoriteIds.has(id))favoriteIds.delete(id);
+ else{
+  if(favoriteIds.size>=300)return false;
+  favoriteIds.add(id);
+ }
+ try{localStorage.setItem(favoriteStoreKey,JSON.stringify([...favoriteIds]));}catch(error){}
+ updateFavoriteCounter();
+ return favoriteIds.has(id);
+}
+$("favoritesOnly").addEventListener("change",()=>renderTourPreviews(true));
+updateFavoriteCounter();
+
+/* Functional Tourvisor-style sidebar, driven ONLY by published source rows. */
+const sidebarCountry=$("filterCountry"),sidebarResort=$("filterResort");
+const sidebarNights=$("filterNights"),sidebarHotel=$("filterHotel");
+const sidebarBudget=$("filterBudget");
+let lastFilterCountry="";
+function replaceFilterOptions(select,items,placeholder,wanted){
+ const frag=document.createDocumentFragment();
+ const empty=document.createElement("option");
+ empty.value=select===sidebarNights?"0":"";
+ empty.textContent=placeholder;frag.append(empty);
+ for(const item of items){
+  const option=document.createElement("option");
+  option.value=String(item.value);option.textContent=item.label;
+  frag.append(option);
+ }
+ select.replaceChildren(frag);
+ select.value=items.some(x=>String(x.value)===wanted)?wanted:empty.value;
+}
+function sourceFilterOptions(){
+ const countryCounts=new Map(),resorts=new Set(),lengths=new Set();
+ const formCountry=$("destination").value.trim();
+ const countryCompare=(a,b)=>a.localeCompare(b,"ru");
+ for(const row of previewRecords){
+  countryCounts.set(row.country,(countryCounts.get(row.country)||0)+1);
+  if(!formCountry||row.country===formCountry){
+    if(row.resort)resorts.add(row.resort);
+    lengths.add(row.nights);
+  }
+ }
+ const priorities=new Map([["Таиланд",0],["Китай",1],["Вьетнам",2]]);
+ const names=[...countryCounts.keys()].sort((a,b)=>
+   (priorities.get(a)??999)-(priorities.get(b)??999)||countryCompare(a,b));
+ replaceFilterOptions(sidebarCountry,names.map(name=>({
+   value:name,label:name+" ("+countryCounts.get(name).toLocaleString("ru-RU")+")"
+ })), "Все страны с предложениями",formCountry);
+ if(lastFilterCountry!==formCountry)sidebarResort.value="";
+ const oldResort=lastFilterCountry===formCountry?sidebarResort.value:"";
+ replaceFilterOptions(sidebarResort,[...resorts].sort(countryCompare).map(x=>({
+   value:x,label:x
+ })), "Любой курорт",oldResort);
+ replaceFilterOptions(sidebarNights,[...lengths].sort((a,b)=>a-b).map(n=>({
+   value:n,label:n+" ночей"
+ })), "Любое число ночей",$("nights").value);
+ sidebarHotel.value=$("hotelSearch").value;
+ sidebarBudget.value=$("budget").value;
+ lastFilterCountry=formCountry;
+}
+function applyTourSidebar(){
+ $("destination").value=sidebarCountry.value;
+ $("nights").value=sidebarNights.value;
+ $("hotelSearch").value=sidebarHotel.value.trim();
+ $("budget").value=sidebarBudget.value;
+ lastFilterCountry=sidebarCountry.value;
+ form.requestSubmit();
+}
+sidebarCountry.addEventListener("change",()=>{
+ // A resort in one destination must never be silently attached to another.
+ $("destination").value=sidebarCountry.value;
+ sidebarResort.value="";
+ sourceFilterOptions();
+});
+$("filterApply").addEventListener("click",applyTourSidebar);
+$("filterReset").addEventListener("click",()=>{
+ sidebarCountry.value="";sidebarResort.value="";sidebarNights.value="0";
+ sidebarHotel.value="";sidebarBudget.value="";
+ lastFilterCountry="";
+ $("destination").value="";$("nights").value="0";
+ $("hotelSearch").value="";$("budget").value="";
+ sourceFilterOptions();form.requestSubmit();
+});
+
+const filtersMedia=window.matchMedia("(min-width:791px)");
+const filtersDisclosure=$("filtersDisclosure");
+filtersDisclosure.open=filtersMedia.matches;
+filtersMedia.addEventListener("change",event=>{
+ filtersDisclosure.open=event.matches;
+});
+const paramsHotel=new URLSearchParams(location.search);
+if(paramsHotel.has("hotel"))$("advancedFilters").open=true;
+
 let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
 let previewTruncated=false,previewCandidateTotal=0;
 let previewLoadSerial=0,previewFullLoaded=true;
@@ -577,6 +762,7 @@ function renderTourPreviews(reset=true){
  const date=$("dateFrom").value,dateTo=$("dateTo").value;
  const nights=Number($("nights").value);
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
+ const resortFilter=sidebarResort.value.trim().toLocaleLowerCase("ru");
  const adults=Number($("adults").value),children=Number($("kids").value);
  const budget=Number($("budget").value)||0;
  const partyTwoAdults=adults===2&&children===0;
@@ -587,6 +773,7 @@ function renderTourPreviews(reset=true){
    (!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)&&
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
+   (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
    (!budget||!partyTwoAdults||referencePrice(x)===null||
                 referencePrice(x)<=budget*2)
  );
@@ -596,6 +783,7 @@ function renderTourPreviews(reset=true){
    list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
  }
  if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
+ if($("favoritesOnly").checked)list=list.filter(x=>favoriteIds.has(x.id));
 
  const frag=document.createDocumentFragment();
  if(!list.length&&previewsLoaded){
@@ -604,32 +792,63 @@ function renderTourPreviews(reset=true){
       requested?"В текущей опубликованной выборке нет подходящих вариантов по направлению «"+requested+"». Это не означает, что предложения отсутствуют у всех поставщиков. Попробуйте другие даты и ночи.":"По заданным параметрам нет вариантов в текущей опубликованной выборке. Измените дату, страну или длительность."));
  }
  for(const x of list.slice(previewVisible,previewVisible+30)){
-   const card=el("article","offerCard");
+   const card=el("article","offerCard tourResultCard");
    card.append(previewCardPhoto(x));
-   card.append(el("h3","",x.country+" · "+x.hotel));
-   card.append(el("small","",x.origin+" · "+x.depart_date+" · "+x.nights+" ночей"));
-   card.append(el("div","",x.resort||x.country));
-   card.append(el("small","",x.room));
+
+   const info=el("div","tourResultMain");
+   info.append(el("span","countryBadge",x.country));
+   info.append(el("h3","",x.country+" · "+x.hotel));
+   info.append(el("div","hotelLocation",x.resort||x.country));
+   const facts=el("div","travelFacts");
+   facts.append(el("span","", "✈ "+x.origin+" → "+x.country));
+   facts.append(el("span","", "📅 "+x.depart_date));
+   facts.append(el("span","", "◷ "+x.nights+" ночей"));
+   info.append(facts);
+   info.append(el("div","roomKind","Размещение: "+x.room));
+   if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
+     const hotelLink=el("a","hotelLink","Подробнее об отеле, фото и отзывы");
+     hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
+     info.append(hotelLink);
+   }
+   card.append(info);
+
+   const priceBox=el("div","tourResultPrice");
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
-     card.append(el("strong","", "Цена по прайс-листу на 2 взрослых: "+new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
-     card.append(el("small","", "В среднем при поездке вдвоём: "+new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+" ₽ на человека. Цена одного туриста рассчитывается отдельно."));
-     card.append(el("small","",
-       (previewPriceFresh?"Цена актуальна на момент выгрузки":"Цена могла измениться")+
-       ". По прайс-листу на "+previewPriceAsOf+
-       ". Итоговая стоимость, рейсы и свободные номера перепроверяются перед договором и покупкой."));
+     const priceTitle=el("strong","", "Цена по прайс-листу на 2 взрослых: ");
+     priceTitle.append(el("span","referenceAmount",
+       new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
+     priceBox.append(priceTitle);
+     priceBox.append(el("small","",
+       "Справочно на человека при поездке вдвоём: "+
+       new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+
+       " ₽. Одиночное размещение рассчитывается отдельно."));
+     priceBox.append(el("small","",
+       (previewPriceFresh?"Данные последней выгрузки":"Цена могла измениться")+
+       " · "+previewPriceAsOf+
+       ". Наличие номера и рейса не подтверждено."));
    }else{
-     card.append(el("small","", "Цена пока не подтверждена; если указан бюджет, соответствие ему требует расчёта. Рейсы и места также не подтверждены."));
+     priceBox.append(el("div","roomKind","Цена пока не подтверждена; требуется отдельный расчёт для выбранного состава путешественников."));
+     priceBox.append(el("small","",
+       "Без проверенной цены и подтверждения мест оплата недоступна."));
    }
-   const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
-   a.href="preview.html?id="+encodeURIComponent(x.id)+
+   const details=el("a","btn btnWhite","Посмотреть тур →");
+   details.href="preview.html?id="+encodeURIComponent(x.id)+
       "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(children);
-   card.append(a);
-   if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
-     const hotelLink=el("a","btn btnWhite","Подробнее об отеле, фото и отзывы");
-     hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
-     card.append(hotelLink);
-   }
+   priceBox.append(details);
+   const save=el("button","saveTour",
+     favoriteIds.has(x.id)?"♥ В избранном":"♡ Сохранить");
+   save.type="button";
+   save.setAttribute("aria-pressed",String(favoriteIds.has(x.id)));
+   save.setAttribute("aria-label","Сохранить тур в избранном");
+   save.addEventListener("click",()=>{
+     const active=saveFavorite(x.id);
+     save.textContent=active?"♥ В избранном":"♡ Сохранить";
+     save.setAttribute("aria-pressed",String(active));
+     if($("favoritesOnly").checked)renderTourPreviews(true);
+   });
+   priceBox.append(save);
+   card.append(priceBox);
    frag.append(card);
  }
  target.append(frag);
@@ -705,7 +924,7 @@ async function loadTourPreviews(){
     (x.price_reference_rub==null||
      (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
       x.price_reference_party==="TWO_ADULTS")));
-  previewsLoaded=true;renderTourPreviews(true);
+  previewsLoaded=true;sourceFilterOptions();renderTourPreviews(true);
   if(!previewFullLoaded){
    try{
     const all=await window.JamaicaCatalog.allPreviews(data);
@@ -713,6 +932,7 @@ async function loadTourPreviews(){
     previewRecords=all.filter(x=>window.JamaicaCatalog.validRow(x)&&
        x.depart_date>=new Date().toISOString().slice(0,10));
     previewFullLoaded=true;
+    sourceFilterOptions();
     const completeCountries=new Set(all.map(x=>x.country));
     const absentAfterComplete=coverage.filter(x=>!completeCountries.has(x.country))
        .map(x=>x.country);

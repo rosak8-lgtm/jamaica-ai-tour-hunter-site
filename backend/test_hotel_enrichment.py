@@ -41,8 +41,9 @@ class Tests(unittest.TestCase):
         self.assertIn('entry.name!==hotel.name||entry.country!==hotel.country',self.page)
         self.assertIn('entry.source_checked_at',self.page)
         self.assertIn('historical_view_not_property_facade:"Исторический вид из гостиницы"',self.page)
-    def test_page_description_precedes_gallery(self):
-        self.assertLess(self.page.index('id="hotelDescriptionSection"'),self.page.index('id="gallery"'))
+    def test_page_verified_gallery_precedes_description(self):
+        # Hotel photo-first customer journey; preserve detailed evidence below.
+        self.assertLess(self.page.index('id="gallery"'),self.page.index('id="hotelDescriptionSection"'))
         for id_ in ("enrichedFeatures","curatedRooms","facts","rooms","gallery","reviewForm"):
             self.assertIn('id="'+id_+'"',self.page)
     def test_basaya_source_backed_room_and_facility_details(self):

@@ -38,21 +38,41 @@ textarea{min-height:125px;resize:vertical}.review{border-bottom:1px solid var(--
 .curatedSource{margin:14px 0;font-size:13px;color:var(--muted)}
 footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 @media(max-width:600px){.box{padding:18px}.photo img{height:210px}}
-</style></head><body>
-<header><div class="wrap nav"><a href="./">🦜 JAMAICA · Все путешествия</a><a href="./#hotels">Каталог гостиниц</a></div></header>
+</style>
+<link rel="stylesheet" href="./assets/jamaica-detail-ui.css">
+</head><body class="hotelView">
+<header><div class="wrap nav">
+ <a class="detailLogo" href="./"><span aria-hidden="true">🦜</span>JAMAICA</a>
+ <div class="detailNavLinks">
+  <a href="./#offers">Все туры</a><a href="./#hotels">Гостиницы</a>
+  <a href="./#routes">Даты вылета</a>
+  <a class="detailSearch" href="./#request">Найти тур</a>
+ </div>
+</div></header>
 <main class="wrap">
-<div class="eyebrow">Гостиница · подробная карточка</div>
-<h1 id="name">Загружаем гостиницу…</h1><p class="sub" id="location"></p>
+<nav class="hotelBreadcrumb" aria-label="Путь к отелю"><a href="./">Главная</a> / <a href="./#offers">Туры</a> / Гостиница</nav>
+<div class="hotelHeading">
+ <div class="eyebrow">Гостиница · фотографии, номера и предложения</div>
+ <h1 id="name">Загружаем гостиницу…</h1>
+ <p class="sub" id="location"></p>
+</div>
 <p id="warning" class="alert" role="status">Загружаем сведения из официального каталога.</p>
+<nav class="hotelTabs" aria-label="Разделы страницы гостиницы">
+ <a href="#hotelPhotos">Фотографии</a>
+ <a href="#hotelDescriptionSection">Описание и услуги</a>
+ <a href="#hotelRooms">Номера</a>
+ <a href="#hotelTrips">Туры и даты</a>
+ <a href="#reviews">Отзывы</a>
+</nav>
+<section class="box" id="hotelPhotos"><h2>Фотографии выбранного отеля</h2><p class="sub">Показываем только подтверждённые фотографии самой гостиницы, на которые есть разрешение или лицензия для коммерческого использования. Если снимков нет, можно перейти к официальной галерее отеля при наличии проверенной ссылки. Пейзажи курорта и чужие гостиницы за фотографии номера или здания не выдаются.</p>
+<div id="gallery" class="photoGrid"><div class="hero"><div><span aria-hidden="true">🏨</span><p>Проверяем наличие фотографий именно этого отеля…</p></div></div></div>
+<p id="photoStatus" class="status" role="status">Проверяем подтверждённые фотографии этой гостиницы…</p><p id="officialGallery" class="sub" hidden></p></section>
 <section class="box" id="hotelDescriptionSection"><h2>Об отеле</h2><p id="description"></p><div id="facts" class="facts"></div>
 <div id="enrichedFeatures"></div>
 <p class="sub" id="detailExplanation">Гостиничные услуги и комплектация номеров проверяются по актуальной карточке объекта; подробности, которых нет в источнике, не выдумываются.</p></section>
-<section class="box"><h2>Фотографии выбранного отеля</h2><p class="sub">Показываем только подтверждённые фотографии самой гостиницы, на которые есть разрешение или лицензия для коммерческого использования. Если снимков нет, можно перейти к официальной галерее отеля при наличии проверенной ссылки. Пейзажи курорта и чужие гостиницы за фотографии номера или здания не выдаются.</p>
-<div id="gallery" class="photoGrid"><div class="hero"><div><span aria-hidden="true">🏨</span><p>Проверяем наличие фотографий именно этого отеля…</p></div></div></div>
-<p id="photoStatus" class="status" role="status">Проверяем подтверждённые фотографии этой гостиницы…</p><p id="officialGallery" class="sub" hidden></p></section>
-<section class="box"><h2>Номера, размещение и питание</h2><div id="curatedRooms"></div><div id="rooms"></div>
+<section class="box" id="hotelRooms"><h2>Номера, размещение и питание</h2><div id="curatedRooms"></div><div id="rooms"></div>
 <p class="sub">Показанные категории номеров встречались в опубликованных прайс-листах, но не означают свободный номер сегодня.</p></section>
-<section class="box"><h2>Найденные даты и цены туров</h2>
+<section class="box" id="hotelTrips"><h2>Найденные даты и цены туров</h2>
 <p class="sub" id="tourStatus">Ищем туры для выбранной гостиницы…</p><div id="trips" class="grid"></div>
 <p><a class="btn" id="searchHotel" href="./#offers">Найти поездку в этот отель</a></p></section>
 <section class="box" id="reviews"><h2>Отзывы путешественников</h2>
