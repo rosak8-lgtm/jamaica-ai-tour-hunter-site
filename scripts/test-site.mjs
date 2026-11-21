@@ -134,6 +134,8 @@ assert.ok(hotelPage.includes('licenseOK('),'Hotel photographs must have an eligi
 assert.ok(hotelPage.includes('tour-previews.json'),'Hotel detail must show real date and room references');
 assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend config required');
 assert.ok(hotelPage.includes('hotel-media-approved.json'),'Supplier gallery needs explicit commercial-use grant');
+assert.ok(hotelPage.includes('function photoSearchPlaceName(place)'),'Search licensed photos by international place name');
+assert.ok(hotelPage.includes('"Паттайя":"Pattaya"'),'Cyrillic Pattaya must be mapped to its Commons search name');
 assert.ok(hotelPage.includes('Курорт '+String.fromCharCode(34)),'Fallback destination photos must never be named hotel photos');
 const hotelPhotos=JSON.parse(fs.readFileSync('hotel-media-approved.json','utf8'));
 assert.equal(hotelPhotos.schema,'jamaica.hotel-media-approved.v1');
