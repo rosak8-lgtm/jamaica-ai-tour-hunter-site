@@ -252,7 +252,7 @@ async function loadHotelReference(){
    c.append(el("h3","",item.name));
    c.append(el("p","",(item.resort?item.resort+" · ":"")+item.country
       +(item.stars?" · "+item.stars:"")+" · справочные сведения"));
-   const link=el("a","askCountry","Информация об отеле →");
+   const link=el("a","askCountry","Подробнее об отеле: фото и отзывы →");
    link.href="hotel.html?id="+encodeURIComponent(item.id);
    c.append(link);frag.append(c);
   }
