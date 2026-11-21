@@ -343,6 +343,15 @@ def main():
                   timeout=18000)
                 ensure(page.locator("#gallery a").filter(has_text="CC BY-SA 4.0").count()==3,
                        "GUANGZHOU_LICENSED_FACADE_IMAGES_MISSING")
+                # Never pass on empty FIGURE shells: pixels must actually load.
+                ensure(page.locator("#gallery figure.photo img").count()==3,
+                       "GUANGZHOU_ACTUAL_IMG_ELEMENTS_MISSING")
+                page.locator("#gallery").scroll_into_view_if_needed()
+                page.wait_for_function(
+                  "()=>[...document.querySelectorAll('#gallery figure.photo img')]"+
+                  ".every(img=>img.complete&&img.naturalWidth>0)",timeout=15000)
+                ensure(page.locator('#gallery figure.photo img[src$="width=960"]').count()==3,
+                       "WIKIMEDIA_STANDARD_HOTEL_THUMBNAIL_SIZE_MISSING")
                 ensure("Вид из гостиницы" not in page.locator("#gallery").inner_text(),
                        "GUANGZHOU_PANORAMAS_MUST_NOT_BE_MISTAKEN_FOR_HOTEL_FACADE")
 
@@ -388,6 +397,10 @@ def main():
                   lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
                 page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
                 page.locator('img[src="https://cdn.approved-hotel.example/photos/basaya/exterior.jpg"]').wait_for(timeout=12000)
+                page.locator("#gallery").scroll_into_view_if_needed()
+                page.wait_for_function(
+                  "()=>[...document.querySelectorAll('#gallery figure.photo img')]"+
+                  ".some(img=>img.complete&&img.naturalWidth>0)",timeout=12000)
                 ensure("использовано с разрешения" in page.locator("#gallery").inner_text(),
                        "EXTERNAL_HOTEL_PHOTO_MISSING_RIGHTS_ATTRIBUTION")
                 page.unroute("**/hotel-media-approved.json")
@@ -445,7 +458,7 @@ def main():
                 media_photo={
                  "file":filename,
                  "src":"https://commons.wikimedia.org/wiki/Special:FilePath/"+
-                    quote(filename,safe="!'()*-._~")+"?width=720",
+                    quote(filename,safe="!'()*-._~")+"?width=500",
                  "source":"https://commons.wikimedia.org/wiki/File:"+
                     quote(filename.replace(" ","_"),safe="!'()*-._~"),
                  "license":"CC BY-SA 4.0",
@@ -475,6 +488,10 @@ def main():
                    lambda route:route.fulfill(status=200,content_type="image/png",body=pixel))
                 page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
                 page.locator('#gallery figure[data-photo-source="commons-open"]').wait_for(timeout=12000)
+                page.locator("#gallery").scroll_into_view_if_needed()
+                page.wait_for_function(
+                  "()=>[...document.querySelectorAll('#gallery figure[data-photo-source=commons-open] img')]"+
+                  ".some(img=>img.complete&&img.naturalWidth>0)",timeout=12000)
                 ensure(page.locator('#gallery a[href="https://creativecommons.org/licenses/by-sa/4.0/"]').count()==1,
                    "COMMERCIAL_CC_LICENSE_LINK_NOT_VISIBLE")
                 ensure(page.locator('#gallery').inner_text().find("Verified photographer")>=0,
