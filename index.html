@@ -543,7 +543,16 @@ function previewCardPhoto(x){
   const img=el("img");
   img.alt=photo.alt;img.loading="lazy";img.decoding="async";
   img.referrerPolicy="no-referrer";
-  img.addEventListener("error",()=>area.replaceChildren(fallback),{once:true});
+  let triedLowerResolution=false;
+  img.addEventListener("error",()=>{
+   // HBX documents that 800px "bigger" photos may return HTTP 403;
+   // retry the same licensed property photo at 320px, never another hotel.
+   if(!triedLowerResolution&&photo.license==="Разрешение правообладателя"&&
+      photo.source!==photo.src){
+      triedLowerResolution=true;img.src=photo.source;return;
+   }
+   area.replaceChildren(fallback);
+  });
   const attribution=el("a","mediaSourceCredit",
     photo.label+" · "+photo.credit+" · "+photo.license+" · источник");
   attribution.href=photo.source;attribution.target="_blank";
