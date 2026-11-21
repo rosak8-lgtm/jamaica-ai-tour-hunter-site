@@ -22,6 +22,14 @@
 .previewMedia .mediaSourceCredit:hover{background:#1d172ae8;color:white}
 .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.step{border:1px solid var(--line);background:white;border-radius:18px;padding:26px}.stepNum{font-weight:950;color:var(--teal);font-size:29px}.step h3{font-size:18px;margin:8px 0}.step p{color:var(--muted);font-size:14px;margin:0}
 .finalCta{margin:45px auto 65px;background:radial-gradient(circle at right top,#00a2a23b,transparent 38%),linear-gradient(110deg,#3d1856,#552b78);border-radius:27px;padding:35px 40px;color:white;display:flex;justify-content:space-between;gap:28px;align-items:center}.finalCta h2{margin:0 0 9px;font-size:29px}.finalCta p{color:#e7daf0;margin:0}.foot{background:#2e1842;color:white;padding:35px 0}.footGrid{display:flex;gap:25px;justify-content:space-between;align-items:start;flex-wrap:wrap}.foot h3{margin:0 0 7px}.foot p{color:#d0c1dd;font-size:13px;max-width:650px;margin:0}.foot a{text-decoration:underline}.legal{margin-top:25px;border-top:1px solid #ffffff26;padding-top:17px;color:#bbacc7;font-size:12px}.hide{display:none!important}
+.resultsToolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.resultsToolbar select{max-width:390px;min-height:45px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #d9cfe0;color:var(--purple);font:inherit}
+.resultsEdit{margin-left:auto;border:1px solid #d9cfe0;border-radius:12px;padding:11px 15px;background:#fff;color:var(--teal);font-size:13px;font-weight:850;text-decoration:none}
+.resultsEdit:hover{border-color:#19838a;background:#f2fbfa}
+.sourceDetails{margin:20px 0 0;padding:14px 18px;border:1px solid #e8e3eb;border-radius:14px;background:#fff}
+.sourceDetails summary{cursor:pointer;color:var(--muted);font-weight:700;font-size:13px}
+.sourceDetails[open] summary{margin-bottom:12px}
+.sourceDetails .micro{line-height:1.65;margin:8px 0}
 @media(max-width:1040px){.destinationGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.heroGrid{grid-template-columns:1fr .85fr}.field{grid-column:span 4}.field.wide{grid-column:span 6}.field.short{grid-column:span 3}}
 @media(max-width:760px){.heroGrid{grid-template-columns:1fr}.heroArt{min-height:230px}.artBird{font-size:90px}.searchPanel{padding:18px}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.field,.field.short,.field.wide{grid-column:span 1}.field.wide{grid-column:span 2}.destinationGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:1fr}.offerCards{grid-template-columns:1fr}.finalCta{flex-direction:column;align-items:flex-start}.hero{padding-top:22px}.section{padding-top:48px}.navLinks a:nth-child(2){display:none}}
 @media(max-width:500px){.destinationGrid{grid-template-columns:1fr}.searchHead{flex-direction:column;align-items:flex-start}.searchPanel{margin-top:-39px}.fields{grid-template-columns:1fr}.field,.field.wide,.field.short{grid-column:1}.destToolbar{flex-direction:column;align-items:stretch}.destToolbar input{width:100%}.nav{min-height:70px}.navLinks{justify-content:flex-end}.navLinks a{font-size:12px;padding:8px}.hero h1{letter-spacing:-.8px}.heroArt{min-height:198px}.artBubble{left:5%;right:5%}.offerBox{flex-direction:column;align-items:flex-start}.finalCta{padding:25px}.sectionHead{display:block}}
@@ -42,28 +50,29 @@
 <div class="field wide"><label for="hotelSearch">Отель (необязательно)</label><input id="hotelSearch" name="hotelSearch" type="search" maxlength="100" placeholder="Название отеля или курорта"></div>
 </div><div class="formBottom"><button class="btn btnTeal" type="submit">Показать варианты туров ↗</button><span class="hint">Поиск показывает варианты из текущих прайс-листов. До договора цена и рейсы проверяются заново; бронирование только после подписи договора и подтверждённой оплаты.</span></div></form></section></div>
 <section class="section offerSection" id="offers"><div class="wrap">
-<div class="sectionHead"><div><div class="sectionTag">Результаты поиска</div>
-<h2>Найденные туры и предварительные цены</h2>
-<p>Сначала реальные варианты из прайс-листов: страна, отель, дата, номер и цена на момент проверки. Нажмите «Подробнее», чтобы открыть гостиницу и поездку. Окончательная цена и наличие проверяются перед договором.</p></div>
+<div class="sectionHead"><div><div class="sectionTag">Подбор путешествий</div>
+<h2>Туры по вашим параметрам</h2>
+<p>Выберите отель и дату поездки. Указанные цены предварительные; стоимость, рейсы и наличие проверяются до оформления.</p></div>
 <div class="count" id="searchResultsCount" role="status">Загрузка вариантов…</div></div>
-<div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Поиск туров работает</strong><p>Проверяем последние опубликованные варианты из прайс-листов. Данные обновляются сервером каждые пять минут.</p></div></div>
-<div style="margin-top:30px"><div class="sectionTag">Конкретные варианты поездок из прайс-листов</div><h3 style="margin:5px 0 7px">Конкретные отели, номера и даты</h3><p class="micro">Это реальные записи прайс-листов, но ещё не подтверждённые к покупке туры: окончательная цена, места и перелёты проверяются отдельно.</p></div>
-<p class="micro" id="sourceCountryPriority">Приоритет поиска из Иркутска: Таиланд → Китай → Вьетнам. Все три направления проверяются на сервере каждые 5 минут; доступные варианты появляются только после ответа прайс-листа.</p>
-<div class="chips" id="previewCountryChips" role="group" aria-label="Страны с конкретными вариантами размещения"></div>
-<div class="destToolbar" style="margin:10px 0 16px">
-  <label class="micro" for="previewSort">Порядок предложений:</label>
-  <select id="previewSort" style="max-width:390px;padding:11px;border:1px solid #d9cfe0;border-radius:12px;background:white">
+<div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Загружаем предложения</strong><p>Проверяем опубликованные данные прайс-листов. Если подходящих вариантов пока нет, измените параметры поиска.</p></div></div>
+<div class="resultsToolbar">
+  <label class="micro" for="previewSort">Сортировка:</label>
+  <select id="previewSort" aria-label="Сортировка туров">
     <option value="balanced">Разные страны · сначала недорогие</option>
     <option value="price">Сначала самые дешёвые по всем странам</option>
     <option value="date">Сначала ближайшие даты</option>
   </select>
-  <span class="micro">Справочные суммы сопоставимы только для 2 взрослых; итоговая цена проверяется перед покупкой.</span>
+  <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
-<div class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</div>
-<div class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки. Обновление данных в браузере — каждые 5 минут.</div>
-<div class="micro" id="previewCoverage" role="status">Проверяем наличие туров по направлениям и странам…</div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
+<details class="sourceDetails" id="sourceDetails">
+ <summary>Источники, охват стран и актуальность цен</summary>
+ <p class="micro">Это предварительные записи прайс-листов, не подтверждённые к покупке туры. Проверка окончательной цены, рейсов и наличия обязательна до договора и оплаты.</p>
+ <p class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</p>
+ <p class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки.</p>
+ <p class="micro" id="previewCoverage" role="status">Проверяем проверенные направления…</p>
+</details>
 
 <div id="confirmedSection" class="hide" style="margin-top:24px">
  <h3>Предложения с окончательно подтверждённой возможностью оформления</h3>
@@ -375,7 +384,7 @@ let previewRecords=[],previewVisible=0;
 let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
 let previewTruncated=false,previewCandidateTotal=0;
 let previewLoadSerial=0,previewFullLoaded=true;
-let previewCountryStatus=[];
+
 const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
   .map(c=>c.n).filter(name=>typeof name==="string");
 function referencePrice(x){
@@ -538,38 +547,6 @@ function previewCardPhoto(x){
  })().catch(()=>area.replaceChildren(fallback));
  return area;
 }
-function renderPreviewCountryChips(){
- const target=$("previewCountryChips");
- target.replaceChildren();
- const counts=new Map();
- for(const x of previewRecords)counts.set(x.country,(counts.get(x.country)||0)+1);
- const priorityNames=["Таиланд","Китай","Вьетнам"];
- const names=[...new Set([...priorityNames,...counts.keys(),
-     ...previewCountryStatus.map(x=>x.country).filter(Boolean)])].sort((a,b)=>{
-       const ai=priorityNames.indexOf(a),bi=priorityNames.indexOf(b);
-       if(ai>=0||bi>=0)return ai>=0&&bi>=0?ai-bi:ai>=0?-1:1;
-       const ca=counts.get(a)||0,cb=counts.get(b)||0;
-       return (cb>0?1:0)-(ca>0?1:0)||a.localeCompare(b,"ru");
-     });
- const current=$("destination").value.trim();
- for(const name of ["Все страны",...names]){
-  const num=counts.get(name)||0;
-  const button=el("button","chip",name==="Все страны"?name:num?name+" ("+num+")":name+" · проверяется");
-  button.type="button";
-  if(!num&&name!=="Все страны")button.title="В текущем прайс-листе нет подтверждённых вариантов из Иркутска";
-  const active=name==="Все страны"?!current:current.toLocaleLowerCase("ru")===name.toLocaleLowerCase("ru");
-  if(active)button.classList.add("active");
-  button.setAttribute("aria-pressed",String(active));
-  button.addEventListener("click",()=>{
-    $("destination").value=name==="Все страны"?"":name;
-    renderTourPreviews(true);
-    if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();
-    if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
-    renderRouteCountryChips();
-  });
-  target.append(button);
- }
-}
 function interleaveCountries(rows){
  const groups=new Map();
  for(const item of rows){
@@ -619,7 +596,7 @@ function renderTourPreviews(reset=true){
    list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
  }
  if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
- if(reset)renderPreviewCountryChips();
+
  const frag=document.createDocumentFragment();
  if(!list.length&&previewsLoaded){
    const requested=$("destination").value.trim();
@@ -690,7 +667,7 @@ async function loadTourPreviews(){
     ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
     ". Браузер проверяет новый каталог каждые 5 минут; расписание серверного импорта задаётся отдельно.";
   const coverage=Array.isArray(data.countries_status)?data.countries_status.filter(x=>x&&typeof x.country==="string"):[];
-  previewCountryStatus=coverage;
+
   const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
   const sampledMonths=[...new Set(coverage.flatMap(row=>
