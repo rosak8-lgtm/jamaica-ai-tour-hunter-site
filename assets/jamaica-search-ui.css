@@ -80,6 +80,11 @@ body{background:var(--bg);color:var(--ink)}
 .resultsToolbar label{font-weight:790;color:#514460;font-size:12px}
 .resultsToolbar select{border:1px solid #e4e0e8;height:39px;min-height:39px;max-width:340px;border-radius:9px;font-weight:680;font-size:13px}
 .resultsToolbar .resultsEdit{font-size:12px;padding:9px 12px}
+.favoritesToggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#56465e;font-weight:790;cursor:pointer;padding:6px 8px;border-radius:9px}
+.favoritesToggle:hover{background:#fcf5e5}
+.favoritesToggle input{accent-color:var(--purple);width:17px;height:17px}
+.favoritesToggle b{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 4px;background:#f7e5f2;color:#54266c;border-radius:6px;font-size:11px}
+
 .offerCards#previewCards{display:flex;flex-direction:column;gap:12px;margin-top:0}
 #previewCards .tourResultCard{display:grid;grid-template-columns:minmax(180px,30%) minmax(0,1fr) minmax(180px,23%);gap:0;padding:0;border:1px solid #e5e0e7;border-radius:16px;box-shadow:0 5px 17px #271c4409;overflow:hidden;min-height:225px;transition:box-shadow .2s,transform .2s}
 #previewCards .tourResultCard:hover{box-shadow:0 14px 28px #241b4319;transform:translateY(-1px)}
