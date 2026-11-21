@@ -45,6 +45,24 @@ class Tests(unittest.TestCase):
         self.assertLess(self.page.index('id="hotelDescriptionSection"'),self.page.index('id="gallery"'))
         for id_ in ("enrichedFeatures","curatedRooms","facts","rooms","gallery","reviewForm"):
             self.assertIn('id="'+id_+'"',self.page)
+    def test_basaya_source_backed_room_and_facility_details(self):
+        basaya=self.data["hotels"]["102623766108"]
+        self.assertEqual(basaya["name"],"BASAYA BEACH HOTEL & RESORT")
+        self.assertEqual(basaya["rooms_total"],"110")
+        self.assertEqual(basaya["renovation_year"],"2023")
+        self.assertEqual(basaya["country"],"Таиланд")
+        for name in ("STANDARD ROOM","DELUXE ROOM","NEW STANDARD WITH BALCONY"):
+            self.assertIn(name," ".join(basaya["room_categories"]))
+        self.assertEqual(basaya["photos"],[])
+        self.assertEqual(len(basaya["sources"]),1)
+    def test_unlicensed_hotel_photos_never_claimed_to_be_resort_photos(self):
+        self.assertIn("async function loadRightsApprovedHotelPhotos()",self.page)
+        self.assertIn('entry.commercial_publication_allowed!==true',self.page)
+        self.assertIn('hotel-media-approved.json',self.page)
+        self.assertIn("Курорт "+'"',self.page)
+        self.assertIn("НЕ фотография гостиницы",self.page)
+        self.assertIn("paintCommonsPhotos(",self.page)
+        self.assertIn("hotel.resort||hotel.country",self.page)
     def test_reviews_and_sales_remain_fail_closed(self):
         review=json.loads((ROOT/"hotel-reviews-config.json").read_text(encoding="utf-8"))
         purchase=json.loads((ROOT/"checkout-config.json").read_text(encoding="utf-8"))
