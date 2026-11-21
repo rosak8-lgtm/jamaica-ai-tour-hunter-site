@@ -18,7 +18,7 @@ jobs:
       - name: Validate current public tour feed and multi-country customer path without Node
         run: python3 -B scripts/site_no_node_qa.py
       - name: Verify server-side quote, booking and payment state machine
-        run: python3 -m unittest -v backend.test_order_engine backend.test_contract_first_order_engine backend.test_preview_quote_engine backend.test_sqlite_order_repository backend.test_send_booking_notifications backend.test_bg_route_sync backend.test_bg_detail_probe backend.test_bg_preview_export backend.test_bg_selected_quote_probe backend.test_future_preview_selection backend.test_multicountry_price_scan backend.test_tour_price_reference backend.test_bg_booking_fields_audit backend.test_bg_tour_api_xml backend.test_bg_read_only_price_client backend.test_flight_availability_evidence backend.test_oracle_site_publisher backend.test_full_country_discovery backend.test_hotel_reviews
+        run: python3 -m unittest -v backend.test_order_engine backend.test_contract_first_order_engine backend.test_preview_quote_engine backend.test_sqlite_order_repository backend.test_send_booking_notifications backend.test_bg_route_sync backend.test_bg_detail_probe backend.test_bg_preview_export backend.test_bg_selected_quote_probe backend.test_future_preview_selection backend.test_multicountry_price_scan backend.test_tour_price_reference backend.test_bg_booking_fields_audit backend.test_bg_tour_api_xml backend.test_bg_read_only_price_client backend.test_flight_availability_evidence backend.test_oracle_site_publisher backend.test_full_country_discovery backend.test_hotel_reviews backend.test_hotel_enrichment
       - name: Verify customer journey in real Chromium
         run: |
           python3 -m venv /tmp/jamaica-playwright-venv
