@@ -1,0 +1,118 @@
+/* JAMAICA Search UI 2026 — independent layout inspired by travel-search UX.
+   Purple / teal / gold JAMAICA identity; no external images/fonts or copied assets. */
+:root{--purple:#35194f;--purple2:#542678;--teal:#007f86;--teal2:#0e9fa2;--gold:#f5c452;--bg:#f7f8fb;--ink:#292237;--muted:#6d6979;--line:#e5e4ea;--shadow:0 14px 45px rgba(34,23,52,.075)}
+body{background:var(--bg);color:var(--ink)}
+.wrap{width:min(1320px,calc(100% - 48px))}
+.utilityBar{background:#29183b;color:#e9def3;font-size:12px}
+.utilityInner{min-height:33px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.utilityInner span+span{color:#d1f4ec}
+.top{position:sticky;top:0;z-index:90;background:#fff;color:var(--ink);box-shadow:0 2px 16px rgba(36,22,43,.075)}
+.nav{min-height:76px}
+.logo{font-size:25px;letter-spacing:.3px;color:var(--purple)}
+.logo .bird{width:47px;height:47px;border-radius:13px;transform:none;background:linear-gradient(145deg,#f9d86e,#f6b747);box-shadow:0 3px 12px #dca94944}
+.logo .logoSub{display:block;font-size:10px;color:#81738d;font-weight:650;letter-spacing:1.3px;text-transform:uppercase}
+.logoText{line-height:1.05}
+.navLinks{gap:5px;align-items:center}
+.navLinks a{border:0;padding:11px 13px;color:#453651;font-size:14px;border-radius:10px}
+.navLinks a:hover,.navLinks a:focus-visible{background:#f5f0f8}
+.navLinks a.contactNav{background:var(--teal);color:#fff!important;padding:11px 18px;border-color:var(--teal);border-radius:11px}
+.navLinks a.contactNav:hover{background:#006970}
+.hero{padding:36px 0 96px;background:radial-gradient(ellipse at 85% 7%,#8757a6aa 0,transparent 36%),linear-gradient(108deg,#32184e 12%,#55287a 67%,#006f86 130%)}
+.hero:after{height:38px;bottom:-20px;left:-1%;right:-1%;border-radius:50% 50% 0 0}
+.heroGrid{grid-template-columns:1.45fr .55fr;gap:25px;min-height:218px}
+.hero h1{margin:14px 0 11px;line-height:1.08;font-size:clamp(33px,4vw,58px);letter-spacing:-1.4px}
+.hero p{font-size:16px;max-width:710px;line-height:1.55}
+.heroActions{display:none}
+.heroFine{font-size:12px;color:#e7d7ed}
+.kicker{background:#fff0c722;border-color:#fff3c470;color:#ffedb3}
+.heroArt{min-height:210px;max-height:240px;border-radius:32px;box-shadow:0 22px 70px #17092655}
+.artBird{font-size:94px}
+.artCircle{width:104px;height:104px}
+.artBubble{left:5%;right:5%;bottom:14px;padding:12px 14px;border-radius:13px}
+.artBubble strong{font-size:20px}
+.searchPanel{margin-top:-64px;z-index:5;padding:0 22px 20px;border:1px solid #ede8ef;box-shadow:0 15px 48px rgba(25,20,40,.17);border-radius:20px}
+.searchModeTabs{display:flex;align-items:center;gap:5px;margin:0 0 15px;border-bottom:1px solid #e8e4eb;overflow-x:auto}
+.searchModeTabs a{display:flex;align-items:center;justify-content:center;white-space:nowrap;min-height:55px;padding:13px 20px 11px;font-size:14px;color:#63566c;font-weight:790;border-bottom:3px solid transparent}
+.searchModeTabs a[aria-current="page"]{color:var(--purple);border-bottom-color:var(--teal)}
+.searchModeTabs a:hover{color:var(--teal)}
+.searchHead{margin-bottom:13px}
+.searchHead h2{font-size:19px}
+.searchHead .micro{max-width:410px;text-align:right}
+.fieldsMain{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:0;border:1px solid #e0dce4;border-radius:13px;background:white;overflow:hidden}
+.fieldsMain .field{grid-column:span 2!important;border-right:1px solid #e7e2ea;display:flex;justify-content:center;padding:9px 11px 10px;gap:3px;min-width:0}
+.fieldsMain .field.wide{grid-column:span 3!important}
+.fieldsMain .field:last-child{border-right:0}
+.fieldsMain .field label{font-weight:750;font-size:11px;color:#706878;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fieldsMain .field input,.fieldsMain .field select{border:0;border-radius:0;background:transparent;height:29px;font-size:14px;font-weight:650;color:var(--ink);padding:0;outline-offset:2px}
+.fieldsMain .field input:focus,.fieldsMain .field select:focus{outline:2px solid #cde9e8;border-radius:4px}
+.advancedFilters{margin-top:10px;border:0}
+.advancedFilters summary{cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--teal);font-weight:780;font-size:13px;list-style-position:inside;padding:8px 3px}
+.advancedFilters[open] summary{margin-bottom:9px}
+.fieldsExtra{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fieldsExtra .field{grid-column:span 1!important}
+.fieldsExtra .field input{height:43px;background:#f8f7fa}
+.formBottom{margin-top:11px;gap:15px;align-items:center}
+.formBottom .btn{background:linear-gradient(115deg,#00888b,#006d85);color:white;border-radius:12px;min-width:210px;min-height:50px;font-size:15px}
+.formBottom .hint{max-width:none;flex:1;color:#70687b;line-height:1.45}
+.offerSection{margin-top:0;border-top:0;background:#f6f7fa;padding:41px 0 65px}
+.offerSection .sectionHead{margin-bottom:19px}
+.offerSection .sectionHead h2{font-size:clamp(25px,2.6vw,33px);margin:0 0 7px}
+.offerSection .sectionHead p{font-size:13px;max-width:800px}
+.offerSection .sectionTag{margin:0 0 8px}
+#searchProgress:not(.hide){padding:13px 18px;margin:0 0 15px!important;border-radius:12px;border-color:#dfe5ed}
+#searchProgress .offerIcon{font-size:26px}
+#searchProgress strong{font-size:14px}
+#searchProgress p{font-size:12px}
+.resultsLayout{display:grid;grid-template-columns:256px minmax(0,1fr);gap:20px;align-items:start}
+.resultsSidebar{min-width:0}
+.filtersDisclosure{border:1px solid #e3e0e8;border-radius:17px;background:#fff;box-shadow:0 7px 25px #3a22460a;overflow:hidden}
+.filtersDisclosure>summary{padding:18px 18px 14px;cursor:pointer;font-size:17px;font-weight:850;list-style-position:inside;color:#342144}
+.filtersContent{padding:0 18px 18px}
+.filterGroup{padding:14px 0;border-top:1px solid #efedf2}
+.filterGroup label{display:block;font-size:12px;font-weight:800;color:#52475b;margin:0 0 7px}
+.filterGroup select,.filterGroup input{display:block;width:100%;height:43px;border:1px solid #ddd8e1;border-radius:10px;background:#fff;padding:9px 10px;color:var(--ink);font-size:14px;min-width:0}
+.filterGroup small{font-size:11px;color:var(--muted);line-height:1.5;display:block;margin-top:6px}
+.filtersActions{display:flex;flex-direction:column;gap:8px}
+.filtersActions button{border:1px solid var(--teal);border-radius:11px;background:var(--teal);padding:11px;color:white;font-weight:820}
+.filtersActions button.filterReset{background:#fff;border-color:#e5dfea;color:#4e3f5a}
+.resultsMain{min-width:0}
+.resultsToolbar{padding:11px 15px;background:#fff;border:1px solid #e4e0e8;border-radius:12px;margin-bottom:14px;gap:10px}
+.resultsToolbar label{font-weight:790;color:#514460;font-size:12px}
+.resultsToolbar select{border:1px solid #e4e0e8;height:39px;min-height:39px;max-width:340px;border-radius:9px;font-weight:680;font-size:13px}
+.resultsToolbar .resultsEdit{font-size:12px;padding:9px 12px}
+.offerCards#previewCards{display:flex;flex-direction:column;gap:12px;margin-top:0}
+#previewCards .tourResultCard{display:grid;grid-template-columns:minmax(180px,30%) minmax(0,1fr) minmax(180px,23%);gap:0;padding:0;border:1px solid #e5e0e7;border-radius:16px;box-shadow:0 5px 17px #271c4409;overflow:hidden;min-height:225px;transition:box-shadow .2s,transform .2s}
+#previewCards .tourResultCard:hover{box-shadow:0 14px 28px #241b4319;transform:translateY(-1px)}
+#previewCards .previewMedia{aspect-ratio:auto;height:100%;min-height:217px;border-radius:0}
+#previewCards .previewScenePlaceholder{min-height:217px;padding:15px;font-size:12px}
+.tourResultMain{padding:18px 19px;display:flex;flex-direction:column;gap:9px;min-width:0}
+.tourResultMain h3{font-size:19px;line-height:1.27;overflow-wrap:anywhere;margin:2px 0 0}
+.tourResultMain .hotelLocation{font-size:12px;color:#706479}
+.tourResultMain .travelFacts{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:3px}
+.tourResultMain .travelFacts span{font-size:12px;background:#f6f2f9;color:#4f3e5f;padding:7px 9px;border-radius:8px;white-space:normal}
+.tourResultMain .roomKind{font-size:12px;color:#665c72;line-height:1.5;overflow-wrap:anywhere}
+.tourResultMain .hotelLink{display:inline-flex;align-items:center;color:var(--teal);font-weight:760;font-size:12px;text-decoration:underline;margin-top:auto}
+.tourResultMain .countryBadge{display:inline-flex;align-self:start;font-size:11px;font-weight:850;color:#0c797c;background:#e7f6f5;padding:5px 10px;border-radius:9px}
+.tourResultPrice{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;padding:16px;border-left:1px solid #f0eaf0;background:#fdfcfe}
+.tourResultPrice strong{color:#30174a;font-size:18px;font-weight:920;line-height:1.35}
+.tourResultPrice small{color:#756b80;font-size:11px;line-height:1.5}
+.tourResultPrice .referenceAmount{font-size:24px;display:block;line-height:1.1;letter-spacing:-.5px;margin:3px 0;color:var(--purple)}
+.tourResultPrice .btn{margin-top:7px;width:100%;font-size:13px;min-height:45px;padding:10px 12px;border:0;background:var(--teal);color:white;border-radius:10px}
+.tourResultPrice .btn:hover{background:#006c73;filter:none}
+.tourResultPrice .saveTour{background:white;border:1px solid #e1dbe8;border-radius:9px;color:#5b4d6b;padding:8px 10px;font-weight:760;font-size:12px}
+.tourResultPrice .saveTour[aria-pressed="true"]{background:#fff4d7;border-color:#f3d286;color:#634318}
+#previewCards .empty{width:100%;text-align:center}
+.sourceDetails{margin-top:15px;background:#fff;border-color:#e7e2ed}
+#previewMore{margin:19px auto 9px}
+#routes,#hotels{background:#fff}
+#routes{padding-top:45px}
+#hotels{background:#faf9fc;border-top:1px solid #eae8ee}
+#hotelGuideCards .destination{min-height:185px}
+#how{background:#fff}
+.finalCta{border-radius:20px;box-shadow:0 14px 45px #36225a22}
+.foot{background:#241632}
+@media(max-width:1230px){.wrap{width:min(1200px,calc(100% - 34px))}.resultsLayout{grid-template-columns:230px minmax(0,1fr);gap:15px}#previewCards .tourResultCard{grid-template-columns:minmax(160px,28%) minmax(0,1fr) minmax(162px,23%)}.tourResultMain{padding:15px}.tourResultPrice{padding:13px}}
+@media(max-width:1050px){.fieldsMain{grid-template-columns:repeat(12,minmax(0,1fr))}.fieldsMain .field.wide{grid-column:span 3!important}.fieldsMain .field{grid-column:span 3!important;border-bottom:1px solid #e7e2ea}.fieldsMain .field:nth-child(4n){border-right:0}.resultsLayout{grid-template-columns:220px minmax(0,1fr)}#previewCards .tourResultCard{grid-template-columns:minmax(180px,35%) minmax(0,1fr)}#previewCards .previewMedia{min-height:190px}.tourResultPrice{grid-column:2;border-left:0;border-top:1px solid #eee6ef;padding:12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.tourResultPrice strong,.tourResultPrice small{grid-column:1}.tourResultPrice .btn,.tourResultPrice .saveTour{grid-column:2}.tourResultMain{padding:15px}}
+@media(max-width:790px){.utilityInner{font-size:11px}.utilityInner span+span{display:none}.nav{gap:8px;min-height:65px}.navLinks a{padding:9px 10px;font-size:12px}.navLinks a:nth-child(2){display:inline-flex}.hero{padding:31px 0 75px}.heroGrid{grid-template-columns:1fr}.heroArt{display:none}.hero h1{font-size:clamp(32px,6vw,46px)}.hero p{font-size:14px}.searchPanel{margin-top:-48px;padding:0 15px 17px}.searchModeTabs a{padding:12px 15px;font-size:12px}.fieldsMain{grid-template-columns:repeat(6,minmax(0,1fr))}.fieldsMain .field,.fieldsMain .field.wide{grid-column:span 3!important}.fieldsMain .field:nth-child(even){border-right:0}.formBottom{flex-direction:column;align-items:stretch}.formBottom .btn{width:100%}.formBottom .hint{font-size:11px}.resultsLayout{display:block}.resultsSidebar{margin-bottom:14px}.filtersDisclosure>summary{padding:13px 16px;font-size:14px}.filtersContent{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;padding:0 16px 16px}.filterGroup{padding:8px 0}.filtersActions{grid-column:1/-1;flex-direction:row}.filtersActions button{flex:1}.offerSection{padding-top:30px}}
+@media(max-width:580px){.wrap{width:calc(100% - 24px)}.top .nav{align-items:center}.logo{font-size:18px;gap:7px}.logo .bird{width:37px;height:37px;font-size:23px}.logo .logoSub{font-size:8px}.navLinks{gap:0}.navLinks a{font-size:11px;padding:8px}.navLinks a:nth-child(2),.navLinks a:nth-child(3){display:none}.navLinks a.contactNav{padding:8px 10px}.hero h1{font-size:36px}.hero p{font-size:13px}.heroFine{display:none}.kicker{font-size:11px}.searchHead{display:none}.fieldsMain{grid-template-columns:repeat(2,minmax(0,1fr))}.fieldsMain .field,.fieldsMain .field.wide{grid-column:span 1!important;border-right:0}.fieldsMain .field:nth-child(1),.fieldsMain .field:nth-child(2){grid-column:span 2!important;border-bottom:1px solid #e7e2ea}.fieldsMain .field:nth-child(3),.fieldsMain .field:nth-child(5),.fieldsMain .field:nth-child(7){border-right:1px solid #e7e2ea}.fieldsMain .field:nth-child(1) label,.fieldsMain .field:nth-child(2) label{font-size:12px}.fieldsMain .field:nth-child(1) input,.fieldsMain .field:nth-child(2) input{font-size:15px}.fieldsExtra{grid-template-columns:1fr}.offerSection .sectionHead h2{font-size:27px}.offerSection .sectionHead p{font-size:12px}.resultsToolbar{padding:10px;flex-wrap:wrap}.resultsToolbar select{flex:1;max-width:100%}.resultsToolbar .resultsEdit{margin-left:0}.filtersContent{grid-template-columns:1fr}#previewCards .tourResultCard{display:flex;flex-direction:column}#previewCards .previewMedia{height:auto;aspect-ratio:16/9;min-height:0}.tourResultMain{padding:15px 16px}.tourResultMain h3{font-size:19px}.tourResultPrice{display:flex;align-items:stretch;border-left:0;border-top:1px solid #eee3ed;padding:14px 16px}.tourResultPrice strong{font-size:15px}.tourResultPrice .referenceAmount{font-size:23px}.tourResultPrice .btn{width:100%}.section{padding-top:40px}.finalCta{margin-top:30px}}
+@media(prefers-reduced-motion:reduce){.tourResultCard,.btn{transition:none!important}.tourResultCard:hover{transform:none!important}}
