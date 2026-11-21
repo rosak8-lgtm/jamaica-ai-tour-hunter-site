@@ -777,7 +777,7 @@ function renderTourPreviews(reset=true){
    info.append(facts);
    info.append(el("div","roomKind","Размещение: "+x.room));
    if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
-     const hotelLink=el("a","hotelLink","Фотографии, описание и отзывы гостиницы");
+     const hotelLink=el("a","hotelLink","Подробнее об отеле, фото и отзывы");
      hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
      info.append(hotelLink);
    }
