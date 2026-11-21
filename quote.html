@@ -28,6 +28,7 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 <button id="contractButton" type="button">Принять рассчитанную цену и перейти к договору</button>
 </div>
 </section></main>
+<script src="./scripts/catalog-shards.js"></script>
 <script>
 (function(){
 "use strict";
@@ -68,9 +69,10 @@ async function init(){
   const feed=await p.json();config=await c.json();
   if(feed.schema!=="jamaica.tour-previews.v1"||feed.bookable!==false||
      !Array.isArray(feed.previews))throw Error("UNVERIFIED_FEED");
-  selected=feed.previews.find(x=>x&&x.id===id&&x.bookable===false&&
-    x.quote_verified===false&&x.availability_verified===false&&
-    x.depart_date>new Date().toISOString().slice(0,10));
+  const found=await window.JamaicaCatalog.findPreview(feed,id);
+  selected=found&&found.bookable===false&&found.quote_verified===false&&
+    found.availability_verified===false&&
+    found.depart_date>new Date().toISOString().slice(0,10)?found:null;
   if(!selected)throw Error("PREVIEW_NOT_CURRENT");
   $("hotelTitle").textContent=selected.country+" · "+selected.hotel;
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
