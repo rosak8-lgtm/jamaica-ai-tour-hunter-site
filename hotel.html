@@ -28,6 +28,14 @@ main{padding:35px 0 60px}h1{font-size:clamp(30px,4.5vw,48px);line-height:1.14;ma
 label{display:block;font-weight:700;margin:15px 0 4px}input,textarea,select{font:inherit;width:100%;padding:11px;border:1px solid #cfc4d8;border-radius:10px}
 textarea{min-height:125px;resize:vertical}.review{border-bottom:1px solid var(--line);padding:12px 0}.review:last-child{border:0}
 .status{font-size:14px;color:var(--muted)}.hide{display:none!important}
+.features{margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:16px}
+.feature{padding:16px;border:1px solid var(--line);border-radius:14px;background:#fcfafc}
+.feature h3{font-size:17px;margin:0 0 8px;color:var(--purple)}
+.feature ul{margin:0;padding-left:20px}
+.feature li{margin:5px 0}
+.roomDetail{border-bottom:1px solid var(--line);padding:11px 0}
+.roomDetail:last-child{border:0}
+.curatedSource{margin:14px 0;font-size:13px;color:var(--muted)}
 footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 @media(max-width:600px){.box{padding:18px}.photo img{height:210px}}
 </style></head><body>
@@ -36,12 +44,13 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 <div class="eyebrow">Гостиница · подробная карточка</div>
 <h1 id="name">Загружаем гостиницу…</h1><p class="sub" id="location"></p>
 <p id="warning" class="alert" role="status">Загружаем сведения из официального каталога.</p>
-<section class="box"><h2>Фотографии гостиницы</h2><p class="sub">Фотографии показываются только при совпадении названия гостиницы и наличии разрешённой лицензии. Автор и источник указаны под фотографией.</p>
+<section class="box" id="hotelDescriptionSection"><h2>Об отеле</h2><p id="description"></p><div id="facts" class="facts"></div>
+<div id="enrichedFeatures"></div>
+<p class="sub" id="detailExplanation">Гостиничные услуги и комплектация номеров проверяются по актуальной карточке объекта; подробности, которых нет в источнике, не выдумываются.</p></section>
+<section class="box"><h2>Фотографии и виды из гостиницы</h2><p class="sub">Фотографии показываются только при совпадении названия гостиницы и наличии разрешённой лицензии. Автор и источник указаны под фотографией.</p>
 <div id="gallery" class="photoGrid"><div class="hero"><div><span aria-hidden="true">🏨</span><p>Проверяем наличие фотографий именно этого отеля…</p></div></div></div>
 <p id="photoStatus" class="status" role="status">Поиск фотографий в открытом медиакаталоге…</p></section>
-<section class="box"><h2>Об отеле</h2><p id="description"></p><div id="facts" class="facts"></div>
-<p class="sub" id="detailExplanation">В справочнике могут отсутствовать сведения об удобствах и услугах гостиницы; такие характеристики не будут додуманы.</p></section>
-<section class="box"><h2>Номера, размещение и питание</h2><div id="rooms"></div>
+<section class="box"><h2>Номера, размещение и питание</h2><div id="curatedRooms"></div><div id="rooms"></div>
 <p class="sub">Показанные категории номеров встречались в опубликованных прайс-листах, но не означают свободный номер сегодня.</p></section>
 <section class="box"><h2>Найденные даты и цены туров</h2>
 <p class="sub" id="tourStatus">Ищем туры для выбранной гостиницы…</p><div id="trips" class="grid"></div>
@@ -174,6 +183,75 @@ async function getCurrentTrips(){
  }catch(e){tripRecords=[];text("tourStatus","Временная ошибка загрузки прайс-листов. Карточка гостиницы доступна.");}
  showTrips(tripRecords);
 }
+
+async function loadEnrichment(){
+ if(!official||!hotel)return false;
+ try{
+  const response=await fetch("./hotel-enrichment.json",{cache:"no-store"});
+  if(!response.ok)return false;
+  const all=await response.json();
+  if(all.schema!=="jamaica.hotel-enrichment.v1"||typeof all.hotels!=="object")return false;
+  const entry=all.hotels[id];
+  if(!entry||entry.name!==hotel.name||entry.country!==hotel.country||
+     !Array.isArray(entry.sources)||entry.sources.length===0)return false;
+  if(typeof entry.editorial_description!=="string"||entry.editorial_description.length<100)return false;
+  text("description",entry.editorial_description);
+  if(entry.location_details)fact("Адрес",entry.location_details);
+  if(entry.year_built)fact("Год постройки",entry.year_built);
+  if(entry.rooms_total)fact("Номерной фонд",entry.rooms_total+" номеров");
+  const content=$("enrichedFeatures");content.replaceChildren();
+  const groups=[
+   ["Инфраструктура и услуги",entry.amenities],
+   ["Оснащение номеров",entry.room_features],
+   ["Питание",entry.meals],
+   ["Что важно знать",entry.guest_notes]
+  ];
+  const holder=make("div","features");
+  for(const [label,items] of groups){
+   if(!Array.isArray(items)||!items.length)continue;
+   const panel=make("section","feature");panel.append(make("h3","",label));
+   const ul=make("ul");
+   for(const item of items.slice(0,15))
+    if(typeof item==="string"&&item.length<250)ul.append(make("li","",item));
+   panel.append(ul);holder.append(panel);
+  }
+  content.append(holder);
+  text("detailExplanation","Описание составлено по опубликованной информации о конкретном объекте; источник проверен "+
+    (entry.source_checked_at||"ранее")+". Наличие услуг, условия размещения и звёздность требуют уточнения на дату поездки.");
+  const details=$("curatedRooms");details.replaceChildren();
+  if(Array.isArray(entry.room_categories)&&entry.room_categories.length){
+   details.append(make("h3","","Описание категорий номеров"));
+   for(const line of entry.room_categories.slice(0,15))
+     if(typeof line==="string"&&line.length<350)
+       details.append(make("div","roomDetail",line));
+   details.append(make("p","sub","Сведения по отдельным категориям основаны на ответах представителей гостиницы; фото, кровати и площадь уточняются для выбранного размещения."));
+  }
+  const photos=Array.isArray(entry.photos)?entry.photos:[];
+  const validPhotos=photos.filter(p=>
+     p&&typeof p.file==="string"&&/^[A-Za-z0-9_-]+\.jpg$/i.test(p.file)&&
+     p.license==="CC BY-SA 3.0"&&p.author==="KAlexey"&&
+     p.kind==="historical_view_not_property_facade"&&
+     typeof p.source==="string"&&
+     p.source==="https://commons.wikimedia.org/wiki/File:"+p.file);
+  if(!validPhotos.length)return false;
+  const target=$("gallery");target.replaceChildren();
+  for(const photo of validPhotos){
+   const fig=make("figure","photo");
+   const img=make("img");
+   img.src="https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(photo.file)+"?width=960";
+   img.alt=photo.title;img.loading="lazy";img.referrerPolicy="no-referrer";
+   fig.append(img);
+   const cap=make("figcaption");
+   cap.append(make("span","",photo.title+" · Фото "+photo.author+" · "+photo.license+" · "));
+   const link=make("a","","Оригинал и лицензия");
+   link.href=photo.source;link.target="_blank";link.rel="noopener noreferrer";
+   cap.append(link);fig.append(cap);target.append(fig);
+  }
+  text("photoStatus",entry.photo_note||"Найдены фотографии с подтверждённым авторством и лицензией.");
+  return true;
+ }catch(e){return false;}
+}
+
 function setHotelInfo(h,older=false){
  hotel=h;
  const name=h.name||h.hotel;
@@ -192,7 +270,9 @@ function setHotelInfo(h,older=false){
  text("warning","Важное условие: цена в прайс-листе не фиксирует наличие мест. Перед договором, оплатой и созданием заявки Jamaica должен повторно проверить рейсы, номер и полную стоимость.");
  $("searchHotel").href="./?country="+encodeURIComponent(h.country)+
    "&hotel="+encodeURIComponent(name)+"#offers";
- loadPhotos();
+ loadEnrichment().then(curatedPhotosUsed=>{
+    if(!curatedPhotosUsed)loadPhotos();
+ });
  getCurrentTrips();
  loadReviews();
 }
