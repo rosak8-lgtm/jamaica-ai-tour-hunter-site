@@ -139,6 +139,8 @@
     <option value="price">Сначала самые дешёвые по всем странам</option>
     <option value="date">Сначала ближайшие даты</option>
   </select>
+  <label class="favoritesToggle" for="favoritesOnly"><input id="favoritesOnly" type="checkbox" aria-label="Показать только сохранённые туры">
+   <span>♡ Избранное <b id="favoritesCount">0</b></span></label>
   <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
@@ -458,6 +460,32 @@ async function loadRouteDiscovery(){
 }
 
 let previewRecords=[],previewVisible=0;
+/* Simple local browser saved tours; does not make supplier bookings. */
+const favoriteStoreKey="jamaica.favorite-tour-ids.v1";
+const favoriteIds=new Set();
+try{
+ const saved=JSON.parse(localStorage.getItem(favoriteStoreKey)||"[]");
+ if(Array.isArray(saved))for(const id of saved.slice(0,300)){
+  if(typeof id==="string"&&/^p_[a-f0-9]{24}$/.test(id))favoriteIds.add(id);
+ }
+}catch(error){}
+function updateFavoriteCounter(){
+ $("favoritesCount").textContent=String(favoriteIds.size);
+}
+function saveFavorite(id){
+ if(!/^p_[a-f0-9]{24}$/.test(id))return false;
+ if(favoriteIds.has(id))favoriteIds.delete(id);
+ else{
+  if(favoriteIds.size>=300)return false;
+  favoriteIds.add(id);
+ }
+ try{localStorage.setItem(favoriteStoreKey,JSON.stringify([...favoriteIds]));}catch(error){}
+ updateFavoriteCounter();
+ return favoriteIds.has(id);
+}
+$("favoritesOnly").addEventListener("change",()=>renderTourPreviews(true));
+updateFavoriteCounter();
+
 /* Functional Tourvisor-style sidebar, driven ONLY by published source rows. */
 const sidebarCountry=$("filterCountry"),sidebarResort=$("filterResort");
 const sidebarNights=$("filterNights"),sidebarHotel=$("filterHotel");
@@ -755,6 +783,7 @@ function renderTourPreviews(reset=true){
    list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
  }
  if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
+ if($("favoritesOnly").checked)list=list.filter(x=>favoriteIds.has(x.id));
 
  const frag=document.createDocumentFragment();
  if(!list.length&&previewsLoaded){
@@ -807,6 +836,18 @@ function renderTourPreviews(reset=true){
    details.href="preview.html?id="+encodeURIComponent(x.id)+
       "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(children);
    priceBox.append(details);
+   const save=el("button","saveTour",
+     favoriteIds.has(x.id)?"♥ В избранном":"♡ Сохранить");
+   save.type="button";
+   save.setAttribute("aria-pressed",String(favoriteIds.has(x.id)));
+   save.setAttribute("aria-label","Сохранить тур в избранном");
+   save.addEventListener("click",()=>{
+     const active=saveFavorite(x.id);
+     save.textContent=active?"♥ В избранном":"♡ Сохранить";
+     save.setAttribute("aria-pressed",String(active));
+     if($("favoritesOnly").checked)renderTourPreviews(true);
+   });
+   priceBox.append(save);
    card.append(priceBox);
    frag.append(card);
  }
