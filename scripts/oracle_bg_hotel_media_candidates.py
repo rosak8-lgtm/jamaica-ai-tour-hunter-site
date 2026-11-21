@@ -42,6 +42,13 @@ def safe_operator_image(raw):
     except ValueError:
         return None
 
+def normalized_hotel_name(value):
+    if not isinstance(value,str):
+        return ""
+    value=re.sub(r"(?i)\\b[1-5]\\*"," ",value).lower()
+    return re.sub(r"[^a-z0-9а-яё]+"," ",value).strip()
+
+
 def parse_candidates(raw,hotels):
     if not isinstance(raw,(bytes,bytearray)) or len(raw)>MAX_FEED_BYTES:
         raise bg.SyncHold("SPO_MEDIA_RESPONSE_SIZE_INVALID")
@@ -63,7 +70,14 @@ def parse_candidates(raw,hotels):
         if not url:
             continue
         hotel=known[hotel_id]
-        # ID is an exact identity match: never match photos by fuzzy names.
+        source_name=item.get("hotelName")
+        if source_name:
+            expected=normalized_hotel_name(hotel["name"])
+            supplied=normalized_hotel_name(source_name)
+            if not expected or not supplied or not (
+                supplied.startswith(expected) or expected.startswith(supplied)):
+                continue
+        # Match by exact hotel ID and reject contradictory hotel names.
         found=result.setdefault(hotel_id,{
             "hotel_id":hotel_id,"hotel_name":hotel["name"],
             "country":hotel["country"],"candidate_urls":[],
