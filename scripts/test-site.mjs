@@ -133,6 +133,15 @@ assert.ok(hotelPage.includes('upload.wikimedia.org'));
 assert.ok(hotelPage.includes('licenseOK('),'Hotel photographs must have an eligible source license');
 assert.ok(hotelPage.includes('tour-previews.json'),'Hotel detail must show real date and room references');
 assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend config required');
+assert.ok(hotelPage.includes('hotel-media-approved.json'),'Supplier gallery needs explicit commercial-use grant');
+assert.ok(hotelPage.includes('Курорт '+String.fromCharCode(34)),'Fallback destination photos must never be named hotel photos');
+const hotelPhotos=JSON.parse(fs.readFileSync('hotel-media-approved.json','utf8'));
+assert.equal(hotelPhotos.schema,'jamaica.hotel-media-approved.v1');
+assert.deepEqual(hotelPhotos.hotels,{},'Never publish unlicensed operator special-offer images');
+const enriched=JSON.parse(fs.readFileSync('hotel-enrichment.json','utf8'));
+assert.equal(enriched.hotels['102623766108'].rooms_total,'110');
+assert.equal(enriched.hotels['102623766108'].photos.length,0);
+
 const reviewsConfig=JSON.parse(fs.readFileSync('hotel-reviews-config.json','utf8'));
 assert.equal(reviewsConfig.schema,'jamaica.hotel-reviews.v1');
 assert.equal(reviewsConfig.enabled,false,'Do not enable review POST until a real HTTPS backend exists');
