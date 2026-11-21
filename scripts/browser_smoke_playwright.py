@@ -7,6 +7,7 @@ GET-only static files; does not contact any supplier API or submit payments.
 from __future__ import annotations
 
 import functools
+from base64 import b64decode
 import http.server
 import json
 import threading
@@ -275,6 +276,9 @@ def main():
                 page.route("**/hotel-media-approved.json",
                   lambda route: route.fulfill(status=200,content_type="application/json",
                     body=json.dumps(mock_manifest,ensure_ascii=False)))
+                pixel=b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/QRYAAAAASUVORK5CYII=")
+                page.route("https://cdn.approved-hotel.example/photos/basaya/exterior.jpg",
+                  lambda route: route.fulfill(status=200,content_type="image/png",body=pixel))
                 page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
                 page.locator('img[src="https://cdn.approved-hotel.example/photos/basaya/exterior.jpg"]').wait_for(timeout=12000)
                 ensure("использовано с разрешения" in page.locator("#gallery").inner_text(),
