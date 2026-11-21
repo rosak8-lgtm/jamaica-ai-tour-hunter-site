@@ -103,6 +103,16 @@ const sorted=[...countries].sort((a,b)=>(priorities.get(a.n)??999)-(priorities.g
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
 const form=$("tourSearchForm");
+const directHotelSearch=new URLSearchParams(location.search);
+if(directHotelSearch.has("hotel")||directHotelSearch.has("country")){
+ const country=directHotelSearch.get("country")||"";
+ const hotel=directHotelSearch.get("hotel")||"";
+ if(country.length<=100&&hotel.length<=150&&
+    !/[<>\x00-\x1f]/.test(country+hotel)){
+   $("destination").value=country;
+   $("hotelSearch").value=hotel;
+ }
+}
 const datalist=$("countryDatalist");
 for(const c of sorted){const e=document.createElement("option");e.value=c.n;datalist.append(e);}
 $("dirTotal").textContent=countries.length+" направлений";
@@ -495,7 +505,13 @@ function renderTourPreviews(reset=true){
    const a=el("a","btn btnWhite","Подробнее о поездке и отеле →");
    a.href="preview.html?id="+encodeURIComponent(x.id)+
       "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(children);
-   card.append(a);frag.append(card);
+   card.append(a);
+   if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
+     const hotelLink=el("a","btn btnWhite","Подробнее об отеле, фото и отзывы");
+     hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
+     card.append(hotelLink);
+   }
+   frag.append(card);
  }
  target.append(frag);
  previewVisible=Math.min(list.length,previewVisible+30);
