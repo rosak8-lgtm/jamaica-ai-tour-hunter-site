@@ -65,6 +65,40 @@ def main():
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                # New branded search design must be a FUNCTIONAL, not decorative,
+                # two-column filter + horizontal card travel shopping interface.
+                ensure(page.locator(".resultsLayout").count()==1,
+                       "PRO_SEARCH_RESULT_LAYOUT_MISSING")
+                ensure(page.locator("#previewCards .tourResultCard").count()>0,
+                       "HORIZONTAL_TOUR_RESULT_CARD_MISSING")
+                ensure(page.locator("#filtersDisclosure").get_attribute("open") is not None,
+                       "DESKTOP_FILTERS_NOT_OPEN")
+                ensure(page.locator("#filterCountry option").count()>=3,
+                       "COUNTRY_SIDEBAR_NOT_SOURCE_BACKED")
+                ensure(page.locator("#filterResort").count()==1,
+                       "REAL_RESORT_SIDEBAR_FILTER_MISSING")
+                ensure(page.locator("#advancedFilters").count()==1,
+                       "ADVANCED_BUDGET_HOTEL_FILTERS_MISSING")
+                ensure(page.locator("#favoritesOnly").count()==1,
+                       "BROWSER_SAVED_TOURS_CONTROL_MISSING")
+                # A real filter changes the displayed catalog, not just its label.
+                page.locator("#filterCountry").select_option("Турция")
+                page.locator("#filterApply").click()
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
+                filtered=page.locator("#previewCards article.offerCard h3").all_text_contents()
+                ensure(filtered and all(x.startswith("Турция · ") for x in filtered),
+                       "SIDEBAR_FILTER_NOT_CONNECTED_TO_PUBLIC_TOURS")
+                page.locator("#filterReset").click()
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
+                # Saved tours are local-only; they NEVER create a booking.
+                page.locator("#previewCards .saveTour").first.click()
+                page.locator("#favoritesOnly").check()
+                ensure(page.locator("#previewCards article.offerCard").count()==1,
+                       "LOCAL_FAVORITES_FILTER_NOT_FUNCTIONAL")
+                ensure(page.locator("#previewCards .saveTour[aria-pressed='true']").count()==1,
+                       "FAVORITE_SAVE_STATE_LOST")
+                page.locator("#favoritesOnly").uncheck()
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
                 ensure(page.locator("#previewCountryChips").count()==0,
                        "COUNTRY_BUTTON_WALL_DISPLACES_TOURS")
                 ensure(page.locator("#sourceCountryPriority").count()==0,
@@ -454,6 +488,27 @@ def main():
                 ensure(page.locator("#officialGallery img").count()==0,
                   "OFFICIAL_SITE_IMAGE_COPYING_NOT_ALLOWED")
                 print("LINK_TO_REVIEWED_OFFICIAL_HOTEL_GALLERY_BROWSER_PASS")
+
+                # Mobile variant: single-column offers and collapsed, usable
+                # filter drawer with no horizontal page overflow.
+                mobile=browser.new_page(viewport={"width":390,"height":844})
+                try:
+                    mobile.goto(base,wait_until="domcontentloaded")
+                    mobile.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                    ensure(mobile.locator("#filtersDisclosure").get_attribute("open") is None,
+                           "MOBILE_FILTER_DRAWER_NOT_COLLAPSED")
+                    mobile.locator("#filtersDisclosure summary").click()
+                    ensure(mobile.locator("#filterCountry").is_visible(),
+                           "MOBILE_FILTER_CONTROLS_NOT_ACCESSIBLE")
+                    ensure(mobile.locator("#previewCards .tourResultCard").first.evaluate(
+                        "(el)=>getComputedStyle(el).display")=="flex",
+                        "MOBILE_CARDS_NOT_STACKED_VERTICALLY")
+                    ensure(mobile.evaluate(
+                        "()=>document.documentElement.scrollWidth<=window.innerWidth+2"),
+                        "MOBILE_HORIZONTAL_OVERFLOW")
+                    print("JAMAICA_PRO_SEARCH_MOBILE_FILTERS_PASS")
+                finally:
+                    mobile.close()
 
 
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
