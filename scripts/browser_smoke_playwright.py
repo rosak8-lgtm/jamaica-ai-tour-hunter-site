@@ -65,6 +65,19 @@ def main():
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                ensure(page.locator("#previewCountryChips").count()==0,
+                       "COUNTRY_BUTTON_WALL_DISPLACES_TOURS")
+                ensure(page.locator("#sourceCountryPriority").count()==0,
+                       "TECHNICAL_COUNTRY_POLLING_WALL_DISPLACES_TOURS")
+                ensure(page.locator("#sourceDetails").is_visible(),
+                       "SOURCE_TRANSPARENCY_DETAILS_NOT_PRESENT")
+                ensure(not page.locator("#sourceDetails").get_attribute("open"),
+                       "TECHNICAL_STATUS_MUST_BE_COLLAPSED_BY_DEFAULT")
+                ensure(page.locator("#previewCards").bounding_box()["y"] <
+                       page.locator("#sourceDetails").bounding_box()["y"],
+                       "REAL_TOUR_CARDS_MUST_APPEAR_BEFORE_TECHNICAL_DETAILS")
+                ensure(page.locator("#countryDatalist option").count()>=251,
+                       "FULL_COUNTRY_SEARCH_MUST_STAY_AVAILABLE")
                 ensure(page.locator('#nights option[value="8"]').count()==1,
                        "EIGHT_NIGHT_OPTION_MISSING")
                 ensure(page.locator('#nights option[value="9"]').count()==1,
