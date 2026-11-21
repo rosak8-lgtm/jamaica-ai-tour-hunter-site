@@ -38,6 +38,38 @@ class Tests(unittest.TestCase):
         rows=[{"date":today.strftime("%d.%m.%Y")},
               {"date":(today-timedelta(days=1)).strftime("%d.%m.%Y")}]
         self.assertEqual(exporter.choose_price_lists(rows,2,today=today),[])
+    def test_catalog_cap_selects_cheaper_rows_but_keeps_dates_and_countries(self):
+        def reference(country,day,price,ident):
+            return {"country":country,"depart_date":day,
+                    "price_reference_rub":price,
+                    "price_reference_party":"TWO_ADULTS",
+                    "hotel":"Sample Hotel","room":"STANDARD","id":ident}
+        rows=[
+            reference("A","2026-11-25",90000,"1"),
+            reference("A","2026-11-25",40000,"2"),
+            reference("A","2026-12-05",45000,"3"),
+            reference("A","2026-12-05",80000,"4"),
+            reference("B","2026-11-25",70000,"5"),
+            reference("B","2026-11-25",35000,"6"),
+        ]
+        selected=exporter.fair_catalog(rows,max_rows=4)
+        self.assertEqual({x["id"] for x in selected},{"2","3","5","6"})
+        self.assertEqual({x["country"] for x in selected},{"A","B"})
+        self.assertEqual({x["depart_date"] for x in selected},
+                         {"2026-11-25","2026-12-05"})
+        self.assertEqual(exporter.fair_catalog(rows,max_rows=0),[])
+
+    def test_unpriced_records_never_rank_cheaper_than_known_prices(self):
+        rows=[
+            {"country":"A","depart_date":"2026-12-03","hotel":"B",
+             "room":"S","id":"unknown","price_reference_rub":None,
+             "price_reference_party":"UNVERIFIED"},
+            {"country":"A","depart_date":"2026-12-03","hotel":"A",
+             "room":"S","id":"known","price_reference_rub":55000,
+             "price_reference_party":"TWO_ADULTS"},
+        ]
+        self.assertEqual(exporter.fair_catalog(rows,max_rows=1)[0]["id"],"known")
+
     def test_preview_contains_only_safe_descriptive_fields(self):
         p=exporter.safe_preview(row(),COUNTRY,self.hotels)
         self.assertEqual(p["hotel"],"Verified Catalog Hotel")
