@@ -44,6 +44,9 @@ def main():
     grant=load_json(GRANT,limit=10000)
     license_gate(grant)
     env=dict(os.environ)
+    if env.get("HBX_API_ENV")!="PRODUCTION" or env.get("HBX_LIVE_CONTENT_RIGHTS_CONFIRMED")!="yes":
+        log("HOLD","EVALUATION_ACCOUNT_CANNOT_PUBLISH_LIVE_PHOTOS")
+        return
     if len(env.get("HBX_API_KEY",""))<8 or len(env.get("HBX_API_SECRET",""))<8:
         log("HOLD","API_CREDENTIALS_MISSING")
         return
