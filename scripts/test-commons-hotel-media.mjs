@@ -8,7 +8,7 @@ const id='102623766108',name='BASAYA BEACH HOTEL & RESORT',country='Таилан
 const file='Basaya Beach Hotel - Verified Exterior.jpg';
 const photo={
  file,kind:'hotel_property',wikidata_qid:'Q123456',
- src:'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(file)+'?width=720',
+ src:'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(file)+'?width=500',
  source:'https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(file.replaceAll(' ','_')),
  license:'CC BY-SA 4.0',
  license_url:'https://creativecommons.org/licenses/by-sa/4.0/',
@@ -35,6 +35,8 @@ const sandbox={
 vm.runInNewContext(source,sandbox);
 const media=sandbox.window.JamaicaOpenHotelMedia;
 assert.equal(media.photoOK(photo),true);
+assert.equal(media.photoOK({...photo,src:photo.src.replace("?width=500","?width=720")}),false,
+  'Custom width 720 must not be introduced again because it is CDN-throttled');
 assert.equal((await media.get(id,country,name)).length,1);
 assert.equal(loads,2);
 assert.equal((await media.get(id,country,name))[0].src,photo.src);
