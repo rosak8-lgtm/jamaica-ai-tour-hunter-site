@@ -21,6 +21,11 @@ KEY="$HOME/.ssh/jamaica_catalog_deploy_ed25519"
 HOSTS="$HOME/.ssh/jamaica_catalog_known_hosts"
 [[ -d "$ROOT/.git" && -r "$KEY" && -r "$HOSTS" ]] || {
  echo "STOP_ORACLE_CATALOG_NOT_INITIALIZED"; exit 2; }
+# Coordinate with the existing 5-minute Oracle catalog publisher so Git
+# updates cannot collide with an in-progress live source publication.
+mkdir -p "$HOME/.cache/jamaica-oracle-catalog"
+exec 9>"$HOME/.cache/jamaica-oracle-catalog/refresh.lock"
+flock -w 270 9 || { echo "STOP_ORACLE_PUBLISHER_LOCK_BUSY"; exit 2; }
 export GIT_SSH_COMMAND="ssh -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOSTS -o ConnectTimeout=15 -i $KEY"
 git -C "$ROOT" fetch --depth=1 origin main
 git -C "$ROOT" checkout --force -B main origin/main
