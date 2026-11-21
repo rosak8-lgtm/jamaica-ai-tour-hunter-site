@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - tour-previews.json
+      - 'tour-previews-shards/**'
       - destination-directory.json
   workflow_dispatch:
 permissions:
@@ -18,4 +19,6 @@ jobs:
           python3 -B scripts/local_site_qa.py
           python3 -B scripts/site_no_node_qa.py
       - name: Verify price and no-booking guarantees in JavaScript
-        run: node scripts/test-site.mjs
+        run: |
+          node scripts/test-site.mjs
+          node scripts/test-catalog-shards.mjs
