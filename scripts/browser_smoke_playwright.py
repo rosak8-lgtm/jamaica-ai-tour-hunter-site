@@ -234,6 +234,53 @@ def main():
                 ensure("CC BY-SA 3.0" in page.locator("#gallery").inner_text(),
                        "LICENSED_RESORT_PHOTO_CREDIT_MISSING")
                 print("BASAYA_HOTEL_DESCRIPTION_AND_HONEST_LICENSED_RESORT_PHOTOS=PASS")
+
+                # The Guangzhou hotel has three externally hosted original
+                # CC BY-SA 4.0 hotel photographs, verified on Commons.
+                page.goto(base+"hotel.html?id=102667206879",wait_until="domcontentloaded")
+                page.wait_for_function(
+                  "()=>document.getElementById('description').textContent.includes('Asia International Hotel') && "+
+                  "document.getElementById('gallery').querySelectorAll('figure.photo').length===3",
+                  timeout=18000)
+                ensure("Гуанчжоу" in page.locator("#location").inner_text(),
+                       "GUANGZHOU_HOTEL_ID_NOT_MATCHED")
+                ensure(page.locator("#gallery a").filter(has_text="CC BY-SA 4.0").count()==3,
+                       "GUANGZHOU_THREE_LICENSE_CREDITS_MISSING")
+                ensure(page.locator("#gallery img").count()==3,
+                       "GUANGZHOU_HOTEL_GALLERY_MISSING")
+                print("GUANGZHOU_HOTEL_THREE_COMMONS_CC4_DIRECT_EXTERNAL_PHOTOS=PASS")
+
+                # Confirm a commercially authorized external hotel's image
+                # can be displayed by URL without downloading to Oracle.
+                # CI data is synthetic and never enters production JSON.
+                mock_manifest={
+                  "schema":"jamaica.hotel-media-approved.v1",
+                  "hotels":{"102623766108":{
+                    "hotel_name":"BASAYA BEACH HOTEL & RESORT","country":"Таиланд",
+                    "rights_verified":True,"commercial_publication_allowed":True,
+                    "rights_verified_at":"2026-11-21",
+                    "permission_reference":"TEST_SIGNED_GRANT_ONLY",
+                    "approved_image_hosts":["cdn.approved-hotel.example"],
+                    "approved_source_hosts":["www.approved-hotel.example"],
+                    "photos":[{
+                      "src":"https://cdn.approved-hotel.example/photos/basaya/exterior.jpg",
+                      "source":"https://www.approved-hotel.example/basaya/gallery",
+                      "license":"contract-authorized",
+                      "alt":"Внешний вид BASAYA BEACH HOTEL & RESORT",
+                      "credit":"Тестовый разрешённый правообладатель",
+                      "kind":"exterior"
+                    }]
+                  }}
+                }
+                page.route("**/hotel-media-approved.json",
+                  lambda route: route.fulfill(status=200,content_type="application/json",
+                    body=json.dumps(mock_manifest,ensure_ascii=False)))
+                page.goto(base+"hotel.html?id=102623766108",wait_until="domcontentloaded")
+                page.locator('img[src="https://cdn.approved-hotel.example/photos/basaya/exterior.jpg"]').wait_for(timeout=12000)
+                ensure("использовано с разрешения" in page.locator("#gallery").inner_text(),
+                       "EXTERNAL_HOTEL_PHOTO_MISSING_RIGHTS_ATTRIBUTION")
+                page.unroute("**/hotel-media-approved.json")
+                print("EXTERNAL_HOTEL_CDN_IMAGE_URL_WITH_EXPLICIT_RIGHTS=PASS")
                 ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
                 print("JAMAICA_CHROMIUM_CUSTOMER_JOURNEY_PASS")
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
