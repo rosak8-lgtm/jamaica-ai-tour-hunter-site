@@ -72,6 +72,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 </form>
 </section>
 </main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
+<script src="./scripts/catalog-shards.js"></script>
 <script>
 (function(){
 "use strict";
@@ -213,7 +214,8 @@ async function getCurrentTrips(){
   if(!response.ok)throw Error("FEED");
   const data=await response.json();
   if(data.schema!=="jamaica.tour-previews.v1"||!Array.isArray(data.previews))throw Error("FEED_SCHEMA");
-  tripRecords=data.previews.filter(p=>p&&p.hotel_id===id&&p.bookable===false);
+  const all=await window.JamaicaCatalog.allPreviews(data);
+  tripRecords=all.filter(p=>p&&p.hotel_id===id&&p.bookable===false);
  }catch(e){tripRecords=[];text("tourStatus","Временная ошибка загрузки прайс-листов. Карточка гостиницы доступна.");}
  showTrips(tripRecords);
 }
