@@ -189,8 +189,8 @@ def update_discovered_source_countries(feed,directory,*,state_path=DISCOVERY_STA
             "100510397223" not in c.get("origins",[]) and isinstance(c.get("name"),str)}
     names=set(old)&source
     for st in feed.get("countries_status",[]):
-        if isinstance(st,dict) and st.get("country") in source and
-                type(st.get("lists_read")) is int and st["lists_read"]>0:
+        if (isinstance(st,dict) and st.get("country") in source and
+                type(st.get("lists_read")) is int and st["lists_read"]>0):
             names.add(st["country"])
     updated=sorted(names)[:40]
     if old!=updated:
