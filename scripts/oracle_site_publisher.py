@@ -288,7 +288,7 @@ def publish(env):
         path=CHECKOUT/rel
         if path.is_symlink() or path.parent!=target_folder:
             raise CatalogHold("UNSAFE_SHARD_OUTPUT_PATH")
-        data=json.dumps(chunk,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\\n"
+        data=json.dumps(chunk,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
         if len(data)>4_000_000:
             raise CatalogHold("SHARD_TOO_LARGE")
         aggregate_size+=len(data)
@@ -298,7 +298,7 @@ def publish(env):
         if stale.name not in expected:
             if stale.is_symlink():raise CatalogHold("STALE_SHARD_SYMLINK")
             stale.unlink()
-    root_bytes=json.dumps(public_root,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\\n"
+    root_bytes=json.dumps(public_root,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
     if len(root_bytes)>8_000_000 or aggregate_size+len(root_bytes)>MAX_BYTES:
         raise CatalogHold("PUBLIC_BUNDLE_TOO_LARGE")
     feed_path.write_bytes(root_bytes)
