@@ -272,14 +272,23 @@ assert.equal(commonsLicenseFn('<b>CC BY-SA 4.0</b>'),null);
 assert.ok(page.includes('id="previewMore"'));
 assert.ok(page.includes('tour-previews.json'));
 assert.ok(page.includes('function renderTourPreviews('));
-assert.ok(page.includes('id="previewCountryChips"'));
-assert.ok(page.includes('function renderPreviewCountryChips()'));
+assert.ok(!page.includes('id="previewCountryChips"'),'Do not cover tour results with full-country button wall');
+assert.ok(page.includes('id="sourceDetails"'),'Keep source transparency available in a compact details section');
+assert.ok(page.includes('id="previewCards"'),'Tour cards must remain the primary content');
+assert.ok(page.indexOf('id="previewCards"')<page.indexOf('id="previewCoverage"'),
+ 'Actual offer cards must be above technical source diagnostics');
+assert.ok(page.includes('href="#request">Изменить поиск</a>'),
+ 'All country choices belong to main search form');
+assert.ok(!page.includes('function renderPreviewCountryChips()'),
+ 'No dynamic button wall for unsupported countries');
 assert.ok(page.includes('function interleaveCountries(rows)'));
 assert.ok(page.includes('function referencePrice(x)'));
 assert.ok(page.includes('id="previewUpdatedAt"'));
 assert.ok(page.includes('id="previewCoverage"'));
-assert.ok(page.includes('id="sourceCountryPriority"'));
-assert.ok(page.includes('const priorityNames=["Таиланд","Китай","Вьетнам"]'));
+assert.ok(!page.includes('id="sourceCountryPriority"'),
+ 'Detailed country polling text must not displace offers');
+assert.ok(page.includes('const priorities=new Map([["Таиланд",0],["Китай",1],["Вьетнам",2]])'),
+ 'Country priority remains in the search datalist');
 assert.ok(!page.includes('id="allCountrySelector"'),"No duplicate country chooser in the results");
 assert.ok(page.includes('fullCountryNames.length'));
 assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');

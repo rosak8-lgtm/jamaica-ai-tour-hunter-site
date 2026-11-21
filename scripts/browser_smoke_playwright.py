@@ -65,6 +65,19 @@ def main():
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                ensure(page.locator("#previewCountryChips").count()==0,
+                       "COUNTRY_BUTTON_WALL_DISPLACES_TOURS")
+                ensure(page.locator("#sourceCountryPriority").count()==0,
+                       "TECHNICAL_COUNTRY_POLLING_WALL_DISPLACES_TOURS")
+                ensure(page.locator("#sourceDetails").is_visible(),
+                       "SOURCE_TRANSPARENCY_DETAILS_NOT_PRESENT")
+                ensure(not page.locator("#sourceDetails").get_attribute("open"),
+                       "TECHNICAL_STATUS_MUST_BE_COLLAPSED_BY_DEFAULT")
+                ensure(page.locator("#previewCards").bounding_box()["y"] <
+                       page.locator("#sourceDetails").bounding_box()["y"],
+                       "REAL_TOUR_CARDS_MUST_APPEAR_BEFORE_TECHNICAL_DETAILS")
+                ensure(page.locator("#countryDatalist option").count()>=251,
+                       "FULL_COUNTRY_SEARCH_MUST_STAY_AVAILABLE")
                 ensure(page.locator('#nights option[value="8"]').count()==1,
                        "EIGHT_NIGHT_OPTION_MISSING")
                 ensure(page.locator('#nights option[value="9"]').count()==1,
@@ -105,8 +118,13 @@ def main():
                 shown_again={name.split(" · ")[0] for name in page.locator("#previewCards article.offerCard h3").all_text_contents()}
                 ensure(len(shown_again)>=3,"PRICE_SORT_BROKE_COUNTRY_COVERAGE")
                 if preview.get("truncated_to_public_limit") is True:
+                    # Disclosure exists but is intentionally collapsed BELOW cards.
+                    page.locator("#sourceDetails summary").click()
+                    ensure(page.locator("#sourceDetails").get_attribute("open") is not None,
+                           "SOURCE_TRANSPARENCY_CANNOT_BE_OPENED")
                     ensure("ВАЖНО" in page.locator("#previewCoverage").inner_text(),
-                           "TRUNCATED_CATALOGUE_WARNING_NOT_VISIBLE")
+                           "TRUNCATED_CATALOGUE_WARNING_NOT_AVAILABLE")
+                    page.locator("#sourceDetails summary").click()
 
                 turkey_dates=sorted({r["depart_date"] for r in rows if r["country"]=="Турция"})
                 ensure(bool(turkey_dates),"NO_TURKEY_DATES_FOR_RANGE_TEST")
