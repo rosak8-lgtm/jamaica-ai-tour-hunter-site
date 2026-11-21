@@ -51,6 +51,7 @@ def load_json(path, limit=12_000_000):
 
 def license_gate(grant, today=None):
     today=today or date.today()
+    assert_true(isinstance(grant,dict),"HBX_LICENSE_SCHEMA_INVALID")
     assert_true(grant.get("schema")=="jamaica.hbx-license-grant.v1" and
        grant.get("provider")=="HBX Group" and
        grant.get("commercial_publication_allowed") is True and
@@ -70,6 +71,7 @@ def license_gate(grant, today=None):
     return grant
 
 def verified_map(mapping, directory):
+    assert_true(isinstance(mapping,dict),"HOTEL_CROSSWALK_SCHEMA_INVALID")
     assert_true(mapping.get("schema")=="jamaica.hbx-crosswalk.v1" and
        isinstance(mapping.get("mappings"),list),"HOTEL_CROSSWALK_SCHEMA_INVALID")
     known={str(h["id"]):h for h in directory.get("hotels",[])
@@ -108,7 +110,10 @@ def get_records(payload):
 def hotel_photos(hotel, item, grant):
     photos=[];seen=set()
     name=item["hotel_name"]
-    for record in hotel.get("images",[])[:120]:
+    records=hotel.get("images")
+    if not isinstance(records,list):
+        return photos
+    for record in records[:120]:
         if not isinstance(record,dict):continue
         path=record.get("path")
         if not isinstance(path,str) or not PATH.fullmatch(path) or ".." in path or path.startswith("/"):
@@ -129,7 +134,8 @@ def hotel_photos(hotel, item, grant):
 
 def build(license_doc, mapping, directory, pages, *, today=None):
     grant=license_gate(license_doc,today=today)
-    assert_true(directory.get("schema")=="jamaica.destination-directory.v1",
+    assert_true(isinstance(directory,dict) and
+                directory.get("schema")=="jamaica.destination-directory.v1",
                 "HOTEL_DIRECTORY_UNVERIFIED")
     by_code=verified_map(mapping,directory)
     joined={};read=0
