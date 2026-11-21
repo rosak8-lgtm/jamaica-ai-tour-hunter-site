@@ -24,6 +24,28 @@ for(const filter of ['filterCountry','filterResort','filterNights','filterHotel'
 }
 assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSidebar()'),
   'Search sidebar cannot be a decorative mockup');
+assert.ok(page.includes('id="otherCountries"')&&page.includes('id="catalogBreadth"'),
+ 'Customer must easily discover other published countries');
+assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
+ 'Search must interleave actual countries without inventing availability');
+const mascotAsset=fs.readFileSync('assets/jamaica-parrot-mascot.svg','utf8');
+const mascotMark=fs.readFileSync('assets/jamaica-parrot-mark.svg','utf8');
+for(const a of [mascotAsset,mascotMark]){
+ assert.ok(a.startsWith('<svg ')&&a.includes('viewBox=')&&a.includes('stroke='));
+ assert.ok(!/<(?:script|foreignObject)\b|(?:xlink:)?href=["']https?:\/\/|url\(\s*https?:\/\//i.test(a),
+  'Mascot SVG must remain standalone without external scripts or remote images');
+}
+assert.ok(page.includes('src="./assets/jamaica-parrot-mascot.svg"')&&
+ page.includes('src="./assets/jamaica-parrot-mark.svg"'),
+ 'Logo and hero must use the new glasses macaw');
+assert.ok(searchStyle.includes('.heroArt .mascotHero')&&
+ searchStyle.includes('.heroArt::after{display:none!important}'),
+ 'Old stick-like hero overlay must be gone');
+for(const name of ['hotel.html','preview.html','tour.html','quote.html','checkout.html','account.html','route.html']){
+ assert.ok(fs.readFileSync(name,'utf8').includes('src="./assets/jamaica-parrot-mark.svg"'),
+  'Consistent customer pages: '+name);
+}
+
 assert.ok(page.includes('if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({'),
  'The selected country must survive an empty current feed');
 assert.ok(page.includes('id="budgetNotice"')&&page.includes('budgetNotice").textContent=budgetMessage'),
@@ -241,6 +263,24 @@ assert.equal(enriched.hotels['102667206879'].photos.length,6,'Guangzhou hotel mu
 assert.equal(enriched.hotels['102667206879'].photos.filter(p=>p.kind==='hotel_exterior').length,3);
 assert.equal(enriched.hotels['102667206879'].photos.filter(p=>p.kind==='view_from_hotel').length,3);
 assert.ok(enriched.hotels['102667206879'].photos.every(p=>p.license==='CC BY-SA 4.0'));
+for(const [id,name,country,license,kind] of [
+ ['102610001177','ROYAL CLIFF BEACH HOTEL','Таиланд','CC BY-SA 4.0','hotel_exterior'],
+ ['102610001141','AMARI PATTAYA','Таиланд','CC BY-SA 4.0','hotel_exterior'],
+ ['102616490643','INTERCONTINENTAL NHA TRANG','Вьетнам','CC BY-SA 3.0','hotel_exterior'],
+ ['102667202290','GRAND HYATT SHANGHAI (上海金茂君悦大酒店)','Китай','CC BY 2.0','hotel_public_area']
+]){
+ const h=enriched.hotels[id];
+ assert.ok(h&&h.name===name&&h.country===country, 'Exact hotel identity '+id);
+ assert.ok(h.sources.every(s=>s.url.startsWith('https://commons.wikimedia.org/wiki/File:')));
+ assert.equal(h.photos.length,1,'No extra unrelated scenery '+id);
+ assert.equal(h.photos[0].license,license);
+ assert.equal(h.photos[0].kind,kind);
+ assert.equal(h.photos[0].source,
+   'https://commons.wikimedia.org/wiki/File:'+h.photos[0].file.replaceAll(' ','_'));
+}
+assert.ok(hotelPage.includes('"CC BY 2.0":"https://creativecommons.org/licenses/by/2.0/"'),
+ 'Commercially reusable CC BY 2.0 hotel photo credit and license');
+
 const remotePhotoUrlFn=hotelPage.match(/function strictExternalPhotoUrl\([\s\S]*?\n\}/);
 assert.ok(remotePhotoUrlFn,'Required HTTPS exact-host safe remote image linking');
 const strictExternalPhotoUrl=vm.runInNewContext(

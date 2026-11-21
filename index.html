@@ -34,6 +34,8 @@
 @media(max-width:760px){.heroGrid{grid-template-columns:1fr}.heroArt{min-height:230px}.artBird{font-size:90px}.searchPanel{padding:18px}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.field,.field.short,.field.wide{grid-column:span 1}.field.wide{grid-column:span 2}.destinationGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.steps{grid-template-columns:1fr}.offerCards{grid-template-columns:1fr}.finalCta{flex-direction:column;align-items:flex-start}.hero{padding-top:22px}.section{padding-top:48px}.navLinks a:nth-child(2){display:none}}
 @media(max-width:500px){.destinationGrid{grid-template-columns:1fr}.searchHead{flex-direction:column;align-items:flex-start}.searchPanel{margin-top:-39px}.fields{grid-template-columns:1fr}.field,.field.wide,.field.short{grid-column:1}.destToolbar{flex-direction:column;align-items:stretch}.destToolbar input{width:100%}.nav{min-height:70px}.navLinks{justify-content:flex-end}.navLinks a{font-size:12px;padding:8px}.hero h1{letter-spacing:-.8px}.heroArt{min-height:198px}.artBubble{left:5%;right:5%}.offerBox{flex-direction:column;align-items:flex-start}.finalCta{padding:25px}.sectionHead{display:block}}
 </style>
+<link rel="icon" type="image/svg+xml" href="./assets/jamaica-parrot-mark.svg">
+<link rel="preload" href="./assets/jamaica-parrot-mascot.svg" as="image" type="image/svg+xml">
 <link rel="stylesheet" href="./assets/jamaica-search-ui.css">
 </head>
 <body>
@@ -44,7 +46,7 @@
  </div></div>
  <div class="wrap"><nav class="nav" aria-label="Главная навигация">
   <a class="logo" href="./" aria-label="JAMAICA — главная">
-   <span class="bird" aria-hidden="true">🦜</span><span class="logoText">JAMAICA<span class="logoSub">Travel search</span></span>
+   <span class="bird" aria-hidden="true"><img src="./assets/jamaica-parrot-mark.svg" width="48" height="48" alt="" decoding="async"></span><span class="logoText">JAMAICA<span class="logoSub">Travel search</span></span>
   </a>
   <div class="navLinks">
    <a href="#offers">Туры с перелётом</a><a href="#hotels">Отели</a>
@@ -61,7 +63,7 @@
   <div class="heroFine">Окончательная цена, наличие мест и перелёт проверяются перед договором и оплатой.</div>
  </div>
  <div class="heroArt" aria-label="Фирменная иллюстрация JAMAICA: тропический отдых" role="img">
-  <div class="artCircle"></div><span class="artBird" aria-hidden="true">🦜</span>
+  <div class="artCircle"></div><img class="mascotHero" src="./assets/jamaica-parrot-mascot.svg" alt="" loading="eager" decoding="async" width="350" height="380">
   <div class="artBubble"><div><b>Ваше путешествие</b><span>Поиск по направлениям и датам</span></div><strong>✈</strong></div>
  </div>
 </div></section>
@@ -141,9 +143,11 @@
   </select>
   <label class="favoritesToggle" for="favoritesOnly"><input id="favoritesOnly" type="checkbox" aria-label="Показать только сохранённые туры">
    <span>♡ Избранное <b id="favoritesCount">0</b></span></label>
+  <button type="button" class="resultsEdit resultsOtherCountries" id="otherCountries" hidden>Другие страны</button>
   <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
 <p id="budgetNotice" class="micro" role="status" aria-live="polite" hidden></p>
+<p class="catalogBreadth" id="catalogBreadth" role="status" aria-live="polite">Загружаем направления с найденными турами…</p>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 <details class="sourceDetails" id="sourceDetails">
@@ -751,6 +755,7 @@ function renderTourPreviews(reset=true){
  }
  if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
  if($("favoritesOnly").checked)list=list.filter(x=>favoriteIds.has(x.id));
+ $("otherCountries").hidden=!country;
 
  const frag=document.createDocumentFragment();
  if(!list.length&&previewsLoaded){
@@ -821,6 +826,12 @@ function renderTourPreviews(reset=true){
  target.append(frag);
  previewVisible=Math.min(list.length,previewVisible+30);
  more.hidden=previewVisible>=list.length;
+ const availableCountries=[...new Set(previewRecords.map(x=>x.country))].sort((a,b)=>a.localeCompare(b,"ru"));
+ $("catalogBreadth").textContent=previewsLoaded?
+   (country?("Выбрано направление «"+$("destination").value.trim()+"». В опубликованной выборке представлены и другие страны: "+availableCountries.length+"."):
+    ("Туры по "+availableCountries.length+" странам: "+availableCountries.slice(0,7).join(", ")+(availableCountries.length>7?" и другие.":".")+
+    " Фото показываются только при подтверждённом соответствии гостинице.")):
+   "Загружаем направления с найденными турами…";
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
@@ -832,6 +843,14 @@ function renderTourPreviews(reset=true){
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
+$("otherCountries").addEventListener("click",()=>{
+  $("destination").value="";
+  sidebarCountry.value="";
+  sidebarResort.value="";
+  lastFilterCountry="";
+  sourceFilterOptions();
+  form.requestSubmit();
+});
 $("previewSort").addEventListener("change",()=>renderTourPreviews(true));
 $("previewMore").addEventListener("click",()=>renderTourPreviews(false));
 async function loadTourPreviews(){

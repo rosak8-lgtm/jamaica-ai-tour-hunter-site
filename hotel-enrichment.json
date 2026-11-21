@@ -1,6 +1,6 @@
 {
   "schema": "jamaica.hotel-enrichment.v1",
-  "updated_at_utc": "2026-11-21T05:46:32.089Z",
+  "updated_at_utc": "2026-11-21T17:30:00Z",
   "notice": "Only manually verified hotel-specific facts and freely licensed photo material. No invented availability, prices or ratings.",
   "hotels": {
     "102610001140": {
@@ -238,6 +238,106 @@
         {
           "type": "commons_hotel_media_category",
           "url": "https://commons.wikimedia.org/wiki/Category:2021_at_Guangdong_Asia_International_Hotel"
+        }
+      ]
+    },
+    "102610001177": {
+      "name": "ROYAL CLIFF BEACH HOTEL",
+      "country": "Таиланд",
+      "resort": "Паттайя",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Royal Cliff Beach Hotel — гостиница в Паттайе, Таиланд. Фотография здания подтверждена карточкой конкретного гостиничного объекта и свободной коммерческой лицензией Wikimedia Commons. Представленные изображения отражают дату съёмки, а сведения о номерах, услугах, доступности и стоимости требуют отдельной проверки.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:Royal_Cliff_Beach_Hotel_in_Pattaya.jpg",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "Royal Cliff Beach Hotel in Pattaya.jpg",
+          "title": "Внешний вид Royal Cliff Beach Hotel в Паттайе (2016)",
+          "author": "Cun Cun",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Royal_Cliff_Beach_Hotel_in_Pattaya.jpg",
+          "kind": "hotel_exterior"
+        }
+      ]
+    },
+    "102610001141": {
+      "name": "AMARI PATTAYA",
+      "country": "Таиланд",
+      "resort": "Паттайя",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Amari Pattaya — гостиница в Паттайе, Таиланд. В Wikimedia Commons опубликована фотография гостиничной башни Amari Pattaya с разрешением на коммерческое использование при указании автора и лицензии. Снимок не подтверждает состояние отеля на дату поездки и не заменяет актуальные сведения об услугах, номерах и наличии мест.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:Amari-pattaya-tower.jpg",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "Amari-pattaya-tower.jpg",
+          "title": "Башня гостиницы Amari Pattaya (фотография 2021 года)",
+          "author": "Isarapanb",
+          "license": "CC BY-SA 4.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Amari-pattaya-tower.jpg",
+          "kind": "hotel_exterior"
+        }
+      ]
+    },
+    "102616490643": {
+      "name": "INTERCONTINENTAL NHA TRANG",
+      "country": "Вьетнам",
+      "resort": "Нячанг",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "InterContinental Nha Trang — гостиница в Нячанге, Вьетнам, расположенная у побережья на улице Tran Phu. Для внешнего вида здания доступна опубликованная в Wikimedia Commons фотография с лицензией CC BY-SA 3.0. Условия размещения, услуги, доступность номеров и окончательная цена зависят от конкретного предложения и требуют отдельной проверки.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:InterContinental_Nha_Trang_-_Exterior.png",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "InterContinental Nha Trang - Exterior.png",
+          "title": "Внешний вид гостиницы InterContinental Nha Trang (2014)",
+          "author": "Twoduy",
+          "license": "CC BY-SA 3.0",
+          "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:InterContinental_Nha_Trang_-_Exterior.png",
+          "kind": "hotel_exterior"
+        }
+      ]
+    },
+    "102667202290": {
+      "name": "GRAND HYATT SHANGHAI (上海金茂君悦大酒店)",
+      "country": "Китай",
+      "resort": "Шанхай",
+      "source_type": "commons_hotel_property_photo_independently_checked",
+      "source_checked_at": "2026-11-21",
+      "editorial_description": "Grand Hyatt Shanghai — гостиница в Шанхае, Китай, размещённая в небоскрёбе Jin Mao Tower. Для карточки подтверждена фотография атриума именно этого отеля из Wikimedia Commons, с разрешением CC BY 2.0. Это фотография общественного интерьера, а не номера или фасада. Актуальность услуг, категория номера и его наличие на дату поездки проверяются отдельно.",
+      "sources": [
+        {
+          "url": "https://commons.wikimedia.org/wiki/File:Grand_Hyatt_Shanghai_I.jpg",
+          "type": "wikimedia_commons_original"
+        }
+      ],
+      "photos": [
+        {
+          "file": "Grand Hyatt Shanghai I.jpg",
+          "title": "Атриум гостиницы Grand Hyatt Shanghai (2011)",
+          "author": "Wenjie, Zhang | A Certain Slant of Light",
+          "license": "CC BY 2.0",
+          "license_url": "https://creativecommons.org/licenses/by/2.0/",
+          "source": "https://commons.wikimedia.org/wiki/File:Grand_Hyatt_Shanghai_I.jpg",
+          "kind": "hotel_public_area"
         }
       ]
     }

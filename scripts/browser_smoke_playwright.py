@@ -65,6 +65,14 @@ def main():
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                ensure(page.locator(".logo .bird img").count()==1 and
+                       page.locator(".heroArt .mascotHero").count()==1,
+                       "BRAND_MASCOT_MISSING")
+                page.wait_for_function(
+                  "()=>[...document.querySelectorAll('.logo .bird img,.heroArt .mascotHero')]"+
+                  ".every(img=>img.complete&&img.naturalWidth>0)",timeout=12000)
+                ensure(page.locator("#catalogBreadth").count()==1,
+                       "COUNTRY_BREADTH_SUMMARY_MISSING")
                 # New branded search design must be a FUNCTIONAL, not decorative,
                 # two-column filter + horizontal card travel shopping interface.
                 ensure(page.locator(".resultsLayout").count()==1,
@@ -98,6 +106,14 @@ def main():
                 filtered=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 ensure(filtered and all(x.startswith("Турция · ") for x in filtered),
                        "SIDEBAR_FILTER_NOT_CONNECTED_TO_PUBLIC_TOURS")
+                ensure(page.locator("#otherCountries").is_visible(),
+                       "OTHER_COUNTRIES_ACTION_MISSING")
+                page.locator("#otherCountries").click()
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=12000)
+                other_countries={name.split(" · ")[0] for name in
+                   page.locator("#previewCards article.offerCard h3").all_text_contents()}
+                ensure(len(other_countries)>=3,
+                       "OTHER_COUNTRIES_DID_NOT_RESTORE_MIXED_RESULTS")
                 page.locator("#filterReset").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
                 # Saved tours are local-only; they NEVER create a booking.
@@ -371,6 +387,19 @@ def main():
                 print("WIKIMEDIA_960_TO_500_HOTEL_IMAGE_RETRY_PASS")
                 page.unroute("https://commons.wikimedia.org/wiki/Special:FilePath/**")
 
+                # Check actual decoded photos for four additional, exactly
+                # identified hotels in Thailand, Vietnam and China.
+                for hid in ("102610001177","102610001141",
+                            "102616490643","102667202290"):
+                    page.goto(base+"hotel.html?id="+hid,wait_until="domcontentloaded")
+                    page.locator("#gallery figure.photo img").first.wait_for(timeout=18000)
+                    page.locator("#gallery").scroll_into_view_if_needed()
+                    page.wait_for_function(
+                       "()=>[...document.querySelectorAll('#gallery figure.photo img')]"+
+                       ".some(img=>img.complete&&img.naturalWidth>0)",timeout=15000)
+                    ensure(page.locator('#gallery a').filter(has_text="Оригинал").count()>=1,
+                           "MISSING_ORIGINAL_LICENSE_CREDIT_"+hid)
+                print("FOUR_EXTRA_EXACT_HOTEL_PHOTOS_DECODED_PASS")
                 # When the actual hotel images fail, do not replace them
                 # with photos of Guangzhou skyline or unrelated hotels.
                 page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
