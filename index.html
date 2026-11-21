@@ -754,8 +754,19 @@ async function loadTourPreviews(){
     previewRecords=all.filter(x=>window.JamaicaCatalog.validRow(x)&&
        x.depart_date>=new Date().toISOString().slice(0,10));
     previewFullLoaded=true;
-    $("previewCoverage").textContent=$("previewCoverage").textContent.replace(
-      / Загружается расширенный каталог: [^.]+\\./,"")+
+    const completeCountries=new Set(all.map(x=>x.country));
+    const absentAfterComplete=coverage.filter(x=>!completeCountries.has(x.country))
+       .map(x=>x.country);
+    let summary=$("previewCoverage").textContent;
+    const loadingPos=summary.indexOf(" Загружается расширенный каталог: ");
+    if(loadingPos>=0)summary=summary.slice(0,loadingPos);
+    summary=summary.replace("реальные варианты опубликованы по "+withTours.size+" странам.",
+      "реальные варианты опубликованы по "+completeCountries.size+" странам.");
+    if(missing.length)summary=summary.replace(
+      " Дополнительно проверены: "+missing.join(", ")+".","");
+    if(absentAfterComplete.length)summary+=" Дополнительно проверены: "+
+      absentAfterComplete.join(", ")+".";
+    $("previewCoverage").textContent=summary+
       " В браузере доступны все "+all.length.toLocaleString("ru-RU")+
       " опубликованных вариантов из отдельных частей каталога.";
     renderTourPreviews(true);
