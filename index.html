@@ -292,7 +292,7 @@ function runSearch(scroll=false){
  $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
  if(scroll)scrollToResults();
 }
-form.addEventListener("submit",e=>{e.preventDefault();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();});
+form.addEventListener("submit",e=>{e.preventDefault();sourceFilterOptions();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdateRoutes==="function")window.jamaicaUpdateRoutes();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();});
 async function loadOffers(){
  inventoryLoading=true;
  try{
@@ -528,7 +528,7 @@ $("filterReset").addEventListener("click",()=>{
  $("hotelSearch").value="";$("budget").value="";
  sourceFilterOptions();form.requestSubmit();
 });
-form.addEventListener("submit",()=>sourceFilterOptions());
+
 const filtersMedia=window.matchMedia("(min-width:791px)");
 const filtersDisclosure=$("filtersDisclosure");
 filtersDisclosure.open=filtersMedia.matches;
