@@ -27,6 +27,7 @@ MAX_COUNTRIES = 120
 MAX_PER_COUNTRY = 2800
 MAX_LISTS_PER_COUNTRY = 5
 EXTRA_DISCOVERY_BATCH = 8
+PRIORITY_ADDITIONAL_COUNTRIES = ("Китай","Вьетнам")
 ALLOWED_ORIGIN = "Иркутск"
 
 def normalize_date(value):
@@ -126,7 +127,7 @@ def select_source_countries(directory, *, extra_priority_names=(), probe_slot=0,
                isinstance(c.get("name"),str) and isinstance(c.get("id"),str)]
     primary=[c for c in countries if bg.CITY_ID in c.get("origins",[])]
     others=[c for c in countries if bg.CITY_ID not in c.get("origins",[])]
-    chosen_names=set(extra_priority_names or ())
+    chosen_names=set(extra_priority_names or ())|set(PRIORITY_ADDITIONAL_COUNTRIES)
     promoted=[c for c in others if c["name"] in chosen_names]
     pending=[c for c in others if c["name"] not in chosen_names]
     if type(probe_slot) is not int or probe_slot<0 or not 1<=discovery_batch<=20:
@@ -143,7 +144,7 @@ def select_source_countries(directory, *, extra_priority_names=(), probe_slot=0,
         "irkutsk_catalog_countries":len(primary),
         "other_tour_countries":len(others),
         "other_countries_probed_this_cycle":len(explored),
-        "previously_discovered_countries":len(promoted),
+        "regular_additional_countries_checked":len(promoted),
     }
 
 
