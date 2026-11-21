@@ -19,7 +19,7 @@ def country(n,i,origin=False):
 def directory():
     return {"schema":"jamaica.destination-directory.v1",
             "countries":[country("Таиланд",1,True)]+[
-                country("Направление "+str(i),i+1) for i in range(16)],
+                country("Направление "+str(i),i+2) for i in range(16)],
             "hotels":[
                 {"id":"102610001486","name":"TEST","country":"Таиланд",
                  "resort":"Пхукет"},
