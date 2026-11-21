@@ -202,6 +202,26 @@ async function loadRightsApprovedHotelPhotos(){
  }catch(e){return false;}
 }
 
+function photoSearchPlaceName(place){
+ const common={
+  "Паттайя":"Pattaya","Пхукет":"Phuket","Нячанг":"Nha Trang",
+  "Хургада":"Hurghada","Анталия":"Antalya",
+  "Шарм-эль-Шейх":"Sharm el Sheikh","Дубай":"Dubai",
+  "Бангкок":"Bangkok","Бали":"Bali","Кемер":"Kemer",
+  "Сочи":"Sochi","Алания":"Alanya",
+  "Стамбул":"Istanbul","Самуи":"Koh Samui",
+  "Пханг Нга":"Phang Nga","Кута":"Kuta"
+ };
+ if(Object.prototype.hasOwnProperty.call(common,place))return common[place];
+ const translit={
+  "а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"yo",
+  "ж":"zh","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m",
+  "н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u",
+  "ф":"f","х":"kh","ц":"ts","ч":"ch","ш":"sh","щ":"shch",
+  "ъ":"","ы":"y","ь":"","э":"e","ю":"yu","я":"ya"
+ };
+ return String(place).toLowerCase().split("").map(x=>translit[x]??x).join("");
+}
 async function loadPhotos(){
  if(!hotel){text("photoStatus","Не выбран отель");return;}
  if(await loadRightsApprovedHotelPhotos())return;
@@ -229,9 +249,12 @@ async function loadPhotos(){
  // This is a DISTINCT destination gallery, never a fabricated hotel gallery.
  // A CC photograph of Pattaya beach is not a photograph of Basaya Beach hotel.
  try{
-  const token=normalize(destination);
-  const placePhotos=await searchCommons(destination+" beach filetype:bitmap",
-     title=>normalize(title).includes(token)&&token.length>=4,4);
+  const english=photoSearchPlaceName(destination);
+  const token=normalize(english);
+  const localToken=normalize(destination);
+  const placePhotos=await searchCommons(english+" beach filetype:bitmap",
+     title=>(normalize(title).includes(token)&&token.length>=4)||
+            (normalize(title).includes(localToken)&&localToken.length>=4),4);
   if(placePhotos.length){
    paintCommonsPhotos(placePhotos,{hotelPhoto:false,place:destination});
    text("photoStatus","Точных лицензированных фотографий «"+hotelName+
