@@ -47,7 +47,7 @@ def main():
     root=pages["index.html"][1]
     for key in ("tourSearchForm","departure","destination","dateFrom","nights",
                 "adults","kids","budget","hotelSearch","offerCards",
-                "previewCards","previewCountryChips","routeCards","noOffers"):
+                "previewCards","previewCountryChips","allCountrySelector","routeCards","noOffers"):
         require(root.ids.get(key)==1,"MISSING_UI_ID_"+key)
     for key in ("heading","facts","bookingStatus","hotelLink","alternatives"):
         require(pages["preview.html"][1].ids.get(key)==1,"MISSING_PREVIEW_ID_"+key)
