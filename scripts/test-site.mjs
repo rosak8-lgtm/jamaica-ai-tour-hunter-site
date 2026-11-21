@@ -163,6 +163,8 @@ assert.ok(page.includes('function interleaveCountries(rows)'));
 assert.ok(page.includes('function referencePrice(x)'));
 assert.ok(page.includes('id="previewUpdatedAt"'));
 assert.ok(page.includes('id="previewCoverage"'));
+assert.ok(page.includes('id="sourceCountryPriority"'));
+assert.ok(page.includes('const priorityNames=["Таиланд","Китай","Вьетнам"]'));
 assert.ok(page.includes('id="allCountrySelector"'));
 assert.ok(page.includes('fullCountryNames.length'));
 assert.ok(page.includes('По направлению'));
