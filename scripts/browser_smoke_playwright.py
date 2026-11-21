@@ -265,15 +265,17 @@ def main():
                 page.goto(base+"hotel.html?id=102667206879",wait_until="domcontentloaded")
                 page.wait_for_function(
                   "()=>document.getElementById('description').textContent.includes('Asia International Hotel') && "+
-                  "document.getElementById('gallery').querySelectorAll('figure.photo').length===3",
+                  "document.getElementById('gallery').querySelectorAll('figure.photo').length===6",
                   timeout=18000)
                 ensure("Гуанчжоу" in page.locator("#location").inner_text(),
                        "GUANGZHOU_HOTEL_ID_NOT_MATCHED")
-                ensure(page.locator("#gallery a").filter(has_text="CC BY-SA 4.0").count()==3,
+                ensure(page.locator("#gallery a").filter(has_text="CC BY-SA 4.0").count()==6,
                        "GUANGZHOU_THREE_LICENSE_CREDITS_MISSING")
-                ensure(page.locator("#gallery img").count()==3,
+                ensure(page.locator("#gallery img").count()==6,
                        "GUANGZHOU_HOTEL_GALLERY_MISSING")
-                print("GUANGZHOU_HOTEL_THREE_COMMONS_CC4_DIRECT_EXTERNAL_PHOTOS=PASS")
+                ensure(page.locator("#gallery").inner_text().count("Вид из гостиницы")==3,
+                       "GUANGZHOU_CITY_VIEWS_MISLABELED_AS_HOTEL_ROOMS")
+                print("GUANGZHOU_HOTEL_SIX_COMMONS_CC4_DIRECT_EXTERNAL_PHOTOS=PASS")
 
                 # All verified hotel photos fail to load: no broken <img> should
                 # remain, and Guangzhou must have only separately labeled city views.
