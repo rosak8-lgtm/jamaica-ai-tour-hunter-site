@@ -28,8 +28,9 @@
 <form id="tourSearchForm"><div class="fields">
 <div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
 <div class="field wide"><label for="destination">Страна или направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Любая страна" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
-<div class="field short"><label for="dateFrom">Дата вылета</label><input id="dateFrom" name="dateFrom" type="date"></div>
-<div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option><option value="3">3 ночи</option><option value="4">4 ночи</option><option value="5">5 ночей</option><option value="7">7 ночей</option><option value="10">10 ночей</option><option value="12">12 ночей</option><option value="14">14 ночей</option><option value="21">21 ночь</option><option value="30">30 ночей</option><option value="60">60 ночей</option><option value="120">120 ночей</option><option value="180">180 ночей</option></select></div>
+<div class="field short"><label for="dateFrom">Вылет не ранее</label><input id="dateFrom" name="dateFrom" type="date"></div>
+<div class="field short"><label for="dateTo">Вылет не позднее</label><input id="dateTo" name="dateTo" type="date"></div>
+<div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option></select></div>
 <div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
 <div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
 <div class="field wide"><label for="budget">Максимальная цена на человека, ₽</label><input id="budget" name="budget" type="number" min="1000" max="10000000" placeholder="Без ограничения"></div>
@@ -112,6 +113,17 @@ const sorted=[...countries].sort((a,b)=>(priorities.get(a.n)??999)-(priorities.g
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
 const form=$("tourSearchForm");
+// Offer every supported length: do not hide valid 6/8/9/11/13-night tours.
+const nightsSelect=$("nights");
+for(let n=3;n<=180;n++){
+ const option=document.createElement("option");
+ option.value=String(n);option.textContent=n+" "+(n%10===1&&n%100!==11?"ночь":
+   [2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?"ночи":"ночей");
+ nightsSelect.append(option);
+}
+$("dateFrom").addEventListener("change",()=>{
+ $("dateTo").min=$("dateFrom").value;
+});
 const directHotelSearch=new URLSearchParams(location.search);
 if(directHotelSearch.has("hotel")||directHotelSearch.has("country")){
  const country=directHotelSearch.get("country")||"";
@@ -170,12 +182,13 @@ function strictOffer(o,now){
 }
 function filters(){
  const val=id=>$(id).value.trim();
- return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),nights:Number(val("nights")),adults:Number(val("adults")),children:Number(val("kids")),budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
+ return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),dateTo:val("dateTo"),nights:Number(val("nights")),adults:Number(val("adults")),children:Number(val("kids")),budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
 }
 function matching(o,q){
  if(o.origin.toLocaleLowerCase("ru")!==q.origin.toLocaleLowerCase("ru"))return false;
  if(q.country&&o.destination.toLocaleLowerCase("ru")!==q.country.toLocaleLowerCase("ru"))return false;
- if(q.date&&o.depart_date!==q.date)return false;
+ if(q.date&&o.depart_date<q.date)return false;
+ if(q.dateTo&&o.depart_date>q.dateTo)return false;
  if(q.nights!==0&&o.nights!==q.nights)return false;
  if(o.adults!==q.adults||o.children!==q.children)return false;
  if(q.budget>0 && o.total_rub/o.adults>q.budget)return false;
@@ -311,12 +324,12 @@ function renderRouteDiscovery(rebuild=true){
  const target=$("routeCards"),more=$("routeMore");
  const origin=$("departure").value.trim().toLocaleLowerCase("ru");
  const country=$("destination").value.trim().toLocaleLowerCase("ru");
- const day=$("dateFrom").value,nights=Number($("nights").value);
+ const day=$("dateFrom").value,dayTo=$("dateTo").value,nights=Number($("nights").value);
  const text=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
  let list=routeRecords.filter(x=>
   (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
   (!country||x.country.toLocaleLowerCase("ru")===country)&&
-  (!day||x.date===day)&&
+  (!day||x.date>=day)&&(!dayTo||x.date<=dayTo)&&
   (!nights||x.nights.includes(nights))&&
   (!text||x.route.toLocaleLowerCase("ru").includes(text))
  );
@@ -480,7 +493,7 @@ function renderTourPreviews(reset=true){
  if(reset){target.replaceChildren();previewVisible=0;}
  const origin=$("departure").value.trim().toLocaleLowerCase("ru");
  const country=$("destination").value.trim().toLocaleLowerCase("ru");
- const date=$("dateFrom").value;
+ const date=$("dateFrom").value,dateTo=$("dateTo").value;
  const nights=Number($("nights").value);
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
  const adults=Number($("adults").value),children=Number($("kids").value);
@@ -490,7 +503,7 @@ function renderTourPreviews(reset=true){
  let list=previewRecords.filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
-   (!date||x.depart_date===date)&&
+   (!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)&&
    (!nights||x.nights===nights)&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
    (!budget||!partyTwoAdults||referencePrice(x)===null||
@@ -574,6 +587,9 @@ async function loadTourPreviews(){
   previewCountryStatus=coverage;
   const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
+  const sampledMonths=[...new Set(coverage.flatMap(row=>
+    Array.isArray(row.sampled_departure_months)?row.sampled_departure_months:[])
+    .filter(m=>/^\d{4}-\d{2}$/.test(m)))].sort();
   const scope=data.source_scope||{};
   previewTruncated=data.truncated_to_public_limit===true;
   previewCandidateTotal=Number.isSafeInteger(data.total_candidate_previews)&&data.total_candidate_previews>=data.previews.length?
@@ -584,6 +600,7 @@ async function loadTourPreviews(){
     "; реальные варианты опубликованы по "+withTours.size+" странам."+
     (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
     " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным."+
+    (sampledMonths.length?" Месяцы, из которых проверялись прайс-листы в этом цикле: "+sampledMonths.join(", ")+". Даты и цены меняются; остальные месяцы проверяются в последующих циклах.":"")+
     (previewTruncated?" ВАЖНО: опубликовано лишь "+data.previews.length.toLocaleString("ru-RU")+
      " из "+previewCandidateTotal.toLocaleString("ru-RU")+
      " найденных предварительных записей. Другие варианты могли не попасть в выдачу из-за ограничения размера каталога.":"");

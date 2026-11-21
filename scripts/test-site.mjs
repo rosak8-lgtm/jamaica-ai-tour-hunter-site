@@ -30,6 +30,13 @@ for(const id of ['tourSearchForm','departure','destination','dateFrom','nights',
  assert.ok(page.includes('id="'+id+'"'),'Missing search control: '+id);
 }
 assert.ok(page.includes('value="0" selected>Любая длительность'));
+assert.ok(page.includes('id="dateTo"'),'Date-to filter is required for monthly searching');
+assert.ok(page.includes('for(let n=3;n<=180;n++)'),'Every supported 3–180-night length must be selectable');
+assert.ok(page.includes('(!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)'),
+ 'Preview results must respect the inclusive date interval');
+assert.ok(page.includes('sampled_departure_months'),'Source-backed months sampled this cycle should be visible');
+assert.ok(page.includes('Месяцы, из которых проверялись прайс-листы'),'Do not claim all months were checked');
+
 assert.ok(page.includes('slice(visible,visible+300)'),'All 251 countries must be rendered');
 assert.ok(page.includes('tour.html?offer='));
 assert.ok(!page.includes('button.href="checkout.html?offer="'));
@@ -115,6 +122,13 @@ assert.equal(matching(sample,{...q,country:'Китай'}),false);
 assert.equal(matching(sample,{...q,hotel:'test hotel'}),true,'Normalized hotel query');
 assert.equal(matching(sample,{...q,budget:30000}),false);
 assert.equal(matching(sample,{...q,budget:50000}),true);
+assert.equal(matching(sample,{...q,date:sample.depart_date,dateTo:sample.depart_date}),true,
+ 'Both date endpoints must be inclusive');
+assert.equal(matching(sample,{...q,date:'2099-01-01'}),false,
+ 'Future start date must exclude earlier tours');
+assert.equal(matching(sample,{...q,dateTo:'2020-01-01'}),false,
+ 'Earlier end date must exclude later tours');
+
 const guide=JSON.parse(fs.readFileSync('hotel-reference.json','utf8'));
 const hotelPage=fs.readFileSync('hotel.html','utf8');
 assert.equal(guide.schema,'jamaica.hotel-reference.v1');
