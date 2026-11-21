@@ -133,12 +133,32 @@ async function searchCommons(query,match,limit=6){
 }
 function paintCommonsPhotos(photos,{hotelPhoto,place}){
  const target=$("gallery");target.replaceChildren();
+ let visible=photos.length,loaded=0;
  for(const photo of photos){
   const figure=make("figure","photo");
+  figure.dataset.photoSource=hotelPhoto?"commons-hotel":"commons-destination";
   const img=make("img");
+  img.alt=hotelPhoto?"Фото гостиницы "+hotel.name:"Фото курорта "+place+" (НЕ фотография гостиницы)";
+  img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
+  img.addEventListener("load",()=>{
+   loaded++;
+   text("photoStatus",hotelPhoto?
+     loaded+" лицензированных фото выбранной гостиницы загружено с Wikimedia Commons.":
+     loaded+" лицензированных фото курорта "+place+" загружено. Это НЕ фотография гостиницы.");
+  },{once:true});
+  img.addEventListener("error",()=>{
+   figure.remove();visible--;
+   if(visible===0){
+    text("photoStatus",hotelPhoto?
+      "Фотографии гостиницы недоступны на внешнем сервере. Проверяем отдельные фото курорта.":
+      "Фотографии курорта не загрузились. Проверенных изображений пока нет.");
+    if(hotelPhoto)loadDestinationPhotos(place);
+    else showPhotoPlaceholder();
+   }else if(!loaded){
+    text("photoStatus","Часть внешних изображений не загрузилась. Проверяем остальные.");
+   }
+  },{once:true});
   img.src=photo.src;
-  img.alt=hotelPhoto?"Фото гостиницы "+hotel.name:"Фото курорта "+place+" (не фотография гостиницы)";
-  img.loading="lazy";img.referrerPolicy="no-referrer";
   figure.append(img);
   const caption=make("figcaption");
   caption.append(make("strong","",hotelPhoto?"Фото гостиницы":"Курорт "+place+" — НЕ фотография гостиницы"));
@@ -236,6 +256,8 @@ async function loadRightsApprovedHotelPhotos(){
 function photoSearchPlaceName(place){
  const common={
   "Паттайя":"Pattaya","Пхукет":"Phuket","Нячанг":"Nha Trang",
+  "Гуанчжоу":"Guangzhou","Шанхай":"Shanghai","Пекин":"Beijing",
+  "Хайнань":"Hainan","Санья":"Sanya","Ханой":"Hanoi",
   "Хургада":"Hurghada","Анталия":"Antalya",
   "Шарм-эль-Шейх":"Sharm el Sheikh","Дубай":"Dubai",
   "Бангкок":"Bangkok","Бали":"Bali","Кемер":"Kemer",
@@ -252,6 +274,42 @@ function photoSearchPlaceName(place){
   "ъ":"","ы":"y","ь":"","э":"e","ю":"yu","я":"ya"
  };
  return String(place).toLowerCase().split("").map(x=>translit[x]??x).join("");
+}
+function showPhotoPlaceholder(){
+ const target=$("gallery");target.replaceChildren();
+ const card=make("div","hero");
+ const child=make("div");
+ child.append(make("span","","🏨"),
+  make("p","","Проверенных фотографий именно этого отеля пока нет"));
+ card.append(child);target.append(card);
+ text("photoStatus","Внешние изображения недоступны или не подтверждены для коммерческого показа. Чужие фотографии гостиниц не подставляются.");
+}
+async function loadDestinationPhotos(place,hotelName){
+ // The only fallback is an expressly labeled destination gallery, never a hotel photo.
+ const english=photoSearchPlaceName(place);
+ const token=normalize(english);
+ const localToken=normalize(place);
+ const isCity=new Set(["Guangzhou","Shanghai","Beijing","Bangkok","Dubai",
+   "Istanbul","Hanoi","Hong Kong","Kuala Lumpur"]).has(english);
+ const terms=isCity?[" skyline filetype:bitmap"," city filetype:bitmap"]:
+   [" beach filetype:bitmap"," coast filetype:bitmap"];
+ const photos=[];
+ try{
+  for(const term of terms){
+   const matches=await searchCommons(english+term,
+     title=>(token.length>=4&&normalize(title).includes(token))||
+            (localToken.length>=4&&normalize(title).includes(localToken)),4);
+   for(const p of matches)if(!photos.some(x=>x.page===p.page))photos.push(p);
+   if(photos.length>=3)break;
+  }
+ }catch(e){}
+ if(photos.length){
+  paintCommonsPhotos(photos.slice(0,4),{hotelPhoto:false,place});
+  text("photoStatus","Точных лицензированных фотографий «"+hotelName+
+   "» пока нет. Ниже — курорт "+place+" (НЕ фотография гостиницы).");
+  return;
+ }
+ showPhotoPlaceholder();
 }
 async function loadPhotos(skipApproved=false){
  if(!hotel){text("photoStatus","Не выбран отель");return;}
@@ -277,30 +335,7 @@ async function loadPhotos(skipApproved=false){
     " фото, совпадающих по названию гостиницы, из лицензированной библиотеки. Автор и условия использования приведены под каждой фотографией.");
   return;
  }
- // This is a DISTINCT destination gallery, never a fabricated hotel gallery.
- // A CC photograph of Pattaya beach is not a photograph of Basaya Beach hotel.
- try{
-  const english=photoSearchPlaceName(destination);
-  const token=normalize(english);
-  const localToken=normalize(destination);
-  const placePhotos=await searchCommons(english+" beach filetype:bitmap",
-     title=>(normalize(title).includes(token)&&token.length>=4)||
-            (normalize(title).includes(localToken)&&localToken.length>=4),4);
-  if(placePhotos.length){
-   paintCommonsPhotos(placePhotos,{hotelPhoto:false,place:destination});
-   text("photoStatus","Точных лицензированных фотографий «"+hotelName+
-     "» пока нет. Ниже показан курорт "+destination+
-     ", а НЕ фасад, территория или номера выбранной гостиницы.");
-   return;
-  }
- }catch(e){}
- const target=$("gallery");target.replaceChildren();
- const card=make("div","hero");
- const child=make("div");
- child.append(make("span","","🏨"),
-  make("p","","Фотографии именно этого отеля пока не подтверждены"));
- card.append(child);target.append(card);
- text("photoStatus","Доступные коммерческие фотографии требуют разрешения владельца. Мы не подставляем чужую гостиницу.");
+ await loadDestinationPhotos(destination,hotelName);
 }
 
 function showTrips(rows){
