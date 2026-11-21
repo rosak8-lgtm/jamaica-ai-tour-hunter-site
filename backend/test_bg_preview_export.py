@@ -103,6 +103,34 @@ class Tests(unittest.TestCase):
                          {"2026-11-25","2026-12-05"})
         self.assertEqual(exporter.fair_catalog(rows,max_rows=0),[])
 
+    def test_catalog_cap_preserves_real_night_diversity(self):
+        def preview(day,nights,price,ident):
+            return {"country":"Вьетнам","depart_date":day,"nights":nights,
+                    "price_reference_rub":price,
+                    "price_reference_party":"TWO_ADULTS",
+                    "hotel":"Real Hotel","room":"STANDARD","id":ident}
+        rows=[preview("2026-12-01",3,70000,"3cheap"),
+              preview("2026-12-01",3,71000,"3repeat"),
+              preview("2026-12-01",3,72000,"3repeat2"),
+              preview("2026-12-01",12,76000,"12nights"),
+              preview("2026-12-02",7,73000,"7nights")]
+        found=exporter.fair_catalog(rows,max_rows=3)
+        self.assertEqual({x["nights"] for x in found},{3,7,12})
+        self.assertEqual({x["id"] for x in found},
+                         {"3cheap","12nights","7nights"})
+        self.assertEqual(len(found),3)
+        # Fairness changes only selection; it never verifies payment or booking.
+        for x in found:
+            self.assertNotIn("bookable",x)
+    def test_catalog_keeps_all_178_actual_offered_nights_when_cap_allows(self):
+        rows=[{"country":"Таиланд","depart_date":"2026-12-10",
+               "nights":n,"price_reference_rub":80000+n,
+               "price_reference_party":"TWO_ADULTS",
+               "hotel":"Actual Hotel","room":"STANDARD","id":str(n)}
+              for n in range(3,181)]
+        found=exporter.fair_catalog(rows,max_rows=178)
+        self.assertEqual({x["nights"] for x in found},set(range(3,181)))
+        self.assertEqual(len(found),178)
     def test_unpriced_records_never_rank_cheaper_than_known_prices(self):
         rows=[
             {"country":"A","depart_date":"2026-12-03","hotel":"B",

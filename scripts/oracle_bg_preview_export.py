@@ -211,15 +211,36 @@ def fair_catalog(candidates, max_rows=MAX_ROWS):
 
     by_country={}
     for country,dates in groups.items():
-        for values in dates.values():
-            values.sort(key=ranking)
-        # Visit each date's best priced record before a second record for a date.
-        date_keys=sorted(dates,key=lambda day:(ranking(dates[day][0])[0],day))
+        # A popular 3- or 7-night tariff can produce thousands of room variants.
+        # Rank *each actual duration* separately inside each departure date;
+        # only then revisit repeated rooms of a duration. Without this, a
+        # bounded public catalog can suppress genuine 10/12/14/21-night tours.
+        # These remain unverified PREVIEWS, never saleable prices or offers.
+        dates_by_night={}
+        for day,values in dates.items():
+            grouped={}
+            for item in values:
+                night=item.get("nights")
+                key=night if type(night) is int and 3<=night<=180 else None
+                grouped.setdefault(key,[]).append(item)
+            for same_night in grouped.values():
+                same_night.sort(key=ranking)
+            night_order=sorted(grouped,key=lambda k:(
+                ranking(grouped[k][0])[0],k if k is not None else 999))
+            interleaved=[]
+            for layer in range(max(len(v) for v in grouped.values())):
+                for night in night_order:
+                    if layer<len(grouped[night]):
+                        interleaved.append(grouped[night][layer])
+            dates_by_night[day]=interleaved
+        # Continue fairly across dates before taking more from any one date.
+        date_keys=sorted(dates_by_night,
+                         key=lambda day:(ranking(dates_by_night[day][0])[0],day))
         chosen=[]
-        for layer in range(max(len(values) for values in dates.values())):
+        for layer in range(max(len(v) for v in dates_by_night.values())):
             for day in date_keys:
-                if layer<len(dates[day]):
-                    chosen.append(dates[day][layer])
+                if layer<len(dates_by_night[day]):
+                    chosen.append(dates_by_night[day][layer])
         by_country[country]=chosen
 
     names=sorted(by_country)
