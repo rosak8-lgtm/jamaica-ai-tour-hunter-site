@@ -40,8 +40,7 @@ class Tests(unittest.TestCase):
     def test_page_fails_closed_if_enrichment_wrong_hotel(self):
         self.assertIn('entry.name!==hotel.name||entry.country!==hotel.country',self.page)
         self.assertIn('entry.source_checked_at',self.page)
-        self.assertIn('photo.kind',self.page)
-        self.assertIn("loaded", "loaded") # independent from network
+        self.assertIn('p.kind==="historical_view_not_property_facade"',self.page)
     def test_page_description_precedes_gallery(self):
         self.assertLess(self.page.index('id="hotelDescriptionSection"'),self.page.index('id="gallery"'))
         for id_ in ("enrichedFeatures","curatedRooms","facts","rooms","gallery","reviewForm"):
