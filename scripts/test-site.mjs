@@ -281,6 +281,20 @@ for(const [id,name,country,license,kind] of [
 assert.ok(hotelPage.includes('"CC BY 2.0":"https://creativecommons.org/licenses/by/2.0/"'),
  'Commercially reusable CC BY 2.0 hotel photo credit and license');
 
+for(const [id,name,country,source] of [
+ ['102618075164','BAIYUN HOTEL GUANGZHOU (广州白云宾馆)','Китай','Guangzhou Baiyun Hotel 20211210-03.jpg'],
+ ['102624989868','CHINA HOTEL GUANGZHOU (广州中国大酒店 )','Китай','广州中国大酒店.jpg'],
+ ['102625907920','КРАСНОЯРСК, гостиница','Россия','Гостиница "Красноярск".JPG']
+]){
+ const x=enriched.hotels[id];
+ assert.ok(x&&x.name===name&&x.country===country,'Existing published tour exact-ID source '+id);
+ assert.equal(x.photos.length,1);
+ assert.equal(x.photos[0].file,source);
+ assert.equal(x.photos[0].kind,'hotel_exterior');
+ assert.equal(x.photos[0].license,'CC BY-SA 4.0');
+}
+assert.ok(page.includes('_.\" -]{5,170}')&&hotelPage.includes('_.\" -]{5,170}'),
+ 'Wikimedia filenames containing quotation marks must be safe and supported');
 const remotePhotoUrlFn=hotelPage.match(/function strictExternalPhotoUrl\([\s\S]*?\n\}/);
 assert.ok(remotePhotoUrlFn,'Required HTTPS exact-host safe remote image linking');
 const strictExternalPhotoUrl=vm.runInNewContext(
