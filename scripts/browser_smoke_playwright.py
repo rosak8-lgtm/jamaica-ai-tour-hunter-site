@@ -64,6 +64,17 @@ def main():
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                ensure(page.locator('#nights option[value="8"]').count()==1,
+                       "EIGHT_NIGHT_OPTION_MISSING")
+                ensure(page.locator('#nights option[value="9"]').count()==1,
+                       "NINE_NIGHT_OPTION_MISSING")
+                ensure(page.locator('#nights option[value="11"]').count()==1,
+                       "ELEVEN_NIGHT_OPTION_MISSING")
+                ensure(page.locator('#nights option').count()==179,
+                       "NOT_ALL_3_TO_180_NIGHTS_PRESENT")
+                ensure(page.locator("#dateTo").count()==1,
+                       "DATE_RANGE_UPPER_BOUND_MISSING")
+
                 first30=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 shown={text.split(" · ")[0] for text in first30}
                 ensure(len(shown)>=3,"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
@@ -84,12 +95,22 @@ def main():
                     ensure("ВАЖНО" in page.locator("#previewCoverage").inner_text(),
                            "TRUNCATED_CATALOGUE_WARNING_NOT_VISIBLE")
 
+                turkey_dates=sorted({r["depart_date"] for r in rows if r["country"]=="Турция"})
+                ensure(bool(turkey_dates),"NO_TURKEY_DATES_FOR_RANGE_TEST")
+                page.locator("#dateFrom").fill(turkey_dates[0])
+                page.locator("#dateTo").fill(turkey_dates[0])
                 page.locator("#destination").fill("Турция")
                 page.locator("#tourSearchForm button[type=submit]").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
                 visible=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 ensure(visible and all(text.startswith("Турция · ") for text in visible),
                        "COUNTRY_FILTER_DID_NOT_REFRESH_PREVIEWS")
+                ensure(page.locator("#previewCards article.offerCard").count()>0,
+                       "EXACT_DATE_RANGE_EXCLUDED_SOURCE_RECORD")
+                page.locator("#dateFrom").fill("")
+                page.locator("#dateTo").fill("")
+                page.locator("#tourSearchForm button[type=submit]").click()
+
                 link=page.locator('#previewCards article.offerCard a[href^="preview.html?id="]').first
                 href=link.get_attribute("href")
                 ensure(href and href.startswith("preview.html?id=p_"),"NO_SELECTED_TOUR_LINK")
