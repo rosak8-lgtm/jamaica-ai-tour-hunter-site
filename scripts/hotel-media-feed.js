@@ -37,6 +37,7 @@ async function getApprovedEntry(id,country,name){
     !/^\d{4}-\d{2}-\d{2}$/.test(entry.rights_verified_at)||
     typeof entry.rights_expires_at!=="string"||
     !/^\d{4}-\d{2}-\d{2}$/.test(entry.rights_expires_at)||
+    !Number.isFinite(Date.parse(entry.rights_expires_at+"T23:59:59Z"))||
     Date.now()>Date.parse(entry.rights_expires_at+"T23:59:59Z")||
     !Array.isArray(entry.photos)||
     !Array.isArray(entry.approved_image_hosts)||
