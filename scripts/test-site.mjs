@@ -280,7 +280,7 @@ assert.ok(page.includes('id="previewUpdatedAt"'));
 assert.ok(page.includes('id="previewCoverage"'));
 assert.ok(page.includes('id="sourceCountryPriority"'));
 assert.ok(page.includes('const priorityNames=["Таиланд","Китай","Вьетнам"]'));
-assert.ok(page.includes('id="allCountrySelector"'));
+assert.ok(!page.includes('id="allCountrySelector"'),"No duplicate country chooser in the results");
 assert.ok(page.includes('fullCountryNames.length'));
 assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');
 assert.ok(page.includes('data.countries_status'));
