@@ -19,10 +19,15 @@ import tempfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-# Direct script execution on Oracle and importlib-based unit tests must
-# resolve the same bundled pure-source helper.
-sys.path.insert(0,str(Path(__file__).resolve().parent))
+# The installed Oracle service script may live outside the GitHub clone:
+# prefer audited, freshly fetched helpers from that pinned checkout.
+_REPO_SCRIPTS=Path.home()/".local"/"share"/"jamaica-oracle-catalog"/"site"/"scripts"
+if _REPO_SCRIPTS.is_dir():
+    sys.path.insert(0,str(_REPO_SCRIPTS))
+else:
+    sys.path.insert(0,str(Path(__file__).resolve().parent))
 import recent_preview_catalog as recent
+import catalog_size_budget as byte_limit
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
 RUNROOT = Path.home()/".local"/"share"/"jamaica-oracle-catalog"
@@ -309,8 +314,14 @@ def publish(env):
              "--output",str(generated),"--max-countries","120",
              "--per-country","5","--discover-state",str(DISCOVERY_STATE)]
     run(command,cwd=SCRIPTS,timeout=200,expose=True)
-    if not generated.is_file() or generated.stat().st_size>MAX_BYTES:
-        raise CatalogHold("GENERATED_FEED_INVALID_SIZE")
+    # Distinguish missing/empty/oversized output. Prior single generic HOLD
+    # concealed whether the upstream exporter actually wrote a file.
+    if not generated.is_file() or generated.is_symlink():
+        raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
+    generated_bytes=generated.stat().st_size
+    log("JAMAICA_GENERATED_FEED_BYTES",generated_bytes)
+    if not 100<=generated_bytes<=MAX_BYTES:
+        raise CatalogHold("GENERATED_FEED_EMPTY_OR_OVERSIZED")
     new=json.loads(generated.read_text(encoding="utf-8"))
     validate(new,directory)
     previous_cache=load_recent_source_cache()
@@ -324,6 +335,12 @@ def publish(env):
         if cached_rows:
             validate({**new,"previews":cached_rows},directory)
     new,next_cache=recent.combine(new,previous_cache,max_rows=MAX_ITEMS)
+    new,dropped_by_budget=byte_limit.fit_feed(new,max_bytes=32_000_000)
+    # Never accumulate private history entries that failed the public byte cap.
+    retained_ids={item["id"] for item in new["previews"]}
+    next_cache={**next_cache,"entries":[item for item in next_cache["entries"]
+                if item["row"]["id"] in retained_ids]}
+    log("JAMAICA_PREVIEWS_DROPPED_BY_BYTE_BUDGET",dropped_by_budget)
     count=validate(new,directory)
     public_root,public_chunks=make_sharded_catalog(new)
     validate(public_root,directory)
