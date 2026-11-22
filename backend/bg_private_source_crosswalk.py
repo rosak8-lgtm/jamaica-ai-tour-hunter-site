@@ -90,6 +90,8 @@ def private_source_candidates(preview: dict, rooms: list[dict],
                 not row["room"].strip() or
                 (group_index == 0 and row["room"] != preview["room"])):
                 continue
+            if not isinstance(row.get("prices"), list):
+                continue
             binding = _operator_source_binding(row)
             if binding is None:
                 continue
