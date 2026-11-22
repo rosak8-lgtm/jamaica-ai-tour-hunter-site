@@ -1,0 +1,138 @@
+{
+  "schema": "jamaica.destination-media.v1",
+  "updated_at": "2026-11-22",
+  "image_bytes_storage": "external Wikimedia Commons only; not Oracle",
+  "purpose": "Clearly labelled destination photos when exact-hotel picture is unavailable; never represent as hotel",
+  "countries": {
+    "Абхазия": {
+      "file": "Old Gagra, Abkhazia, Palm, Sun, Гагра, Абхазия.jpg",
+      "author": "Vyacheslav Argenberg",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Old_Gagra,_Abkhazia,_Palm,_Sun,_Гагра,_Абхазия.jpg",
+      "place": "Гагра",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Вьетнам": {
+      "file": "Phan Thiết - beach.JPG",
+      "author": "1700-talet",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Phan_Thiết_-_beach.JPG",
+      "place": "Фантьет",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Египет": {
+      "file": "Red Sea in Hurghada.jpg",
+      "author": "Iwelldone",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Red_Sea_in_Hurghada.jpg",
+      "place": "Хургада",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Китай": {
+      "file": "Pearl River in Guangzhou 20220712-01.jpg",
+      "author": "中少",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Pearl_River_in_Guangzhou_20220712-01.jpg",
+      "place": "Гуанчжоу",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Мальдивы": {
+      "file": "Maldives beach.jpg",
+      "author": "Sindhukandru",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Maldives_beach.jpg",
+      "place": "Хулхумале",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Объединенные Арабские Эмираты": {
+      "file": "A view of Dubai's skyline.jpg",
+      "author": "Chatax902",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:A_view_of_Dubai's_skyline.jpg",
+      "place": "Дубай",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Россия": {
+      "file": "RU Krasnoyarsk Yenisei River Kommunalny Bridge.jpg",
+      "author": "Alexander Klink",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:RU_Krasnoyarsk_Yenisei_River_Kommunalny_Bridge.jpg",
+      "place": "Красноярск",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Таиланд": {
+      "file": "Pattaya Beach in Thailand.jpg",
+      "author": "VN.NguyenDucDuy",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Pattaya_Beach_in_Thailand.jpg",
+      "place": "Паттайя",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Турция": {
+      "file": "İstanbul bosphorus.jpg",
+      "author": "Yunuss31",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:İstanbul_bosphorus.jpg",
+      "place": "Стамбул",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Индия": {
+      "file": "Calangute beach Goa.jpg",
+      "author": "Jonathansammy",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Calangute_beach_Goa.jpg",
+      "place": "Гоа",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Индонезия": {
+      "file": "Bali - Kuta Beach.jpg",
+      "author": "Sanji24",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Bali_-_Kuta_Beach.jpg",
+      "place": "Бали",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Сейшелы": {
+      "file": "Anse Source d'Argent.jpg",
+      "author": "Mathieu Bastide",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Anse_Source_d'Argent.jpg",
+      "place": "Ла-Диг",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    },
+    "Шри-Ланка": {
+      "file": "Unawatuna Beach.jpg",
+      "author": "Kondephy",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Unawatuna_Beach.jpg",
+      "place": "Унаватуна",
+      "kind": "destination_not_hotel",
+      "caption": "Пейзаж направления, не фотография гостиницы"
+    }
+  }
+}
