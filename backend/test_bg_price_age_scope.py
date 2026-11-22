@@ -22,6 +22,7 @@ def row(room="STANDARD HB",id_ns="104623691678",prices=None,**updates):
       "duration":"7","room":room,
       "id_ns":id_ns,
       "id_price":"121120516103","dt":"11.12.2026","o_duration":"7",
+      "_jamaica_private_prx":"104499999900000025",
       "sr":"PRIVATE_PROVIDER_FLIGHT_TOKEN",
       "prices":prices if prices is not None else [
         {"ag":"[14-99][14-99][2-11][12-17]"}
@@ -92,10 +93,11 @@ class Tests(unittest.TestCase):
      self.assertEqual(report["candidate_counts"],[1,1])
      self.assertEqual(report["source_metadata_counts"],[1,1])
      self.assertEqual(report["shared_source_candidate_count"],1)
-     self.assertEqual(report["source_status"],"POTENTIAL_COMMON_PRICE_LIST_ONLY")
+     self.assertEqual(report["source_status"],"POTENTIAL_SAME_PRX_PRICE_LIST_ONLY")
      self.assertFalse(report["exact_supplier_quote"])
      self.assertFalse(report["bookable"])
-     for secret in ("121120516103","104623691679","PRIVATE_PROVIDER_FLIGHT_TOKEN"):
+     for secret in ("121120516103","104623691679",
+                    "104499999900000025","PRIVATE_PROVIDER_FLIGHT_TOKEN"):
          self.assertNotIn(secret,str(report))
 
  def test_option_level_sr_is_not_official_source(self):
@@ -103,6 +105,7 @@ class Tests(unittest.TestCase):
      for changed in (
        {"sr":"","prices":[{"ag":"[14-99][14-99][2-11][12-17]","sr":"OPTION_ONLY"}]},
        {"id_ns":""},{"id_price":""},{"ic":"BROKEN"},
+       {"_jamaica_private_prx":None},{"_jamaica_private_prx":"invalid"},
        {"dt":"not-a-date"},{"o_duration":"0"}
      ):
          with self.subTest(changed=tuple(changed.keys())):
@@ -127,6 +130,31 @@ class Tests(unittest.TestCase):
      ])
      self.assertEqual(commission["shared_source_candidate_count"],1)
      self.assertFalse(commission["bookable"])
+
+ def test_same_template_from_different_prx_is_not_shared(self):
+     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
+     result=candidate_report(PREVIEW,rooms,[
+         row(),row(room="FAMILY HB",id_ns="104623691679",
+             _jamaica_private_prx="104499999900000026",
+             prices=[{"ag":"12+,2-11"}])])
+     self.assertEqual(result["candidate_counts"],[1,1])
+     self.assertEqual(result["source_metadata_counts"],[1,1])
+     self.assertEqual(result["shared_source_candidate_count"],0)
+     self.assertEqual(result["source_status"],"MISSING_COMMON_PRICE_LIST_SOURCE")
+     self.assertFalse(result["bookable"])
+     for secret in ("104499999900000025","104499999900000026"):
+         self.assertNotIn(secret,str(result))
+
+ def test_extra_stays_or_different_primary_date_cannot_be_quoted(self):
+     party=[{"adults":2,"child_ages":[6,12]}]
+     for extra in ({"o_duration":"6"},{"dt":"12.12.2026"},
+                   {"id_ns_b":"104625776787"},{"id_ns_a":"104625776787"},
+                   {"a_duration":"1"}):
+         with self.subTest(extra=extra):
+             result=candidate_report(PREVIEW,party,[row(**extra)])
+             self.assertEqual(result["candidate_counts"],[1])
+             self.assertEqual(result["source_metadata_counts"],[0])
+             self.assertFalse(result["exact_supplier_quote"])
 
  def test_missing_one_room_is_hold_not_price(self):
     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]

@@ -111,8 +111,26 @@ def _operator_source_binding(row:dict):
 
     BG JSON keeps id_ns, sr, id_price/ic, dt, and o_duration on the
     parent price-list row rather than the individual prices[] option.
+    prx comes from the top-level authorized price-list response.
     """
-    if not _RE_ID.fullmatch(str(row.get("id_ns",""))):
+    # prx originates in the authenticated top-level JSON response. Never
+    # combine same-template rows from different price-list documents.
+    private_prx=row.get("_jamaica_private_prx")
+    if (not _RE_ID.fullmatch(str(private_prx or "")) or
+        not _RE_ID.fullmatch(str(row.get("id_ns","")))):
+        return None
+    # This private serializer handles ONLY one main stay per room; any
+    # before/after roommeal must not silently be dropped from the request.
+    if any(row.get(field) not in (None,"",0) for field in
+           ("id_ns_b","id_ns_ab","id_ns_ba","id_ns_a",
+            "b_duration","ab_duration","ba_duration","a_duration")):
+        return None
+    started_tour=_iso(row.get("tour_date") or row.get("dt"))
+    started_hotel=_iso(row.get("dt") or row.get("tour_date"))
+    total_nights=row.get("duration")
+    primary_nights=row.get("o_duration",total_nights)
+    if (started_tour is None or started_hotel!=started_tour or
+        str(primary_nights)!=str(total_nights)):
         return None
     sr=row.get("sr")
     if (not isinstance(sr,str) or not 1<=len(sr.strip())<=2048 or
@@ -131,7 +149,7 @@ def _operator_source_binding(row:dict):
         not re.fullmatch(r"[1-9][0-9]{0,2}",str(raw_nights)) or
         not 1<=int(raw_nights)<=180):
         return None
-    return (kind,identifier,started.isoformat(),int(raw_nights))
+    return (str(private_prx),kind,identifier,started.isoformat(),int(raw_nights))
 
 
 def candidate_report(preview:dict,selected_rooms:list[dict],rows:list[dict])->dict:
@@ -207,7 +225,7 @@ def candidate_report(preview:dict,selected_rooms:list[dict],rows:list[dict])->di
         "candidate_counts":counts,
         "source_metadata_counts":evidence,
         "shared_source_candidate_count":len(common),
-        "source_status":("POTENTIAL_COMMON_PRICE_LIST_ONLY" if common else
+        "source_status":("POTENTIAL_SAME_PRX_PRICE_LIST_ONLY" if common else
                          "MISSING_COMMON_PRICE_LIST_SOURCE"),
         "exact_supplier_quote":False,
         "availability_verified":False,
