@@ -5,6 +5,7 @@
   const T=root.JamaicaTravelers;
   const el=id=>document.getElementById(id);
   let active=[{adults:2,child_ages:[]}];
+  let roomSequence=1;
   function add(tag,text,cls,parent){
    const x=document.createElement(tag);if(cls)x.className=cls;
    if(text!==undefined)x.textContent=text;
@@ -36,7 +37,7 @@
   }
   function addRoom(initial={adults:1,child_ages:[]}){
    if(el("extraRooms").children.length>=T.MAX_ROOMS-1)return;
-   const no=el("extraRooms").children.length+2;
+   const no=++roomSequence;
    const box=add("div",undefined,"partyRoom");
    const header=add("div",undefined,"partyRoomHeader",box);
    add("strong","Номер "+no,undefined,header);
