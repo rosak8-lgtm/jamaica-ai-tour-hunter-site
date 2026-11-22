@@ -41,6 +41,8 @@ def parse_age_ranges(marker: str):
             return None
         out=[]
         for part in raw:
+            if part.startswith("[") != part.endswith("]"):
+                return None
             m=_RE_PART.fullmatch(part)
             if not m:
                 return None
@@ -99,7 +101,7 @@ def _iso(raw):
         return None
     try:
         d=date.fromisoformat(raw) if "-" in raw else datetime.strptime(raw,"%d.%m.%Y").date()
-        return d if 2020<=d.year<=2100 else None
+        return d if 2020<=d.year<=2100 and raw in (d.isoformat(),d.strftime("%d.%m.%Y")) else None
     except ValueError:
         return None
 
