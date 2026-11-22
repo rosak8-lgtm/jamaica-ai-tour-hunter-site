@@ -191,12 +191,13 @@ def main():
                 if counts.get("Таиланд",0)>0:
                     thai_cards=page.locator("#previewCards article.offerCard").filter(has_text="Таиланд ·")
                     ensure(thai_cards.count()>0,"THAILAND_CARD_MISSING")
-                    # No exact facade for the displayed Thai property:
-                    # destination photography is permitted ONLY when prominently
-                    # labelled as NOT the chosen hotel, and with author/source.
-                    thai_cards.first.locator(".destinationPhotoLabel").wait_for(timeout=14000)
-                    ensure("не фото гостиницы" in thai_cards.first.locator(".destinationPhotoLabel").inner_text(),
-                           "DESTINATION_IMAGE_NOT_CLEARED_AS_NOT_HOTEL")
+                    # Destination photography is labelled via alt and a concise
+                    # real-place source link below the photo, not a large ribbon.
+                    thai_cards.first.locator(".previewPhotoMeta .mediaSourceCredit").wait_for(timeout=14000)
+                    ensure(thai_cards.first.locator(".destinationPhotoLabel").count()==0,
+                           "REDUNDANT_SCENERY_WARNING_RIBBON_RETURNED")
+                    ensure("Пейзаж:" in thai_cards.first.locator(".mediaSourceCredit").inner_text(),
+                           "DESTINATION_PHOTO_LOCATION_CREDIT_MISSING")
                     ensure("не выбранной гостиницы" in thai_cards.first.locator(".previewMedia img").first.get_attribute("alt"),
                            "DESTINATION_ALT_MUST_NOT_CLAIM_HOTEL")
                     thai_cards.first.locator(".previewMedia img").first.scroll_into_view_if_needed()
@@ -214,17 +215,20 @@ def main():
                       if(!frame||!footer||!photo)return false;
                       const imageRect=frame.getBoundingClientRect();
                       const footerRect=footer.getBoundingClientRect();
-                      const label=card.querySelector('.destinationPhotoLabel');
+                      const attribution=card.querySelector('.previewPhotoMeta .mediaSourceCredit');
                       return footerRect.top>=imageRect.bottom-1 &&
                         footerRect.height>0 &&
-                        footer.contains(label) &&
+                        footer.contains(attribution) &&
+                        !card.querySelector('.destinationPhotoLabel') &&
                         getComputedStyle(footer).position!=='absolute' &&
-                        getComputedStyle(label).position!=='absolute';
+                        getComputedStyle(attribution).position!=='absolute';
                     }""")
                     ensure(clean_image,"CAPTIONS_MUST_APPEAR_BELOW_NOT_ON_TOP_OF_PHOTO")
                 if counts.get("Абхазия",0)>0:
                     abkh=page.locator("#previewCards article.offerCard").filter(has_text="Абхазия ·")
-                    abkh.first.locator(".destinationPhotoLabel").wait_for(timeout=14000)
+                    abkh.first.locator(".previewPhotoMeta .mediaSourceCredit").wait_for(timeout=14000)
+                    ensure(abkh.first.locator(".destinationPhotoLabel").count()==0,
+                           "SCENERY_LABEL_SHOULD_NOT_CROWD_ABKHAZIA_CARD")
                     ensure(abkh.first.locator(".previewMedia img").count()==1,
                            "ABKHAZIA_PHOTO_NOT_SHOWN_IN_FIRST_RESULT")
 
