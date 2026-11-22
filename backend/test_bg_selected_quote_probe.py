@@ -63,6 +63,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(r["group_age_candidate_counts"],[1,1])
         self.assertEqual(r["group_source_metadata_counts"],[0,0])
         self.assertEqual(r["shared_source_candidate_count"],0)
+        self.assertEqual(r["private_source_plan_count"],0)
         self.assertEqual(r["source_status"],"MISSING_COMMON_PRICE_LIST_SOURCE")
         self.assertFalse(r["quote_verified"])
         self.assertFalse(r["availability_verified"])
@@ -104,6 +105,37 @@ class Tests(unittest.TestCase):
         self.assertFalse(result["quote_verified"])
         self.assertFalse(result["bookable"])
         for secret in ("104499999900000025","104499999900000026","PRIVATE_SR_TWO"):
+            self.assertNotIn(secret,str(result))
+
+    def test_private_grouped_source_plan_is_aggregate_only(self):
+        d,feed=self.setup_data()
+        class SameList(Api):
+            def get(self,url):
+                self.calls.append(url)
+                if "/yandex?" in url:
+                    return json.dumps({"entries":[{"date":DAY,"url":URL}]}).encode()
+                if "/partners?" in url:
+                    return json.dumps({
+                        "prx":"104499999900000025",
+                        "entries":[
+                            {**ROW,"id_ns":"104623691678",
+                             "id_price":"121132934133","sr":"SECRET_SR_1",
+                             "dt":DAY,"o_duration":"7",
+                             "prices":[{"ag":"12+,12+"}]},
+                            {**ROW,"room":"FAMILY HB",
+                             "id_ns":"104623691679",
+                             "id_price":"121132934133","sr":"SECRET_SR_2",
+                             "dt":DAY,"o_duration":"7",
+                             "prices":[{"ag":"12+,2-11"}]}
+                        ]}).encode()
+                raise AssertionError("unapproved request")
+        result=selected.inspect_selected(d,feed,P["id"],SameList(),
+            selected_rooms=[{"adults":2,"child_ages":[]},
+                            {"adults":1,"child_ages":[6]}])
+        self.assertEqual(result["private_source_plan_count"],1)
+        self.assertFalse(result["bookable"])
+        self.assertFalse(result["quote_verified"])
+        for secret in ("104499999900000025","104623691678","SECRET_SR_2"):
             self.assertNotIn(secret,str(result))
 
     def test_no_compatible_child_age_blocks_family_candidate(self):
