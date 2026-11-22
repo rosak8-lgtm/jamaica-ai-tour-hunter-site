@@ -18,6 +18,11 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# Direct script execution on Oracle and importlib-based unit tests must
+# resolve the same bundled pure-source helper.
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+import recent_preview_catalog as recent
+
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
 RUNROOT = Path.home()/".local"/"share"/"jamaica-oracle-catalog"
 CHECKOUT = RUNROOT/"site"
@@ -27,6 +32,7 @@ KNOWN_HOSTS = Path.home()/".ssh"/"jamaica_catalog_known_hosts"
 # its verified GitHub clone, so future catalog fixes apply automatically.
 SCRIPTS = CHECKOUT/"scripts"
 DISCOVERY_STATE = RUNROOT/"extra_irkutsk_source_countries.json"
+RECENT_SOURCE_CACHE = RUNROOT/"recent-price-list-previews.json"
 MAX_BYTES = 45_000_000
 MAX_ITEMS = 60_000
 ROOT_ITEMS = 8_000
@@ -158,6 +164,46 @@ def validate(feed, directory):
         raise CatalogHold("FEED_NOT_FRESH_FROM_SUPPLIER")
     return len(rows)
 
+def load_recent_source_cache(path=RECENT_SOURCE_CACHE):
+    """Owner-only source-memory file; invalid files cannot influence public data."""
+    if not path.exists() and not path.is_symlink():
+        return None
+    st=path.lstat()
+    if (path.is_symlink() or not path.is_file() or
+        st.st_uid!=os.geteuid() or st.st_mode & 0o077 or
+        not 2<=st.st_size<=MAX_BYTES):
+        raise CatalogHold("PRIVATE_SOURCE_CACHE_PERMISSIONS_OR_SIZE")
+    try:
+        obj=json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError,UnicodeError):
+        raise CatalogHold("PRIVATE_SOURCE_CACHE_JSON_INVALID") from None
+    if not isinstance(obj,dict) or obj.get("schema")!=recent.CACHE_SCHEMA:
+        raise CatalogHold("PRIVATE_SOURCE_CACHE_SCHEMA_INVALID")
+    return obj
+
+
+def save_recent_source_cache(data,path=RECENT_SOURCE_CACHE):
+    """Atomic private state; only published/successfully reconciled sources."""
+    if path.is_symlink():
+        raise CatalogHold("PRIVATE_SOURCE_CACHE_SYMLINK")
+    content=json.dumps(data,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+    if not 2<=len(content)<=MAX_BYTES:
+        raise CatalogHold("PRIVATE_SOURCE_CACHE_TOO_LARGE")
+    tmp=path.with_suffix(".next")
+    if tmp.is_symlink():
+        raise CatalogHold("PRIVATE_SOURCE_CACHE_TEMP_SYMLINK")
+    try:
+        with open(tmp,"xb") as stream:
+            os.fchmod(stream.fileno(),0o600)
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(tmp,path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
 def comparable(feed):
     # Ignore timestamps and unstable ordering of country probes; never ignore
     # price, hotel, date, room, stop or source coverage changes.
@@ -259,6 +305,18 @@ def publish(env):
     if not generated.is_file() or generated.stat().st_size>MAX_BYTES:
         raise CatalogHold("GENERATED_FEED_INVALID_SIZE")
     new=json.loads(generated.read_text(encoding="utf-8"))
+    validate(new,directory)
+    previous_cache=load_recent_source_cache()
+    if previous_cache is not None:
+        raw_entries=previous_cache.get("entries")
+        if not isinstance(raw_entries,list) or len(raw_entries)>MAX_ITEMS or any(
+            not isinstance(e,dict) or set(e)!={"row","last_seen_at_utc"}
+            for e in raw_entries):
+            raise CatalogHold("PRIVATE_SOURCE_CACHE_ENTRIES_INVALID")
+        cached_rows=[e["row"] for e in raw_entries]
+        if cached_rows:
+            validate({**new,"previews":cached_rows},directory)
+    new,next_cache=recent.combine(new,previous_cache,max_rows=MAX_ITEMS)
     count=validate(new,directory)
     public_root,public_chunks=make_sharded_catalog(new)
     validate(public_root,directory)
@@ -270,10 +328,15 @@ def publish(env):
     log("JAMAICA_ORACLE_COUNTRY_COUNT",len({x["country"] for x in new["previews"]}))
     log("JAMAICA_ORACLE_TOUR_COUNT",count)
     log("JAMAICA_PUBLIC_SHARD_COUNT",len(public_chunks))
+    log("JAMAICA_RECENT_UNRECHECKED_PREVIEWS",
+        new["source_scope"]["last_24h_unrechecked_previews"])
+    log("JAMAICA_RECENT_UNRECHECKED_COUNTRIES",
+        new["source_scope"]["last_24h_unrechecked_countries"])
     log("JAMAICA_ORACLE_INDICATIVE_RUB_COUNT",sum(type(x["price_reference_rub"]) is int for x in new["previews"]))
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
     if not changed_dir and not needs_publish(previous,public_root):
+        save_recent_source_cache(next_cache)
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
     # Keep the legacy fast index small; publish the remainder in verifiable
@@ -306,6 +369,7 @@ def publish(env):
         cwd=CHECKOUT,env=env)
     staged=run(["git","diff","--cached","--quiet"],cwd=CHECKOUT,env=env,check=False)
     if staged.returncode==0:
+        save_recent_source_cache(next_cache)
         log("JAMAICA_ORACLE_PUBLISH","NOTHING_TO_COMMIT")
         return
     if staged.returncode!=1:
@@ -316,6 +380,7 @@ def publish(env):
         cwd=CHECKOUT,env=env)
     # If another process pushed meanwhile, stop instead of force-pushing.
     run(["git","push","origin","HEAD:refs/heads/main"],cwd=CHECKOUT,env=env,timeout=90)
+    save_recent_source_cache(next_cache)
     log("JAMAICA_ORACLE_PUBLISH","PUSHED_TO_GITHUB_PAGES_SOURCE")
     log("JAMAICA_LAST_PUBLISH_AT_UTC",datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
