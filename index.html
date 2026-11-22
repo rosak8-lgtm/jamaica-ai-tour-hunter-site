@@ -84,9 +84,17 @@
    <div class="field short"><label for="dateFrom">Вылет с</label><input id="dateFrom" name="dateFrom" type="date"></div>
    <div class="field short"><label for="dateTo">Вылет до</label><input id="dateTo" name="dateTo" type="date"></div>
    <div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option></select></div>
-   <div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
-   <div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
+   <div class="field short"><label for="adults">Взрослых · номер 1</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
+   <div class="field short"><label for="kids">Детей · номер 1</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
   </div>
+  <section class="travelerBuilder" aria-label="Туристы и размещение по номерам">
+   <div class="travelerIntro"><div><strong>Состав туристов по номерам</strong><span>Возраст каждого ребёнка указывается <b>на дату начала тура</b>.</span></div><span id="partySummary" aria-live="polite">2 взрослых · 1 номер</span></div>
+   <div id="primaryChildAges" class="partyAges" aria-label="Возраст детей в номере 1"></div>
+   <div id="extraRooms" class="extraRooms"></div>
+   <button type="button" id="addRoom" class="addRoomButton">+ Добавить номер</button>
+   <p id="partyError" class="partyError" role="alert" hidden></p>
+   <p class="partyHint">Для каждого номера можно указать свой состав. Стоимость и возможность такого размещения должны быть подтверждены поставщиком — цена за двух взрослых не переносится на семью автоматически.</p>
+  </section>
   <details class="advancedFilters" id="advancedFilters">
    <summary>Дополнительные параметры: бюджет и название гостиницы</summary>
    <div class="fields fieldsExtra">
@@ -189,6 +197,7 @@
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
 <script src="./scripts/commons-hotel-media.js"></script>
+<script src="./scripts/traveler-party.js"></script>
 <script>
 (function(){
 "use strict";
