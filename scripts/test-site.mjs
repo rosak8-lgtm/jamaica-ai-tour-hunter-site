@@ -380,15 +380,18 @@ assert.ok(page.includes('function curatedPreviewPhoto(x)'),'Use verified hotel-s
 assert.ok(!page.includes('function licensedDestinationScene(country)'),'Never mislabel country scenery as a hotel photo');
 assert.ok(page.includes('async function renderDestinationPhoto(area,x,plain)') &&
  page.includes('destination_not_hotel') &&
- page.includes('Фото направления · не фото гостиницы'),
+ page.includes('Пейзаж: "+place+" · © "+e.author') &&
+ !page.includes('Фото направления · не фото гостиницы') &&
+ page.includes('img.alt="Фотография направления "+x.country+", не выбранной гостиницы"'),
  'Destination photos may fill empty card visuals ONLY when clearly distinct from actual hotel photos');
 assert.ok(page.includes('const frame=el("div","previewPhotoFrame")')&&
  page.includes('const meta=el("div","previewPhotoMeta")')&&
  page.includes('area.replaceChildren(frame,meta)'),
  'Real photos must have separate visual and attribution regions');
 assert.ok(!page.includes('area.replaceChildren(img,ribbon,credit)')&&
- !page.includes('area.replaceChildren(img,attribution)'),
- 'Photo labels may not overlap images');
+ !page.includes('area.replaceChildren(img,attribution)')&&
+ !page.includes('destinationPhotoLabel'),
+ 'Photo labels may not overlap images or use a redundant warning ribbon');
 assert.ok(page.includes('license.href=e.license_url')&&
  page.includes('lic.href=photo.licenseUrl'),
  'Author/photographer and license links must remain accessible');
