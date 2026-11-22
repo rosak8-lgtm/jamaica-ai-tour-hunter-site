@@ -18,7 +18,7 @@ CACHE_SCHEMA="jamaica.recent-price-list-previews.v1"
 HISTORICAL_STATUS="PREVIOUSLY_SEEN_NOT_RECHECKED"
 MAX_TTL=timedelta(hours=24)
 MAX_CLOCK_DRIFT=timedelta(minutes=5)
-ISO_DAY=re.compile(r"^\\d{4}-\\d{2}-\\d{2}$")
+ISO_DAY=re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _moment(value):
