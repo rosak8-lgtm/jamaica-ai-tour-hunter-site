@@ -197,3 +197,15 @@ body{background:var(--bg);color:var(--ink)}
 .partyError{padding:9px 12px;border-radius:9px;background:#fff1ec;color:#7f2525;font-size:13px}
 .partyInCard{font-size:12px;color:#106b72;font-weight:800;border-left:3px solid #39b4ac;padding:4px 0 4px 9px}
 @media(max-width:580px){.travelerBuilder{padding:13px}.travelerIntro{flex-direction:column}.travelerIntro #partySummary{max-width:100%;text-align:left}.partyAges,.partyRoomFields{grid-template-columns:1fr}}
+
+
+/* Country choices only from source-observed tour preview countries. */
+.quickCountryBar{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin:0 0 17px}
+.quickCountryIntro{font-size:12px;font-weight:800;color:#51435f;white-space:nowrap}
+.quickCountryChips{display:flex;flex-wrap:wrap;gap:7px;min-width:0}
+.quickCountryChip{font:inherit;font-size:12px;font-weight:700;line-height:1.3;cursor:pointer;color:#523568;background:#fff;border:1px solid #dcd1e3;border-radius:999px;padding:8px 12px;transition:background .15s,border-color .15s}
+.quickCountryChip:hover{background:#f1edf7;border-color:#816a9c}
+.quickCountryChip[aria-pressed="true"]{color:#fff;background:#35194f;border-color:#35194f}
+.quickCountryChip:focus-visible{outline:3px solid #09a6a9;outline-offset:3px}
+.previousSourceNotice{color:#655482;background:#f7f2fc;border-left:3px solid #9875be;border-radius:5px;padding:7px 10px;font-size:12px;line-height:1.5;margin-top:8px}
+@media(max-width:580px){.quickCountryBar{display:block}.quickCountryIntro{display:block;margin-bottom:7px}.quickCountryChips{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:2px 2px 8px}.quickCountryChip{flex:none;white-space:nowrap}}
