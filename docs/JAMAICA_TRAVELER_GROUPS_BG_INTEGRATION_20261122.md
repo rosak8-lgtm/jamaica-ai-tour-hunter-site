@@ -63,3 +63,28 @@
 Документация оператора:
 https://export.bgoperator.ru/load-xml-prices.html
 https://www.bgoperator.ru/texts/api/tour-api.html
+
+## Приватный запуск проверки возрастных вариантов
+
+Сканер `scripts/oracle_bg_selected_quote_probe.py` поддерживает дополнительный аргумент `--private-rooms-file`. Использовать только после проверки авторизованного доступа к read-only цене и **только на доверенной машине**; не запускать внутри GitHub Pages или Actions с пользовательскими данными.
+
+Файл содержит только взрослые/возраст детей/распределение по комнатам (без фамилий, паспортов и DOB), например:
+```json
+[
+  {"adults": 2, "child_ages": [6, 12]},
+  {"adults": 1, "child_ages": [4]}
+]
+```
+Создать его локально вне каталога GitHub и выставить права `chmod 600`. Сканер отклоняет символьные ссылки, файлы других владельцев, групповые/публичные права доступа, содержимое больше 2048 байт и поля вне `adults/child_ages`. Возрастной состав не печатается в журнал.
+
+```bash
+python3 -B scripts/oracle_bg_selected_quote_probe.py \
+  --directory /PRIVATE_ORACLE/destination-directory.json \
+  --previews /PRIVATE_ORACLE/tour-previews.json \
+  --preview-id p_<24_HEX_DIGITS> \
+  --private-rooms-file /PRIVATE_ORACLE/rooms-0600.json
+```
+
+Строка `p_<24_HEX_DIGITS>` — только условное обозначение: нужен **настоящий** ID публичного предварительного предложения из приватно проверенной выгрузки, а не случайное значение. Путь к файлу и список возрастов не записывать в публичный репозиторий и не прикладывать к сообщениям с логами.
+
+В выводе будут `AGE_GROUP_COUNT`, `AGE_GROUP_CANDIDATE_COUNTS`, `AGE_GROUP_SOURCE_METADATA_COUNTS`, `AGE_GROUP_STATUS`, `AGE_GROUP_QUOTE_VERIFIED=NO`. Это **не цены**, а количество вариантов. Подбор возраста лишь позволяет выбрать, какую официальную котировку запрашивать следующим этапом. Бронирование, платёж и подтверждение мест этим режимом не включаются.
