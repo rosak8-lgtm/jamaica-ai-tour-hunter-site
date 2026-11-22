@@ -33,24 +33,22 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 </div>
 </section></main>
 <script src="./scripts/catalog-shards.js"></script>
+<script src="./scripts/traveler-party.js"></script>
 <script>
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
 const id=params.get("preview")||"";
-const rawAdults=params.get("adults")||"2",rawKids=params.get("kids")||"0";
-const adults=/^(?:[1-9]|1[0-2])$/.test(rawAdults)?Number(rawAdults):null;
-const kids=/^(?:[0-9]|10)$/.test(rawKids)?Number(rawKids):null;
-const supportedParty=adults===2&&kids===0;
+const Travelers=window.JamaicaTravelers;
+const rooms=Travelers.fromQuery(params),sum=Travelers.totals(rooms);
+const adults=sum?sum.adults:null,kids=sum?sum.children:null;
+const supportedParty=Travelers.isTwoAdults(rooms);
 function ruNoun(n,one,few,many){
  const mod10=n%10,mod100=n%100;
  return mod100>=11&&mod100<=14?many:mod10===1?one:mod10>=2&&mod10<=4?few:many;
 }
-function partyLabel(){
- return adults+" "+ruNoun(adults,"взрослый","взрослых","взрослых")+
-   ", "+kids+" "+ruNoun(kids,"ребёнок","ребёнка","детей");
-}
+function partyLabel(){return Travelers.label(rooms);}
 let selected=null,config=null,quoteResult=null,auth="";
 function notice(s){$("quoteNotice").textContent=s;}
 function cfgReady(c){
@@ -62,7 +60,7 @@ function cfgReady(c){
  }catch(e){return false;}
 }
 async function init(){
- if(!/^p_[a-f0-9]{24}$/.test(id)||adults===null||kids===null){
+ if(!/^p_[a-f0-9]{24}$/.test(id)||!rooms){
   notice("Выберите действующий тур и корректный состав туристов.");return;
  }
  try{
@@ -82,9 +80,9 @@ async function init(){
   $("hotelTitle").textContent=selected.country+" · "+selected.hotel;
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
       " · "+selected.nights+" ночей · "+selected.room+
-      " · "+partyLabel();
+      " · "+partyLabel()+" · "+Travelers.description(rooms);
   if(!supportedParty){
-    notice("Для выбранного состава ("+partyLabel()+") требуется отдельная проверка стоимости. Сейчас онлайн-оформление поддерживает только 2 взрослых без детей при наличии подтверждённого API. Цена на двух взрослых для вашего состава не применяется; оплата и бронирование не выполняются."+
+    notice("Состав передан без потерь: "+Travelers.description(rooms)+". Для выбранного состава ("+partyLabel()+") требуется официальная котировка именно с этими возрастами и номерами. Подключённый канал проверки пока не поддерживает такой запрос; цена за двух взрослых не применяется. Оплата и бронирование не выполняются."+
       (selected.depart_date<=new Date().toISOString().slice(0,10)?
        " Дата вылета уже наступила или прошла.":""));
     return;
