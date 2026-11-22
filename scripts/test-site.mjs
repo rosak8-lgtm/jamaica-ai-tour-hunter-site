@@ -52,6 +52,16 @@ assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSideba
   'Search sidebar cannot be a decorative mockup');
 assert.ok(page.includes('id="otherCountries"')&&page.includes('id="catalogBreadth"'),
  'Customer must easily discover other published countries');
+assert.ok(page.includes('id="quickCountries"')&&
+  page.includes('renderCountryShortcuts(')&&
+  page.includes('control.setAttribute("aria-pressed"'),
+  'Actual observed countries must be quickly selectable without fake stock');
+assert.ok(page.includes('PREVIOUSLY_SEEN_NOT_RECHECKED')&&
+  page.includes('цены скрыты до новой проверки'),
+  'Retained 24h sources cannot masquerade as current priced offers');
+assert.ok(searchStyle.includes('.quickCountryChip')&&
+  searchStyle.includes('.previousSourceNotice'),
+  'Destination shortcuts and old-source notices require styling');
 assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
  'Search must interleave actual countries without inventing availability');
 const mascotAsset=fs.readFileSync('assets/jamaica-parrot-mascot.svg','utf8');
