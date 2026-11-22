@@ -665,16 +665,24 @@ async function renderDestinationPhoto(area,x,plain){
   const img=el("img");
   img.alt="Фотография направления "+x.country+", не выбранной гостиницы";
   img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
-  const ribbon=el("div","destinationPhotoLabel","Фото направления · не фото гостиницы");
-  const credit=el("a","mediaSourceCredit","Фото: "+e.author+" · "+e.license+" · Wikimedia Commons");
+  // Keep the entire photo unobstructed: captions and rights go below it.
+  const frame=el("div","previewPhotoFrame");
+  frame.append(img);
+  const meta=el("div","previewPhotoMeta");
+  const ribbon=el("span","destinationPhotoLabel","Фото направления · не фото гостиницы");
+  const credit=el("a","mediaSourceCredit","© "+e.author+" · источник");
   credit.href=e.source;credit.rel="noopener noreferrer";credit.target="_blank";
-  credit.title="Источник изображения. Условия: "+e.license_url;
+  credit.title="Оригинал Wikimedia Commons: "+e.file;
+  const license=el("a","mediaLicenseLink",e.license);
+  license.href=e.license_url;license.rel="noopener noreferrer";license.target="_blank";
+  license.title="Условия лицензии "+e.license;
+  meta.append(ribbon,credit,license);
   let smaller=false;
   img.addEventListener("error",()=>{
    if(!smaller){smaller=true;img.src=url+"?width=330";return;}
    if(area.isConnected)area.replaceChildren(plain);
   });
-  if(area.isConnected)area.replaceChildren(img,ribbon,credit);
+  if(area.isConnected)area.replaceChildren(frame,meta);
   img.src=url+"?width=500";
  }catch(e){if(area.isConnected)area.replaceChildren(plain);}
 }
@@ -705,16 +713,21 @@ function previewCardPhoto(x){
    // One broken CDN URL must not obscure the next verified photo.
    nextVerifiedPhoto();
   });
-  const attribution=el("a","mediaSourceCredit",
-    photo.label+" · "+photo.credit+" · "+photo.license+" · источник");
+  const frame=el("div","previewPhotoFrame");
+  frame.append(img);
+  const meta=el("div","previewPhotoMeta");
+  meta.append(el("span","hotelPhotoLabel","Фото гостиницы"));
+  const attribution=el("a","mediaSourceCredit","© "+photo.credit+" · источник");
   attribution.href=photo.source;attribution.target="_blank";
-  attribution.rel="noopener noreferrer";
-  area.replaceChildren(img,attribution);
+  attribution.rel="noopener noreferrer";meta.append(attribution);
   if(photo.licenseUrl){
-   const lic=el("a","mediaLicenseLink","Условия лицензии "+photo.license);
+   const lic=el("a","mediaLicenseLink",photo.license);
    lic.href=photo.licenseUrl;lic.target="_blank";
-   lic.rel="noopener noreferrer";area.append(lic);
+   lic.rel="noopener noreferrer";meta.append(lic);
+  }else{
+   meta.append(el("span","mediaRightsNote",photo.license));
   }
+  area.replaceChildren(frame,meta);
   img.src=photo.src;
  }
  function addCandidates(photos){
