@@ -66,24 +66,22 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
  </section>
 </main>
 <script src="./scripts/catalog-shards.js"></script>
+<script src="./scripts/traveler-party.js"></script>
 <script>
 (function(){
 "use strict";
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
 const id=params.get("id")||"";
-const rawAdults=params.get("adults")||"2",rawKids=params.get("kids")||"0";
-const adults=/^(?:[1-9]|1[0-2])$/.test(rawAdults)?Number(rawAdults):null;
-const kids=/^(?:[0-9]|10)$/.test(rawKids)?Number(rawKids):null;
-const pairPrice=adults===2&&kids===0;
+const Travelers=window.JamaicaTravelers;
+const rooms=Travelers.fromQuery(params),sum=Travelers.totals(rooms);
+const adults=sum?sum.adults:null,kids=sum?sum.children:null;
+const pairPrice=Travelers.isTwoAdults(rooms);
 function ruNoun(n,one,few,many){
  const mod10=n%10,mod100=n%100;
  return mod100>=11&&mod100<=14?many:mod10===1?one:mod10>=2&&mod10<=4?few:many;
 }
-function partyLabel(){
- return adults+" "+ruNoun(adults,"взрослый","взрослых","взрослых")+
-   ", "+kids+" "+ruNoun(kids,"ребёнок","ребёнка","детей");
-}
+function partyLabel(){return Travelers.label(rooms);}
 function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
 function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
 async function init(){
@@ -105,13 +103,12 @@ async function init(){
     found.depart_date>=new Date().toISOString().slice(0,10)?found:null;
   if(!p){$("heading").textContent="Вариант больше не актуален";$("subtitle").textContent="Вернитесь в поиск и выберите свежую дату.";return;}
   $("heading").textContent=p.country+" — "+p.hotel;
-  if(adults===null||kids===null){
+  if(!rooms){
     $("heading").textContent="Неверно указан состав туристов";
     $("quoteLink").removeAttribute("href");
     return;
   }
-  $("quoteLink").href="quote.html?preview="+encodeURIComponent(p.id)+
-    "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(kids);
+  $("quoteLink").href="quote.html?preview="+encodeURIComponent(p.id)+Travelers.suffix(rooms);
   $("subtitle").textContent=p.resort||p.country;
   fact("Город вылета",p.origin);
   fact("Дата вылета",p.depart_date);
@@ -120,6 +117,7 @@ async function init(){
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
   fact("Выбранные туристы",partyLabel());
+  fact("Размещение по номерам",Travelers.description(rooms));
   const observed=Date.parse(feed.refreshed_at_utc||"");
   const age=Date.now()-observed;
   const fresh=Number.isFinite(observed)&&age>=-60000&&age<=30*60*1000;
@@ -152,8 +150,7 @@ async function init(){
     (x.country!==p.country||x.depart_date!==p.depart_date)).slice(0,12);
   for(const choice of choices){
    const link=document.createElement("a");
-   link.href="preview.html?id="+encodeURIComponent(choice.id)+
-     "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(kids);
+   link.href="preview.html?id="+encodeURIComponent(choice.id)+Travelers.suffix(rooms);
    add("strong",choice.country+" · "+choice.hotel,link);
    add("div",choice.depart_date+" · "+choice.nights+" ночей",link);
    $("alternatives").append(link);
