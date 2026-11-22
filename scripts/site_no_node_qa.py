@@ -166,6 +166,13 @@ def main():
             raise SystemExit("JAMAICA_NO_NODE_QA_HOLD=INVALID_DATE")
         if d>today:future_by_country[r["country"]]+=1
         amount=r.get("price_reference_rub")
+        require(r.get("status") in
+                ("REFERENCE_PRICE_LIST_ONLY","PREVIOUSLY_SEEN_NOT_RECHECKED"),
+                "UNKNOWN_SOURCE_PREVIEW_STATUS")
+        if r["status"]=="PREVIOUSLY_SEEN_NOT_RECHECKED":
+            require(amount is None and
+                    r.get("price_reference_party")=="UNVERIFIED",
+                    "STALE_SOURCE_PRICE_FORBIDDEN")
         if amount is not None:
             require(type(amount) is int and 0<amount<=100_000_000 and
                     r.get("price_reference_party")=="TWO_ADULTS",
