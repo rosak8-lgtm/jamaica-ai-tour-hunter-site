@@ -162,6 +162,33 @@ class Tests(unittest.TestCase):
             count=publisher.update_discovered_source_countries(
                 actual,d,state_path=state_path)
             self.assertEqual(count,1)
+    def test_old_24h_archive_plus_fresh_oversized_feed_is_byte_bounded(self):
+        from scripts import recent_preview_catalog as recent
+        from scripts import catalog_size_budget as budget
+        # Source-only synthetic high volume; never invent airline seats or price.
+        sample=feed()["previews"][0]
+        old_rows=[{**sample,"id":"p_"+format(i,"024x"),
+                   "hotel":"ARCHIVE "+("X"*85),
+                   "country":["Таиланд","Китай","Вьетнам"][i%3],
+                   "status":"PREVIOUSLY_SEEN_NOT_RECHECKED",
+                   "price_reference_rub":None,"price_reference_party":"UNVERIFIED"}
+                  for i in range(4000)]
+        current=[{**sample,"id":"p_"+format(5000+i,"024x"),
+                  "country":"Индонезия",
+                  "hotel":"CURRENT "+("Y"*85)} for i in range(180)]
+        src={**feed(),"previews":current}
+        extended={**src,"previews":current+old_rows,
+                  "source_scope":{"last_24h_unrechecked_previews":len(old_rows),
+                                  "last_24h_unrechecked_countries":3}}
+        result,removed=budget.fit_feed(extended,max_bytes=100_000)
+        self.assertLessEqual(budget.encoded_size(result),100_000)
+        self.assertGreater(removed,0)
+        self.assertTrue(all(x["country"]=="Индонезия"
+             for x in result["previews"]))
+        self.assertEqual(result["source_scope"]["last_24h_unrechecked_previews"],0)
+        self.assertTrue(result["truncated_to_public_limit"])
+        self.assertFalse(any(x["bookable"] for x in result["previews"]))
+
     def test_private_recent_country_state_is_owner_only_and_atomic(self):
         from scripts import recent_preview_catalog as recent
         with tempfile.TemporaryDirectory() as folder:
