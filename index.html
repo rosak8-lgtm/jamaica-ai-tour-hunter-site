@@ -158,6 +158,10 @@
 </div>
 <p id="budgetNotice" class="micro" role="status" aria-live="polite" hidden></p>
 <p class="catalogBreadth" id="catalogBreadth" role="status" aria-live="polite">Загружаем направления с найденными турами…</p>
+<div class="quickCountryBar" aria-label="Выбор опубликованного направления">
+ <span class="quickCountryIntro">Направления из прайс-листов</span>
+ <div id="quickCountries" class="quickCountryChips" role="group" aria-label="Страны с предварительными вариантами"></div>
+</div>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 <details class="sourceDetails" id="sourceDetails">
@@ -802,6 +806,30 @@ function interleaveCountries(rows){
  }
  return output;
 }
+function renderCountryShortcuts(chosen){
+ const counts=new Map();
+ for(const x of previewRecords)counts.set(x.country,(counts.get(x.country)||0)+1);
+ const names=[...counts.keys()].sort((a,b)=>
+   counts.get(b)-counts.get(a)||a.localeCompare(b,"ru"));
+ const buttons=document.createDocumentFragment();
+ function addCountry(name,label){
+   const control=el("button","quickCountryChip",label);
+   control.type="button";
+   control.setAttribute("aria-pressed",String(name===chosen));
+   control.addEventListener("click",()=>{
+     $("destination").value=name;
+     sidebarResort.value="";
+     sourceFilterOptions();
+     form.requestSubmit();
+   });
+   buttons.append(control);
+ }
+ addCountry("","Все направления");
+ for(const name of names.slice(0,10)){
+   addCountry(name,name+" · "+counts.get(name).toLocaleString("ru-RU"));
+ }
+ $("quickCountries").replaceChildren(buttons);
+}
 function renderTourPreviews(reset=true){
  const target=$("previewCards"),more=$("previewMore");
  if(reset){target.replaceChildren();previewVisible=0;}
@@ -816,6 +844,7 @@ function renderTourPreviews(reset=true){
  const partyTwoAdults=Travelers.isTwoAdults(selectedParty);
  const partySuffix=Travelers.suffix(selectedParty);
  const chosenParty=Travelers.label(selectedParty);
+ renderCountryShortcuts($("destination").value.trim());
  const budget=Number($("budget").value)||0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
@@ -863,6 +892,10 @@ function renderTourPreviews(reset=true){
    info.append(facts);
    info.append(el("div","roomKind",(partyTwoAdults?"Размещение: ":"Тип номера по исходному прайсу: ")+x.room+
    (partyTwoAdults?"":" · вместимость для этого состава не подтверждена")));
+  if(x.status==="PREVIOUSLY_SEEN_NOT_RECHECKED"){
+   info.append(el("div","previousSourceNotice",
+     "Найдено в прайс-листе за последние 24 часа; в этом цикле не перепроверено. Цена и наличие требуют нового расчёта."));
+  }
   info.append(el("div","partyInCard","Туристы: "+chosenParty));
    if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
      const hotelLink=el("a","hotelLink","Подробнее об отеле, фото и отзывы");
@@ -915,7 +948,7 @@ function renderTourPreviews(reset=true){
  const availableCountries=[...new Set(previewRecords.map(x=>x.country))].sort((a,b)=>a.localeCompare(b,"ru"));
  $("catalogBreadth").textContent=previewsLoaded?
    (country?("Выбрано направление «"+$("destination").value.trim()+"». В опубликованной выборке представлены и другие страны: "+availableCountries.length+"."):
-    ("Туры по "+availableCountries.length+" странам: "+availableCountries.slice(0,7).join(", ")+(availableCountries.length>7?" и другие.":".")+
+    ("Предварительные варианты по "+availableCountries.length+" странам: "+availableCountries.slice(0,7).join(", ")+(availableCountries.length>7?" и другие.":".")+
     " Фото показываются только при подтверждённом соответствии гостинице.")):
    "Загружаем направления с найденными турами…";
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
@@ -974,13 +1007,17 @@ async function loadTourPreviews(){
   $("previewCoverage").textContent="Направлений с туристическим каталогом: "+
     (Number.isInteger(scope.source_tour_countries)?scope.source_tour_countries:"уточняется")+
     "; проверено в этом цикле: "+coverage.length+
-    "; реальные варианты опубликованы по "+withTours.size+" странам."+
+    "; предварительные варианты опубликованы по "+withTours.size+" странам."+
     (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
     " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным."+
     (sampledMonths.length?" Месяцы, из которых проверялись прайс-листы в этом цикле: "+sampledMonths.join(", ")+". Даты и цены меняются; остальные месяцы проверяются в последующих циклах.":"")+
     (previewTruncated?" ВАЖНО: опубликовано "+advertisedTotal.toLocaleString("ru-RU")+
      " из "+previewCandidateTotal.toLocaleString("ru-RU")+
      " найденных предварительных записей. Другие варианты могли не попасть из-за ограничения каталога.":"")+
+    (Number.isSafeInteger(scope.last_24h_unrechecked_previews)&&scope.last_24h_unrechecked_previews>0?
+      " За последние 24 часа сохранено "+scope.last_24h_unrechecked_previews+
+      " ранее найденных вариантов по "+scope.last_24h_unrechecked_countries+
+      " странам. Их цены скрыты до новой проверки.":"")+
     (!previewFullLoaded?" Загружается расширенный каталог: "+
        data.previews.length.toLocaleString("ru-RU")+" из "+
        advertisedTotal.toLocaleString("ru-RU")+" предложений.":"");
@@ -993,6 +1030,9 @@ async function loadTourPreviews(){
     Number.isInteger(x.nights)&&x.nights>=3&&x.nights<=180&&
     x.bookable===false&&x.quote_verified===false&&
     x.availability_verified===false&&x.flight_verified===false&&
+    (x.status==="REFERENCE_PRICE_LIST_ONLY"||
+     (x.status==="PREVIOUSLY_SEEN_NOT_RECHECKED"&&
+       x.price_reference_rub==null&&x.price_reference_party==="UNVERIFIED"))&&
     (x.price_reference_rub==null||
      (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
       x.price_reference_party==="TWO_ADULTS")));
@@ -1011,8 +1051,8 @@ async function loadTourPreviews(){
     let summary=$("previewCoverage").textContent;
     const loadingPos=summary.indexOf(" Загружается расширенный каталог: ");
     if(loadingPos>=0)summary=summary.slice(0,loadingPos);
-    summary=summary.replace("реальные варианты опубликованы по "+withTours.size+" странам.",
-      "реальные варианты опубликованы по "+completeCountries.size+" странам.");
+    summary=summary.replace("предварительные варианты опубликованы по "+withTours.size+" странам.",
+      "предварительные варианты опубликованы по "+completeCountries.size+" странам.");
     if(missing.length)summary=summary.replace(
       " Дополнительно проверены: "+missing.join(", ")+".","");
     if(absentAfterComplete.length)summary+=" Дополнительно проверены: "+

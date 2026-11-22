@@ -24,6 +24,15 @@ const context={window:{},fetch:async path=>{
 }};
 vm.runInNewContext(source,context,{filename:'catalog-shards.js'});
 const catalog=context.window.JamaicaCatalog;
+const historical={...first,status:'PREVIOUSLY_SEEN_NOT_RECHECKED',
+  price_reference_rub:null,price_reference_party:'UNVERIFIED'};
+assert.equal(catalog.validRow(historical),true,
+ 'An authentic earlier source can be listed without any price');
+assert.equal(catalog.validRow({...historical,price_reference_rub:75000,
+  price_reference_party:'TWO_ADULTS'}),false,
+ 'An unrechecked source can NEVER display last-cycle prices');
+assert.equal(catalog.validRow({...historical,status:'UNKNOWN'}),false,
+ 'No unknown source status may be published');
 assert.equal(catalog.manifest(root).length,1);
 const rows=await catalog.allPreviews(root);
 assert.equal(rows.length,2);

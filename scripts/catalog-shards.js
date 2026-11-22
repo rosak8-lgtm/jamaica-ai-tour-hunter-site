@@ -14,6 +14,9 @@ function validRow(x){
     Number.isInteger(x.nights)&&x.nights>=3&&x.nights<=180&&
     x.bookable===false&&x.quote_verified===false&&
     x.availability_verified===false&&x.flight_verified===false&&
+    ["REFERENCE_PRICE_LIST_ONLY","PREVIOUSLY_SEEN_NOT_RECHECKED"].includes(x.status)&&
+    (x.status!=="PREVIOUSLY_SEEN_NOT_RECHECKED"||
+      (x.price_reference_rub==null&&x.price_reference_party==="UNVERIFIED"))&&
     (x.price_reference_rub==null||
       (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
        x.price_reference_party==="TWO_ADULTS"));
