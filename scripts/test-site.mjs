@@ -382,6 +382,21 @@ assert.ok(page.includes('async function renderDestinationPhoto(area,x,plain)') &
  page.includes('destination_not_hotel') &&
  page.includes('Фото направления · не фото гостиницы'),
  'Destination photos may fill empty card visuals ONLY when clearly distinct from actual hotel photos');
+assert.ok(page.includes('const frame=el("div","previewPhotoFrame")')&&
+ page.includes('const meta=el("div","previewPhotoMeta")')&&
+ page.includes('area.replaceChildren(frame,meta)'),
+ 'Real photos must have separate visual and attribution regions');
+assert.ok(!page.includes('area.replaceChildren(img,ribbon,credit)')&&
+ !page.includes('area.replaceChildren(img,attribution)'),
+ 'Photo labels may not overlap images');
+assert.ok(page.includes('license.href=e.license_url')&&
+ page.includes('lic.href=photo.licenseUrl'),
+ 'Author/photographer and license links must remain accessible');
+assert.ok(searchStyle.includes('#previewCards .previewPhotoMeta')&&
+ searchStyle.includes('.previewPhotoFrame>img')&&
+ searchStyle.includes('position:static!important'),
+ 'Image captions must be styled below rather than on photo overlays');
+
 const destinationMedia=JSON.parse(fs.readFileSync('assets/jamaica-destination-media.json','utf8'));
 assert.equal(destinationMedia.schema,'jamaica.destination-media.v1');
 assert.equal(Object.keys(destinationMedia.countries).length,13);
