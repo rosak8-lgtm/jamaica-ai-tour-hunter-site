@@ -20,6 +20,10 @@ import oracle_bg_route_sync as bg
 import oracle_bg_price_detail_probe as detail
 import oracle_bg_preview_export as preview
 
+# Reuse private, source-only age-bucket matching with no passenger PII.
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
+from backend.bg_price_age_scope import candidate_report
+
 ID_RE = re.compile(r"^p_[a-f0-9]{24}$")
 MAX_DETAIL_LISTS = 4
 
@@ -98,7 +102,7 @@ def inspect_match(rows, selected, hotels):
             "age_value_present":age_value_present,
             "age_marker_unrecognized":age_marker_unrecognized}
 
-def inspect_selected(directory, public_feed, chosen_id, api):
+def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=None):
     if directory.get("schema") != "jamaica.destination-directory.v1":
         raise bg.SyncHold("DIRECTORY_SCHEMA_UNKNOWN")
     if (public_feed.get("schema") != "jamaica.tour-previews.v1" or
@@ -109,6 +113,11 @@ def inspect_selected(directory, public_feed, chosen_id, api):
     if len(matches) != 1:
         raise bg.SyncHold("PREVIEW_NOT_FOUND_OR_AMBIGUOUS")
     selected = matches[0]
+    if selected_rooms is not None:
+        try:
+            candidate_report(selected, selected_rooms, [])
+        except ValueError as exc:
+            raise bg.SyncHold("INVALID_SELECTED_ROOM_GROUPS") from None
     if selected.get("bookable") is not False or selected.get("quote_verified") is not False:
         raise bg.SyncHold("PREVIEW_CLAIMS_BOOKABILITY")
     if selected.get("origin") != preview.ALLOWED_ORIGIN:
@@ -140,6 +149,7 @@ def inspect_selected(directory, public_feed, chosen_id, api):
              "two_adults_amount_only":0,"age_value_present":0,
              "age_marker_unrecognized":0}
     detail_lists=0
+    party_rows=[]  # private only; never log raw rows or operator IDs
     for item in matching_listings:
         url=detail.safe_url(item,country["id"])
         data=json.loads(api.get(url))
@@ -147,12 +157,25 @@ def inspect_selected(directory, public_feed, chosen_id, api):
         if not isinstance(rows,list) or len(rows)>preview.MAX_RESPONSE_ROWS:
             continue
         detail_lists+=1
+        if selected_rooms is not None:
+            if len(party_rows)+len(rows)>10000:
+                raise bg.SyncHold("TOO_MANY_PRIVATE_AGE_CANDIDATES")
+            party_rows.extend(rows)
         result=inspect_match(rows, selected, hotels)
         for key, value in result.items():
             summary[key]+=value
+    party_status={}
+    if selected_rooms is not None:
+        checked=candidate_report(selected, selected_rooms, party_rows)
+        party_status={
+            "group_status":checked["status"],
+            "group_count":checked["requested_rooms"],
+            "group_age_candidate_counts":checked["candidate_counts"],
+            "group_source_metadata_counts":checked["source_metadata_counts"],
+        }
     return {"preview_id":chosen_id,"country":selected["country"],
             "depart_date":selected["depart_date"],"detail_lists":detail_lists,
-            **summary,"quote_verified":False,"availability_verified":False,
+            **summary,**party_status,"quote_verified":False,"availability_verified":False,
             "flight_verified":False,"bookable":False,
             "status":("NO_CURRENT_MATCH" if not summary["matched_rows"] else
                       "POTENTIAL_2_ADULT_RUB_PRICE_OPTION" if summary["two_adults_with_rub"] else
