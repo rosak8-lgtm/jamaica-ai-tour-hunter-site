@@ -150,6 +150,41 @@ class Tests(unittest.TestCase):
             count=publisher.update_discovered_source_countries(
                 actual,d,state_path=state_path)
             self.assertEqual(count,1)
+    def test_private_recent_country_state_is_owner_only_and_atomic(self):
+        from scripts import recent_preview_catalog as recent
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/"recent-price-list-previews.json"
+            self.assertIsNone(publisher.load_recent_source_cache(path))
+            current,next_cache=recent.combine(feed(),None,now=NOW)
+            publisher.save_recent_source_cache(next_cache,path)
+            self.assertEqual(path.stat().st_mode&0o777,0o600)
+            actual=publisher.load_recent_source_cache(path)
+            self.assertEqual(actual["schema"],recent.CACHE_SCHEMA)
+            self.assertEqual(len(actual["entries"]),1)
+            path.chmod(0o644)
+            with self.assertRaises(publisher.CatalogHold):
+                publisher.load_recent_source_cache(path)
+            path.chmod(0o600)
+            combined,another=recent.combine(feed(),actual,
+                         now=NOW+timedelta(minutes=5))
+            self.assertEqual(len(combined["previews"]),1)
+            publisher.save_recent_source_cache(another,path)
+            self.assertEqual(len(publisher.load_recent_source_cache(path)["entries"]),1)
+
+    def test_private_cache_invalid_file_and_symlink_cannot_be_published(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/"recent-price-list-previews.json"
+            path.write_text('{"schema":"other"}',encoding="utf-8")
+            path.chmod(0o600)
+            with self.assertRaises(publisher.CatalogHold):
+                publisher.load_recent_source_cache(path)
+            path.unlink()
+            path.symlink_to(Path(folder)/"does-not-exist")
+            with self.assertRaises(publisher.CatalogHold):
+                publisher.load_recent_source_cache(path)
+            with self.assertRaises(publisher.CatalogHold):
+                publisher.save_recent_source_cache({"schema":"test"},path)
+
     def test_server_reads_updated_api_adapters_from_its_github_clone(self):
         self.assertEqual(publisher.SCRIPTS,publisher.CHECKOUT/"scripts")
     def test_disabled_github_deploy_key_prevents_publish(self):
