@@ -64,7 +64,7 @@ class Tests(unittest.TestCase):
     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
     rows=[
       row(),
-      row(room="FAMILY HB",prices=[{"ag":"12+,2-11","sr":"OK"}]),
+      row(room="FAMILY HB",id_ns="",prices=[{"ag":"12+,2-11","sr":"OK"}]),
       row(room="FAMILY HB",prices=[{"ag":"12+,2-11","isstop":["hotel"]}]),
       row(room="OTHER HB",prices=[{"ag":"12+,2-11","sr":"OK"}],stop=True),
       row(room="OTHER HB",prices=[{"ag":"12+,2-11","sr":"OK"}],
