@@ -17,6 +17,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 from backend.bg_tour_api_xml import build_price_request, parse_price_response
+from backend.bg_multiroom_quote import build_group_price_request, parse_group_price_response
 from backend.order_engine import BadOrder, NotAvailable
 
 LOGIN_URL="https://login.bgoperator.ru/auth"
@@ -118,4 +119,39 @@ class BGReadOnlyPriceClient:
         result["flight_verified"]=False
         result["hotel_verified"]=False
         result["bookable"]=False
+        return result
+
+    def price_groups_only(self, tour: dict, selected_rooms: list[dict],
+                          supplier_groups: list[dict],
+                          customer: dict | None = None) -> dict:
+        """READ-ONLY group pricing, using private operator-confirmed room IDs.
+
+        Do not expose `supplier_groups` to arbitrary browser JSON. This can
+        only be called by a private authenticated service, after a trusted
+        matching adapter has verified every room/age tariff and received the
+        real passenger data over an approved secure channel. The repository
+        is NOT configured to invoke this method in production.
+        """
+        url, body = build_group_price_request(
+            tour, selected_rooms, supplier_groups, customer
+        )
+        if not _safe_price_url(url):
+            raise BadOrder("Unapproved supplier price endpoint")
+        _require_read_only_xml(body)
+        if not self._authenticated:
+            self._authenticate()
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": "application/xml; charset=utf-8",
+                     "Accept": "application/xml"},
+            method="POST",
+        )
+        raw = self._open(req)
+        result = parse_group_price_response(
+            raw, tour["client_tour_id"], expected_groups=len(selected_rooms)
+        )
+        # Price alone does NOT establish seat, hotel availability or seller
+        # authorization; it cannot be used to enable booking/payments.
+        result["hotel_verified"] = False
+        result["bookable"] = False
         return result
