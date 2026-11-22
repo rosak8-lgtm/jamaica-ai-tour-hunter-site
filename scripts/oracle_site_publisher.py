@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -189,11 +190,10 @@ def save_recent_source_cache(data,path=RECENT_SOURCE_CACHE):
     content=json.dumps(data,ensure_ascii=False,separators=(",",":")).encode("utf-8")
     if not 2<=len(content)<=MAX_BYTES:
         raise CatalogHold("PRIVATE_SOURCE_CACHE_TOO_LARGE")
-    tmp=path.with_suffix(".next")
-    if tmp.is_symlink():
-        raise CatalogHold("PRIVATE_SOURCE_CACHE_TEMP_SYMLINK")
+    fd,tmp_name=tempfile.mkstemp(prefix=".jamaica-recent-",dir=path.parent)
+    tmp=Path(tmp_name)
     try:
-        with open(tmp,"xb") as stream:
+        with os.fdopen(fd,"wb") as stream:
             os.fchmod(stream.fileno(),0o600)
             stream.write(content)
             stream.flush()
