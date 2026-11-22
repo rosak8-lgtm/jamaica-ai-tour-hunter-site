@@ -210,35 +210,58 @@ def _one_rub_amount(price):
         raise NotAvailable("Supplier group gross retail price missing") from None
 
 
+def _unique_rub_retail(sums):
+    """Select exactly one RUR/RUB gross retail amount from currency alternatives.
+
+    Official Tour API returns one <tour>/<sum> per currency, often USD + RUR.
+    Never read <amount> (agent net), add currencies, or silently pick the first.
+    """
+    rub = [entry for entry in sums
+           if (entry.findtext("currency") or "").strip() in ("RUR", "RUB")]
+    if len(rub) != 1:
+        raise NotAvailable("Missing or ambiguous RUB retail tour total")
+    return _one_rub_amount(rub[0])
+
+
 def parse_group_price_response(raw: bytes, client_tour_id: str,
                                *, expected_groups: int) -> dict:
-    """Strict retail total from *every* quoted group; never net agent amount.
+    """One whole-tour retail cost from the official Tour API *price* reply.
 
-    Does NOT imply hotel availability, approved flights or booking.
+    Actual documented reply: <tours>/<tour clientTourId=...>/<sum>, with
+    currency alternatives; it does NOT enumerate one <sum> per room group.
+    The caller already supplied and validated exactly expected_groups in
+    its private XML request, but the reply does not echo their individual
+    prices. Never claim per-room subtotals or hotel/flight availability.
+    If an operator extension returns group subtotals, reconcile all of them
+    with the whole-tour total or fail closed.
     """
     if type(expected_groups) is not int or not 1 <= expected_groups <= MAX_GROUPS:
         raise BadOrder("Expected supplier group count invalid")
     item = _xml(raw)
-    if item.get("clientTourId") != client_tour_id or item.find("confirm") is not None:
+    if (item.get("clientTourId") != client_tour_id or
+        item.find(".//confirm") is not None):
         raise NotAvailable("Supplier response itinerary mismatch")
-    nested = item.findall("group")
-    if not nested:
-        nested = item.findall("groups/group")
-    if len(nested) != expected_groups:
-        raise NotAvailable("Supplier response omitted a quoted room group")
-    amounts = []
-    for group in nested:
-        prices = group.findall("sum")
-        if len(prices) != 1:
-            raise NotAvailable("Ambiguous or missing group price")
-        amounts.append(_one_rub_amount(prices[0]))
-    total = sum(amounts)
-    if total > 100_000_000:
-        raise NotAvailable("Supplier total exceeds allowed range")
-    summary = item.findall("sum")
-    if summary and (len(summary) != 1 or _one_rub_amount(summary[0]) != total):
-        raise NotAvailable("Supplier retail grand total differs from group prices")
+    total = _unique_rub_retail(item.findall("sum"))
+
+    # No groups are present in the documented 3.1 reply. If the provider
+    # ever includes group sums, they must be complete and reconcile exactly.
+    direct = item.findall("group")
+    wrapped = item.findall("groups/group")
+    if direct and wrapped:
+        raise NotAvailable("Ambiguous supplier group response layouts")
+    groups = direct or wrapped
+    itemized = bool(groups)
+    if itemized:
+        if len(groups) != expected_groups:
+            raise NotAvailable("Supplier omitted a requested room group")
+        subtotals = [_unique_rub_retail(group.findall("sum"))
+                     for group in groups]
+        if sum(subtotals) != total:
+            raise NotAvailable("Group subtotals differ from whole-tour retail total")
+
     return {"client_tour_id": client_tour_id, "currency": "RUB",
-            "total_rub": total, "groups_priced": expected_groups,
+            "total_rub": total, "groups_requested": expected_groups,
+            "supplier_total_scope": "WHOLE_TOUR",
+            "group_price_breakdown_verified": itemized,
             "supplier_price_readonly": True, "availability_verified": False,
             "flight_verified": False, "bookable": False}
