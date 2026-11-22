@@ -106,6 +106,34 @@ def _iso(raw):
         return None
 
 
+def _operator_source_binding(row:dict):
+    """Privacy-safe source candidate, not a live quote or booking.
+
+    BG JSON keeps id_ns, sr, id_price/ic, dt, and o_duration on the
+    parent price-list row rather than the individual prices[] option.
+    """
+    if not _RE_ID.fullmatch(str(row.get("id_ns",""))):
+        return None
+    sr=row.get("sr")
+    if (not isinstance(sr,str) or not 1<=len(sr.strip())<=2048 or
+        any(ord(c)<32 or ord(c)==127 for c in sr)):
+        return None
+    ic=row.get("ic")
+    if ic not in (None,""):
+        kind,identifier="commission",str(ic)
+    else:
+        kind,identifier="template",str(row.get("id_price",""))
+    if not _RE_ID.fullmatch(identifier):
+        return None
+    started=_iso(row.get("dt") or row.get("tour_date"))
+    raw_nights=row.get("o_duration",row.get("duration"))
+    if (started is None or type(raw_nights) not in (int,str) or
+        not re.fullmatch(r"[1-9][0-9]{0,2}",str(raw_nights)) or
+        not 1<=int(raw_nights)<=180):
+        return None
+    return (kind,identifier,started.isoformat(),int(raw_nights))
+
+
 def candidate_report(preview:dict,selected_rooms:list[dict],rows:list[dict])->dict:
     """Private audit counts only, never individual prices, IDs or operator URLs.
 
@@ -149,8 +177,10 @@ def candidate_report(preview:dict,selected_rooms:list[dict],rows:list[dict])->di
         usable.append(row)
     counts=[]
     evidence=[]
+    shared_bindings=[]
     for index,group in enumerate(selected_rooms):
         candidates=source_complete=0
+        matched_bindings=set()
         for row in usable:
             if index==0 and row["room"]!=preview["room"]:
                 continue
@@ -161,18 +191,24 @@ def candidate_report(preview:dict,selected_rooms:list[dict],rows:list[dict])->di
                                       option.get("ag")):
                     continue
                 candidates+=1
-                # Even these rows are NOT independently live-verified quotes.
-                if (_RE_ID.fullmatch(str(row.get("id_ns",""))) and
-                    isinstance(option.get("sr"),str) and option["sr"].strip()):
+                # Read sr from the official BG ROW, not prices[].
+                binding=_operator_source_binding(row)
+                if binding is not None:
                     source_complete+=1
+                    matched_bindings.add(binding)
         counts.append(candidates)
         evidence.append(source_complete)
+        shared_bindings.append(matched_bindings)
+    common=set.intersection(*shared_bindings) if shared_bindings else set()
     return {
         "status":"POTENTIAL_CANDIDATES_ONLY" if all(x>0 for x in counts)
                  else "MISSING_GROUP_AGE_CANDIDATES",
         "requested_rooms":len(selected_rooms),
         "candidate_counts":counts,
         "source_metadata_counts":evidence,
+        "shared_source_candidate_count":len(common),
+        "source_status":("POTENTIAL_COMMON_PRICE_LIST_ONLY" if common else
+                         "MISSING_COMMON_PRICE_LIST_SOURCE"),
         "exact_supplier_quote":False,
         "availability_verified":False,
         "flight_verified":False,

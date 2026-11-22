@@ -174,6 +174,8 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
             "group_count":checked["requested_rooms"],
             "group_age_candidate_counts":checked["candidate_counts"],
             "group_source_metadata_counts":checked["source_metadata_counts"],
+            "shared_source_candidate_count":checked["shared_source_candidate_count"],
+            "source_status":checked["source_status"],
         }
     return {"preview_id":chosen_id,"country":selected["country"],
             "depart_date":selected["depart_date"],"detail_lists":detail_lists,
@@ -255,6 +257,8 @@ def main():
         print("AGE_GROUP_SOURCE_METADATA_COUNTS="+",".join(
             map(str,result["group_source_metadata_counts"])))
         print("AGE_GROUP_STATUS="+result["group_status"])
+        print("AGE_SHARED_SOURCE_CANDIDATES="+str(result["shared_source_candidate_count"]))
+        print("AGE_SOURCE_STATUS="+result["source_status"])
         print("AGE_GROUP_QUOTE_VERIFIED=NO")
     print("QUOTE_VERIFIED=NO")
     print("NO_SALE_NO_PAYMENT_NO_SUPPLIER_IDENTIFIERS_EXPORTED=YES")
