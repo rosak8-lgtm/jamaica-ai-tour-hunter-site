@@ -162,7 +162,15 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
         if selected_rooms is not None:
             if len(party_rows)+len(rows)>10000:
                 raise bg.SyncHold("TOO_MANY_PRIVATE_AGE_CANDIDATES")
-            party_rows.extend(rows)
+            # Bind each row to its OWN authenticated price-list prx.
+            # Never print/export prx or infer it from a neighboring response.
+            private_prx=data.get("prx") if isinstance(data,dict) else None
+            safe_prx=(str(private_prx) if
+                type(private_prx) in (str,int) and
+                re.fullmatch(r"[0-9]{7,20}",str(private_prx))
+                else None)
+            party_rows.extend({**row,"_jamaica_private_prx":safe_prx}
+                              for row in rows if isinstance(row,dict))
         result=inspect_match(rows, selected, hotels)
         for key, value in result.items():
             summary[key]+=value
