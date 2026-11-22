@@ -65,12 +65,21 @@ def groups():
     ]
 
 
+# Mirrors the documented BG Tour API 3.1 response: one tour total,
+# multiple currency sums, NO required group-level price breakdown.
 RESPONSE = b"""<tours><tour clientTourId="order_abcdefghijklmnop">
-    <group><sum><currency>RUR</currency><fullamount>120000.00</fullamount>
+    <sum><currency>USD</currency><fullamount>2600.0</fullamount>
+      <comission>260.0</comission><amount>2340.0</amount></sum>
+    <sum><currency>RUR</currency><fullamount>185000.0</fullamount>
+      <comission>18500.0</comission><amount>166500.0</amount></sum>
+</tour></tours>"""
+
+ITEMIZED_RESPONSE = b"""<tours><tour clientTourId="order_abcdefghijklmnop">
+    <group><sum><currency>RUR</currency><fullamount>120000.0</fullamount>
       <amount>80000</amount></sum></group>
     <group><sum><currency>RUB</currency><fullamount>65000</fullamount>
       <amount>40000</amount></sum></group>
-    <sum><currency>RUB</currency><fullamount>185000</fullamount></sum>
+    <sum><currency>RUB</currency><fullamount>185000.0</fullamount></sum>
 </tour></tours>"""
 
 
@@ -175,34 +184,60 @@ class Tests(unittest.TestCase):
         _, raw = build_group_price_request(TOUR, rooms, g)
         self.assertIsNone(ET.fromstring(raw).find(".//parentnum"))
 
-    def test_price_response_is_sum_of_all_actual_group_retail_gross(self):
+    def test_documented_tour_level_rub_gross_is_not_agent_net_or_usd(self):
         result = parse_group_price_response(
             RESPONSE, TOUR["client_tour_id"], expected_groups=2
         )
         self.assertEqual(result["total_rub"], 185000)
-        self.assertEqual(result["groups_priced"], 2)
+        self.assertEqual(result["groups_requested"], 2)
+        self.assertEqual(result["supplier_total_scope"], "WHOLE_TOUR")
+        self.assertFalse(result["group_price_breakdown_verified"])
+        self.assertTrue(result["supplier_price_readonly"])
         self.assertFalse(result["bookable"])
         self.assertFalse(result["flight_verified"])
         self.assertFalse(result["availability_verified"])
+        self.assertNotIn("166500", str(result))
+        self.assertNotIn("2340", str(result))
 
-    def test_bad_group_price_response_can_never_turn_bookable(self):
+    def test_optional_complete_group_subtotals_are_reconciled(self):
+        result = parse_group_price_response(
+            ITEMIZED_RESPONSE, TOUR["client_tour_id"], expected_groups=2
+        )
+        self.assertEqual(result["total_rub"], 185000)
+        self.assertTrue(result["group_price_breakdown_verified"])
+        self.assertFalse(result["bookable"])
+
+    def test_ambiguous_or_invalid_whole_tour_reply_is_rejected(self):
         bad = [
-            RESPONSE.replace(b"<fullamount>185000</fullamount>",
-                             b"<fullamount>180000</fullamount>"),
             RESPONSE.replace(b"<currency>RUR</currency>", b"<currency>USD</currency>"),
-            RESPONSE.replace(b"<fullamount>65000</fullamount>", b"<amount>100</amount>"),
-            RESPONSE.replace(b'<group><sum><currency>RUB', b'<wrong><sum><currency>RUB'),
+            RESPONSE.replace(b"<fullamount>185000.0</fullamount>",
+                             b"<amount>185000.0</amount>"),
+            RESPONSE.replace(b"<fullamount>185000.0</fullamount>",
+                             b"<fullamount>185000.50</fullamount>"),
+            RESPONSE.replace(b"<fullamount>185000.0</fullamount>",
+                             b"<fullamount>NaN</fullamount>"),
+            RESPONSE.replace(b"<fullamount>185000.0</fullamount>",
+                             b"<fullamount>-185000.0</fullamount>"),
+            RESPONSE.replace(b"</tour>", b"<sum><currency>RUB</currency>"
+                                           b"<fullamount>185000</fullamount></sum></tour>"),
             RESPONSE.replace(b'<tour clientTourId="order_abcdefghijklmnop">',
                              b'<tour clientTourId="another">'),
-            RESPONSE.replace(b'</tour>', b'<confirm/></tour>'),
+            RESPONSE.replace(b"</tour>", b"<confirm/></tour>"),
+            ITEMIZED_RESPONSE.replace(b"<fullamount>65000</fullamount>",
+                                      b"<fullamount>64000</fullamount>"),
+            ITEMIZED_RESPONSE.replace(b"<group><sum><currency>RUB",
+                                      b"<wrong><sum><currency>RUB"),
         ]
         for raw in bad:
-            with self.subTest(data=raw[:42]), self.assertRaises(NotAvailable):
+            with self.subTest(raw=raw[:65]), self.assertRaises(NotAvailable):
                 parse_group_price_response(raw, TOUR["client_tour_id"],
                                            expected_groups=2)
         with self.assertRaises(BadOrder):
             parse_group_price_response(RESPONSE, TOUR["client_tour_id"],
                                        expected_groups=0)
+        with self.assertRaises(BadOrder):
+            parse_group_price_response(RESPONSE, TOUR["client_tour_id"],
+                                       expected_groups=True)
 
 
 class FakeOpener:
