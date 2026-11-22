@@ -205,6 +205,23 @@ def main():
                       ".some(img=>img.complete&&img.naturalWidth>0)",timeout=14000)
                     ensure(thai_cards.first.locator(".mediaSourceCredit").count()==1,
                            "DESTINATION_PHOTO_AUTHOR_AND_LICENSE_MISSING")
+                    ensure(thai_cards.first.locator(".previewPhotoMeta .mediaLicenseLink").count()==1,
+                           "DESTINATION_LICENSE_LINK_MISSING")
+                    clean_image=thai_cards.first.evaluate("""card => {
+                      const frame=card.querySelector('.previewPhotoFrame');
+                      const footer=card.querySelector('.previewPhotoMeta');
+                      const photo=frame?.querySelector('img');
+                      if(!frame||!footer||!photo)return false;
+                      const imageRect=frame.getBoundingClientRect();
+                      const footerRect=footer.getBoundingClientRect();
+                      const label=card.querySelector('.destinationPhotoLabel');
+                      return footerRect.top>=imageRect.bottom-1 &&
+                        footerRect.height>0 &&
+                        footer.contains(label) &&
+                        getComputedStyle(footer).position!=='absolute' &&
+                        getComputedStyle(label).position!=='absolute';
+                    }""")
+                    ensure(clean_image,"CAPTIONS_MUST_APPEAR_BELOW_NOT_ON_TOP_OF_PHOTO")
                 if counts.get("Абхазия",0)>0:
                     abkh=page.locator("#previewCards article.offerCard").filter(has_text="Абхазия ·")
                     abkh.first.locator(".destinationPhotoLabel").wait_for(timeout=14000)
