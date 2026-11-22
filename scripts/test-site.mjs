@@ -124,6 +124,9 @@ assert.ok(checkout.includes('/v1/contract-orders/draft'));
 assert.ok(!checkout.includes('/v1/checkout/prepare'),'Legacy pay-before-contract route forbidden');
 assert.ok(previewSelection.includes('quote.html?preview='));
 assert.ok(quotePage.includes('/v1/preview-quotes'));
+assert.ok(quotePage.includes('if(selected.depart_date<=new Date().toISOString().slice(0,10))')&&
+ quotePage.includes('Проверка стоимости и бронирование недоступны'),
+ 'Show selected expired tour read-only, never allow a quote/payment for elapsed departure dates');
 assert.ok(quotePage.includes('checkout.html?quote='));
 assert.ok(account.includes('/verify-signature'));
 assert.ok(account.includes('/payment'));
