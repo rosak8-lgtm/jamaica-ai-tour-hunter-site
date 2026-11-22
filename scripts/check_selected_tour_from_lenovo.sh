@@ -33,6 +33,10 @@ fi
 # Optional age-only private file: no passports, names or exact birthdates.
 # Its bytes are never passed as shell arguments or printed to stdout.
 if [[ -n "$ROOMS_FILE" ]]; then
+ # Absolute paths prevent scp from reinterpreting input as a remote source.
+ [[ "$ROOMS_FILE" == /* && "$ROOMS_FILE" != *:* ]] || {
+   echo "STOP_PRIVATE_ROOM_FILE_PATH_INVALID"; exit 2;
+ }
  python3 -B - "$ROOMS_FILE" <<'PY'
 import json, os, stat, sys
 path=sys.argv[1]
