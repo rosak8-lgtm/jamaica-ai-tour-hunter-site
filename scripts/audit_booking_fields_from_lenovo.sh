@@ -10,6 +10,7 @@ set -- \
  "$ROOT/scripts/oracle_bg_multicountry_price_scan.py" \
  "$ROOT/scripts/oracle_bg_selected_quote_probe.py" \
  "$ROOT/scripts/oracle_bg_preview_export.py" \
+ "$ROOT/scripts/catalog_size_budget.py" \
  "$ROOT/scripts/oracle_bg_price_detail_probe.py" \
  "$ROOT/scripts/oracle_bg_route_sync.py" \
  "$ROOT/scripts/tour_price_reference.py" \
@@ -32,8 +33,13 @@ DIR="$(ssh -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes \
 [[ "$DIR" =~ ^/tmp/jamaica-booking-audit\.[[:alnum:]]+$ ]] || {
  echo "STOP_REMOTE_DIR_INVALID"; exit 2;
 }
+ssh -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+ -o ConnectTimeout=15 -i "$KEY" "$REMOTE" "umask 077; mkdir -p '$DIR/backend'"
 scp -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
  -o ConnectTimeout=15 -i "$KEY" "$@" "$REMOTE:$DIR/"
+scp -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+ -o ConnectTimeout=15 -i "$KEY" "$ROOT/backend/bg_price_age_scope.py" \
+ "$ROOT/backend/bg_private_source_crosswalk.py" "$REMOTE:$DIR/backend/"
 echo "=== JAMAICA SERVER ONLY READ-ONLY BOOKING FIELD AUDIT ==="
 ssh -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
  -o ConnectTimeout=15 -i "$KEY" "$REMOTE" \
