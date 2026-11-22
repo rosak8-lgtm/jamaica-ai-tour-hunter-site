@@ -61,6 +61,8 @@ class Tests(unittest.TestCase):
         self.assertEqual(r["group_count"],2)
         self.assertEqual(r["group_age_candidate_counts"],[1,1])
         self.assertEqual(r["group_source_metadata_counts"],[0,0])
+        self.assertEqual(r["shared_source_candidate_count"],0)
+        self.assertEqual(r["source_status"],"MISSING_COMMON_PRICE_LIST_SOURCE")
         self.assertFalse(r["quote_verified"])
         self.assertFalse(r["availability_verified"])
         self.assertFalse(r["bookable"])
