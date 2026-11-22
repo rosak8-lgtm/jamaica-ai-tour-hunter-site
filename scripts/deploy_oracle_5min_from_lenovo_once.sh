@@ -22,6 +22,7 @@ done
 for name in oracle_site_publisher.py oracle_bg_preview_export.py \
  oracle_bg_price_detail_probe.py oracle_bg_route_sync.py \
  tour_price_reference.py sync_destination_directory.py \
+ recent_preview_catalog.py catalog_size_budget.py \
  oracle_install_catalog_timer.sh; do
  test -r "$ROOT/scripts/$name" || { echo "STOP_REQUIRED_SCRIPT_MISSING=$name"; exit 2; }
 done
@@ -74,6 +75,7 @@ echo "=== COPY ONLY PUBLIC-SAFE SERVER SOFTWARE TO ORACLE ==="
 for name in oracle_site_publisher.py oracle_bg_preview_export.py \
  oracle_bg_price_detail_probe.py oracle_bg_route_sync.py \
  tour_price_reference.py sync_destination_directory.py \
+ recent_preview_catalog.py catalog_size_budget.py \
  oracle_install_catalog_timer.sh; do
  "${SCP[@]}" "$ROOT/scripts/$name" "$REMOTE:$SERVER_DIR/$name"
 done
