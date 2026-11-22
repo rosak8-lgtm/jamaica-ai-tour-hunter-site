@@ -154,6 +154,13 @@ def validate(feed, directory):
         if row["id"] in seen:
             raise CatalogHold("FEED_DUPLICATE_ID")
         seen.add(row["id"])
+        if row.get("status") not in (
+            "REFERENCE_PRICE_LIST_ONLY",recent.HISTORICAL_STATUS):
+            raise CatalogHold("FEED_UNKNOWN_PREVIEW_STATUS")
+        if row["status"]==recent.HISTORICAL_STATUS and (
+            row.get("price_reference_rub") is not None or
+            row.get("price_reference_party")!="UNVERIFIED"):
+            raise CatalogHold("FEED_STALE_PRICE_FORBIDDEN")
         amt=row.get("price_reference_rub")
         if amt is not None:
             if type(amt) is not int or not 0<amt<=100_000_000 or row.get("price_reference_party")!="TWO_ADULTS":
