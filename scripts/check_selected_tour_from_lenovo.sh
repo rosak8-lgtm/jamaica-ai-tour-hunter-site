@@ -13,6 +13,7 @@ REMOTE="ubuntu@92.5.184.47"
 for name in \
   scripts/oracle_bg_selected_quote_probe.py \
   scripts/oracle_bg_preview_export.py \
+  scripts/catalog_size_budget.py \
   scripts/tour_price_reference.py \
   scripts/oracle_bg_price_detail_probe.py \
   scripts/oracle_bg_route_sync.py \
@@ -86,6 +87,7 @@ REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-selection
 "${SCP[@]}" \
  "$ROOT/scripts/oracle_bg_selected_quote_probe.py" \
  "$ROOT/scripts/oracle_bg_preview_export.py" \
+ "$ROOT/scripts/catalog_size_budget.py" \
  "$ROOT/scripts/tour_price_reference.py" \
  "$ROOT/scripts/oracle_bg_price_detail_probe.py" \
  "$ROOT/scripts/oracle_bg_route_sync.py" \
