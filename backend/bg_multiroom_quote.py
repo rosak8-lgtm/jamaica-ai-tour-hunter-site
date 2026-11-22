@@ -182,6 +182,8 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
             if not all(isinstance(v, str) and v for v in identity) or identity in identity_keys:
                 raise BadOrder("Passenger identity missing or repeated across rooms")
             identity_keys.add(identity)
+            if _iso_date(p.get("passport_expires")) < departure:
+                raise BadOrder("Expired travel document cannot be priced as bookable")
             _person(people, p)  # Reuse existing private passport/date validation.
             if position >= expected["adults"] and actual_age < 2 and (
                 p["infant_allocation"] == "NO_SEAT"
