@@ -1,0 +1,46 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+
+const module=fs.readFileSync('scripts/traveler-party.js','utf8');
+const ui=fs.readFileSync('scripts/traveler-ui.js','utf8');
+new vm.Script(module);
+new vm.Script(ui);
+const window={};
+vm.runInNewContext(module,{window,globalThis:window});
+const T=window.JamaicaTravelers;
+assert.ok(T,'Traveler party module exported');
+const groups=[{adults:2,child_ages:[6,12]},{adults:1,child_ages:[4]}];
+const code=T.serialize(groups);
+assert.equal(code,'2:6,12|1:4');
+assert.equal(JSON.stringify(T.parse(code)),JSON.stringify(groups));
+assert.equal(JSON.stringify(T.fromQuery(new URLSearchParams('adults=3&kids=3&rooms='+encodeURIComponent(code)))),JSON.stringify(groups));
+assert.equal(T.fromQuery(new URLSearchParams('adults=3&kids=2&rooms='+encodeURIComponent(code))),null);
+assert.equal(T.fromQuery(new URLSearchParams('adults=1&kids=1')),null,'Legacy link cannot guess child age');
+assert.equal(T.parse('2:6,99'),null);
+assert.equal(T.parse('2:01'),null);
+assert.equal(T.parse('12:|1:'),null,'Too many adults');
+assert.equal(T.parse('1:|1:|1:|1:|1:|1:'),null,'Too many rooms');
+assert.equal(T.parse('1:0,1,2,3,4,5,6,7,8,9,10'),null,'Too many children');
+assert.equal(T.isTwoAdults([{adults:2,child_ages:[]}]),true);
+assert.equal(T.isTwoAdults([{adults:1,child_ages:[]},{adults:1,child_ages:[]}]),false);
+assert.equal(T.isTwoAdults(groups),false);
+assert.equal(T.totals(groups).adults,3);
+assert.equal(T.totals(groups).children,3);
+assert.ok(T.label(groups).includes('3 ребёнка'));
+assert.ok(T.description(groups).includes('Номер 2'));
+assert.equal(T.suffix(groups),'&adults=3&kids=3&rooms=2%3A6%2C12%7C1%3A4');
+
+const index=fs.readFileSync('index.html','utf8');
+const preview=fs.readFileSync('preview.html','utf8');
+const quote=fs.readFileSync('quote.html','utf8');
+const css=fs.readFileSync('assets/jamaica-search-ui.css','utf8');
+assert.ok(index.includes('id="primaryChildAges"')&&index.includes('id="extraRooms"')&&index.includes('id="addRoom"'));
+assert.ok(index.includes('src="./scripts/traveler-ui.js"')&&index.includes('Travelers.suffix(selectedParty)'));
+assert.ok(index.includes('const partyTwoAdults=Travelers.isTwoAdults(selectedParty)'));
+assert.ok(preview.includes('Travelers.description(rooms)')&&preview.includes('Travelers.suffix(rooms)'));
+assert.ok(quote.includes('const supportedParty=Travelers.isTwoAdults(rooms);'));
+assert.ok(quote.includes('if(!selected||!supportedParty||!cfgReady(config)||auth.length<32)return;'),
+ 'No unconfigured supplier call for a family');
+assert.ok(css.includes('.travelerBuilder')&&css.includes('.partyAges'));
+console.log('JAMAICA_MULTI_ROOM_CHILD_AGES_PASS');

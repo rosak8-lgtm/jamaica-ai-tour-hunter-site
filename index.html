@@ -84,9 +84,17 @@
    <div class="field short"><label for="dateFrom">Вылет с</label><input id="dateFrom" name="dateFrom" type="date"></div>
    <div class="field short"><label for="dateTo">Вылет до</label><input id="dateTo" name="dateTo" type="date"></div>
    <div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option></select></div>
-   <div class="field short"><label for="adults">Взрослых</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
-   <div class="field short"><label for="kids">Детей</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
+   <div class="field short"><label for="adults">Взрослых · номер 1</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
+   <div class="field short"><label for="kids">Детей · номер 1</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
   </div>
+  <section class="travelerBuilder" aria-label="Туристы и размещение по номерам">
+   <div class="travelerIntro"><div><strong>Состав туристов по номерам</strong><span>Возраст каждого ребёнка указывается <b>на дату начала тура</b>.</span></div><span id="partySummary" aria-live="polite">2 взрослых · 1 номер</span></div>
+   <div id="primaryChildAges" class="partyAges" aria-label="Возраст детей в номере 1"></div>
+   <div id="extraRooms" class="extraRooms"></div>
+   <button type="button" id="addRoom" class="addRoomButton">+ Добавить номер</button>
+   <p id="partyError" class="partyError" role="alert" hidden></p>
+   <p class="partyHint">Для каждого номера можно указать свой состав. Стоимость и возможность такого размещения должны быть подтверждены поставщиком — цена за двух взрослых не переносится на семью автоматически.</p>
+  </section>
   <details class="advancedFilters" id="advancedFilters">
    <summary>Дополнительные параметры: бюджет и название гостиницы</summary>
    <div class="fields fieldsExtra">
@@ -189,6 +197,8 @@
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
 <script src="./scripts/commons-hotel-media.js"></script>
+<script src="./scripts/traveler-party.js"></script>
+<script src="./scripts/traveler-ui.js"></script>
 <script>
 (function(){
 "use strict";
@@ -199,6 +209,8 @@ const sorted=[...countries].sort((a,b)=>(priorities.get(a.n)??999)-(priorities.g
 const $=id=>document.getElementById(id);
 const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e;};
 const form=$("tourSearchForm");
+const Travelers=window.JamaicaTravelers;
+const travelerUI=window.JamaicaTravelerUI.create();
 // Offer every supported length: do not hide valid 6/8/9/11/13-night tours.
 const nightsSelect=$("nights");
 for(let n=3;n<=180;n++){
@@ -244,7 +256,8 @@ function strictOffer(o,now){
 }
 function filters(){
  const val=id=>$(id).value.trim();
- return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),dateTo:val("dateTo"),nights:Number(val("nights")),adults:Number(val("adults")),children:Number(val("kids")),budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
+ const rooms=travelerUI.current(),summary=Travelers.totals(rooms);
+  return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),dateTo:val("dateTo"),nights:Number(val("nights")),adults:summary.adults,children:summary.children,rooms,budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
 }
 function matching(o,q){
  if(o.origin.toLocaleLowerCase("ru")!==q.origin.toLocaleLowerCase("ru"))return false;
@@ -252,7 +265,7 @@ function matching(o,q){
  if(q.date&&o.depart_date<q.date)return false;
  if(q.dateTo&&o.depart_date>q.dateTo)return false;
  if(q.nights!==0&&o.nights!==q.nights)return false;
- if(o.adults!==q.adults||o.children!==q.children)return false;
+ if(!Travelers.isTwoAdults(q.rooms)||o.adults!==q.adults||o.children!==q.children)return false;
  if(q.budget>0 && o.total_rub/o.adults>q.budget)return false;
  if(q.hotel && !o.hotel.toLocaleLowerCase("ru").includes(q.hotel))return false;
  return true;
@@ -296,7 +309,13 @@ function runSearch(scroll=false){
  $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
  if(scroll)scrollToResults();
 }
-form.addEventListener("submit",e=>{e.preventDefault();sourceFilterOptions();runSearch(true);if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();});
+form.addEventListener("submit",e=>{
+ e.preventDefault();
+ if(!travelerUI.commit()||!form.reportValidity())return;
+ sourceFilterOptions();runSearch(true);
+ if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
+ if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();
+});
 async function loadOffers(){
  inventoryLoading=true;
  try{
@@ -792,9 +811,12 @@ function renderTourPreviews(reset=true){
  const nights=Number($("nights").value);
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
  const resortFilter=sidebarResort.value.trim().toLocaleLowerCase("ru");
- const adults=Number($("adults").value),children=Number($("kids").value);
+ const selectedParty=travelerUI.current(),sum=Travelers.totals(selectedParty);
+ const adults=sum.adults,children=sum.children;
+ const partyTwoAdults=Travelers.isTwoAdults(selectedParty);
+ const partySuffix=Travelers.suffix(selectedParty);
+ const chosenParty=Travelers.label(selectedParty);
  const budget=Number($("budget").value)||0;
- const partyTwoAdults=adults===2&&children===0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
    "Бюджет: только туры с известной справочной ценой за двух взрослых. Неоценённые туры исключены; окончательная стоимость и места не подтверждены.";
@@ -839,7 +861,9 @@ function renderTourPreviews(reset=true){
    facts.append(el("span","", "📅 "+x.depart_date));
    facts.append(el("span","", "◷ "+x.nights+" ночей"));
    info.append(facts);
-   info.append(el("div","roomKind","Размещение: "+x.room));
+   info.append(el("div","roomKind",(partyTwoAdults?"Размещение: ":"Тип номера по исходному прайсу: ")+x.room+
+   (partyTwoAdults?"":" · вместимость для этого состава не подтверждена")));
+  info.append(el("div","partyInCard","Туристы: "+chosenParty));
    if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
      const hotelLink=el("a","hotelLink","Подробнее об отеле, фото и отзывы");
      hotelLink.href="hotel.html?id="+encodeURIComponent(x.hotel_id);
@@ -868,8 +892,7 @@ function renderTourPreviews(reset=true){
        "Без проверенной цены и подтверждения мест оплата недоступна."));
    }
    const details=el("a","btn btnWhite","Посмотреть тур →");
-   details.href="preview.html?id="+encodeURIComponent(x.id)+
-      "&adults="+encodeURIComponent(adults)+"&kids="+encodeURIComponent(children);
+   details.href="preview.html?id="+encodeURIComponent(x.id)+partySuffix;
    priceBox.append(details);
    const save=el("button","saveTour",
      favoriteIds.has(x.id)?"♥ В избранном":"♡ Сохранить");

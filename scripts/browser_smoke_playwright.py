@@ -316,10 +316,11 @@ def main():
                 page.locator("#destination").fill("Турция")
                 page.locator("#adults").fill("1")
                 page.locator("#kids").fill("1")
+                page.locator("#primaryChildAges select").first.select_option("7")
                 page.locator("#tourSearchForm button[type=submit]").click()
                 custom=page.locator('#previewCards article.offerCard a[href^="preview.html?id="]').first
                 custom.wait_for(timeout=15000)
-                ensure("&adults=1&kids=1" in custom.get_attribute("href"),
+                ensure("&adults=1&kids=1&rooms=1%3A7" in custom.get_attribute("href"),
                        "TRAVELER_COUNT_LOST_FROM_SEARCH")
                 custom.click()
                 page.wait_for_url("**/preview.html?id=*",timeout=20000)
@@ -330,7 +331,7 @@ def main():
                        page.locator("#facts").inner_text(),
                        "PAIR_PRICE_MISREPRESENTED_FOR_FAMILY")
                 q=page.locator("#quoteLink").get_attribute("href")
-                ensure("&adults=1&kids=1" in q,
+                ensure("&adults=1&kids=1&rooms=1%3A7" in q,
                        "TRAVELER_COUNT_LOST_TO_QUOTATION")
                 page.locator("#quoteLink").click()
                 page.wait_for_url("**/quote.html?preview=*",timeout=20000)
@@ -339,7 +340,44 @@ def main():
                     timeout=12000)
                 ensure(page.locator("#checkQuote").is_disabled(),
                        "UNSUPPORTED_TRAVELERS_ENTERED_TWO_ADULT_CHECKOUT")
+                ensure("7 лет" in page.locator("#tripSummary").inner_text(),
+                       "CHILD_AGE_LOST_IN_QUOTE_SUMMARY")
                 print("CUSTOM_TRAVELER_PARTY_1_ADULT_1_CHILD_PROTECTED=YES")
+                # Multi-room family retains each child's age and the selected
+                # room group; this is not a verified supplier quotation.
+                page.goto(base,wait_until="domcontentloaded")
+                page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                page.locator("#adults").fill("2")
+                page.locator("#kids").fill("2")
+                ages=page.locator("#primaryChildAges select")
+                ensure(ages.count()==2,"CHILD_AGE_SELECTORS_MISSING")
+                ages.nth(0).select_option("6")
+                ages.nth(1).select_option("12")
+                page.locator("#addRoom").click()
+                ensure(page.locator("#extraRooms .partyRoom").count()==1,
+                       "SECOND_ROOM_CONTROL_MISSING")
+                page.locator("#tourSearchForm button[type=submit]").click()
+                family=page.locator('#previewCards article.offerCard a[href^="preview.html?id="]').first
+                family.wait_for(timeout=15000)
+                ensure("&adults=3&kids=2&rooms=2%3A6%2C12%7C1%3A" in family.get_attribute("href"),
+                       "ROOM_GROUP_AND_CHILD_AGES_LOST_FROM_SEARCH")
+                family.click()
+                page.wait_for_url("**/preview.html?id=*",timeout=20000)
+                page.locator("#facts .fact").first.wait_for(timeout=15000)
+                ensure("Номер 2: 1 взрослый" in page.locator("#facts").inner_text(),
+                       "SECOND_ROOM_NOT_PRESERVED_IN_DETAILS")
+                ensure("Номер 1: 2 взрослых, 2 ребёнка (6 лет, 12 лет)" in
+                       page.locator("#facts").inner_text(),
+                       "CHILD_AGES_NOT_PRESERVED_IN_DETAILS")
+                ensure("Цена по прайс-листу на 2 взрослых" not in page.locator("#facts").inner_text(),
+                       "TWO_ADULT_REFERENCE_CANNOT_BE_FAMILY_PRICE")
+                page.locator("#quoteLink").click()
+                page.wait_for_url("**/quote.html?preview=*",timeout=20000)
+                ensure("Номер 2: 1 взрослый" in page.locator("#tripSummary").inner_text(),
+                       "SECOND_ROOM_MISSING_IN_QUOTE_SUMMARY")
+                ensure(page.locator("#checkQuote").is_disabled(),
+                       "UNVERIFIED_MULTI_ROOM_QUOTE_MUST_NOT_ENABLE_PAYMENT")
+                print("MULTI_ROOM_CHILD_AGES_FULL_PATH_PASS")
 
                 # All reference destinations remain selectable even when the
                 # official supplier publishes no validated Irkutsk tour.
