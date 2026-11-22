@@ -50,6 +50,39 @@ class Tests(unittest.TestCase):
         self.assertNotIn("115000",str(result))
         self.assertNotIn("121132934133",str(result))
         self.assertEqual(len(a.calls),2)
+    def test_exact_selected_family_rooms_are_checked_against_age_buckets(self):
+        d,feed=self.setup_data()
+        rooms=[{"adults":2,"child_ages":[]},{"adults":1,"child_ages":[6]}]
+        api=Api()
+        r=selected.inspect_selected(d,feed,P["id"],api,selected_rooms=rooms)
+        self.assertEqual(r["group_status"],"POTENTIAL_CANDIDATES_ONLY")
+        self.assertEqual(r["group_count"],2)
+        self.assertEqual(r["group_age_candidate_counts"],[1,1])
+        self.assertEqual(r["group_source_metadata_counts"],[0,0])
+        self.assertFalse(r["quote_verified"])
+        self.assertFalse(r["availability_verified"])
+        self.assertFalse(r["bookable"])
+        self.assertEqual(len(api.calls),2)
+        self.assertNotIn("115000",str(r))
+        self.assertNotIn("121132934133",str(r))
+
+    def test_no_compatible_child_age_blocks_family_candidate(self):
+        d,feed=self.setup_data()
+        r=selected.inspect_selected(d,feed,P["id"],Api(),
+            selected_rooms=[{"adults":2,"child_ages":[]},
+                            {"adults":1,"child_ages":[0]}])
+        self.assertEqual(r["group_age_candidate_counts"],[1,0])
+        self.assertEqual(r["group_status"],"MISSING_GROUP_AGE_CANDIDATES")
+        self.assertFalse(r["bookable"])
+
+    def test_invalid_party_is_rejected_before_credentialled_network(self):
+        d,feed=self.setup_data()
+        api=Api()
+        with self.assertRaises(bg.SyncHold):
+            selected.inspect_selected(d,feed,P["id"],api,
+                selected_rooms=[{"adults":0,"child_ages":[]}])
+        self.assertEqual(api.calls,[])
+
     def test_invalid_price_amounts_are_not_eligible(self):
         for value in (None,"",0,-50,"NaN","Infinity",[],["500"],{},True,"not a price"):
             self.assertFalse(selected.valid_positive_amount(value),repr(value))
