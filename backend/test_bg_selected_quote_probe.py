@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 import sys
 import unittest
 from datetime import datetime,timedelta,timezone
@@ -82,6 +84,43 @@ class Tests(unittest.TestCase):
             selected.inspect_selected(d,feed,P["id"],api,
                 selected_rooms=[{"adults":0,"child_ages":[]}])
         self.assertEqual(api.calls,[])
+
+    def test_private_group_file_requires_owner_only_permissions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            file=os.path.join(directory,"private-rooms.json")
+            party=[{"adults":2,"child_ages":[6,12]},
+                   {"adults":1,"child_ages":[4]}]
+            with open(file,"w",encoding="utf-8") as handle:
+                json.dump(party,handle)
+            os.chmod(file,0o600)
+            self.assertEqual(selected.read_local_room_groups(file),party)
+            os.chmod(file,0o644)
+            with self.assertRaises(bg.SyncHold):
+                selected.read_local_room_groups(file)
+            os.chmod(file,0o600)
+            alias=os.path.join(directory,"symlink.json")
+            os.symlink(file,alias)
+            with self.assertRaises(bg.SyncHold):
+                selected.read_local_room_groups(alias)
+
+    def test_private_group_file_rejects_passports_and_malformed_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            file=os.path.join(directory,"private-rooms.json")
+            for payload in (
+                {"rooms":[{"adults":2,"child_ages":[]}]},
+                [{"adults":2,"child_ages":[],"passport":"secret"}],
+                "not a room array",
+                [],
+            ):
+                with open(file,"w",encoding="utf-8") as handle:
+                    json.dump(payload,handle)
+                os.chmod(file,0o600)
+                with self.subTest(data_type=type(payload).__name__),self.assertRaises(bg.SyncHold):
+                    selected.read_local_room_groups(file)
+            with open(file,"w",encoding="utf-8") as handle:
+                handle.write(" "*3000)
+            with self.assertRaises(bg.SyncHold):
+                selected.read_local_room_groups(file)
 
     def test_invalid_price_amounts_are_not_eligible(self):
         for value in (None,"",0,-50,"NaN","Infinity",[],["500"],{},True,"not a price"):

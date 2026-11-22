@@ -8,6 +8,8 @@ numeric values, links and supplier identifiers never leave Oracle.
 from __future__ import annotations
 import argparse
 import json
+import os
+import stat
 import re
 import sys
 import urllib.error
@@ -182,20 +184,63 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
                       "POTENTIAL_2_ADULT_AMOUNT_CURRENCY_UNVERIFIED" if summary["two_adults_amount_only"] else
                       "PRICE_REFERENCE_NOT_SUITABLE_FOR_2_ADULT_RUB_CHECK")}
 
+def read_local_room_groups(path: str):
+    """Read tiny age-only search groups from user-owned, mode-0600 file.
+
+    Do not accept group data from a public URL, CLI argument string, or a
+    shared group-writable path; the data is not echoed/logged.
+    """
+    if not isinstance(path,str) or not path or len(path)>1024:
+        raise bg.SyncHold("PRIVATE_GROUP_FILE_INVALID")
+    flags=os.O_RDONLY
+    if hasattr(os,"O_NOFOLLOW"):
+        flags|=os.O_NOFOLLOW
+    if hasattr(os,"O_CLOEXEC"):
+        flags|=os.O_CLOEXEC
+    try:
+        fd=os.open(path,flags)
+        try:
+            info=os.fstat(fd)
+            if (not stat.S_ISREG(info.st_mode) or
+                info.st_uid!=os.geteuid() or
+                stat.S_IMODE(info.st_mode)&0o077 or
+                info.st_size<2 or info.st_size>2048):
+                raise bg.SyncHold("PRIVATE_GROUP_FILE_PERMISSIONS")
+            raw=os.read(fd,2049)
+        finally:
+            os.close(fd)
+    except OSError:
+        raise bg.SyncHold("PRIVATE_GROUP_FILE_UNAVAILABLE") from None
+    if len(raw)>2048:
+        raise bg.SyncHold("PRIVATE_GROUP_FILE_TOO_LARGE")
+    try:
+        rooms=json.loads(raw)
+    except (ValueError,UnicodeError):
+        raise bg.SyncHold("PRIVATE_GROUP_FILE_JSON_INVALID") from None
+    if (not isinstance(rooms,list) or not 1<=len(rooms)<=5 or
+        any(not isinstance(room,dict) or
+            set(room.keys())!={"adults","child_ages"} for room in rooms)):
+        raise bg.SyncHold("PRIVATE_GROUP_FILE_SCHEMA_INVALID")
+    # Validator is reused by inspect_selected before any supplier requests.
+    return rooms
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--directory",required=True)
     parser.add_argument("--previews",required=True)
     parser.add_argument("--preview-id",required=True)
     parser.add_argument("--credentials",default="")
+    parser.add_argument("--private-rooms-file",default="")
     args=parser.parse_args()
     if not ID_RE.fullmatch(args.preview_id):
         raise bg.SyncHold("PREVIEW_ID_INVALID")
     directory=json.loads(Path(args.directory).read_text(encoding="utf-8"))
     feed=json.loads(Path(args.previews).read_text(encoding="utf-8"))
+    rooms=read_local_room_groups(args.private_rooms_file) if args.private_rooms_file else None
     login,password=bg.read_secret(bg.credentials_path(args.credentials))
     bg.BASE="https://export.bgoperator.ru/"
-    result=inspect_selected(directory,feed,args.preview_id,bg.ApiClient(login,password))
+    result=inspect_selected(directory,feed,args.preview_id,bg.ApiClient(login,password),
+                            selected_rooms=rooms)
     print("JAMAICA_SELECTED_PRICE_REFERENCE_V1")
     for key in ("preview_id","country","depart_date","detail_lists",
                 "matched_rows","price_options","rub_price_fields",
@@ -203,6 +248,14 @@ def main():
                 "two_adults_amount_only","age_value_present","age_marker_unrecognized",
                 "blocked_price_options","status"):
         print(key.upper()+"="+str(result[key]))
+    if rooms is not None:
+        print("AGE_GROUP_COUNT="+str(result["group_count"]))
+        print("AGE_GROUP_CANDIDATE_COUNTS="+",".join(
+            map(str,result["group_age_candidate_counts"])))
+        print("AGE_GROUP_SOURCE_METADATA_COUNTS="+",".join(
+            map(str,result["group_source_metadata_counts"])))
+        print("AGE_GROUP_STATUS="+result["group_status"])
+        print("AGE_GROUP_QUOTE_VERIFIED=NO")
     print("QUOTE_VERIFIED=NO")
     print("NO_SALE_NO_PAYMENT_NO_SUPPLIER_IDENTIFIERS_EXPORTED=YES")
     if not result["matched_rows"]:
