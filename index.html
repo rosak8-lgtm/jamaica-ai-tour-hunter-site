@@ -669,14 +669,16 @@ async function renderDestinationPhoto(area,x,plain){
   const frame=el("div","previewPhotoFrame");
   frame.append(img);
   const meta=el("div","previewPhotoMeta");
-  const ribbon=el("span","destinationPhotoLabel","Фото направления · не фото гостиницы");
-  const credit=el("a","mediaSourceCredit","© "+e.author+" · источник");
+  // No intrusive disclaimer ribbon. The concise source link identifies the
+  // actual scenery location; ALT keeps the not-a-hotel disclosure explicit.
+  const place=typeof e.place==="string"&&e.place.trim()?e.place.trim():x.country;
+  const credit=el("a","mediaSourceCredit","Пейзаж: "+place+" · © "+e.author+" · источник");
   credit.href=e.source;credit.rel="noopener noreferrer";credit.target="_blank";
-  credit.title="Оригинал Wikimedia Commons: "+e.file;
+  credit.title="Пейзаж направления, не фотография выбранного отеля. Оригинал Wikimedia Commons: "+e.file;
   const license=el("a","mediaLicenseLink",e.license);
   license.href=e.license_url;license.rel="noopener noreferrer";license.target="_blank";
   license.title="Условия лицензии "+e.license;
-  meta.append(ribbon,credit,license);
+  meta.append(credit,license);
   let smaller=false;
   img.addEventListener("error",()=>{
    if(!smaller){smaller=true;img.src=url+"?width=330";return;}
