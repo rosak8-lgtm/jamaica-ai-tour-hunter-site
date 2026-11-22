@@ -244,7 +244,11 @@ def main():
                 ensure(not page.locator("#providerFrame").count(),"UNAPPROVED_PAYMENT_IFRAME")
                 quote_link.click()
                 page.wait_for_url("**/quote.html?preview=*",timeout=20000)
-                page.locator("#hotelTitle").wait_for(timeout=15000)
+                # The element exists before its async preview JSON resolves:
+                # wait for the *country content*, not just element attachment.
+                page.wait_for_function(
+                   "()=>document.querySelector('#hotelTitle')?.textContent?.includes('Турция')",
+                   timeout=20000)
                 ensure("Турция" in page.locator("#hotelTitle").inner_text(),
                        "SELECTED_COUNTRY_LOST_ON_QUOTE_PAGE")
                 ensure(page.locator("#checkQuote").is_disabled(),
