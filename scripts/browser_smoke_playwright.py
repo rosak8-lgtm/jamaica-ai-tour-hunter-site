@@ -68,9 +68,19 @@ def main():
                 ensure(page.locator(".logo .bird img").count()==1 and
                        page.locator(".heroArt .mascotHero").count()==1,
                        "BRAND_MASCOT_MISSING")
-                page.wait_for_function(
-                  "()=>[...document.querySelectorAll('.logo .bird img,.heroArt .mascotHero')]"+
-                  ".every(img=>img.complete&&img.naturalWidth>0)",timeout=12000)
+                try:
+                    page.wait_for_function(
+                      "()=>[...document.querySelectorAll('.logo .bird img,.heroArt .mascotHero')]"+
+                      ".every(img=>img.complete&&img.naturalWidth>0)",timeout=12000)
+                except Exception:
+                    debug=page.evaluate("""()=>
+                     [...document.querySelectorAll('.logo .bird img,.heroArt .mascotHero')]
+                       .map(img=>({src:img.src,currentSrc:img.currentSrc,
+                                  naturalWidth:img.naturalWidth,complete:img.complete,
+                                  type:img.parentElement?.tagName}))
+                    """)
+                    print("MASCOT_DECODE_DEBUG="+str(debug),flush=True)
+                    raise
                 ensure(page.evaluate("""()=>
                    document.querySelector('.heroArt .mascotHero').currentSrc.endsWith('jamaica-parrot-hero-v2.avif')&&
                    document.querySelector('.logo .bird img').currentSrc.endsWith('jamaica-parrot-logo-v2.avif')"""),
