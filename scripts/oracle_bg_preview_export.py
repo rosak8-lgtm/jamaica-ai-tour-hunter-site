@@ -20,6 +20,7 @@ from pathlib import Path
 import oracle_bg_route_sync as bg
 import oracle_bg_price_detail_probe as detail
 import tour_price_reference as price_ref
+import catalog_size_budget as byte_limit
 
 MAX_ROWS = 60000
 MAX_RESPONSE_ROWS = 25000
@@ -422,6 +423,10 @@ def main():
             print("ROWS_SCANNED_"+str(i)+"="+str(stats["rows_scanned"]))
             print("HOTEL_IDS_MATCHED_"+str(i)+"="+str(stats["known_hotel_ids"]))
         raise bg.SyncHold("NO_MATCHED_HOTEL_PREVIEWS_DO_NOT_PUBLISH_EMPTY")
+    # Compact real, preliminary source rows *before* writing the file.
+    # A 60k-entry feed can exceed Oracle's 45MB guard. Keep representative
+    # hotels/dates/countries, never fabricate a missing country or a price.
+    result,dropped_by_budget=byte_limit.fit_feed(result,max_bytes=32_000_000)
     destination = Path(args.output)
     if destination.is_symlink():
         raise bg.SyncHold("OUTPUT_SYMLINK")
@@ -431,6 +436,8 @@ def main():
     temp.chmod(0o600)
     temp.replace(destination)
     print("JAMAICA_PREVIEW_EXPORT_PASS")
+    print("JAMAICA_PREVIEW_OUTPUT_BYTES="+str(destination.stat().st_size))
+    print("JAMAICA_PREVIEW_DROPPED_BY_BYTE_BUDGET="+str(dropped_by_budget))
     print("COUNTRIES_ATTEMPTED="+str(len(result["countries_status"])))
     print("COUNTRIES_ELIGIBLE_FOR_ORIGIN="+str(len([c for c in catalog["countries"]
        if c.get("has_tour_catalog") and bg.CITY_ID in c.get("origins",[])])))
