@@ -353,14 +353,40 @@ assert.ok(previews.previews.every(x=>x.bookable===false&&x.quote_verified===fals
 assert.ok(page.includes('id="previewCards"'));
 assert.ok(page.includes('function previewCardPhoto(x)'),'Preview cards need identity-verified hotel photo or honest placeholder');
 assert.ok(page.includes('function curatedPreviewPhoto(x)'),'Use verified hotel-specific Commons photos where known');
-assert.ok(!page.includes('function licensedDestinationScene(country)'),'Never substitute a country photo for a hotel');
+assert.ok(!page.includes('function licensedDestinationScene(country)'),'Never mislabel country scenery as a hotel photo');
+assert.ok(page.includes('async function renderDestinationPhoto(area,x,plain)') &&
+ page.includes('destination_not_hotel') &&
+ page.includes('Фото направления · не фото гостиницы'),
+ 'Destination photos may fill empty card visuals ONLY when clearly distinct from actual hotel photos');
+const destinationMedia=JSON.parse(fs.readFileSync('assets/jamaica-destination-media.json','utf8'));
+assert.equal(destinationMedia.schema,'jamaica.destination-media.v1');
+assert.equal(Object.keys(destinationMedia.countries).length,13);
+for(const [country,item] of Object.entries(destinationMedia.countries)){
+ assert.equal(item.kind,'destination_not_hotel',country);
+ assert.ok(item.author.length>=3&&/^CC BY(?:-SA)? (?:3\.0|4\.0)$/.test(item.license),country);
+ assert.equal(item.source,'https://commons.wikimedia.org/wiki/File:'+item.file.replaceAll(' ','_'));
+ assert.ok(item.license_url.startsWith('https://creativecommons.org/licenses/'));
+}
+for(const name of ['hero','logo']){
+ const file=fs.readFileSync('assets/jamaica-parrot-'+name+'-v2.avif');
+ assert.ok(file.length>1000&&file.length<60000&&
+  file.toString('ascii',4,12)==='ftypavif','Real generated parrot image not deployed: '+name);
+}
+assert.ok(page.includes('srcset="./assets/jamaica-parrot-hero-v2.avif"')&&
+ page.includes('srcset="./assets/jamaica-parrot-logo-v2.avif"'),
+ 'Real prepared mascot should appear in hero and top-left corner, not only as an SVG test asset');
+for(const filename of ['hotel.html','preview.html','tour.html','quote.html','checkout.html','account.html','route.html']){
+ assert.ok(fs.readFileSync(filename,'utf8').includes('srcset="./assets/jamaica-parrot-logo-v2.avif"'),
+  'All customer pages must use the real mascot photo: '+filename);
+}
 assert.ok(!page.includes('countrySceneNames'),'Country imagery must not replace hotel pictures');
 assert.ok(page.includes('async function approvedPartnerPreviewPhoto(x)'),'Allow only individually approved hotel CDN image feeds');
 assert.ok(page.includes('e.rights_verified!==true'),'Hotel partner rights must be checked');
 assert.ok(page.includes('img.referrerPolicy="no-referrer"'),'Do not leak referral context to photo host');
 assert.ok(page.includes('Проверенная фотография гостиницы пока недоступна'),'Missing hotel photo should be disclosed');
 assert.ok(!page.includes('landscape filetype:bitmap'),'Do not search scenery as hotel photographs');
-assert.ok(page.includes('area.replaceChildren(fallback)'),'Broken external images should fall back without a broken thumbnail');
+assert.ok(page.includes('area.replaceChildren(plain)')&&page.includes('renderDestinationPhoto(area,x,fallback)'),
+ 'Broken images must fall back to labelled destination imagery or a plain placeholder');
 assert.ok(page.includes('nextVerifiedPhoto()'),'Card must retry another rights-verified photo of the same hotel');
 assert.ok(page.includes('fallbackSrc:alternate&&alternate!==src?alternate:null'),
   'Never retry an HTML attribution URL as an image');
