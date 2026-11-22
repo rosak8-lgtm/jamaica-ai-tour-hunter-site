@@ -64,6 +64,21 @@ def main():
                 errors=[]
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
                 page.goto(base,wait_until="domcontentloaded")
+                png_favicon=page.request.get(base+"favicon.png?v=20261122b")
+                ico_favicon=page.request.get(base+"favicon.ico?v=20261122b")
+                ensure(png_favicon.status==200 and
+                       png_favicon.body().startswith(bytes((137,80,78,71,13,10,26,10))),
+                       "NEW_BRANDED_PNG_FAVICON_UNAVAILABLE")
+                ensure(ico_favicon.status==200 and
+                       ico_favicon.body().startswith(bytes((0,0,1,0,1,0))),
+                       "CLASSIC_ICO_FAVICON_UNAVAILABLE")
+                ensure(page.evaluate("""async ()=> {
+                  const img=new Image();
+                  img.src='./favicon.png?v=20261122b';
+                  await img.decode();
+                  return img.naturalWidth===64&&img.naturalHeight===64;
+                }"""),"NEW_PARROT_FAVICON_IMAGE_DECODE_FAILED")
+                print("BRANDED_PARROT_FAVICON_PNG_ICO_PASS")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
                 ensure(page.locator(".logo .bird img").count()==1 and
                        page.locator(".heroArt .mascotHero").count()==1,

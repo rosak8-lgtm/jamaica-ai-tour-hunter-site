@@ -14,6 +14,27 @@ const config=JSON.parse(fs.readFileSync('checkout-config.json','utf8'));
 const searchStyle=fs.readFileSync('assets/jamaica-search-ui.css','utf8');
 const detailStyle=fs.readFileSync('assets/jamaica-detail-ui.css','utf8');
 assert.ok(page.includes('./assets/jamaica-search-ui.css'));
+// Browser-tab icon uses the same newly installed glasses-parrot artwork as the logo.
+const faviconPng=fs.readFileSync('favicon.png');
+const faviconIco=fs.readFileSync('favicon.ico');
+assert.deepEqual([...faviconPng.subarray(0,8)],[137,80,78,71,13,10,26,10],
+ 'Parrot favicon must contain real PNG pixels');
+assert.equal(faviconPng.readUInt32BE(16),64,'Favicon image width must be 64');
+assert.equal(faviconPng.readUInt32BE(20),64,'Favicon image height must be 64');
+assert.deepEqual([...faviconIco.subarray(0,6)],[0,0,1,0,1,0],
+ 'Classic ICO favicon must have valid header');
+assert.ok(faviconIco.includes(faviconPng),
+ 'ICO and modern PNG should share the same parrot image bytes');
+for(const name of ['index.html','hotel.html','preview.html','tour.html',
+ 'route.html','quote.html','account.html','checkout.html']){
+ const html=fs.readFileSync(name,'utf8');
+ assert.ok(html.includes('href="./favicon.png?v=20261122b"')&&
+    html.includes('href="./favicon.ico?v=20261122b"'),
+  name+' must explicitly use new cache-busted favicon');
+ assert.ok(!html.includes('rel="icon" type="image/svg+xml" href="./assets/jamaica-parrot-mark.svg"'),
+  'Old vector canary icon must no longer be used for '+name);
+}
+
 assert.ok(page.includes('class="utilityBar"')&&page.includes('class="searchModeTabs"'));
 assert.ok(page.includes('class="fields fieldsMain"'));
 assert.ok(page.includes('id="advancedFilters"')&&page.includes('id="budget"'));
