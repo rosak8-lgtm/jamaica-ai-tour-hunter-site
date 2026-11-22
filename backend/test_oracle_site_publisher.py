@@ -122,6 +122,18 @@ class Tests(unittest.TestCase):
             with self.assertRaises(publisher.CatalogHold):
                 publisher.validate(f,directory())
 
+    def test_old_unrechecked_record_cannot_keep_numeric_price(self):
+        f=feed()
+        f["previews"][0]["status"]="PREVIOUSLY_SEEN_NOT_RECHECKED"
+        with self.assertRaises(publisher.CatalogHold):
+            publisher.validate(f,directory())
+        f["previews"][0]["price_reference_rub"]=None
+        f["previews"][0]["price_reference_party"]="UNVERIFIED"
+        self.assertEqual(publisher.validate(f,directory()),1)
+        f["previews"][0]["status"]="UNKNOWN_OPERATOR_CLAIM"
+        with self.assertRaises(publisher.CatalogHold):
+            publisher.validate(f,directory())
+
     def test_old_data_not_published_as_fresh(self):
         f=feed()
         f["refreshed_at_utc"]=(NOW-timedelta(hours=1)).isoformat()
