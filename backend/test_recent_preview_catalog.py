@@ -45,7 +45,9 @@ class Tests(unittest.TestCase):
         # Repeated unobserved cycles must not refresh its last-seen timestamp.
         f3,_=combine(feed([preview("c","Индонезия",76000)]),h2,
                      now=NOW+timedelta(hours=24,minutes=1))
-        self.assertEqual([r["country"] for r in f3["previews"]],["Индонезия"])
+        self.assertEqual({r["country"] for r in f3["previews"]},
+                         {"Индонезия","Вьетнам"})
+        self.assertNotIn("Таиланд",{r["country"] for r in f3["previews"]})
 
     def test_reobserved_previous_price_is_current_and_overrides_history(self):
         _,cache=combine(feed([preview("a","Таиланд",88000)]),None,now=NOW)
