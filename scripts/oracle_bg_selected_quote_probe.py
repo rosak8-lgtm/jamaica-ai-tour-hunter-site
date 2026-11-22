@@ -25,6 +25,7 @@ import oracle_bg_preview_export as preview
 # Reuse private, source-only age-bucket matching with no passenger PII.
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
 from backend.bg_price_age_scope import candidate_report
+from backend.bg_private_source_crosswalk import private_source_candidates
 
 ID_RE = re.compile(r"^p_[a-f0-9]{24}$")
 MAX_DETAIL_LISTS = 4
@@ -177,6 +178,9 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
     party_status={}
     if selected_rooms is not None:
         checked=candidate_report(selected, selected_rooms, party_rows)
+        # PRIVATE full ID/roommeal/sr matching is performed in-memory only.
+        # Report candidate count, never internal plan records or price.
+        plans=private_source_candidates(selected, selected_rooms, party_rows)
         party_status={
             "group_status":checked["status"],
             "group_count":checked["requested_rooms"],
@@ -184,6 +188,7 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
             "group_source_metadata_counts":checked["source_metadata_counts"],
             "shared_source_candidate_count":checked["shared_source_candidate_count"],
             "source_status":checked["source_status"],
+            "private_source_plan_count":len(plans),
         }
     return {"preview_id":chosen_id,"country":selected["country"],
             "depart_date":selected["depart_date"],"detail_lists":detail_lists,
@@ -267,6 +272,7 @@ def main():
         print("AGE_GROUP_STATUS="+result["group_status"])
         print("AGE_SHARED_SOURCE_CANDIDATES="+str(result["shared_source_candidate_count"]))
         print("AGE_SOURCE_STATUS="+result["source_status"])
+        print("AGE_PRIVATE_SOURCE_PLANS="+str(result["private_source_plan_count"]))
         print("AGE_GROUP_QUOTE_VERIFIED=NO")
     print("QUOTE_VERIFIED=NO")
     print("NO_SALE_NO_PAYMENT_NO_SUPPLIER_IDENTIFIERS_EXPORTED=YES")
