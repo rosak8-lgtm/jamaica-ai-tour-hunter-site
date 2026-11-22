@@ -71,6 +71,10 @@ def main():
                 page.wait_for_function(
                   "()=>[...document.querySelectorAll('.logo .bird img,.heroArt .mascotHero')]"+
                   ".every(img=>img.complete&&img.naturalWidth>0)",timeout=12000)
+                ensure(page.evaluate("""()=>
+                   document.querySelector('.heroArt .mascotHero').currentSrc.endsWith('jamaica-parrot-hero-v2.avif')&&
+                   document.querySelector('.logo .bird img').currentSrc.endsWith('jamaica-parrot-logo-v2.avif')"""),
+                   "REAL_PHOTOREALISTIC_MASCOT_FILES_NOT_USED_BY_BROWSER")
                 ensure(page.locator("#catalogBreadth").count()==1,
                        "COUNTRY_BREADTH_SUMMARY_MISSING")
                 # New branded search design must be a FUNCTIONAL, not decorative,
@@ -162,12 +166,25 @@ def main():
                 if counts.get("Таиланд",0)>0:
                     thai_cards=page.locator("#previewCards article.offerCard").filter(has_text="Таиланд ·")
                     ensure(thai_cards.count()>0,"THAILAND_CARD_MISSING")
-                    # Source catalog has no validated Thai hotel facades.
-                    ensure(thai_cards.first.locator(".previewMedia img").count()==0,
-                           "UNVERIFIED_THAI_HOTEL_PHOTO_WAS_SHOWN")
-                    ensure("фотография гостиницы" in
-                           thai_cards.first.locator(".previewScenePlaceholder").inner_text(),
-                           "HONEST_HOTEL_PLACEHOLDER_MISSING")
+                    # No exact facade for the displayed Thai property:
+                    # destination photography is permitted ONLY when prominently
+                    # labelled as NOT the chosen hotel, and with author/source.
+                    thai_cards.first.locator(".destinationPhotoLabel").wait_for(timeout=14000)
+                    ensure("не фото гостиницы" in thai_cards.first.locator(".destinationPhotoLabel").inner_text(),
+                           "DESTINATION_IMAGE_NOT_CLEARED_AS_NOT_HOTEL")
+                    ensure("не выбранной гостиницы" in thai_cards.first.locator(".previewMedia img").first.get_attribute("alt"),
+                           "DESTINATION_ALT_MUST_NOT_CLAIM_HOTEL")
+                    thai_cards.first.locator(".previewMedia img").first.scroll_into_view_if_needed()
+                    page.wait_for_function(
+                      "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
+                      ".some(img=>img.complete&&img.naturalWidth>0)",timeout=14000)
+                    ensure(thai_cards.first.locator(".mediaSourceCredit").count()==1,
+                           "DESTINATION_PHOTO_AUTHOR_AND_LICENSE_MISSING")
+                if counts.get("Абхазия",0)>0:
+                    abkh=page.locator("#previewCards article.offerCard").filter(has_text="Абхазия ·")
+                    abkh.first.locator(".destinationPhotoLabel").wait_for(timeout=14000)
+                    ensure(abkh.first.locator(".previewMedia img").count()==1,
+                           "ABKHAZIA_PHOTO_NOT_SHOWN_IN_FIRST_RESULT")
 
                 # Price sort must order known two-adult references, not departure dates.
                 page.locator("#previewSort").select_option("price")
