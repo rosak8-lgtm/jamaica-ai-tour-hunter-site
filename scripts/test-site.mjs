@@ -1,8 +1,13 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
+import './test-traveler-party.mjs';
 
 const page=fs.readFileSync('index.html','utf8');
+const partyWindow={};
+vm.runInNewContext(fs.readFileSync('scripts/traveler-party.js','utf8'),
+ {window:partyWindow,globalThis:partyWindow});
+const Travelers=partyWindow.JamaicaTravelers;
 const detail=fs.readFileSync('tour.html','utf8');
 const checkout=fs.readFileSync('checkout.html','utf8');
 const account=fs.readFileSync('account.html','utf8');
@@ -175,7 +180,7 @@ function functionFrom(source,signature){
  assert.ok(match,'Function body not found '+signature);
  return vm.runInNewContext('('+match[0]+')',{
    now:Date.now(),countries,Date,Number,Array,Object,String,RegExp,
-   dataSafe:s=>typeof s==='string'?s.trim():'',
+   dataSafe:s=>typeof s==='string'?s.trim():'',Travelers,
    referencePrice:x=>Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0?x.price_reference_rub:null
  });
 }
@@ -203,8 +208,10 @@ assert.ok(previewPriceSort(cheap,costly)<0,'Cheapest should rank before earliest
 assert.ok(previewPriceSort(costly,unknown)<0,'Known reference price before unknown');
 assert.ok(previewPriceSort(unknown,cheap)>0,'Unknown price never ranked as free or cheapest');
 const matching=functionFrom(page,'function matching(o,q){');
-const q={origin:'Иркутск',country:'',date:'',nights:0,adults:2,children:0,budget:0,hotel:''};
+const q={origin:'Иркутск',country:'',date:'',nights:0,adults:2,children:0,rooms:[{adults:2,child_ages:[]}],budget:0,hotel:''};
 assert.equal(matching(sample,q),true,'Any duration must show verified quotes');
+assert.equal(matching(sample,{...q,rooms:[{adults:1,child_ages:[]},{adults:1,child_ages:[]}]}),false,
+ 'Pair reference is not valid for two separate rooms');
 assert.equal(matching(sample,{...q,nights:7}),false);
 assert.equal(matching(sample,{...q,nights:10}),true);
 assert.equal(matching(sample,{...q,country:'Таиланд'}),true);
@@ -492,6 +499,13 @@ for(const id of ['heading','subtitle','notice','facts','hotelInfo','hotelLink','
  assert.ok(previewDetail.includes('id="'+id+'"'),'Preview detail missing '+id);
 }
 assert.ok(previewDetail.includes('tour-previews.json'));
+assert.ok(previewDetail.includes('Travelers.suffix(rooms)')&&previewDetail.includes('Travelers.description(rooms)'),
+ 'Selected room groups and child ages must persist on hotel details');
+const quoteParty=fs.readFileSync('quote.html','utf8');
+assert.ok(quoteParty.includes('Travelers.fromQuery(params)')&&
+ quoteParty.includes('Travelers.description(rooms)')&&
+ quoteParty.includes('const supportedParty=Travelers.isTwoAdults(rooms);'),
+ 'Quote page must retain all travelers and refuse unsupported pricing');
 assert.ok(previewDetail.includes('x.bookable===false'));
 assert.ok(!/WhatsApp|wa\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(previewDetail));
 const previewScripts=[...previewDetail.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
