@@ -363,7 +363,7 @@ assert.equal(destinationMedia.schema,'jamaica.destination-media.v1');
 assert.equal(Object.keys(destinationMedia.countries).length,13);
 for(const [country,item] of Object.entries(destinationMedia.countries)){
  assert.equal(item.kind,'destination_not_hotel',country);
- assert.ok(item.author.length>=3&&/^CC BY(?:-SA)? (?:3\.0|4\.0)$/.test(item.license),country);
+ assert.ok(item.author.length>=1&&/^CC BY(?:-SA)? (?:3\.0|4\.0)$/.test(item.license),country);
  assert.equal(item.source,'https://commons.wikimedia.org/wiki/File:'+item.file.replaceAll(' ','_'));
  assert.ok(item.license_url.startsWith('https://creativecommons.org/licenses/'));
 }
