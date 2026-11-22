@@ -14,7 +14,7 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 .price{font-size:30px;font-weight:900;color:var(--purple)}.sub{color:#756b7c}
 </style>
 <link rel="stylesheet" href="./assets/jamaica-app-pages.css"></head>
-<body class="jamaicaAppPage"><nav><a href="./"><img src="./assets/jamaica-parrot-mark.svg" alt="" aria-hidden="true" width="34" height="34" style="width:34px;height:34px;object-fit:contain;vertical-align:middle;margin-right:8px">JAMAICA · Выбрать другой тур</a></nav><main>
+<body class="jamaicaAppPage"><nav><a href="./"><picture><source srcset="./assets/jamaica-parrot-logo-v2.avif" type="image/avif"><img src="./assets/jamaica-parrot-mark.svg" alt="" aria-hidden="true" width="34" height="34" style="width:34px;height:34px;object-fit:contain;vertical-align:middle;margin-right:8px"></picture>JAMAICA · Выбрать другой тур</a></nav><main>
 <h1>Проверка стоимости путешествия</h1>
 <p class="sub">Перед оформлением договора сервер повторно рассчитывает выбранный тур для вашего состава туристов. Справочные суммы из прайс-листов не являются ценой продажи.</p>
 <section><h2 id="hotelTitle">Загрузка выбранного тура…</h2>
@@ -71,16 +71,23 @@ async function init(){
   if(feed.schema!=="jamaica.tour-previews.v1"||feed.bookable!==false||
      !Array.isArray(feed.previews))throw Error("UNVERIFIED_FEED");
   const found=await window.JamaicaCatalog.findPreview(feed,id);
+  // Read-only details must remain visible even when a dated preview has
+  // become too old; never permit a quote or purchase for that record.
   selected=found&&found.bookable===false&&found.quote_verified===false&&
-    found.availability_verified===false&&
-    found.depart_date>new Date().toISOString().slice(0,10)?found:null;
+    found.availability_verified===false?found:null;
   if(!selected)throw Error("PREVIEW_NOT_CURRENT");
   $("hotelTitle").textContent=selected.country+" · "+selected.hotel;
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
       " · "+selected.nights+" ночей · "+selected.room+
       " · "+partyLabel();
   if(!supportedParty){
-    notice("Для выбранного состава ("+partyLabel()+") требуется отдельная проверка стоимости. Сейчас онлайн-оформление поддерживает только 2 взрослых без детей при наличии подтверждённого API. Цена на двух взрослых для вашего состава не применяется; оплата и бронирование не выполняются.");
+    notice("Для выбранного состава ("+partyLabel()+") требуется отдельная проверка стоимости. Сейчас онлайн-оформление поддерживает только 2 взрослых без детей при наличии подтверждённого API. Цена на двух взрослых для вашего состава не применяется; оплата и бронирование не выполняются."+
+      (selected.depart_date<=new Date().toISOString().slice(0,10)?
+       " Дата вылета уже наступила или прошла.":""));
+    return;
+  }
+  if(selected.depart_date<=new Date().toISOString().slice(0,10)){
+    notice("Дата вылета наступила или прошла. Проверка стоимости и бронирование недоступны; выберите новый будущий вылет в поиске туров.");
     return;
   }
   auth=sessionStorage.getItem("jamaica_auth_token")||"";

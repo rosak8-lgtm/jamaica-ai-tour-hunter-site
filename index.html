@@ -35,7 +35,7 @@
 @media(max-width:500px){.destinationGrid{grid-template-columns:1fr}.searchHead{flex-direction:column;align-items:flex-start}.searchPanel{margin-top:-39px}.fields{grid-template-columns:1fr}.field,.field.wide,.field.short{grid-column:1}.destToolbar{flex-direction:column;align-items:stretch}.destToolbar input{width:100%}.nav{min-height:70px}.navLinks{justify-content:flex-end}.navLinks a{font-size:12px;padding:8px}.hero h1{letter-spacing:-.8px}.heroArt{min-height:198px}.artBubble{left:5%;right:5%}.offerBox{flex-direction:column;align-items:flex-start}.finalCta{padding:25px}.sectionHead{display:block}}
 </style>
 <link rel="icon" type="image/svg+xml" href="./assets/jamaica-parrot-mark.svg">
-<link rel="preload" href="./assets/jamaica-parrot-mascot.svg" as="image" type="image/svg+xml">
+<link rel="preload" href="./assets/jamaica-parrot-hero-v2.avif" as="image" type="image/avif">
 <link rel="stylesheet" href="./assets/jamaica-search-ui.css">
 </head>
 <body>
@@ -46,7 +46,7 @@
  </div></div>
  <div class="wrap"><nav class="nav" aria-label="Главная навигация">
   <a class="logo" href="./" aria-label="JAMAICA — главная">
-   <span class="bird" aria-hidden="true"><img src="./assets/jamaica-parrot-mark.svg" width="48" height="48" alt="" decoding="async"></span><span class="logoText">JAMAICA<span class="logoSub">Travel search</span></span>
+   <span class="bird" aria-hidden="true"><picture><source srcset="./assets/jamaica-parrot-logo-v2.avif" type="image/avif"><img src="./assets/jamaica-parrot-mark.svg" width="48" height="48" alt="" decoding="async"></picture></span><span class="logoText">JAMAICA<span class="logoSub">Travel search</span></span>
   </a>
   <div class="navLinks">
    <a href="#offers">Туры с перелётом</a><a href="#hotels">Отели</a>
@@ -62,9 +62,9 @@
   <p>Страна, даты, отель и предварительная цена — в одном поиске. Сравнивайте настоящие записи прайс-листов и изучайте отели, не уходя с JAMAICA.</p>
   <div class="heroFine">Окончательная цена, наличие мест и перелёт проверяются перед договором и оплатой.</div>
  </div>
- <div class="heroArt" aria-label="Фирменная иллюстрация JAMAICA: тропический отдых" role="img">
-  <div class="artCircle"></div><img class="mascotHero" src="./assets/jamaica-parrot-mascot.svg" alt="" loading="eager" decoding="async" width="350" height="380">
-  <div class="artBubble"><div><b>Ваше путешествие</b><span>Поиск по направлениям и датам</span></div><strong>✈</strong></div>
+ <div class="heroArt" aria-label="Весёлый фирменный попугай JAMAICA в фиолетовых очках" role="img">
+  <div class="artCircle"></div><picture class="mascotVisual"><source srcset="./assets/jamaica-parrot-hero-v2.avif" type="image/avif"><img class="mascotHero" src="./assets/jamaica-parrot-mascot.svg" alt="" loading="eager" decoding="async" width="499" height="440"></picture>
+  
  </div>
 </div></section>
 <div class="wrap"><section class="searchPanel" id="request">
@@ -635,17 +635,63 @@ async function approvedPartnerPreviewPhoto(x){
   return candidates;
  }catch(e){return [];}
 }
+// Rights-reviewed destination landscapes: never claim these are photos of
+// the chosen hotel. The hotel-specific feed is ALWAYS attempted first.
+let jamaicaDestinationPhotosPromise=null;
+async function destinationPhotoManifest(){
+ if(!jamaicaDestinationPhotosPromise){
+  jamaicaDestinationPhotosPromise=fetch("./assets/jamaica-destination-media.json",{cache:"force-cache"})
+   .then(r=>{if(!r.ok)throw Error("DESTINATION_MEDIA");return r.json();})
+   .then(d=>d.schema==="jamaica.destination-media.v1"&&d.countries&&
+     typeof d.countries==="object"?d.countries:{})
+   .catch(()=>({}));
+ }
+ return jamaicaDestinationPhotosPromise;
+}
+async function renderDestinationPhoto(area,x,plain){
+ try{
+  const e=(await destinationPhotoManifest())[x.country];
+  if(!area.isConnected||!e)return;
+  if(e.kind!=="destination_not_hotel"||typeof e.file!=="string"||
+     !/^[\p{L}\p{N}_.', -]{6,180}\.(?:jpe?g|png|webp)$/iu.test(e.file)||
+     e.file.includes("..")||
+     !["CC BY 4.0","CC BY 3.0","CC BY-SA 4.0"].includes(e.license)||
+     typeof e.author!=="string"||e.author.length<1||e.author.length>120||
+     e.source!=="https://commons.wikimedia.org/wiki/File:"+e.file.replaceAll(" ","_")||
+     typeof e.license_url!=="string"||!e.license_url.startsWith("https://creativecommons.org/licenses/"))return;
+  const url="https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(e.file);
+  const img=el("img");
+  img.alt="Фотография направления "+x.country+", не выбранной гостиницы";
+  img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
+  const ribbon=el("div","destinationPhotoLabel","Фото направления · не фото гостиницы");
+  const credit=el("a","mediaSourceCredit","Фото: "+e.author+" · "+e.license+" · Wikimedia Commons");
+  credit.href=e.source;credit.rel="noopener noreferrer";credit.target="_blank";
+  credit.title="Источник изображения. Условия: "+e.license_url;
+  let smaller=false;
+  img.addEventListener("error",()=>{
+   if(!smaller){smaller=true;img.src=url+"?width=330";return;}
+   if(area.isConnected)area.replaceChildren(plain);
+  });
+  if(area.isConnected)area.replaceChildren(img,ribbon,credit);
+  img.src=url+"?width=500";
+ }catch(e){if(area.isConnected)area.replaceChildren(plain);}
+}
 function previewCardPhoto(x){
  const area=el("div","previewMedia");
  const fallback=el("div","previewScenePlaceholder",
    "🏨 "+x.hotel+" · Проверенная фотография гостиницы пока недоступна");
  area.append(fallback);
  const candidates=[],seen=new Set();
- let cursor=0;
+ let cursor=0,fallbackStarted=false;
+ function showDestination(){
+  if(fallbackStarted)return;
+  fallbackStarted=true;
+  renderDestinationPhoto(area,x,fallback);
+ }
  function nextVerifiedPhoto(){
   if(!area.isConnected)return;
   const photo=candidates[cursor++];
-  if(!photo){area.replaceChildren(fallback);return;}
+  if(!photo){showDestination();return;}
   const img=el("img");
   img.alt=photo.alt;img.loading="lazy";img.decoding="async";
   img.referrerPolicy="no-referrer";
@@ -694,8 +740,8 @@ function previewCardPhoto(x){
      license:p.license,licenseUrl:p.license_url,
      alt:p.alt,kind:"hotel",label:"Фото выбранного отеля"})));
   }
-  if(candidates.length)nextVerifiedPhoto();
- })().catch(()=>area.replaceChildren(fallback));
+  if(candidates.length)nextVerifiedPhoto();else showDestination();
+ })().catch(()=>showDestination());
  return area;
 }
 function interleaveCountries(rows){
