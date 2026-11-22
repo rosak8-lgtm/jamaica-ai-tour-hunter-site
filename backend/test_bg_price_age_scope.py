@@ -21,8 +21,10 @@ def row(room="STANDARD HB",id_ns="104623691678",prices=None,**updates):
       "tour_date":"11.12.2026",
       "duration":"7","room":room,
       "id_ns":id_ns,
+      "id_price":"121120516103","dt":"11.12.2026","o_duration":"7",
+      "sr":"PRIVATE_PROVIDER_FLIGHT_TOKEN",
       "prices":prices if prices is not None else [
-        {"ag":"[14-99][14-99][2-11][12-17]","sr":"PRIVATE_PROVIDER_FLIGHT_TOKEN"}
+        {"ag":"[14-99][14-99][2-11][12-17]"}
       ],
       **updates
     }
@@ -81,6 +83,50 @@ class Tests(unittest.TestCase):
     for secret in ("SAMPLE HOTEL","PRIVATE_PROVIDER_FLIGHT_TOKEN",
                    "104623691678","2026-12-11"):
         self.assertNotIn(secret,rendered)
+
+ def test_row_level_source_and_shared_template_for_two_rooms(self):
+     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
+     rows=[row(),row(room="FAMILY HB",id_ns="104623691679",
+                     prices=[{"ag":"12+,2-11"}])]
+     report=candidate_report(PREVIEW,rooms,rows)
+     self.assertEqual(report["candidate_counts"],[1,1])
+     self.assertEqual(report["source_metadata_counts"],[1,1])
+     self.assertEqual(report["shared_source_candidate_count"],1)
+     self.assertEqual(report["source_status"],"POTENTIAL_COMMON_PRICE_LIST_ONLY")
+     self.assertFalse(report["exact_supplier_quote"])
+     self.assertFalse(report["bookable"])
+     for secret in ("121120516103","104623691679","PRIVATE_PROVIDER_FLIGHT_TOKEN"):
+         self.assertNotIn(secret,str(report))
+
+ def test_option_level_sr_is_not_official_source(self):
+     rooms=[{"adults":2,"child_ages":[6,12]}]
+     for changed in (
+       {"sr":"","prices":[{"ag":"[14-99][14-99][2-11][12-17]","sr":"OPTION_ONLY"}]},
+       {"id_ns":""},{"id_price":""},{"ic":"BROKEN"},
+       {"dt":"not-a-date"},{"o_duration":"0"}
+     ):
+         with self.subTest(changed=tuple(changed.keys())):
+             report=candidate_report(PREVIEW,rooms,[row(**changed)])
+             self.assertEqual(report["candidate_counts"],[1])
+             self.assertEqual(report["source_metadata_counts"],[0])
+             self.assertEqual(report["shared_source_candidate_count"],0)
+             self.assertFalse(report["bookable"])
+
+ def test_different_template_ids_are_not_one_joint_source(self):
+     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
+     second=row(room="FAMILY HB",id_ns="104623691679",
+                id_price="121120516104",prices=[{"ag":"12+,2-11"}])
+     report=candidate_report(PREVIEW,rooms,[row(),second])
+     self.assertEqual(report["source_metadata_counts"],[1,1])
+     self.assertEqual(report["shared_source_candidate_count"],0)
+     self.assertEqual(report["source_status"],"MISSING_COMMON_PRICE_LIST_SOURCE")
+     commission=candidate_report(PREVIEW,rooms,[
+         row(ic="121132934133"),
+         row(room="FAMILY HB",id_ns="104623691679",ic="121132934133",
+             id_price="121120516104",prices=[{"ag":"12+,2-11"}])
+     ])
+     self.assertEqual(commission["shared_source_candidate_count"],1)
+     self.assertFalse(commission["bookable"])
 
  def test_missing_one_room_is_hold_not_price(self):
     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
