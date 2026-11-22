@@ -373,6 +373,12 @@ def main():
                        "TWO_ADULT_REFERENCE_CANNOT_BE_FAMILY_PRICE")
                 page.locator("#quoteLink").click()
                 page.wait_for_url("**/quote.html?preview=*",timeout=20000)
+                # The quote page loads the selected preview/shards asynchronously.
+                # A URL match only proves navigation; wait for populated content
+                # before asserting that the second room was preserved.
+                page.wait_for_function(
+                    "()=>document.querySelector('#tripSummary')?.textContent?.includes('Номер 2: 1 взрослый')",
+                    timeout=25000)
                 ensure("Номер 2: 1 взрослый" in page.locator("#tripSummary").inner_text(),
                        "SECOND_ROOM_MISSING_IN_QUOTE_SUMMARY")
                 ensure(page.locator("#checkQuote").is_disabled(),
