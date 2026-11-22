@@ -183,9 +183,19 @@ class Tests(unittest.TestCase):
         result,removed=budget.fit_feed(extended,max_bytes=100_000)
         self.assertLessEqual(budget.encoded_size(result),100_000)
         self.assertGreater(removed,0)
-        self.assertTrue(all(x["country"]=="Индонезия"
-             for x in result["previews"]))
-        self.assertEqual(result["source_scope"]["last_24h_unrechecked_previews"],0)
+        # Every fresh source row stays; only *spare* bytes can be assigned
+        # to stale 24h previews, which must carry zero reference price.
+        fresh=[x for x in result["previews"]
+               if x["status"]=="REFERENCE_PRICE_LIST_ONLY"]
+        old=[x for x in result["previews"]
+             if x["status"]=="PREVIOUSLY_SEEN_NOT_RECHECKED"]
+        self.assertEqual(len(fresh),180)
+        self.assertTrue(all(x["country"]=="Индонезия" for x in fresh))
+        self.assertTrue(all(x["price_reference_rub"] is None and
+                            x["price_reference_party"]=="UNVERIFIED"
+                            for x in old))
+        self.assertEqual(result["source_scope"]["last_24h_unrechecked_previews"],
+                         len(old))
         self.assertTrue(result["truncated_to_public_limit"])
         self.assertFalse(any(x["bookable"] for x in result["previews"]))
 
