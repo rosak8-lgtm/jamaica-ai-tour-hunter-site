@@ -176,3 +176,24 @@ body{background:var(--bg);color:var(--ink)}
 #previewCards .previewPhotoMeta a:hover{text-decoration:underline;background:none!important;color:#08575d}
 #previewCards .previewPhotoMeta a:focus-visible{outline:2px solid #008e93;outline-offset:3px}
 @media(max-width:790px){#previewCards .previewMedia{height:auto;aspect-ratio:auto;min-height:0}#previewCards .previewPhotoFrame{flex:none;min-height:0;aspect-ratio:16/9}}
+
+/* Guests and room groups for verified age-aware provider pricing. */
+.travelerBuilder{margin:15px 0 0;border:1px solid #dbeae7;border-radius:15px;background:#f8fcfb;padding:17px 19px}
+.travelerIntro{display:flex;align-items:start;justify-content:space-between;gap:15px;margin-bottom:12px}
+.travelerIntro strong{display:block;color:#381e4e;font-size:15px}
+.travelerIntro span,.partyHint{font-size:12px;color:#70677a;line-height:1.55}
+#partySummary{flex-shrink:0;border-radius:8px;background:#e8f6f4;color:#116e70;font-weight:780;padding:7px 10px;max-width:270px;text-align:right}
+.partyAges,.partyRoomFields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px}
+.childAgeField{display:flex;flex-direction:column;gap:5px;min-width:0}
+.childAgeField label{font-size:12px;font-weight:750;color:#5b5067}
+.childAgeField input,.childAgeField select{min-height:42px;min-width:0;padding:8px 10px;border:1px solid #d8d4e2;border-radius:9px;background:#fff;color:#362445;font:inherit;width:100%}
+.partyRoom{margin:14px 0 12px;border:1px solid #e7e0eb;background:#fff;border-radius:12px;padding:13px}
+.partyRoomHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#4a285e}
+.removeRoom{border:0;background:none;color:#9a3454;font-size:12px;font-weight:750;cursor:pointer;text-decoration:underline}
+.partyRoom .partyAges{margin-top:10px}
+.addRoomButton{border:1px solid #0c8589;background:#fff;color:#08767a;border-radius:10px;cursor:pointer;padding:9px 14px;font-weight:800;font-size:13px;margin-top:10px}
+.addRoomButton:disabled{opacity:.45;cursor:not-allowed}
+.partyHint{margin:10px 0 0}
+.partyError{padding:9px 12px;border-radius:9px;background:#fff1ec;color:#7f2525;font-size:13px}
+.partyInCard{font-size:12px;color:#106b72;font-weight:800;border-left:3px solid #39b4ac;padding:4px 0 4px 9px}
+@media(max-width:580px){.travelerBuilder{padding:13px}.travelerIntro{flex-direction:column}.travelerIntro #partySummary{max-width:100%;text-align:left}.partyAges,.partyRoomFields{grid-template-columns:1fr}}
