@@ -110,3 +110,29 @@ python3 -B scripts/oracle_bg_selected_quote_probe.py \
 Официальные источники:
 https://www.bgoperator.ru/texts/load-xml-prices.html
 https://www.bgoperator.ru/texts/tour-api.html
+
+
+## Протокол ответа поставщика: общая стоимость всего тура (22.11.2026)
+
+При официальном `createtour` **без** `<confirm/>` ответ BG, раздел 3.1,
+содержит `<tours><tour clientTourId="..."><sum>...</sum></tour></tours>`.
+Под `tour` может быть несколько `sum` по разным валютам, например USD и RUR.
+Официальный пример **не содержит** отдельного `<sum>` на каждый `<group>`.
+
+Исправлен `backend/bg_multiroom_quote.py:parse_group_price_response`:
+- Требуется совпадающий `clientTourId` и **ровно один** RUB/RUR `fullamount` на уровне `tour`.
+- `amount` — агентская сумма к оплате, не стоимость для клиента.
+- Возвращаемый `total_rub` относится ко всему запрошенному туру,
+  `groups_requested` — число групп из приватного исходящего запроса,
+  а не якобы подтверждённое количество отдельных сумм в ответе.
+- `supplier_total_scope="WHOLE_TOUR"` и `group_price_breakdown_verified=false`
+  для стандартного документированного ответа.
+- Если расширение ответа содержит детализацию групп, она должна охватывать
+  все группы и точно сходиться с суммой всего тура, иначе HOLD.
+- В любом случае `bookable=false`, `availability_verified=false`,
+  `flight_verified=false`. Никакие платежи и брони не включаются.
+
+До подключения реальной семейной котировки остаются обязательными
+приватное сопоставление источников `roommeal`/`sr`, наличие прав API,
+безопасная обработка персональных данных, проверка отеля и двух перелётов.
+Источник: https://www.bgoperator.ru/texts/tour-api.html#3 (раздел 3.1).
