@@ -35,9 +35,15 @@ python3 -B -m py_compile "$ROOT/scripts/oracle_site_publisher.py" \
   "$ROOT/scripts/recent_preview_catalog.py" \
   "$ROOT/scripts/catalog_size_budget.py" \
   "$ROOT/scripts/bot_visual_sidecar.py" \
+  "$ROOT/scripts/public_tour_eligibility.py" \
+  "$ROOT/scripts/catalog_property_identity.py" \
   "$ROOT/backend/bg_route_first_visual_gate.py"
 [[ -f "$SERVER/oracle_site_publisher.py" ]] || {
   echo "STOP_PREVIOUS_PUBLISHER_MISSING"; exit 2; }
+# Do not install a publisher that only prints old source-price-list tours.
+grep -Fq 'eligibility.select_public_source_rows(new,visual_public)' \
+ "$ROOT/scripts/oracle_site_publisher.py" || {
+  echo "STOP_SOURCE_PUBLISHER_HAS_NO_BEST_PRICE_BOTH_GREEN_GATE"; exit 2; }
 
 # Pause new timer ticks but do not interrupt a running import.
 systemctl --user stop "$TIMER"
@@ -73,6 +79,39 @@ result="$(systemctl --user show "$SERVICE" -p Result --value)"
 if [[ "$result" != "success" ]]; then
   cp "$BACKUP" "$SERVER/oracle_site_publisher.py"
   echo "STOP_ORACLE_NEW_PUBLISHER_NOT_SUCCESSFUL_ROLLED_BACK"
+  exit 2
+fi
+# Confirm the actually running service wrote strict projection, NOT just
+# the executable path. A success status without source-proof filtering
+# must not be reported as a successful deployment.
+if ! python3 -B - "$ROOT" <<'PY'
+import json,sys
+from pathlib import Path
+base=Path(sys.argv[1])
+try:
+    catalog=json.loads((base/"tour-previews.json").read_text(encoding="utf-8"))
+    visual=json.loads((base/"tour-visual-evidence.json").read_text(encoding="utf-8"))
+    assert catalog["schema"]=="jamaica.tour-previews.v1"
+    assert catalog["publication_rule"]=="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1"
+    assert visual["schema"]=="jamaica.visual-selection.v1"
+    evidence={e["preview_id"] for e in visual["entries"]
+              if e.get("route_best_price_seen") is True and
+                 e.get("both_green_planes_seen") is True}
+    assert catalog.get("total_published_previews",0)<=len(evidence)
+    for item in catalog.get("previews",[]):
+        assert item["id"] in evidence
+    for entry in catalog.get("shards",[]):
+        path=base/entry["path"]
+        assert path.resolve().is_relative_to(base.resolve())
+        shard=json.loads(path.read_text(encoding="utf-8"))
+        assert all(row["id"] in evidence for row in shard["previews"])
+    print("JAMAICA_SERVER_STRICT_VISUAL_PROJECTION_VERIFIED=YES")
+except (OSError,ValueError,AssertionError,KeyError,TypeError):
+    raise SystemExit(2)
+PY
+then
+  cp "$BACKUP" "$SERVER/oracle_site_publisher.py"
+  echo "STOP_ORACLE_STRICT_VISUAL_PROJECTION_NOT_PROVEN_ROLLED_BACK"
   exit 2
 fi
 rm -f "$BACKUP"
