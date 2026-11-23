@@ -53,6 +53,32 @@ class Tests(unittest.TestCase):
                             for c in public["countries_status"]))
         self.assertEqual(public["bookable"],False)
 
+    def test_source_geography_survives_zero_verified_offers(self):
+        private=source([row(),row(SECOND)])
+        private["countries_status"]=[
+            {"country":"Таиланд","previews":120,
+             "sampled_departure_months":["2026-12","2027-01"]},
+            {"country":"Китай","previews":80,
+             "sampled_departure_months":["2026-12"]},
+            {"country":"Вьетнам","previews":0,
+             "sampled_departure_months":[]},
+        ]
+        public=eligibility.select_public_source_rows(
+            private,receipts([]),now=NOW)
+        self.assertEqual(public["previews"],[])
+        self.assertEqual(
+            [x["country"] for x in public["search_coverage"]["countries"]],
+            ["Таиланд","Китай"])
+        self.assertEqual(public["search_coverage"]["classification"],
+                         "SOURCE_SCAN_ONLY_NOT_OFFERS")
+        self.assertEqual(
+            public["search_coverage"]["countries"][0]["source_rows_observed"],120)
+        self.assertEqual(public["countries_status"][0]["previews"],0)
+        self.assertNotIn("search_coverage",private)
+        self.assertTrue(all(
+            "hotel" not in x and "price" not in x
+            for x in public["search_coverage"]["countries"]))
+
     def test_only_exact_receipt_of_same_preview_id_can_publish(self):
         public=eligibility.select_public_source_rows(source([
             row(),row(SECOND)]),receipts([proof()]),now=NOW)
