@@ -28,6 +28,7 @@ else:
     sys.path.insert(0,str(Path(__file__).resolve().parent))
 import recent_preview_catalog as recent
 import catalog_size_budget as byte_limit
+import bot_visual_sidecar as visual
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
 RUNROOT = Path.home()/".local"/"share"/"jamaica-oracle-catalog"
@@ -39,6 +40,8 @@ KNOWN_HOSTS = Path.home()/".ssh"/"jamaica_catalog_known_hosts"
 SCRIPTS = CHECKOUT/"scripts"
 DISCOVERY_STATE = RUNROOT/"extra_irkutsk_source_countries.json"
 RECENT_SOURCE_CACHE = RUNROOT/"recent-price-list-previews.json"
+PRIVATE_BOT_VISUAL_RECEIPTS = RUNROOT/"private-bg-route-first-receipts.json"
+PUBLIC_VISUAL_PATH = "tour-visual-evidence.json"
 MAX_BYTES = 45_000_000
 MAX_ITEMS = 60_000
 ROOT_ITEMS = 8_000
@@ -344,6 +347,26 @@ def publish(env):
     count=validate(new,directory)
     public_root,public_chunks=make_sharded_catalog(new)
     validate(public_root,directory)
+    # Optional authenticated V183 browser-event bridge. A file from the bot
+    # MUST be owner-only, have exact source lineage, and be <=15 minutes old.
+    # A missing, invalid or untrusted proof cannot stall public tour browsing.
+    try:
+        private_receipts=visual.read_private_receipts(PRIVATE_BOT_VISUAL_RECEIPTS)
+        visual_public=visual.build_visual_feed(
+            new["previews"],private_receipts)
+    except (visual.VisualHold,ValueError,TypeError):
+        visual_public=visual.empty_public()
+        log("JAMAICA_BOT_VISUAL_STATUS","RECEIPTS_INVALID_IGNORE")
+    if not visual.validate_public_feed(visual_public):
+        visual_public=visual.empty_public()
+    visual_path=CHECKOUT/PUBLIC_VISUAL_PATH
+    try:
+        previous_visual=json.loads(visual_path.read_text(encoding="utf-8")
+            ) if visual_path.is_file() and not visual_path.is_symlink() else None
+    except (ValueError,UnicodeError,OSError):
+        previous_visual=None
+    visual_changed=previous_visual!=visual_public
+    log("JAMAICA_VISUAL_ROUTE_FIRST_MATCHES",len(visual_public["entries"]))
     promoted=update_discovered_source_countries(new,directory)
     log("JAMAICA_SOURCE_COUNTRIES_TOTAL",new.get("source_scope",{}).get("source_tour_countries","UNKNOWN"))
     log("JAMAICA_OTHER_COUNTRIES_PROBED",new.get("source_scope",{}).get("other_countries_probed_this_cycle","UNKNOWN"))
@@ -359,7 +382,7 @@ def publish(env):
     log("JAMAICA_ORACLE_INDICATIVE_RUB_COUNT",sum(type(x["price_reference_rub"]) is int for x in new["previews"]))
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
-    if not changed_dir and not needs_publish(previous,public_root):
+    if not changed_dir and not visual_changed and not needs_publish(previous,public_root):
         save_recent_source_cache(next_cache)
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
@@ -389,7 +412,14 @@ def publish(env):
     if len(root_bytes)>8_000_000 or aggregate_size+len(root_bytes)>MAX_BYTES:
         raise CatalogHold("PUBLIC_BUNDLE_TOO_LARGE")
     feed_path.write_bytes(root_bytes)
-    run(["git","add","-A","--","tour-previews.json","destination-directory.json",SHARD_FOLDER],
+    if visual_path.is_symlink():
+        raise CatalogHold("PUBLIC_VISUAL_FEED_SYMLINK")
+    visual_bytes=json.dumps(visual_public,ensure_ascii=False,
+        separators=(",",":")).encode("utf-8")+b"\n"
+    if len(visual_bytes)>100_000:
+        raise CatalogHold("PUBLIC_VISUAL_FEED_TOO_LARGE")
+    visual_path.write_bytes(visual_bytes)
+    run(["git","add","-A","--","tour-previews.json","destination-directory.json",SHARD_FOLDER,PUBLIC_VISUAL_PATH],
         cwd=CHECKOUT,env=env)
     staged=run(["git","diff","--cached","--quiet"],cwd=CHECKOUT,env=env,check=False)
     if staged.returncode==0:
