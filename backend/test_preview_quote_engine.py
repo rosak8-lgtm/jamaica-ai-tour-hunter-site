@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime,timedelta,timezone
 from backend.preview_quote_engine import PreviewQuoteEngine, NotAvailable, BadOrder
 from backend.order_engine import valid_offer
+from backend.test_bg_route_first_visual_gate import bundle
 
 def now():return datetime.now(timezone.utc)
 def preview():
@@ -21,6 +22,9 @@ def supplier_quote(p,**patch):
             "hotel_stop":False,"hotel_status":"IN_STOCK",
             "two_adults_price_verified":True,"supplier_quote_verified":True,
             "expires_at":(now()+timedelta(minutes=12)).isoformat()}
+    route,flight=bundle(p)
+    result["route_visual_evidence"]=route
+    result["flight_visual_evidence"]=flight
     result.update(patch)
     return result
 class Repo:
@@ -78,6 +82,30 @@ class Tests(unittest.TestCase):
                 self.supplier.patches=patches
                 with self.assertRaises(NotAvailable):
                     self.engine.get_authoritative_quote(self.repo.p["id"],
+                        buyer_id="customer-12345678",adults=2,children=0)
+                self.assertEqual(self.repo.private,{})
+
+    def test_exact_route_first_browser_capture_is_mandatory_for_bg(self):
+        p=self.repo.p
+        good=supplier_quote(p)
+        for changes in (
+            {"route_visual_evidence":None},
+            {"flight_visual_evidence":None},
+            {"route_visual_evidence":{
+                **good["route_visual_evidence"],"badge_scope":"UNRELATED_HEADING"}},
+            {"route_visual_evidence":{
+                **good["route_visual_evidence"],"route_clicked":False}},
+            {"flight_visual_evidence":{
+                **good["flight_visual_evidence"],"source_price_list_id":"121132934134"}},
+            {"flight_visual_evidence":{
+                **good["flight_visual_evidence"],"out_green":False}},
+            {"flight_visual_evidence":{
+                **good["flight_visual_evidence"],"back_green":False}},
+        ):
+            with self.subTest(changes=list(changes.keys())):
+                self.supplier.patches=changes
+                with self.assertRaises(NotAvailable):
+                    self.engine.get_authoritative_quote(p["id"],
                         buyer_id="customer-12345678",adults=2,children=0)
                 self.assertEqual(self.repo.private,{})
 
