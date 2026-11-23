@@ -31,6 +31,7 @@ import recent_preview_catalog as recent
 import catalog_size_budget as byte_limit
 import bot_visual_sidecar as visual
 import public_tour_eligibility as eligibility
+import site_bot_price_overlay as browser_price
 import catalog_property_identity as identity
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
@@ -44,6 +45,7 @@ SCRIPTS = CHECKOUT/"scripts"
 DISCOVERY_STATE = RUNROOT/"extra_irkutsk_source_countries.json"
 RECENT_SOURCE_CACHE = RUNROOT/"recent-price-list-previews.json"
 PRIVATE_BOT_VISUAL_RECEIPTS = RUNROOT/"private-bg-route-first-receipts.json"
+PRIVATE_SITE_DOM_PRICES = RUNROOT/"private-site-bot-dom-prices.json"
 PUBLIC_VISUAL_PATH = "tour-visual-evidence.json"
 MAX_BYTES = 45_000_000
 MAX_ITEMS = 60_000
@@ -422,6 +424,18 @@ def publish(env):
     if not visual.validate_public_feed(visual_public):
         visual_public=visual.empty_public()
     published=eligibility.select_public_source_rows(new,visual_public)
+    # A source XML amount can change many times per day. Never display that
+    # amount as a fresh verified-tour price. Only the trusted website bot's
+    # independently tied same-session DOM amount may replace it.
+    try:
+        trusted_browser_prices=browser_price.read_ledger(PRIVATE_SITE_DOM_PRICES)
+    except (ValueError,OSError):
+        trusted_browser_prices=None
+        log("JAMAICA_WEBSITE_BOT_PRICE_STATUS","PRIVATE_LEDGER_INVALID_HIDE_PRICE")
+    published=browser_price.apply(published,
+        private_receipts if "private_receipts" in locals() else None,
+        visual_public,trusted_browser_prices)
+    log("JAMAICA_SITE_LIVE_DOM_PRICES",published["indicative_two_adult_rub_count"])
     public_root,public_chunks=make_sharded_catalog(published)
     validate(public_root,directory,allow_empty=True)
     log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
