@@ -245,7 +245,12 @@ function strictOffer(o,now){
  if(!o||typeof o!=="object")return false;
  if(!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
  if(o.publish_approved!==true||o.quote_verified!==true||o.availability_verified!==true||o.flights_out_green!==true||o.flights_back_green!==true||o.price_scope_verified!==true||o.total_two_verified!==true)return false;
- if(o.best_price_required===true&&o.best_price_verified!==true)return false;
+ if(o.flight_pair_evidence_verified!==true)return false;
+ if(o.sale_policy==="BG_BEST_PRICE_TWO_FLIGHTS"){
+  if(o.best_price_required!==true||o.best_price_verified!==true)return false;
+ }else if(o.sale_policy==="PEGAS_TWO_FLIGHTS"){
+  if(o.best_price_required!==false)return false;
+ }else return false;
  if(o.adults!==2||o.children!==0||!Number.isInteger(o.total_rub)||o.total_rub<=0)return false;
  if(!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
  if(typeof o.destination!=="string"||!countries.some(c=>c.n===o.destination))return false;
@@ -919,6 +924,8 @@ function renderTourPreviews(reset=true){
    card.append(info);
 
    const priceBox=el("div","tourResultPrice");
+   priceBox.append(el("small","eligibilityUnverified",
+     "✈ Туда: места не проверены · ✈ Обратно: места не проверены. «ЛУЧШАЯ ЦЕНА»: метка не подтверждена. Предварительный тур, не готов к оплате."));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      const priceTitle=el("strong","", "Цена по прайс-листу на 2 взрослых: ");
