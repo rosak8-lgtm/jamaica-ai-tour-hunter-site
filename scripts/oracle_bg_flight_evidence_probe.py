@@ -36,7 +36,7 @@ def detailed_url(listing,country_id):
 
 def inspect(directory,api,*,country_name:str=""):
     if (not isinstance(country_name,str) or len(country_name)>120 or
-        any(x in country_name for x in ("\\n","\\r","\\x00"))):
+        any(x in country_name for x in ("\n","\r","\x00"))):
         raise bg.SyncHold("INVALID_FLIGHT_COUNTRY_FILTER")
     countries=directory.get("countries",[])
     if not isinstance(countries,list) or len(countries)>300:
