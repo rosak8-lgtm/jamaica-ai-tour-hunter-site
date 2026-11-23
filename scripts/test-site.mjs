@@ -235,7 +235,7 @@ assert.equal(strictOffer({...sample,flight_pair_evidence_verified:false},now),fa
 assert.equal(strictOffer({...sample,sale_policy:"UNKNOWN"},now),false);
 assert.equal(strictOffer({...sample,best_price_required:false},now),false);
 assert.equal(strictOffer({...sample,best_price_verified:false},now),false);
-assert.equal(strictOffer({...sample,sale_policy:"PEGAS_TWO_FLIGHTS",
+assert.equal(strictOffer({...sample,sale_policy:"STANDARD_TWO_FLIGHTS",
   best_price_required:false,best_price_verified:false},now),true,
   'Other operators need independent policy; BG label requirement is BG-only');
 const previewPriceSort=functionFrom(page,'function previewPriceCompare(a,b){');
