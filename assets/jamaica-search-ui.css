@@ -209,3 +209,6 @@ body{background:var(--bg);color:var(--ink)}
 .quickCountryChip:focus-visible{outline:3px solid #09a6a9;outline-offset:3px}
 .previousSourceNotice{color:#655482;background:#f7f2fc;border-left:3px solid #9875be;border-radius:5px;padding:7px 10px;font-size:12px;line-height:1.5;margin-top:8px}
 @media(max-width:580px){.quickCountryBar{display:block}.quickCountryIntro{display:block;margin-bottom:7px}.quickCountryChips{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:2px 2px 8px}.quickCountryChip{flex:none;white-space:nowrap}}
+
+.quickCountryMore{border-style:dashed;border-color:#61adb1;background:#f0fbfa;color:#006970}
+.quickCountryMore:hover{border-color:#00878b;background:#e3f8f5}

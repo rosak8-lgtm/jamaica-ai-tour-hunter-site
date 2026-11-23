@@ -50,6 +50,10 @@ for(const filter of ['filterCountry','filterResort','filterNights','filterHotel'
 }
 assert.ok(page.includes('sourceFilterOptions()')&&page.includes('applyTourSidebar()'),
   'Search sidebar cannot be a decorative mockup');
+assert.ok(page.includes('quickCountriesExpanded?names:names.slice(0,18)')&&
+  page.includes('quickCountriesExpanded=!quickCountriesExpanded')&&
+  page.includes('class="quickCountryBar"'),
+  'All real discovered countries should be shown when <=18 and expandable otherwise');
 assert.ok(page.includes('id="otherCountries"')&&page.includes('id="catalogBreadth"'),
  'Customer must easily discover other published countries');
 assert.ok(page.includes('id="quickCountries"')&&
