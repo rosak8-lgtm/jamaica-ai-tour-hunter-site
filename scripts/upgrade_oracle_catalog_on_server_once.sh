@@ -33,7 +33,9 @@ git -C "$ROOT" reset --hard origin/main
 python3 -B -m py_compile "$ROOT/scripts/oracle_site_publisher.py" \
   "$ROOT/scripts/oracle_bg_preview_export.py" \
   "$ROOT/scripts/recent_preview_catalog.py" \
-  "$ROOT/scripts/catalog_size_budget.py"
+  "$ROOT/scripts/catalog_size_budget.py" \
+  "$ROOT/scripts/bot_visual_sidecar.py" \
+  "$ROOT/backend/bg_route_first_visual_gate.py"
 [[ -f "$SERVER/oracle_site_publisher.py" ]] || {
   echo "STOP_PREVIOUS_PUBLISHER_MISSING"; exit 2; }
 

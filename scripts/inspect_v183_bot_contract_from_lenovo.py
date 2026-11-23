@@ -93,7 +93,7 @@ def js_summary(data:bytes):
             if re.search(r"(?<![A-Za-z0-9_])"+re.escape(k)+
                          r"(?![A-Za-z0-9_])",txt)][:45],
             "browser_call_names":[x for x in sorted(CALLS)
-                                  if re.search(r"\\b"+re.escape(x)+r"\\b",txt)]}
+                                  if re.search(r"\b"+re.escape(x)+r"\b",txt)]}
 
 def inspect(base:Path):
     root=base/ROOT_NAME
