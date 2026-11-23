@@ -152,8 +152,8 @@
     <option value="date">Сначала ближайшие даты</option>
   </select>
   <label class="favoritesToggle visualProofToggle" for="visualProofOnly">
-   <input id="visualProofOnly" type="checkbox" aria-label="Показать только недавно визуально проверенные ботом туры">
-   <span>✈✈ «ЛУЧШАЯ ЦЕНА» + два рейса</span></label>
+   <input id="visualProofOnly" type="checkbox" checked disabled aria-label="Обязательное условие: ЛУЧШАЯ ЦЕНА и два зелёных самолётика">
+   <span>✓ «ЛУЧШАЯ ЦЕНА» + ✈✈ оба зелёных — обязательно</span></label>
   <label class="favoritesToggle" for="favoritesOnly"><input id="favoritesOnly" type="checkbox" aria-label="Показать только сохранённые туры">
    <span>♡ Избранное <b id="favoritesCount">0</b></span></label>
   <button type="button" class="resultsEdit resultsOtherCountries" id="otherCountries" hidden>Другие страны</button>
@@ -210,6 +210,7 @@
 <script src="./scripts/country-offer-balance.js"></script>
 <script src="./scripts/month-offer-filters.js"></script>
 <script src="./scripts/visual-selection.js"></script>
+<script src="./scripts/public-visual-policy.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
 <script src="./scripts/commons-hotel-media.js"></script>
 <script src="./scripts/traveler-party.js"></script>
@@ -257,11 +258,8 @@ function strictOffer(o,now){
  if(!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
  if(o.publish_approved!==true||o.quote_verified!==true||o.availability_verified!==true||o.flights_out_green!==true||o.flights_back_green!==true||o.price_scope_verified!==true||o.total_two_verified!==true)return false;
  if(o.flight_pair_evidence_verified!==true)return false;
- if(o.sale_policy==="BG_BEST_PRICE_TWO_FLIGHTS"){
-  if(o.best_price_required!==true||o.best_price_verified!==true)return false;
- }else if(o.sale_policy==="STANDARD_TWO_FLIGHTS"){
-  if(o.best_price_required!==false)return false;
- }else return false;
+ if(o.sale_policy!=="BG_BEST_PRICE_TWO_FLIGHTS"||
+    o.best_price_required!==true||o.best_price_verified!==true)return false;
  if(o.adults!==2||o.children!==0||!Number.isInteger(o.total_rub)||o.total_rub<=0)return false;
  if(!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
  if(typeof o.destination!=="string"||!countries.some(c=>c.n===o.destination))return false;
@@ -438,6 +436,7 @@ for(const link of document.querySelectorAll('a[href="#hotels"]')){
 if(location.hash==="#hotels")openHotelDirectory();
 let previewRecords=[],previewVisible=0;
 let visualProofs=new Map();
+const verifiedRows=()=>window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs);
 /* Simple local browser saved tours; does not make supplier bookings. */
 const favoriteStoreKey="jamaica.favorite-tour-ids.v1";
 const favoriteIds=new Set();
@@ -484,11 +483,11 @@ function replaceFilterOptions(select,items,placeholder,wanted){
 }
 function sourceFilterOptions(){
  const origin=$("departure").value.trim().toLocaleLowerCase("ru");
- const countryCounts=window.JamaicaCountryOffers.countryCounts(previewRecords,origin);
+ const countryCounts=window.JamaicaCountryOffers.countryCounts(verifiedRows(),origin);
  const resorts=new Set(),lengths=new Set();
  const formCountry=$("destination").value.trim();
  const countryCompare=(a,b)=>a.localeCompare(b,"ru");
- for(const row of previewRecords){
+ for(const row of verifiedRows()){
   if(origin&&row.origin.trim().toLocaleLowerCase("ru")!==origin)continue;
   if(!formCountry||row.country===formCountry){
    if(row.resort)resorts.add(row.resort);
@@ -777,7 +776,7 @@ function interleaveCountries(rows){
 let quickCountriesExpanded=false;
 function renderCountryShortcuts(chosen){
  const counts=window.JamaicaCountryOffers.countryCounts(
-   previewRecords,$("departure").value.trim());
+   verifiedRows(),$("departure").value.trim());
  const names=[...counts.keys()].sort((a,b)=>{
    const priority=window.JamaicaCountryOffers.PRIORITY;
    const ai=priority.indexOf(a),bi=priority.indexOf(b);
@@ -818,7 +817,7 @@ function renderCountryShortcuts(chosen){
 }
 function renderMonthShortcuts(){
  const origin=$("departure").value.trim(),country=$("destination").value.trim();
- const counts=window.JamaicaMonths.monthsFor(previewRecords,{
+ const counts=window.JamaicaMonths.monthsFor(verifiedRows(),{
    origin,country,today:new Date().toISOString().slice(0,10)});
  const active=window.JamaicaMonths.activeMonth(
    $("dateFrom").value,$("dateTo").value);
@@ -873,7 +872,7 @@ function renderTourPreviews(reset=true){
  $("budgetNotice").textContent=budgetMessage;
  $("budgetNotice").hidden=!budgetMessage;
  const sortMode=$("previewSort").value;
- let list=previewRecords.filter(x=>
+ let list=verifiedRows().filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
    (!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)&&
@@ -890,7 +889,7 @@ function renderTourPreviews(reset=true){
  }
  if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
  if($("favoritesOnly").checked)list=list.filter(x=>favoriteIds.has(x.id));
- if($("visualProofOnly").checked)list=list.filter(x=>visualProofs.has(x.id));
+ // Mandatory evidence cannot be turned off by the customer.
  $("otherCountries").hidden=!country;
 
  const frag=document.createDocumentFragment();
