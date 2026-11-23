@@ -574,7 +574,17 @@ def main():
                         print("EXACT_HOTEL_NOT_IN_CURRENT_SOURCE="+hid)
                         continue
                     checked_preview_hotel_photos+=1
-                    ensure(offers.first.locator(".previewMedia img").count()>0,
+                    # The result feed finishes loading BEFORE its independent
+                    # rights-vetted photo indexes. Wait specifically for a
+                    # license-attributed HOTEL image; never treat a landscape
+                    # fallback or mere DOM result count as property media.
+                    page.wait_for_function(
+                      "()=>[...document.querySelectorAll('#previewCards article.offerCard')]"+
+                      ".some(card=>card.querySelector('.previewMedia img') && "+
+                      "card.querySelector('.hotelPhotoLabel'))",
+                      timeout=20000)
+                    ensure(offers.first.locator(".previewMedia img").count()>0 and
+                           offers.first.locator(".hotelPhotoLabel").count()>0,
                            "CURRENT_EXACT_HOTEL_CARD_PHOTO_MISSING_"+hid)
                     # Atomic browser-side scroll survives async replacement
                     # of a preview card by a refreshed source selection.
