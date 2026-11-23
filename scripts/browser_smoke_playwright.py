@@ -775,9 +775,10 @@ def main():
                                card && getComputedStyle(card).display==='flex' &&
                                getComputedStyle(card).flexDirection==='column';
                     }""",timeout=12000)
-                    ensure(mobile.locator("#previewCards .tourResultCard").first.evaluate(
-                        "(el)=>getComputedStyle(el).display")=="flex",
-                        "MOBILE_CARDS_NOT_STACKED_VERTICALLY")
+                    # The wait above atomically verifies flex + column on
+                    # the rendered card. Do not immediately query a second
+                    # card: its node may have been replaced by the next 4k-row
+                    # source shard before this separate read executes.
                     ensure(mobile.evaluate(
                         "()=>document.documentElement.scrollWidth<=window.innerWidth+2"),
                         "MOBILE_HORIZONTAL_OVERFLOW")
