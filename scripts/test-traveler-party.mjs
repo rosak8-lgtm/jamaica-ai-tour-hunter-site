@@ -40,7 +40,10 @@ assert.ok(index.includes('src="./scripts/traveler-ui.js"')&&index.includes('Trav
 assert.ok(index.includes('const partyTwoAdults=Travelers.isTwoAdults(selectedParty)'));
 assert.ok(preview.includes('Travelers.description(rooms)')&&preview.includes('Travelers.suffix(rooms)'));
 assert.ok(quote.includes('const supportedParty=Travelers.isTwoAdults(rooms);'));
-assert.ok(quote.includes('if(!selected||!supportedParty||!cfgReady(config)||auth.length<32)return;'),
- 'No unconfigured supplier call for a family');
+assert.ok(quote.includes('const canBook=supportedParty&&cfgReady(config);')&&
+ quote.includes('const canPrice=cfgPriceReady(config);')&&
+ quote.includes('if(!canBook&&!canPrice)return;')&&
+ quote.includes('c.price_checks_enabled!==true||c.private_price_api_enabled!==true'),
+ 'Family pricing must require configured private read-only supplier API');
 assert.ok(css.includes('.travelerBuilder')&&css.includes('.partyAges'));
 console.log('JAMAICA_MULTI_ROOM_CHILD_AGES_PASS');
