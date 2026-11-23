@@ -20,6 +20,10 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 .btn{display:inline-block;border:1px solid var(--teal);background:var(--teal);border-radius:13px;color:white;padding:13px 20px;font-weight:800;margin:10px 10px 0 0}
 .btn:hover{color:white}.btn.secondary{background:white;color:var(--teal)}.other{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .other a{display:block;border:1px solid var(--line);padding:13px;border-radius:13px;background:#fff}
+.other .alternativeTour{display:flex;flex-direction:column;gap:5px;min-height:120px}
+.alternativeCategory{font-size:11px;font-weight:800;color:#5d3474;background:#f5edfa;border-radius:6px;padding:3px 7px;align-self:start}
+.alternativeTour small{font-size:11px;color:#655e70;line-height:1.5}
+.alternativeTour:focus-visible{outline:3px solid #008e93;outline-offset:3px}
 @media(max-width:700px){.grid,.other{grid-template-columns:1fr}}
 </style>
 <link rel="stylesheet" href="./assets/jamaica-detail-ui.css">
@@ -62,11 +66,13 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
   </aside>
  </div>
  <section class="card"><h2>Похожие туры и другие даты</h2>
+  <p class="sub" id="alternativesStatus" role="status" aria-live="polite">Проверяем весь опубликованный каталог по направлениям…</p>
   <div id="alternatives" class="other"></div>
  </section>
 </main>
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/traveler-party.js"></script>
+<script src="./scripts/preview-alternatives.js"></script>
 <script>
 (function(){
 "use strict";
@@ -84,24 +90,7 @@ function ruNoun(n,one,few,many){
 function partyLabel(){return Travelers.label(rooms);}
 function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
 function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
-async function init(){
- if(!/^p_[a-f0-9]{24}$/.test(id)){$("heading").textContent="Выберите путешествие в поиске";return;}
- try{
-  const [pr,hr]=await Promise.all([
-   fetch("./tour-previews.json",{cache:"no-store"}),
-   fetch("./destination-directory.json",{cache:"no-store"})
-  ]);
-  if(!pr.ok||!hr.ok)throw Error("NO_FEED");
-  const feed=await pr.json(),directory=await hr.json();
-  if(feed.schema!=="jamaica.tour-previews.v1"||feed.bookable!==false||
-     feed.quote_verified!==false||feed.availability_verified!==false||
-     !Array.isArray(feed.previews)||directory.schema!=="jamaica.destination-directory.v1"||
-     !Array.isArray(directory.hotels))throw Error("INVALID_FEED");
-  const found=await window.JamaicaCatalog.findPreview(feed,id);
-  const p=found&&found.bookable===false&&found.quote_verified===false&&
-    found.availability_verified===false&&found.flight_verified===false&&
-    found.depart_date>=new Date().toISOString().slice(0,10)?found:null;
-  if(!p){$("heading").textContent="Вариант больше не актуален";$("subtitle").textContent="Вернитесь в поиск и выберите свежую дату.";return;}
+function showSelection(p,feed,directory){
   $("heading").textContent=p.country+" — "+p.hotel;
   if(!rooms){
     $("heading").textContent="Неверно указан состав туристов";
@@ -146,21 +135,93 @@ async function init(){
   }else{
    $("hotelInfo").textContent="Информация об отеле временно не найдена в справочнике.";
   }
-  const choices=feed.previews.filter(x=>x&&x.id!==p.id&&x.bookable===false&&
-    (x.country!==p.country||x.depart_date!==p.depart_date)).slice(0,12);
-  for(const choice of choices){
-   const link=document.createElement("a");
-   link.href="preview.html?id="+encodeURIComponent(choice.id)+Travelers.suffix(rooms);
-   add("strong",choice.country+" · "+choice.hotel,link);
-   add("div",choice.depart_date+" · "+choice.nights+" ночей",link);
-   $("alternatives").append(link);
-  }
-  if(!choices.length)add("p","Другие варианты пока не опубликованы.",$("alternatives"));
- }catch(err){
-  $("heading").textContent="Информация временно недоступна";
-  $("subtitle").textContent="Не удалось загрузить подтверждённый источник справочных данных.";
+
+ if(p.status==="PREVIOUSLY_SEEN_NOT_RECHECKED"){
+  $("bookingStatus").textContent="Этот вариант найден ранее, но в текущем цикле прайс-листа не проверялся. Старая цена скрыта, для покупки нужна новая цена и подтверждение мест и рейсов.";
  }
 }
+function showAlternatives(rows,p,done,total){
+ const items=window.JamaicaPreviewAlternatives.choose(rows,p);
+ const fragment=document.createDocumentFragment();
+ for(const item of items){
+  const choice=item.row;
+  const link=document.createElement("a");
+  link.className="alternativeTour";
+  link.dataset.category=item.kind;
+  link.href="preview.html?id="+encodeURIComponent(choice.id)+Travelers.suffix(rooms);
+  add("span",item.label,link).className="alternativeCategory";
+  add("strong",choice.country+" · "+choice.hotel,link);
+  add("div",choice.depart_date+" · "+choice.nights+" ночей · "+choice.room,link);
+  add("small",choice.status==="PREVIOUSLY_SEEN_NOT_RECHECKED"?
+   "Найдено ранее · нужна новая цена":"Предварительный вариант · цена и места не подтверждены",link);
+  fragment.append(link);
+ }
+ $("alternatives").replaceChildren(fragment);
+ $("alternativesStatus").textContent=done===total?
+   "Проверены все опубликованные разделы: "+items.length+" вариантов для сравнения.":
+   "Просматриваем полный каталог: "+done+" из "+total+" разделов.";
+ if(done===total&&!items.length){
+  add("p","Других вариантов по проверенным источникам пока не опубликовано.",$("alternatives"));
+ }
+}
+async function init(){
+ if(!/^p_[a-f0-9]{24}$/.test(id)){$("heading").textContent="Выберите путешествие в поиске";return;}
+ if(!rooms){
+  $("heading").textContent="Неверно указан состав туристов";
+  $("quoteLink").removeAttribute("href");
+  return;
+ }
+ let selected=null,invalid=false;
+ try{
+  const [pr,hr]=await Promise.all([
+   fetch("./tour-previews.json",{cache:"no-store"}),
+   fetch("./destination-directory.json",{cache:"no-store"})
+  ]);
+  if(!pr.ok||!hr.ok)throw Error("NO_FEED");
+  const feed=await pr.json(),directory=await hr.json();
+  if(feed.schema!=="jamaica.tour-previews.v1"||feed.bookable!==false||
+     feed.quote_verified!==false||feed.availability_verified!==false||
+     !Array.isArray(feed.previews)||directory.schema!=="jamaica.destination-directory.v1"||
+     !Array.isArray(directory.hotels))throw Error("INVALID_FEED");
+  try{
+   // The selected tour may be in any of the 52k source-backed shard rows.
+   // Render detail immediately when encountered, then progressively improve
+   // alternatives from the SAME verified catalog version in a single pass.
+   await window.JamaicaCatalog.allPreviews(feed,(rows,done,total)=>{
+    if(invalid)return;
+    const found=selected||rows.find(x=>x.id===id);
+    if(!found)return;
+    if(!selected){
+     if(found.bookable!==false||found.quote_verified!==false||
+        found.availability_verified!==false||found.flight_verified!==false||
+        found.depart_date<=new Date().toISOString().slice(0,10)){
+      invalid=true;
+      $("heading").textContent="Вариант больше не актуален";
+      $("subtitle").textContent="Выберите другую дату или страну в поиске.";
+      $("quoteLink").removeAttribute("href");
+      return;
+     }
+     selected=found;
+     showSelection(found,feed,directory);
+    }
+    showAlternatives(rows,selected,done,total);
+   });
+  }catch(error){
+   // Never erase a selected hotel/date if only a later optional shard fails.
+   if(!selected)throw error;
+   $("alternativesStatus").textContent="Часть каталога временно недоступна. Показаны только уже загруженные предварительные варианты.";
+  }
+  if(!selected&&!invalid){
+   $("heading").textContent="Вариант больше не опубликован";
+   $("subtitle").textContent="Вернитесь в поиск и выберите новый тур.";
+   $("quoteLink").removeAttribute("href");
+  }
+ }catch(err){
+  $("heading").textContent="Информация временно недоступна";
+  $("subtitle").textContent="Не удалось загрузить проверенный источник предварительных данных.";
+ }
+}
+
 init();
 })();
 </script></body></html>
