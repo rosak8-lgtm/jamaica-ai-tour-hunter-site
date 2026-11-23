@@ -161,6 +161,47 @@ class Tests(unittest.TestCase):
                 audit.inspect(self.directory,MustNotCall(),
                               country_name="Сейшелы",probe_slot=slot)
 
+    def test_observed_country_list_can_check_extra_and_primary_together(self):
+        class NoListsApi:
+            def __init__(self):self.calls=[]
+            def get(self,url):
+                self.calls.append(url)
+                return json.dumps({"entries":[]}).encode()
+        api=NoListsApi()
+        reports=audit.inspect(self.directory,api,
+            country_names=["Сейшелы","Таиланд"])
+        self.assertEqual({x["country"] for x in reports},
+                         {"Сейшелы","Таиланд"})
+        self.assertEqual(len(api.calls),2)
+        self.assertTrue(all(x["state"]=="NO_FUTURE_LIST" for x in reports))
+        self.assertTrue(all("flt2="+bg.CITY_ID in x for x in api.calls))
+
+    def test_observed_country_list_missing_unknown_duplicates_never_queried(self):
+        class NoRequests:
+            def get(self,url):
+                raise AssertionError("INVALID_COUNTRY_FILE_SCOPE_MUST_FAIL_FIRST")
+        for names in ([],["Unknown"],["Сейшелы","Сейшелы"],
+                      [0],["Сейшелы\nInjected"],["Сейшелы"]*21):
+            with self.subTest(names=names),self.assertRaises(bg.SyncHold):
+                audit.inspect(self.directory,NoRequests(),country_names=names)
+
+    def test_owner_only_country_file_and_symlinks_are_mandatory(self):
+        import tempfile,os
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/"countries.json"
+            path.write_text(json.dumps(["Таиланд","Сейшелы"]),encoding="utf-8")
+            os.chmod(path,0o600)
+            self.assertEqual(audit.read_owner_only_country_names(str(path)),
+                             ["Таиланд","Сейшелы"])
+            os.chmod(path,0o644)
+            with self.assertRaises(bg.SyncHold):
+                audit.read_owner_only_country_names(str(path))
+            os.chmod(path,0o600)
+            link=Path(folder)/"alias.json"
+            link.symlink_to(path)
+            with self.assertRaises(bg.SyncHold):
+                audit.read_owner_only_country_names(str(link))
+
     def test_bad_extended_url_does_not_follow_external_url(self):
         with self.assertRaises(bg.SyncHold):
             audit.detailed_url({"url":"https://malicious.example/partners?action=price"},EXTRA["id"])
