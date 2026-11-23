@@ -63,7 +63,7 @@ def python_summary(data:bytes,allowed_names:tuple):
     tree=ast.parse(text)
     out=[]
     for node in ast.walk(tree):
-        if not isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef)) or
+        if (not isinstance(node,(ast.FunctionDef,ast.AsyncFunctionDef)) or
             node.name not in allowed_names):
             continue
         names=set()
@@ -71,8 +71,9 @@ def python_summary(data:bytes,allowed_names:tuple):
         for child in ast.walk(node):
             if isinstance(child,ast.Dict):
                 for key in child.keys:
-                    if isinstance(key,ast.Constant) and isinstance(key.value,str) and
-                        key.value in PUBLIC_KEYS:
+                    if (isinstance(key,ast.Constant) and
+                        isinstance(key.value,str) and
+                        key.value in PUBLIC_KEYS):
                         names.add(key.value)
             if isinstance(child,ast.Call):
                 f=child.func
