@@ -159,6 +159,13 @@ assert.equal(config.auth_api_enabled,false);
 assert.ok(checkout.includes('/v1/contract-orders/draft'));
 assert.ok(!checkout.includes('/v1/checkout/prepare'),'Legacy pay-before-contract route forbidden');
 assert.ok(previewSelection.includes('quote.html?preview='));
+assert.ok(previewSelection.includes('scripts/preview-alternatives.js')&&
+          previewSelection.includes('JamaicaCatalog.allPreviews(feed')&&
+          previewSelection.includes('id="alternativesStatus"'),
+  'Detail page must find real related trips and other countries from all catalog shards');
+assert.ok(previewSelection.includes('Travelers.suffix(rooms)')&&
+          previewSelection.includes('PREVIOUSLY_SEEN_NOT_RECHECKED'),
+  'Alternatives must keep rooms and suppress unverified archive price');
 assert.ok(quotePage.includes('/v1/preview-quotes'));
 assert.ok(quotePage.includes('if(selected.depart_date<=new Date().toISOString().slice(0,10))')&&
  quotePage.includes('Проверка стоимости и бронирование недоступны'),
@@ -516,7 +523,11 @@ assert.ok(quoteParty.includes('Travelers.fromQuery(params)')&&
  quoteParty.includes('Travelers.description(rooms)')&&
  quoteParty.includes('const supportedParty=Travelers.isTwoAdults(rooms);'),
  'Quote page must retain all travelers and refuse unsupported pricing');
-assert.ok(previewDetail.includes('x.bookable===false'));
+assert.ok(previewDetail.includes('found.bookable!==false')&&
+          previewDetail.includes('found.quote_verified!==false')&&
+          previewDetail.includes('found.availability_verified!==false')&&
+          previewDetail.includes('found.flight_verified!==false'),
+  'Selected tour must fail closed unless it is still unverified source metadata');
 assert.ok(!/WhatsApp|wa\.me|mailto:|Библио-Глобус|PEGAS|bgoperator/i.test(previewDetail));
 const previewScripts=[...previewDetail.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
  .map(x=>x[1]).filter(x=>x.includes('(function(){'));

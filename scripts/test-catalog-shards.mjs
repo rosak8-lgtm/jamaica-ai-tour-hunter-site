@@ -34,7 +34,14 @@ assert.equal(catalog.validRow({...historical,price_reference_rub:75000,
 assert.equal(catalog.validRow({...historical,status:'UNKNOWN'}),false,
  'No unknown source status may be published');
 assert.equal(catalog.manifest(root).length,1);
-const rows=await catalog.allPreviews(root);
+const checkpoints=[];
+const rows=await catalog.allPreviews(root,(batch,done,total)=>{
+  checkpoints.push({len:batch.length,done,total});
+});
+assert.equal(checkpoints[0].len,1,
+ 'Published root must render before waiting for optional source shards');
+assert.equal(checkpoints[0].done,0);
+assert.equal(checkpoints[checkpoints.length-1].done,1);
 assert.equal(rows.length,2);
 assert.equal(rows[1].id,second.id);
 assert.equal((await catalog.findPreview(root,second.id)).hotel_id,model.hotel_id);

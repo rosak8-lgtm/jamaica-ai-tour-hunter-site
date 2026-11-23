@@ -86,7 +86,12 @@ def main():
     require(routes.get("quote_verified") is False,"unverified routes marked quoted")
     require(config.get("live_booking_enabled") is False or bool(config.get("api_base_url")),"live booking enabled without API")
     require(not config.get("payments_enabled") or bool(config.get("seller_legal_name") and config.get("terms_url") and config.get("privacy_url")),"payments enabled without legal disclosures")
-    for name in ("routeCards","offerCards","destinationGrid"):
+    # The current selling/search UI is built around a direct result list,
+    # fast source-backed country chips and an on-demand hotel directory.
+    # routeCards/destinationGrid belonged to the removed 251-country card wall.
+    # Validate the ACTUAL interactive elements rather than obsolete markup.
+    for name in ("tourSearchForm","previewCards","catalogBreadth",
+                 "filterCountry","quickCountries","hotelGuideCards","offerCards"):
         require('id="'+name+'"' in page,"missing "+name)
     for name in ("alternativeCountry","alternativeNights","alternativeDate","alternativeList"):
         require('id="'+name+'"' in route_page,"missing "+name)

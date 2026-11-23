@@ -24,10 +24,13 @@ jobs:
         run: |
           node scripts/test-site.mjs
           node scripts/test-catalog-shards.mjs
+          node scripts/test-preview-alternatives.mjs
           node scripts/test-hotel-media-feed.mjs
           node scripts/test-commons-hotel-media.mjs
       - name: Validate current public tour feed and multi-country customer path without Node
-        run: python3 -B scripts/site_no_node_qa.py
+        run: |
+          python3 -B scripts/local_site_qa.py
+          python3 -B scripts/site_no_node_qa.py
       - name: Verify server-side quote, booking and payment state machine
         run: python3 -m unittest -v backend.test_order_engine backend.test_contract_first_order_engine backend.test_preview_quote_engine backend.test_sqlite_order_repository backend.test_send_booking_notifications backend.test_bg_route_sync backend.test_bg_detail_probe backend.test_bg_preview_export backend.test_bg_selected_quote_probe backend.test_bg_price_age_scope backend.test_bg_private_source_crosswalk backend.test_future_preview_selection backend.test_multicountry_price_scan backend.test_tour_price_reference backend.test_bg_booking_fields_audit backend.test_bg_tour_api_xml backend.test_bg_read_only_price_client backend.test_bg_multiroom_quote backend.test_flight_availability_evidence backend.test_oracle_site_publisher backend.test_recent_preview_catalog backend.test_catalog_size_budget backend.test_full_country_discovery backend.test_hotel_reviews backend.test_hotel_enrichment backend.test_bg_hotel_media_candidates backend.test_hbx_licensed_hotel_photos backend.test_hbx_test_probe backend.test_nuitee_sandbox_hotel_probe backend.test_hbx_crosswalk_candidates backend.test_commons_open_hotel_media
       - name: Verify customer journey in real Chromium
