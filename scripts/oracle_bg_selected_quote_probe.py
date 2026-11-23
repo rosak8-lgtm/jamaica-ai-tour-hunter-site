@@ -38,20 +38,21 @@ def valid_positive_amount(value):
     try:
         amount=Decimal(str(value).strip())
         return amount.is_finite() and amount>0
-    except (InvalidOperation,Vadef adult_pair_marker(value):
-    """Two potentially adult tariff slots in all official BG age encodings.
+    except (InvalidOperation,ValueError):
+        return False
 
-    The source publishes both '12+,12+' and contiguous '[14-99][14-99]'.
-    Do not misclassify strictly child-only ranges as adult price options.
-    This remains only a candidate: adult DOB, room and final price are
-    neither known nor supplier-verified here.
+
+def adult_pair_marker(value):
+    """Recognize two adult-capable slots in official BG source price lists.
+
+    The operator emits both '12+,12+' and contiguous '[14-99][14-99]'.
+    Never count child-only bands as two-adult price candidates. This
+    classifies a candidate, never a verified passenger DOB or final price.
     """
     bands=parse_age_ranges(value)
     return (bands is not None and len(bands)==2 and
             all(low>=12 and high>=18 for low,high in bands) and
-            possible_group(2,[],value))     return False
-    return True
-
+            possible_group(2,[],value))
 
 def inspect_match(rows, selected, hotels):
     """Match real operator rows to the exact selected site preview ID."""
