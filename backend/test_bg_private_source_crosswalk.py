@@ -61,7 +61,7 @@ class Tests(unittest.TestCase):
         rows=[price_row(),price_row(room="FAMILY HB",ns="104623691679",
                                     ag="12+,2-11")]
         for key,value in (("id_ns_b","104625776787"),("o_duration","6"),
-                          ("dt","12.12.2026"),("stop","1"),("isstop","1")):
+                          ("dt","16.12.2026"),("stop","1"),("isstop","1")):
             bad=[rows[0],{**rows[1],key:value}]
             with self.subTest(key=key):
                 self.assertEqual(private_source_candidates(P,ROOMS,bad),())
@@ -69,6 +69,20 @@ class Tests(unittest.TestCase):
             private_source_candidates(P,ROOMS,rows,max_plans=0)
         with self.assertRaises(ValueError):
             private_source_candidates(P,ROOMS,rows,max_plans=True)
+
+    def test_next_day_primary_accommodation_is_source_bound(self):
+        rows=[price_row(dt="12.12.2026"),
+              price_row(room="FAMILY HB",ns="104623691679",
+                        ag="12+,2-11",dt="12.12.2026")]
+        plans=private_source_candidates(P,ROOMS,rows)
+        self.assertEqual(len(plans),1)
+        self.assertEqual(plans[0].groups[0][0].start_date,"2026-12-12")
+        self.assertEqual(plans[0].groups[1][0].start_date,"2026-12-12")
+        self.assertFalse(plans[0].quote_verified)
+        self.assertFalse(plans[0].bookable)
+        # Both rooms must be tied to the same accommodation start date.
+        rows[1]["dt"]="13.12.2026"
+        self.assertEqual(private_source_candidates(P,ROOMS,rows),())
 
     def test_commission_id_never_becomes_template(self):
         p=private_source_candidates(P,ROOMS,[
