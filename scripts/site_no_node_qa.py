@@ -198,7 +198,6 @@ def main():
     if expected is not None:
         require(expected==reference_prices,"REFERENCE_PRICE_COUNT_MISMATCH")
     if preview.get("publication_rule")=="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1":
-        from datetime import datetime
         import public_tour_eligibility as public_gate
         visual=load("tour-visual-evidence.json")
         try:
