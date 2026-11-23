@@ -4,6 +4,8 @@
 (function(){
 "use strict";
 const MAX_ROOT=8000,MAX_TOTAL=60000,MAX_SHARDS=13,MAX_SHARD_ROWS=4000;
+// Six bounded parallel requests reveal more source countries sooner without a 13-file burst.
+const SHARD_WINDOW=6;
 function validRow(x){
  return x&&typeof x==="object"&&/^p_[a-f0-9]{24}$/.test(x.id||"")&&
     /^\d{7,20}$/.test(x.hotel_id||"")&&
@@ -61,8 +63,8 @@ async function allPreviews(feed,onBatch){
  if(seen.size!==rows.length)throw Error("DUPLICATE_PREVIEW_ROOT");
  // Show actual root results immediately, without waiting for all shards.
  if(onBatch)onBatch(rows,0,parts.length);
- for(let pos=0;pos<parts.length;pos+=3){
-  const fetched=await Promise.all(parts.slice(pos,pos+3)
+ for(let pos=0;pos<parts.length;pos+=SHARD_WINDOW){
+  const fetched=await Promise.all(parts.slice(pos,pos+SHARD_WINDOW)
     .map(part=>fetchShard(part,feed.refreshed_at_utc)));
   for(const page of fetched){
    for(const x of page){
@@ -70,7 +72,7 @@ async function allPreviews(feed,onBatch){
     seen.add(x.id);rows.push(x);
    }
   }
-  if(onBatch)onBatch(rows,Math.min(pos+3,parts.length),parts.length);
+  if(onBatch)onBatch(rows,Math.min(pos+SHARD_WINDOW,parts.length),parts.length);
  }
  if(parts.length&&rows.length!==feed.total_published_previews)
    throw Error("SHARDED_COUNT_MISMATCH");
@@ -80,8 +82,8 @@ async function findPreview(feed,id){
  const parts=manifest(feed);
  const first=feed.previews.find(x=>x.id===id);
  if(first)return first;
- for(let pos=0;pos<parts.length;pos+=3){
-  const fetched=await Promise.all(parts.slice(pos,pos+3)
+ for(let pos=0;pos<parts.length;pos+=SHARD_WINDOW){
+  const fetched=await Promise.all(parts.slice(pos,pos+SHARD_WINDOW)
     .map(part=>fetchShard(part,feed.refreshed_at_utc)));
   for(const rows of fetched){
    const found=rows.find(x=>x.id===id);

@@ -1092,28 +1092,42 @@ async function loadTourPreviews(){
   previewsLoaded=true;sourceFilterOptions();renderTourPreviews(true);
   if(!previewFullLoaded){
    try{
-    const all=await window.JamaicaCatalog.allPreviews(data);
+    // Make verified catalog shards visible as they arrive, so countries not
+    // in the first 8,000 rows can be searched before the final shard finishes.
+    const coverageBase=$("previewCoverage").textContent
+      .split(" Загружается расширенный каталог: ")[0];
+    function installShardBatch(rows,done,total,complete){
+      if(serial!==previewLoadSerial)return;
+      const today=new Date().toISOString().slice(0,10);
+      previewRecords=rows.filter(x=>window.JamaicaCatalog.validRow(x)&&
+         x.depart_date>=today);
+      sourceFilterOptions();
+      const knownCountries=new Set(rows.map(x=>x.country));
+      const stillMissing=coverage.filter(x=>!knownCountries.has(x.country))
+         .map(x=>x.country);
+      let summary=coverageBase.replace(
+        "предварительные варианты опубликованы по "+withTours.size+" странам.",
+        "предварительные варианты опубликованы по "+knownCountries.size+" странам.");
+      if(missing.length)summary=summary.replace(
+        " Дополнительно проверены: "+missing.join(", ")+".","");
+      if(stillMissing.length)summary+=" Дополнительно проверены: "+
+        stillMissing.join(", ")+".";
+      $("previewCoverage").textContent=summary+(complete?
+        " В браузере доступны все "+rows.length.toLocaleString("ru-RU")+
+        " опубликованных вариантов из отдельных частей каталога.":
+        " Загружается расширенный каталог: "+rows.length.toLocaleString("ru-RU")+
+        " из "+advertisedTotal.toLocaleString("ru-RU")+
+        " предложений ("+done+"/"+total+" разделов).");
+      renderTourPreviews(true);
+    }
+    const all=await window.JamaicaCatalog.allPreviews(data,(rows,done,total)=>{
+      // The first 8,000 rows were already displayed above.
+      if(done>0&&done<total)installShardBatch(rows,done,total,false);
+    });
     if(serial!==previewLoadSerial)return;
-    previewRecords=all.filter(x=>window.JamaicaCatalog.validRow(x)&&
-       x.depart_date>=new Date().toISOString().slice(0,10));
     previewFullLoaded=true;
-    sourceFilterOptions();
-    const completeCountries=new Set(all.map(x=>x.country));
-    const absentAfterComplete=coverage.filter(x=>!completeCountries.has(x.country))
-       .map(x=>x.country);
-    let summary=$("previewCoverage").textContent;
-    const loadingPos=summary.indexOf(" Загружается расширенный каталог: ");
-    if(loadingPos>=0)summary=summary.slice(0,loadingPos);
-    summary=summary.replace("предварительные варианты опубликованы по "+withTours.size+" странам.",
-      "предварительные варианты опубликованы по "+completeCountries.size+" странам.");
-    if(missing.length)summary=summary.replace(
-      " Дополнительно проверены: "+missing.join(", ")+".","");
-    if(absentAfterComplete.length)summary+=" Дополнительно проверены: "+
-      absentAfterComplete.join(", ")+".";
-    $("previewCoverage").textContent=summary+
-      " В браузере доступны все "+all.length.toLocaleString("ru-RU")+
-      " опубликованных вариантов из отдельных частей каталога.";
-    renderTourPreviews(true);
+    const shardsCount=Array.isArray(data.shards)?data.shards.length:0;
+    installShardBatch(all,shardsCount,shardsCount,true);
    }catch(error){
     if(serial!==previewLoadSerial)return;
     $("previewCoverage").textContent+=" Не все части каталога загрузились. Выдача неполная; повторите обновление страницы.";
