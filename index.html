@@ -170,6 +170,13 @@
  <span class="quickMonthIntro">Вылеты по месяцам</span>
  <div id="quickMonths" class="quickMonthChips" role="group" aria-label="Месяцы с опубликованными турами"></div>
 </div>
+
+<details class="sourceSearchCoverage" id="sourceSearchCoverage" hidden>
+ <summary id="sourceSearchCoverageTitle">Где ищем туры · проверяем направления</summary>
+ <p class="sourceSearchDisclaimer">Это страны, где обнаружены <strong>предварительные записи прайс-листов</strong>, а не туры к продаже. Карточки появляются только после проверки «ЛУЧШАЯ ЦЕНА» и обоих зелёных самолётиков у того же отеля, номера и даты.</p>
+ <div id="sourceSearchCountryChips" class="sourceSearchCountryChips" role="group" aria-label="Направления фонового поиска без показа непроверенных туров"></div>
+ <p id="sourceSearchMonths" class="sourceSearchMonths"></p>
+</details>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 <details class="sourceDetails" id="sourceDetails">
@@ -211,6 +218,7 @@
 <script src="./scripts/month-offer-filters.js"></script>
 <script src="./scripts/visual-selection.js"></script>
 <script src="./scripts/public-visual-policy.js"></script>
+<script src="./scripts/source-coverage.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
 <script src="./scripts/commons-hotel-media.js"></script>
 <script src="./scripts/traveler-party.js"></script>
@@ -435,6 +443,7 @@ for(const link of document.querySelectorAll('a[href="#hotels"]')){
 }
 if(location.hash==="#hotels")openHotelDirectory();
 let previewRecords=[],previewVisible=0;
+let lastSourceCoverage=[];
 let visualProofs=new Map();
 const verifiedRows=()=>window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs);
 /* Simple local browser saved tours; does not make supplier bookings. */
@@ -849,6 +858,40 @@ function renderMonthShortcuts(){
  }
  $("quickMonths").replaceChildren(buttons);
 }
+function renderSourceScanCoverage(){
+ const root=$("sourceSearchCoverage"),chips=$("sourceSearchCountryChips");
+ const countries=lastSourceCoverage;
+ root.hidden=!countries.length;
+ if(!countries.length)return;
+ const selected=$("destination").value.trim(),fragment=document.createDocumentFragment();
+ $("sourceSearchCoverageTitle").textContent=
+   "Где бот ищет туры: "+countries.length+
+   " направлений в прайс-листах · с полной проверкой: "+verifiedRows().length;
+ let months=[];
+ for(const item of countries){
+   const button=el("button","sourceSearchChip",
+     item.country+" · "+item.source_rows_observed.toLocaleString("ru-RU"));
+   button.type="button";
+   button.setAttribute("aria-label",item.country+
+     ": предварительных записей "+item.source_rows_observed+
+     ". Искать только туры со всеми тремя проверками.");
+   button.setAttribute("aria-pressed",String(selected===item.country));
+   button.addEventListener("click",()=>{
+     $("destination").value=selected===item.country?"":item.country;
+     form.requestSubmit();
+   });
+   fragment.append(button);
+   if(!selected||item.country===selected)months.push(...item.sampled_departure_months);
+ }
+ chips.replaceChildren(fragment);
+ months=[...new Set(months)].sort();
+ $("sourceSearchMonths").textContent=months.length?
+   "Месяцы, по которым просмотрены прайс-листы: "+
+     months.slice(0,18).join(", ")+
+     (months.length>18?" и другие.":".")+
+     " Наличие туров с полной проверкой не гарантировано.":
+   "Месяцы исследования прайс-листов не указаны; наличие подходящих туров пока не подтверждено.";
+}
 function renderTourPreviews(reset=true){
  const target=$("previewCards"),more=$("previewMore");
  if(reset){target.replaceChildren();previewVisible=0;}
@@ -865,6 +908,7 @@ function renderTourPreviews(reset=true){
  const chosenParty=Travelers.label(selectedParty);
  renderCountryShortcuts($("destination").value.trim());
  renderMonthShortcuts();
+ renderSourceScanCoverage();
  const budget=Number($("budget").value)||0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
@@ -1043,6 +1087,7 @@ async function loadTourPreviews(){
     ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
     ". Браузер проверяет новый каталог каждые 5 минут; расписание серверного импорта задаётся отдельно.";
   const coverage=Array.isArray(data.countries_status)?data.countries_status.filter(x=>x&&typeof x.country==="string"):[];
+  lastSourceCoverage=window.JamaicaSourceCoverage.parse(data);
 
   const withTours=new Set(data.previews.map(x=>x&&x.country).filter(Boolean));
   const missing=coverage.filter(x=>!withTours.has(x.country)).map(x=>x.country);
