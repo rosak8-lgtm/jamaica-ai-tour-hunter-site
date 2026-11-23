@@ -106,6 +106,9 @@ function showSelection(p,feed,directory){
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
   fact("Выбранные туристы",partyLabel());
+  fact("✈ Перелёт туда","Наличие мест не подтверждено");
+  fact("✈ Перелёт обратно","Наличие мест не подтверждено");
+  fact("Метка «ЛУЧШАЯ ЦЕНА»","Не подтверждена для выбранного тарифа");
   fact("Размещение по номерам",Travelers.description(rooms));
   const observed=Date.parse(feed.refreshed_at_utc||"");
   const age=Date.now()-observed;
