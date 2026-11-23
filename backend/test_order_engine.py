@@ -11,6 +11,8 @@ def offer(**patch):
         "id":"tour_abcdefgh123","publish_approved":True,"quote_verified":True,
         "availability_verified":True,"flights_out_green":True,"flights_back_green":True,
         "price_scope_verified":True,"total_two_verified":True,
+        "sale_policy":"BG_BEST_PRICE_TWO_FLIGHTS",
+        "flight_pair_evidence_verified":True,
         "best_price_required":True,"best_price_verified":True,
         "total_rub":95000,"adults":2,"children":0,"currency":"RUB",
         "quote_verified_at":(NOW-timedelta(minutes=2)).isoformat(),
@@ -30,7 +32,9 @@ class Supplier:
         self.hold_calls+=1
         return {"hold_id":"hold_abcdefgh","inventory_confirmed":self.available,
                 "flights_out_green":True,"flights_back_green":True,
-                "best_price_verified":True,"currency":"RUB","total_rub":self.price}
+                "flight_pair_evidence_verified":True,
+                "best_price_required":True,"best_price_verified":True,
+                "currency":"RUB","total_rub":self.price}
     def confirm_booking(self, hold_id, order_id):
         self.confirm_calls+=1
         if self.fail_confirm:raise RuntimeError("SUPPLIER_UNAVAILABLE")
@@ -70,6 +74,23 @@ class CheckoutTests(unittest.TestCase):
         self.supplier.available=False
         with self.assertRaises(NotAvailable):self.prepare()
         self.assertEqual(self.psp.calls,0)
+    def test_bg_missing_best_price_or_one_flight_blocks_legacy_payment(self):
+        for change in (
+            {"best_price_required":False},
+            {"best_price_verified":False},
+            {"flight_pair_evidence_verified":False},
+            {"flights_back_green":False},
+        ):
+            class ChangedSupplier(Supplier):
+                def hold_and_requote(inner,offer,key):
+                    return {**super().hold_and_requote(offer,key),**change}
+            with self.subTest(change=change):
+                self.supplier=ChangedSupplier()
+                self.engine.supplier=self.supplier
+                with self.assertRaises(NotAvailable):
+                    self.prepare()
+                self.assertEqual(self.psp.calls,0)
+
     def test_exact_price_and_verified_flights_lead_to_payment_intent(self):
         p=self.prepare()
         self.assertEqual(p["status"],"PAYMENT_READY")
