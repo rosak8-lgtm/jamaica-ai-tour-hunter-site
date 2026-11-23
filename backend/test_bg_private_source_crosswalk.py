@@ -1,7 +1,7 @@
 """All private source crosswalk fixtures are artificial (no live API/PII)."""
 import unittest
 
-from backend.bg_private_source_crosswalk import private_source_candidates
+from backend.bg_private_source_crosswalk import private_source_candidates, price_option_otv_from_href2
 
 P={
     "id":"p_"+"f"*24,"hotel_id":"102616490643",
@@ -83,6 +83,36 @@ class Tests(unittest.TestCase):
         # Both rooms must be tied to the same accommodation start date.
         rows[1]["dt"]="13.12.2026"
         self.assertEqual(private_source_candidates(P,ROOMS,rows),())
+
+    def test_exact_option_otv_is_preserved_without_leaking_passenger_payload(self):
+        first=price_row(prices=[
+           {"ag":"[14-99][14-99][2-11][12-17]",
+            "href2":"&otv=102510005340&p=0250819780.0250819780#"},
+           {"ag":"[14-99][14-99][2-11][12-17]",
+            "href2":"&otv=102510005341&p=PRIVATE_PLACEHOLDER#"}])
+        second=price_row(room="FAMILY HB",ns="104623691679",
+                         ag="12+,2-11",
+                         prices=[{"ag":"12+,2-11",
+                                  "href2":"&otv=102510005350&p=PRIVATE#"}])
+        plans=private_source_candidates(P,ROOMS,[first,second])
+        self.assertEqual(len(plans),1)
+        self.assertEqual([x.otv_id for x in plans[0].groups[0]],
+                         ["102510005340","102510005341"])
+        self.assertEqual(plans[0].groups[1][0].otv_id,"102510005350")
+        self.assertFalse(plans[0].quote_verified)
+        self.assertNotIn("PRIVATE",repr(plans))
+        self.assertNotIn("0250819780",repr(plans))
+        self.assertEqual(price_option_otv_from_href2(None),(None,True))
+        self.assertEqual(price_option_otv_from_href2(""),(None,True))
+        for bad in ("&otv=bad&p=1#", "&otv=102510005340&otv=102510005341#",
+                    "&otv=102510005340&n=bad\n", "otv=102510005340",
+                    "&otv=102510005340&bad", "&p=1#"):
+            with self.subTest(bad=bad):
+                self.assertEqual(price_option_otv_from_href2(bad)[1],False)
+        malformed=price_row(prices=[
+          {"ag":"[14-99][14-99][2-11][12-17]",
+           "href2":"&otv=102510005340&otv=102510005341#"}])
+        self.assertEqual(private_source_candidates(P,ROOMS,[malformed,second]),())
 
     def test_commission_id_never_becomes_template(self):
         p=private_source_candidates(P,ROOMS,[

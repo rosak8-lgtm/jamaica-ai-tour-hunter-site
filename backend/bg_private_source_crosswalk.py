@@ -11,6 +11,8 @@ inferred. Never send records or their fields to public endpoints/logs/JSON.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
+from urllib.parse import parse_qsl
 
 from backend.bg_price_age_scope import (
     _iso, _operator_source_binding, candidate_report, possible_group,
@@ -34,6 +36,7 @@ class PrivateRoomSourceOption:
     room_name: str
     source_preview_id: str
     hotel_id: str
+    otv_id: str | None = None
 
     def __repr__(self) -> str:
         return "<PrivateRoomSourceOption: REDACTED CANDIDATE ONLY>"
@@ -54,6 +57,31 @@ class PrivateTourSourceCandidate:
 
     def __repr__(self) -> str:
         return "<PrivateTourSourceCandidate: REDACTED NOT QUOTED>"
+
+
+def price_option_otv_from_href2(value) -> tuple[str | None, bool]:
+    """Read only a rate-specific otv from the official price-option href2.
+
+    Missing href2 means an incomplete candidate. Malformed/ambiguous href2
+    is rejected rather than borrowing an otv from another age tariff.
+    Passenger details inside the p parameter must not be copied or logged.
+    """
+    if value is None or value == "":
+        return None, True
+    if (not isinstance(value, str) or len(value) > 1024 or
+        not value.startswith("&") or
+        any(ord(ch) < 32 or ord(ch) == 127 for ch in value)):
+        return None, False
+    try:
+        raw = value.split("#", 1)[0][1:]
+        params = parse_qsl(raw, keep_blank_values=True, strict_parsing=True,
+                           max_num_fields=20)
+    except ValueError:
+        return None, False
+    matches = [v for key, v in params if key == "otv"]
+    if len(matches) != 1 or re.fullmatch(r"\d{7,20}", matches[0]) is None:
+        return None, False
+    return matches[0], True
 
 
 def private_source_candidates(preview: dict, rooms: list[dict],
@@ -105,9 +133,12 @@ def private_source_candidates(preview: dict, rooms: list[dict],
                 marker = rate.get("ag")
                 if not possible_group(group["adults"], group["child_ages"], marker):
                     continue
-                # Only one operator source record per possible age/room/flight
-                # tuple; do not publish or interpret pricing amounts.
-                sig = (str(row["id_ns"]), str(row["sr"]), marker)
+                # Preserve distinct option-specific otv within the same
+                # row and age marker. Never combine unrelated price options.
+                otv, otv_format_ok = price_option_otv_from_href2(rate.get("href2"))
+                if not otv_format_ok:
+                    continue
+                sig = (str(row["id_ns"]), str(row["sr"]), marker, otv)
                 if sig in options or len(options) >= MAX_OPTIONS_PER_ROOM:
                     continue
                 options[sig] = PrivateRoomSourceOption(
@@ -118,6 +149,7 @@ def private_source_candidates(preview: dict, rooms: list[dict],
                     age_marker=marker, start_date=start_date,
                     duration_nights=duration, room_name=row["room"],
                     source_preview_id=preview["id"], hotel_id=str(preview["hotel_id"]),
+                    otv_id=otv,
                 )
         per_group.append({binding:tuple(items.values())
                           for binding,items in by_source.items() if items})

@@ -112,6 +112,22 @@ class Tests(unittest.TestCase):
         self.assertIsNone(root.find("tour/confirm"))
         self.assertEqual(root.findtext("tour/templateId"), TOUR["template_id"])
 
+    def test_price_option_otv_is_explicit_and_never_used_for_booking(self):
+        g=groups()
+        g[0]["otv_id"]="102510005340"
+        g[1]["otv_id"]="102510005350"
+        _,payload=build_group_price_request(TOUR,ROOMS,g)
+        doc=ET.fromstring(payload)
+        self.assertEqual([x.text for x in doc.findall("tour/groups/group/otv")],
+                         ["102510005340","102510005350"])
+        self.assertIsNone(doc.find(".//confirm"))
+        g[1]["otv_id"]="102510005350&wrong=1"
+        with self.assertRaises(BadOrder):
+            build_group_price_request(TOUR,ROOMS,g)
+        g[1]["otv_id"]=""
+        with self.assertRaises(BadOrder):
+            build_group_price_request(TOUR,ROOMS,g)
+
     def test_missing_supplier_matching_flags_blocks_before_network(self):
         for key in ("price_list_exact_match", "room_occupancy_verified",
                     "passenger_age_scope_verified"):
