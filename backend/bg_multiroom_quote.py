@@ -145,6 +145,12 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
         ET.SubElement(group, "roommeal",
                       duration=str(sourced["duration_nights"])).text = roommeal
         ET.SubElement(group, "sr").text = sr
+        # BG Tour API documents <otv> from the exact prices[].href2 option,
+        # not from the neighboring row or a browser-selected candidate.
+        # Only a private source-matched numeric token may be serialized.
+        if sourced.get("otv_id") is not None:
+            ET.SubElement(group, "otv").text = _require_text(
+                sourced["otv_id"], r"\d{7,20}")
         people = ET.SubElement(group, "persons")
         infant_parent_ids = set()
 
