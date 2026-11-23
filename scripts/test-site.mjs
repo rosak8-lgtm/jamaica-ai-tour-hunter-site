@@ -68,7 +68,7 @@ assert.ok(searchStyle.includes('.quickCountryChip')&&
   'Destination shortcuts and old-source notices require styling');
 assert.ok(page.includes('./scripts/country-offer-balance.js')&&
  page.includes('window.JamaicaCountryOffers.interleaveCountries(rows)')&&
- page.includes('window.JamaicaCountryOffers.countryCounts(previewRecords,origin)'),
+ page.includes('window.JamaicaCountryOffers.countryCounts(verifiedRows(),origin)'),
  'Multi-country results must balance actual countries and match the selected departure city');
 assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
  'Search must interleave actual countries without inventing availability');
