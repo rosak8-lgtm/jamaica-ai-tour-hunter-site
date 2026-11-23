@@ -59,6 +59,8 @@ async function fetchShard(part,refreshed){
 async function allPreviews(feed,onBatch){
  const parts=manifest(feed),rows=[...feed.previews],seen=new Set(rows.map(x=>x.id));
  if(seen.size!==rows.length)throw Error("DUPLICATE_PREVIEW_ROOT");
+ // Show actual root results immediately, without waiting for all shards.
+ if(onBatch)onBatch(rows,0,parts.length);
  for(let pos=0;pos<parts.length;pos+=3){
   const fetched=await Promise.all(parts.slice(pos,pos+3)
     .map(part=>fetchShard(part,feed.refreshed_at_utc)));
