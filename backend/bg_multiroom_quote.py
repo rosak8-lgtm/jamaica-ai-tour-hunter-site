@@ -21,6 +21,7 @@ from backend.bg_tour_api_xml import (
     _xml, url_for_prx,
 )
 from backend.order_engine import BadOrder, NotAvailable
+from backend.bg_price_age_scope import exact_ages_match
 
 MAX_GROUPS = 5
 MAX_ADULTS = 12
@@ -113,6 +114,8 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
     _customer_details(item, customer)
     groups = ET.SubElement(item, "groups")
     identity_keys = set()
+    # One selected flight itinerary for every room in the same tour request.
+    shared_sr = None
 
     for expected, sourced in zip(selected, supplier_groups):
         if not isinstance(sourced, dict):
@@ -123,6 +126,10 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
             sourced.get("room_occupancy_verified") is not True or
             sourced.get("passenger_age_scope_verified") is not True):
             raise NotAvailable("Supplier room / age-price source not independently verified")
+        if (sourced.get("prx") != tour["prx"] or
+            sourced.get("template_id") != tour.get("template_id") or
+            sourced.get("commission_id") != tour.get("commission_id")):
+            raise NotAvailable("Supplier price-list source differs across rooms")
         if (sourced.get("source_preview_id") != tour["source_preview_id"] or
             sourced.get("hotel_id") != tour["hotel_id"] or
             sourced.get("start_date") != hotel_start.isoformat() or
@@ -131,6 +138,10 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
             raise NotAvailable("Supplier group does not match selected preview")
         roommeal = _require_text(sourced.get("roommeal_id"), r"\d{7,20}")
         sr = _require_text(sourced.get("sr"), r"[^\x00-\x1f\x7f]{1,2048}", 2048)
+        if shared_sr is None:
+            shared_sr = sr
+        elif sr != shared_sr:
+            raise NotAvailable("Multiple incompatible flight itineraries in one tour")
         passengers = sourced.get("passengers")
         if not isinstance(passengers, list) or len(passengers) != (
             expected["adults"] + len(expected["child_ages"])
@@ -153,12 +164,14 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
                 sourced["otv_id"], r"\d{7,20}")
         people = ET.SubElement(group, "persons")
         infant_parent_ids = set()
+        actual_ages = []
 
         # Strict ordering: adults first, then children in chosen age order.
         for position, p in enumerate(passengers):
             if not isinstance(p, dict):
                 raise BadOrder("Private passenger identity invalid")
             actual_age = age_on(p.get("birthday"), tour["depart_date"])
+            actual_ages.append(actual_age)
             if position < expected["adults"]:
                 if actual_age < 18 or actual_age > 120:
                     raise BadOrder("Adult birthdate does not match selected group")
@@ -195,6 +208,13 @@ def build_group_price_request(tour: dict, selected_rooms: list[dict],
                 p["infant_allocation"] == "NO_SEAT"
             ):
                 ET.SubElement(people[-1], "parentnum").text = str(p["parentnum"])
+
+        # The caller's "passenger_age_scope_verified" boolean is NOT proof:
+        # cross-check real DOB-derived ages with the SAME prices[].ag marker
+        # carried from the trusted private source option. Reject unknown
+        # formats and tariffs before any authorized network call.
+        if not exact_ages_match(actual_ages, sourced.get("age_marker")):
+            raise NotAvailable("Real passenger ages do not match chosen price option")
 
     payload = ET.tostring(root, encoding="utf-8", xml_declaration=True)
     if len(payload) > MAX_XML_BYTES or b"<confirm" in payload:
