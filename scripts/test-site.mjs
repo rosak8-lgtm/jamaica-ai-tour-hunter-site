@@ -103,10 +103,12 @@ assert.ok(!page.includes('онлайн-бронирование туров</titl
 
 assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
 assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
-assert.ok(page.includes('ЛУЧШАЯ ЦЕНА')&&page.includes('Туда: места не проверены')&&
+assert.ok(page.includes('ЛУЧШАЯ ЦЕНА')&&
+  page.includes('checked disabled aria-label="Обязательное условие')&&
+  page.includes('let list=verifiedRows().filter(x=>')&&
   previewSelection.includes('Перелёт обратно')&&
   checkout.includes('flight_pair_evidence_verified!==true'),
-  'Do not invent two green plane markers or the BG best-price label');
+  'Do not invent two green planes; all tour listings must require real bot proof');
 assert.ok(page.includes('Цена пока не подтверждена;'),
  'Never imply a price or supplier booking where neither is verified');
 assert.ok(searchStyle.includes('.tourResultCard')&&searchStyle.includes('.fieldsMain'));
