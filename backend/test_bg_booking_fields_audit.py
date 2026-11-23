@@ -43,7 +43,7 @@ class BookingAuditTests(unittest.TestCase):
                     listings=[{"date":DAY,"duration":"/7/12",
                                "url":"https://export.bgoperator.ru/partners?"
                                  "action=price&tid=211&flt=100410000051"
-                                 "&flt2=100510000863&id_price="+
+                                 "&flt2="+preview.bg.CITY_ID+"&id_price="+
                                  str(121132934130+i)+"&data="+DAY+"&xml=11"}
                                for i in range(7)]
                     return json.dumps({"entries":listings}).encode()
@@ -59,7 +59,7 @@ class BookingAuditTests(unittest.TestCase):
         self.assertEqual(results[0]["status"],"INSPECTED_SOURCE_ONLY")
         self.assertEqual(results[0]["lists"],7)
         self.assertEqual(len(api.calls),8)
-        self.assertIn("flt2=100510000863",api.calls[0])
+        self.assertIn("flt2="+preview.bg.CITY_ID,api.calls[0])
         self.assertFalse(results[0]["live_quote_verified"])
         self.assertFalse(results[0]["bookable"])
         self.assertNotIn("PRIVATE",str(results))
