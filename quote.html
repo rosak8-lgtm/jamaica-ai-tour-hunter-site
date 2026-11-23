@@ -25,6 +25,12 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 <p class="note" id="quoteNotice" role="status">Заявка ещё не создана. Оплата не начата.</p>
 <label><input type="checkbox" id="onRequestAccept"> Согласен на отель со статусом «под запрос» — окончательное подтверждение гостиницы может потребовать времени, а при отказе применяется предусмотренный договором возврат</label>
 <button type="button" id="checkQuote" disabled>Проверить цену, рейсы и гостиницу</button>
+<div id="priceOnlyResult" class="hide" role="status" aria-live="polite">
+<h2>Стоимость для выбранного состава</h2>
+<div class="price" id="priceOnlyValue"></div>
+<p class="sub" id="priceOnlyTerms"></p>
+<p class="note">Это только расчёт цены всего состава. Места на рейсах и в отеле, договор и оплата ещё не подтверждены. Бронирование не выполняется.</p>
+</div>
 <div id="quoteResult" class="hide">
 <h2>Результат окончательного расчёта № 1</h2>
 <div class="price" id="quotedPrice"></div>
@@ -51,6 +57,16 @@ function ruNoun(n,one,few,many){
 function partyLabel(){return Travelers.label(rooms);}
 let selected=null,config=null,quoteResult=null,auth="";
 function notice(s){$("quoteNotice").textContent=s;}
+function cfgPriceReady(c){
+ try{
+  if(!c||c.schema!=="jamaica.checkout-config.v1"||
+     c.price_checks_enabled!==true||c.private_price_api_enabled!==true||
+     c.auth_api_enabled!==true)return false;
+  const url=new URL(c.api_base_url);
+  return url.protocol==="https:"&&!url.username&&!url.password&&
+    !url.search&&!url.hash;
+ }catch(e){return false;}
+}
 function cfgReady(c){
  try{
   const url=new URL(c.api_base_url);
@@ -81,28 +97,85 @@ async function init(){
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
       " · "+selected.nights+" ночей · "+selected.room+
       " · "+partyLabel()+" · "+Travelers.description(rooms);
-  if(!supportedParty){
-    notice("Состав передан без потерь: "+Travelers.description(rooms)+". Для выбранного состава ("+partyLabel()+") требуется официальная котировка именно с этими возрастами и номерами. Подключённый канал проверки пока не поддерживает такой запрос; цена за двух взрослых не применяется. Оплата и бронирование не выполняются."+
-      (selected.depart_date<=new Date().toISOString().slice(0,10)?
-       " Дата вылета уже наступила или прошла.":""));
-    return;
-  }
   if(selected.depart_date<=new Date().toISOString().slice(0,10)){
     notice("Дата вылета наступила или прошла. Проверка стоимости и бронирование недоступны; выберите новый будущий вылет в поиске туров.");
     return;
   }
   auth=sessionStorage.getItem("jamaica_auth_token")||"";
-  if(!cfgReady(config)||auth.length<32){
-    notice("Тур найден, но онлайн-расчёт для договора пока недоступен: необходимы подключённые авторизация покупателя, поставщик и платёжная система. Бронирование и оплата не выполняются.");
+  const canBook=supportedParty&&cfgReady(config);
+  const canPrice=cfgPriceReady(config);
+  if(!canBook&&!canPrice){
+    notice("Состав туристов сохранён: "+Travelers.description(rooms)+
+      ". Точную цену всех выбранных номеров и возрастов можно получить только после подключения защищённого расчёта поставщика. "+
+      "Справочную цену за двух взрослых к другому составу не применяем. Оплата и бронирование недоступны.");
+    return;
+  }
+  if(auth.length<32){
+    notice("Для безопасной проверки стоимости требуется авторизованная сессия покупателя. "+
+      "Паспортные данные и даты рождения не передаются в URL сайта. Оплата и бронирование не выполняются.");
     return;
   }
   $("checkQuote").disabled=false;
-  notice("Можно запросить окончательный расчёт № 1. Это ещё не бронирование.");
+  if(canBook){
+    notice("Можно запросить окончательный расчёт № 1. Это ещё не бронирование.");
+  }else{
+    $("checkQuote").textContent="Проверить стоимость всего состава";
+    notice("Для "+partyLabel()+" доступен запрос предварительной цены через защищённый сервер. "+
+      "Эта проверка не подтверждает свободные места и не создаёт бронь.");
+  }
  }catch(e){notice("Не удалось получить актуальные сведения о выбранной поездке. Выберите другой вариант.");}
 }
 $("checkQuote").addEventListener("click",async()=>{
- if(!selected||!supportedParty||!cfgReady(config)||auth.length<32)return;
- $("checkQuote").disabled=true;$("quoteResult").classList.add("hide");
+ if(!selected||auth.length<32)return;
+ const canBook=supportedParty&&cfgReady(config);
+ const canPrice=cfgPriceReady(config);
+ if(!canBook&&!canPrice)return;
+ $("checkQuote").disabled=true;
+ $("quoteResult").classList.add("hide");
+ $("priceOnlyResult").classList.add("hide");
+ if(!canBook){
+  notice("Запрашиваем цену всего состава, не создавая бронь…");
+  try{
+   const apiUrl=new URL(config.api_base_url).href;
+   const apiBase=apiUrl.endsWith("/")?apiUrl.slice(0,-1):apiUrl;
+   const response=await fetch(apiBase+"/v1/party-price-checks",{
+    method:"POST",credentials:"omit",cache:"no-store",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+auth},
+    body:JSON.stringify({preview_id:selected.id,rooms:rooms})
+   });
+   if(!response.ok)throw Error("PARTY_PRICE_UNAVAILABLE");
+   const res=await response.json();
+   const expiry=Date.parse(res.expires_at);
+   const now=Date.now();
+   if(res.status!=="PRICE_ONLY_NOT_BOOKABLE"||
+      res.source_preview_id!==selected.id||
+      res.currency!=="RUB"||
+      res.groups_requested!==rooms.length||
+      res.supplier_total_scope!=="WHOLE_TOUR"||
+      res.supplier_price_readonly!==true||
+      !Number.isSafeInteger(res.total_rub)||res.total_rub<=0||res.total_rub>100000000||
+      res.quote_verified!==false||res.availability_verified!==false||
+      res.flight_verified!==false||res.best_price_verified!==false||
+      res.bookable!==false||res.booked!==false||res.payment_enabled!==false||
+      !Number.isFinite(expiry)||expiry<=now||expiry>now+10*60*1000||
+      typeof res.expires_at!=="string"||
+      !/(Z|[+-]\d\d:\d\d)$/.test(res.expires_at))
+      throw Error("INVALID_PRICE_ONLY_RESPONSE");
+   $("priceOnlyValue").textContent=new Intl.NumberFormat("ru-RU").format(res.total_rub)+
+     " ₽ за весь состав";
+   $("priceOnlyTerms").textContent=Travelers.description(rooms)+
+     ". Цена поставщика действует до "+res.expires_at+
+     ". Наличие всех номеров и обоих рейсов проверяется отдельно.";
+   $("priceOnlyResult").classList.remove("hide");
+   notice("Предварительная цена получена для "+partyLabel()+
+     ". Бронь, договор и оплата не созданы.");
+  }catch(e){
+   notice("Точная цена всего состава пока недоступна: сервер не подтвердил расчёт, "+
+     "источник или актуальность тарифа. Цена за двух взрослых не подставляется. "+
+     "Бронирование и оплата не выполняются.");
+  }finally{$("checkQuote").disabled=false;}
+  return;
+ }
  notice("Сверяем цену, оба направления перелёта, гостиницу и статус стоп-продажи…");
  try{
   const response=await fetch(new URL(config.api_base_url).href.replace(/\/$/,"")+"/v1/preview-quotes",{

@@ -10,9 +10,11 @@
   "terms_url": "",
   "privacy_url": "",
   "terms_version": "",
-  "note": "Contract signature must be authoritatively verified before payment. After authoritative PSP confirmation, recheck exact price/flights/hotel, then create supplier booking; never beforehand. Production adapters, seller terms, authorization and PSP are not installed.",
+  "note": "Separate private price-only room-group check is OFF until authenticated buyer session, permitted supplier API, verified nonvirtual flights and full-party inventory preflight are installed. Contract signature and PSP are also OFF; price-only never grants booking.",
   "contract_first_enabled": false,
   "trusted_signature_enabled": false,
   "signing_origin": "",
-  "auth_api_enabled": false
+  "auth_api_enabled": false,
+  "price_checks_enabled": false,
+  "private_price_api_enabled": false
 }

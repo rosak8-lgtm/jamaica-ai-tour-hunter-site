@@ -369,7 +369,7 @@ def main():
                 page.locator("#quoteLink").click()
                 page.wait_for_url("**/quote.html?preview=*",timeout=20000)
                 page.wait_for_function(
-                    "()=>document.getElementById('quoteNotice').textContent.includes('Для выбранного состава')",
+                    "()=>document.getElementById('quoteNotice').textContent.includes('Состав туристов сохранён:')",
                     timeout=12000)
                 ensure(page.locator("#checkQuote").is_disabled(),
                        "UNSUPPORTED_TRAVELERS_ENTERED_TWO_ADULT_CHECKOUT")
