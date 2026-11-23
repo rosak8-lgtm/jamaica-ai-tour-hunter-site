@@ -28,7 +28,8 @@ from backend.bg_price_age_scope import candidate_report
 from backend.bg_private_source_crosswalk import private_source_candidates
 
 ID_RE = re.compile(r"^p_[a-f0-9]{24}$")
-MAX_DETAIL_LISTS = 4
+MAX_DETAIL_LISTS = 16
+MAX_SOURCE_FILE_ENTRIES = 20000
 
 def valid_positive_amount(value):
     """Reject arrays, booleans, zero, NaN and non-numeric supplier fields."""
@@ -105,6 +106,40 @@ def inspect_match(rows, selected, hotels):
             "age_value_present":age_value_present,
             "age_marker_unrecognized":age_marker_unrecognized}
 
+def matching_source_listings(entries, departure, nights, *,
+                             limit=MAX_DETAIL_LISTS):
+    """Bounded supplier FILES inventory for the EXACT selected departure.
+
+    Operator directories can omit Irkutsk even when a real authenticated
+    Irkutsk price list exists. Never treat the directory flag as proof:
+    examine only FILES responses queried with the trusted Irkutsk city ID.
+    A previous limit of four unsorted same-day lists hid authentic tours
+    when the selected preview came from the 5th or later list.
+
+    Explicit duration mismatches are skipped; missing duration metadata is
+    treated as unknown (probe required), never fabricated as a match.
+    """
+    if (not isinstance(entries,list) or len(entries)>MAX_SOURCE_FILE_ENTRIES or
+        not isinstance(departure,str) or type(nights) is not int or
+        not 3<=nights<=180 or type(limit) is not int or
+        not 1<=limit<=MAX_DETAIL_LISTS):
+        raise bg.SyncHold("SOURCE_LIST_SELECTION_INVALID")
+    candidates=[]
+    for position,item in enumerate(entries):
+        if not isinstance(item,dict) or item.get("stop") is not None:
+            continue
+        date_value=bg.date_iso(item.get("date"))
+        if date_value is None or date_value.isoformat()!=departure:
+            continue
+        advertised=preview.advertised_nights(item)
+        if advertised and nights not in advertised:
+            continue
+        # Prefer lists which explicitly advertise the selected number of
+        # nights. Stable ordering among equally qualified source lists.
+        candidates.append((0 if nights in advertised else 1,position,item))
+    return [item for _,_,item in sorted(candidates)[:limit]]
+
+
 def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=None):
     if directory.get("schema") != "jamaica.destination-directory.v1":
         raise bg.SyncHold("DIRECTORY_SCHEMA_UNKNOWN")
@@ -128,10 +163,16 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
     if selected.get("depart_date", "") < datetime.now(timezone.utc).date().isoformat():
         raise bg.SyncHold("PREVIEW_EXPIRED")
     country = next((c for c in directory.get("countries", []) if
+                    isinstance(c,dict) and
                     c.get("name")==selected.get("country") and
-                    bg.CITY_ID in c.get("origins", []) and c.get("has_tour_catalog")),None)
+                    c.get("has_tour_catalog") is True and
+                    isinstance(c.get("id"),str)),None)
     if not country:
         raise bg.SyncHold("COUNTRY_UNSUPPORTED")
+    # The directory's optional origins[] annotation is not authoritative.
+    # Subsequent authenticated /yandex FILES query ALWAYS pins bg.CITY_ID
+    # and only the selected country/hotel/room/date may match. No source
+    # preview -> no claimed option; no supplier quote -> no booking.
     hotels = {str(h.get("id")): h for h in directory.get("hotels", [])
               if isinstance(h,dict) and h.get("id") and h.get("country")}
     q=urllib.parse.urlencode({"action":"files", "flt":country["id"],
@@ -140,12 +181,10 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
     entries=file_feed.get("entries")
     if not isinstance(entries,list):
         raise bg.SyncHold("FILES_SCHEMA_UNKNOWN")
-    # The public preview was taken from a specific departure date. Re-check
-    # only that date; never scan unrelated dates or country inventories.
-    matching_listings=[e for e in entries if isinstance(e,dict) and
-                       bg.date_iso(e.get("date")) and
-                       bg.date_iso(e.get("date")).isoformat()==selected["depart_date"] and
-                       e.get("stop") is None][:MAX_DETAIL_LISTS]
+    # Bounded exact-date/duration lookup across independent price lists,
+    # including lists which rotate into the public preview exporter.
+    matching_listings=matching_source_listings(
+        entries,selected["depart_date"],selected["nights"])
     summary={"matched_rows":0,"price_options":0,"rub_price_fields":0,
              "two_adults_age_markers":0,"blocked_price_options":0,
              "two_adults_with_rub":0,
@@ -161,7 +200,15 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
             continue
         detail_lists+=1
         if selected_rooms is not None:
-            if len(party_rows)+len(rows)>10000:
+            # Crosswalk must compare alternative rooms in the SAME hotel,
+            # date and duration. Unrelated hotel rows can number in tens
+            # of thousands; never let those exhaust the private 10k cap.
+            relevant=[row for row in rows if isinstance(row,dict) and
+                str(row.get("id_hotel",""))==str(selected["hotel_id"]) and
+                preview.normalize_date(row.get("tour_date") or row.get("dt"))
+                    ==selected["depart_date"] and
+                preview.nights_value(row.get("duration"))==selected["nights"]]
+            if len(party_rows)+len(relevant)>10000:
                 raise bg.SyncHold("TOO_MANY_PRIVATE_AGE_CANDIDATES")
             # Bind each row to its OWN authenticated price-list prx.
             # Never print/export prx or infer it from a neighboring response.
@@ -171,10 +218,15 @@ def inspect_selected(directory, public_feed, chosen_id, api, *, selected_rooms=N
                 re.fullmatch(r"[0-9]{7,20}",str(private_prx))
                 else None)
             party_rows.extend({**row,"_jamaica_private_prx":safe_prx}
-                              for row in rows if isinstance(row,dict))
+                              for row in relevant)
         result=inspect_match(rows, selected, hotels)
         for key, value in result.items():
             summary[key]+=value
+        # For the basic two-adult read-only audit a genuinely matching,
+        # RUB-valued age option is sufficient. Multiroom checking scans all
+        # selected bound source lists to preserve same-prx group candidates.
+        if selected_rooms is None and summary["two_adults_with_rub"]>0:
+            break
     party_status={}
     if selected_rooms is not None:
         checked=candidate_report(selected, selected_rooms, party_rows)
