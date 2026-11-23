@@ -18,6 +18,7 @@ for name in \
   scripts/oracle_bg_price_detail_probe.py \
   scripts/oracle_bg_route_sync.py \
   scripts/select_future_preview.py \
+  scripts/local_selected_preview.py \
   backend/bg_price_age_scope.py \
   backend/bg_private_source_crosswalk.py \
   destination-directory.json tour-previews.json; do
@@ -26,10 +27,20 @@ done
 
 PREVIEW_ID="${1:-}"
 ROOMS_FILE="${2:-}"
-if [[ -z "$PREVIEW_ID" ]]; then
- PREVIEW_ID="$(python3 -B "$ROOT/scripts/select_future_preview.py" --feed "$ROOT/tour-previews.json")"
-fi
+# The published catalog contains up to 60k offers in hashed shards. Never
+# send only the 8k root to Oracle: a click from shard 7 would be rejected.
+# Fully verify ALL local source hash manifests, then stage exactly ONE
+# original public preview in a 0600 temporary file.
+LOCAL_TMP="$(mktemp -d /tmp/jamaica-selected-local.XXXXXXXX)"
+trap 'rm -rf -- "$LOCAL_TMP"' EXIT
+LOCAL_PREVIEW_FEED="$LOCAL_TMP/tour-previews.json"
+PREVIEW_ID="$(python3 -B "$ROOT/scripts/local_selected_preview.py" \
+ --root "$ROOT/tour-previews.json" \
+ --preview-id "$PREVIEW_ID" --output "$LOCAL_PREVIEW_FEED")"
 [[ "$PREVIEW_ID" =~ ^p_[a-f0-9]{24}$ ]] || { echo "STOP_INVALID_PREVIEW_ID"; exit 2; }
+[[ -f "$LOCAL_PREVIEW_FEED" && ! -L "$LOCAL_PREVIEW_FEED" ]] || {
+ echo "STOP_SELECTED_SHARD_FEED_UNAVAILABLE"; exit 2;
+}
 
 # Optional age-only private file: no passports, names or exact birthdates.
 # Its bytes are never passed as shell arguments or printed to stdout.
@@ -76,6 +87,7 @@ cleanup(){
  if [[ "$REMOTE_TMP" =~ ^/tmp/jamaica-selection\.[[:alnum:]]+$ ]]; then
   "${SSH[@]}" "$REMOTE" "rm -rf -- '$REMOTE_TMP'" >/dev/null 2>&1 || true
  fi
+ rm -rf -- "$LOCAL_TMP"
 }
 trap cleanup EXIT
 REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-selection.XXXXXXXX')"
@@ -91,7 +103,7 @@ REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-selection
  "$ROOT/scripts/tour_price_reference.py" \
  "$ROOT/scripts/oracle_bg_price_detail_probe.py" \
  "$ROOT/scripts/oracle_bg_route_sync.py" \
- "$ROOT/destination-directory.json" "$ROOT/tour-previews.json" \
+ "$ROOT/destination-directory.json" "$LOCAL_PREVIEW_FEED" \
  "$REMOTE:$REMOTE_TMP/"
 "${SCP[@]}" "$ROOT/backend/bg_price_age_scope.py" \
  "$ROOT/backend/bg_private_source_crosswalk.py" \
