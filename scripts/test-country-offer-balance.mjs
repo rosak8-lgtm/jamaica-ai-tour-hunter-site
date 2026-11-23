@@ -24,7 +24,7 @@ source.unshift(...Array.from({length:200},(_,i)=>make("Таиланд",1000+i)))
 const before=source.map(x=>x.id);
 const result=interleaveCountries(source);
 assert.equal(result.length,source.length);
-assert.deepEqual(result.slice(0,3).map(x=>x.country),
+assert.deepEqual(Array.from(result.slice(0,3),x=>x.country),
  ["Таиланд","Китай","Вьетнам"]);
 assert.equal(new Set(result.slice(0,30).map(x=>x.country)).size,30,
  "First 30 displayed tours must include 30 different source-backed countries");
