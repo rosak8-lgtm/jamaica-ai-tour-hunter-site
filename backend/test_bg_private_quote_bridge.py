@@ -6,6 +6,7 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from backend.bg_private_exact_party import select_exact_party_sources
+from backend.bg_private_source_crosswalk import private_source_candidates
 from backend.bg_private_quote_bridge import (
     PrivateBuyerPriceAuthorization, IndependentOperatorPreflight,
     price_exact_party_read_only,
@@ -298,7 +299,7 @@ class Tests(unittest.TestCase):
         source[1]["prices"]=[{
             "ag":"12+,0-1","href2":"&otv=102510005350&p=PRIVATE_TEST_DATA#"
         }]
-        plans=candidates(source)
+        plans=private_source_candidates(PREVIEW,rooms,source)
         birthday_sets=[[x["birthday"] for x in p] for p in people]
         prf=proof(rooms=rooms,born=birthday_sets,sources=plans,
                   infant_policies_by_room=(False,False))
