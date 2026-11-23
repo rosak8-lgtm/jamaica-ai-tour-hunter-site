@@ -99,6 +99,10 @@ assert.ok(!page.includes('онлайн-бронирование туров</titl
 
 assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
 assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
+assert.ok(page.includes('ЛУЧШАЯ ЦЕНА')&&page.includes('Туда: места не проверены')&&
+  previewSelection.includes('Перелёт обратно')&&
+  checkout.includes('flight_pair_evidence_verified!==true'),
+  'Do not invent two green plane markers or the BG best-price label');
 assert.ok(page.includes('Цена пока не подтверждена;'),
  'Never imply a price or supplier booking where neither is verified');
 assert.ok(searchStyle.includes('.tourResultCard')&&searchStyle.includes('.fieldsMain'));
@@ -212,15 +216,28 @@ const sample={
  nights:10,adults:2,children:0,total_rub:94500,
  quote_verified_at:new Date(now-60000).toISOString(),expires_at:new Date(now+300000).toISOString(),
  quote_verified:true,availability_verified:true,flights_out_green:true,flights_back_green:true,
- price_scope_verified:true,total_two_verified:true,publish_approved:true
+ price_scope_verified:true,total_two_verified:true,publish_approved:true,
+ flight_pair_evidence_verified:true,sale_policy:"BG_BEST_PRICE_TWO_FLIGHTS",
+ best_price_required:true,best_price_verified:true
 };
 const valid=functionFrom(detail,'function valid(o){');
 assert.equal(valid(sample),true,'A truly confirmed tour must open hotel details');
 assert.equal(valid({...sample,flights_back_green:false}),false);
+assert.equal(valid({...sample,flight_pair_evidence_verified:false}),false);
+assert.equal(valid({...sample,best_price_required:false}),false);
+assert.equal(valid({...sample,best_price_verified:false}),false);
 assert.equal(valid({...sample,expires_at:new Date(now-1000).toISOString()}),false);
 const strictOffer=functionFrom(page,'function strictOffer(o,now){');
 assert.equal(strictOffer(sample,now),true,'A current confirmed quote must appear in search');
 assert.equal(strictOffer({...sample,quote_verified:false},now),false);
+assert.equal(strictOffer({...sample,flights_out_green:false},now),false);
+assert.equal(strictOffer({...sample,flight_pair_evidence_verified:false},now),false);
+assert.equal(strictOffer({...sample,sale_policy:"UNKNOWN"},now),false);
+assert.equal(strictOffer({...sample,best_price_required:false},now),false);
+assert.equal(strictOffer({...sample,best_price_verified:false},now),false);
+assert.equal(strictOffer({...sample,sale_policy:"STANDARD_TWO_FLIGHTS",
+  best_price_required:false,best_price_verified:false},now),true,
+  'Other operators need independent policy; BG label requirement is BG-only');
 const previewPriceSort=functionFrom(page,'function previewPriceCompare(a,b){');
 const cheap={depart_date:'2026-12-10',country:'Таиланд',hotel:'A',price_reference_rub:51000};
 const costly={depart_date:'2026-12-01',country:'Китай',hotel:'B',price_reference_rub:99000};

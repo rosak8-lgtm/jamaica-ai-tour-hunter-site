@@ -16,6 +16,8 @@ def supplier_quote(p,**patch):
             "country":p["country"],"origin":p["origin"],
             "currency":"RUB","total_rub":100000,
             "flight_out_available":True,"flight_back_available":True,
+            "flight_pair_evidence_verified":True,
+            "best_price_required":True,"best_price_verified":True,
             "hotel_stop":False,"hotel_status":"IN_STOCK",
             "two_adults_price_verified":True,"supplier_quote_verified":True,
             "expires_at":(now()+timedelta(minutes=12)).isoformat()}
@@ -43,6 +45,10 @@ class Tests(unittest.TestCase):
         self.assertEqual(result["total_rub"],100000)
         offer=self.repo.private[result["offer_id"]]
         self.assertTrue(valid_offer(offer,now()))
+        self.assertEqual(offer["sale_policy"],"BG_BEST_PRICE_TWO_FLIGHTS")
+        self.assertTrue(offer["flight_pair_evidence_verified"])
+        self.assertTrue(offer["best_price_required"])
+        self.assertTrue(offer["best_price_verified"])
         self.assertEqual(len(self.supplier.calls),1)
         self.assertEqual(offer["buyer_id"],"customer-12345678")
     def test_incorrect_hotel_never_generates_private_offer(self):
@@ -57,6 +63,24 @@ class Tests(unittest.TestCase):
             with self.assertRaises(NotAvailable):
                 self.engine.get_authoritative_quote(self.repo.p["id"],buyer_id="customer-12345678",adults=2,children=0)
         self.assertEqual(self.repo.private,{})
+    def test_bg_requires_both_actual_green_flight_checks_and_best_price(self):
+        for patches in (
+            {"flight_out_available":False},
+            {"flight_back_available":False},
+            {"flight_pair_evidence_verified":False},
+            {"flight_pair_evidence_verified":None},
+            {"best_price_required":False,"best_price_verified":True},
+            {"best_price_required":None,"best_price_verified":True},
+            {"best_price_required":True,"best_price_verified":False},
+            {"best_price_required":True,"best_price_verified":None},
+        ):
+            with self.subTest(patches=patches):
+                self.supplier.patches=patches
+                with self.assertRaises(NotAvailable):
+                    self.engine.get_authoritative_quote(self.repo.p["id"],
+                        buyer_id="customer-12345678",adults=2,children=0)
+                self.assertEqual(self.repo.private,{})
+
     def test_on_request_requires_consent(self):
         self.supplier.patches={"hotel_status":"ON_REQUEST"}
         with self.assertRaises(NotAvailable):

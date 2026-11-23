@@ -48,7 +48,12 @@ const dateOK=d=>typeof d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Date.parse(d
 function validOffer(o){
  if(!o||!(/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||"")))return false;
  if(o.publish_approved!==true||o.quote_verified!==true||o.availability_verified!==true||o.flights_out_green!==true||o.flights_back_green!==true||o.price_scope_verified!==true||o.total_two_verified!==true)return false;
- if(o.best_price_required===true&&o.best_price_verified!==true)return false;
+ if(o.flight_pair_evidence_verified!==true)return false;
+ if(o.sale_policy==="BG_BEST_PRICE_TWO_FLIGHTS"){
+  if(o.best_price_required!==true||o.best_price_verified!==true)return false;
+ }else if(o.sale_policy==="STANDARD_TWO_FLIGHTS"){
+  if(o.best_price_required!==false)return false;
+ }else return false;
  if(o.adults!==2||o.children!==0||!Number.isInteger(o.total_rub)||o.total_rub<=0||!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
  if(typeof o.destination!=="string"||typeof o.hotel!=="string"||!dateOK(o.depart_date))return false;
  const updated=Date.parse(o.quote_verified_at),expiry=Date.parse(o.expires_at),now=Date.now();

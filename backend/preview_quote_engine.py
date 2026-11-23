@@ -11,6 +11,9 @@ from typing import Protocol, Any
 
 from backend.order_engine import BadOrder, NotAvailable
 from backend.contract_first_order_engine import quote_is_valid
+from backend.supplier_sale_policy import (
+    BG_BEST_PRICE, valid_policy, check_supplier_evidence
+)
 
 class PreviewQuoteRepository(Protocol):
     def get_preview(self,preview_id:str)->dict[str,Any]|None: ...
@@ -31,7 +34,13 @@ def _source_matches(p:dict[str,Any],check:dict[str,Any])->bool:
             check.get("origin")==p.get("origin"))
 
 class PreviewQuoteEngine:
-    def __init__(self,repo:PreviewQuoteRepository,supplier:PreviewSupplier,clock=None):
+    def __init__(self,repo:PreviewQuoteRepository,supplier:PreviewSupplier,clock=None,
+                 *,sale_policy:str=BG_BEST_PRICE):
+        if not valid_policy(sale_policy):
+            raise ValueError("Only explicit trusted supplier sale policies allowed")
+        # Set by deployment configuration, NEVER by the browser or by public
+        # catalog content. Current authenticated catalog supplier is BG.
+        self.sale_policy=sale_policy
         self.repo,self.supplier=repo,supplier
         self.clock=clock or (lambda:datetime.now(timezone.utc))
 
@@ -58,8 +67,11 @@ class PreviewQuoteEngine:
         if not isinstance(quoted,dict) or not _source_matches(p,quoted):
             raise NotAvailable("Supplier response is for another hotel/date/room")
         price=quoted.get("total_rub")
-        if type(price) is not int or price<=0 or not quote_is_valid(
-            quoted,price,allow_on_request=on_request_accepted):
+        if (type(price) is not int or price<=0 or
+            not check_supplier_evidence(quoted,self.sale_policy) or
+            not quote_is_valid(
+                quoted,price,allow_on_request=on_request_accepted,
+                sale_policy=self.sale_policy)):
             raise NotAvailable("Fresh verified price, seats or hotel status missing")
         offer_id="tour_"+secrets.token_urlsafe(18)
         now=self.clock().astimezone(timezone.utc)
@@ -74,10 +86,12 @@ class PreviewQuoteEngine:
             "adults":2,"children":0,"currency":"RUB","total_rub":price,
             "quote_verified":True,"availability_verified":True,
             "flights_out_green":True,"flights_back_green":True,
+            "flight_pair_evidence_verified":True,
             "price_scope_verified":True,"total_two_verified":True,
             "publish_approved":True,
-            "best_price_required":bool(quoted.get("best_price_required")),
-            "best_price_verified":bool(quoted.get("best_price_verified")),
+            "sale_policy":self.sale_policy,
+            "best_price_required":self.sale_policy==BG_BEST_PRICE,
+            "best_price_verified":quoted.get("best_price_verified") is True,
             "hotel_status":quoted["hotel_status"],
             "hotel_on_request_accepted":bool(on_request_accepted),
             "quote_verified_at":now.isoformat(),

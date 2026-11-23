@@ -7,7 +7,7 @@ KEY="$HOME/.ssh/jamaica-oracle.key"
 REMOTE="ubuntu@92.5.184.47"
 test -r "$KEY" || { echo "STOP_ORACLE_SSH_KEY_MISSING"; exit 2; }
 for file in oracle_bg_flight_evidence_probe.py flight_availability_evidence.py \
-  oracle_bg_preview_export.py oracle_bg_route_sync.py \
+  oracle_bg_preview_export.py catalog_size_budget.py oracle_bg_route_sync.py \
   oracle_bg_price_detail_probe.py tour_price_reference.py; do
   test -f "$ROOT/scripts/$file" || { echo "STOP_MISSING_SCRIPT=$file"; exit 2; }
 done
@@ -28,6 +28,7 @@ REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-flight-au
 "${SCP[@]}" "$ROOT/scripts/oracle_bg_flight_evidence_probe.py" \
  "$ROOT/scripts/flight_availability_evidence.py" \
  "$ROOT/scripts/oracle_bg_preview_export.py" \
+ "$ROOT/scripts/catalog_size_budget.py" \
  "$ROOT/scripts/oracle_bg_price_detail_probe.py" \
  "$ROOT/scripts/oracle_bg_route_sync.py" \
  "$ROOT/scripts/tour_price_reference.py" \

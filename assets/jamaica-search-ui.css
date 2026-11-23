@@ -200,6 +200,7 @@ body{background:var(--bg);color:var(--ink)}
 
 
 /* Country choices only from source-observed tour preview countries. */
+.eligibilityUnverified{display:block;color:#694f75;background:#f8f4fc;border-left:3px solid #b8a0cb;padding:8px 10px;border-radius:6px;margin-bottom:9px;line-height:1.45}
 .quickCountryBar{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin:0 0 17px}
 .quickCountryIntro{font-size:12px;font-weight:800;color:#51435f;white-space:nowrap}
 .quickCountryChips{display:flex;flex-wrap:wrap;gap:7px;min-width:0}
