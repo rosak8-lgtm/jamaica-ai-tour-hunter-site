@@ -183,6 +183,24 @@ def main():
                 ensure(page.locator("#dateTo").count()==1,
                        "DATE_RANGE_UPPER_BOUND_MISSING")
 
+                # Country chips must reflect ALL actually observed source
+                # countries while keeping the 251-name reference directory
+                # separate from the selectable *tour* results.
+                observed=page.locator("#filterCountry option").evaluate_all(
+                    "(nodes)=>nodes.filter(n=>n.value).map(n=>n.value)")
+                chips=page.locator("#quickCountries .quickCountryChip:not(.quickCountryMore)").evaluate_all(
+                    "(nodes)=>nodes.map(n=>n.textContent.split(' · ')[0]).filter(n=>n!=='Все направления')")
+                if len(observed)<=18:
+                    ensure(set(chips)==set(observed),
+                           "TEN_COUNTRY_QUICK_FILTER_DROPPED_REAL_DESTINATIONS")
+                else:
+                    more=page.locator("#quickCountries .quickCountryMore")
+                    ensure(more.count()==1,"PUBLISHED_COUNTRY_EXPANDER_MISSING")
+                    more.click()
+                    expanded=page.locator("#quickCountries .quickCountryChip:not(.quickCountryMore)").evaluate_all(
+                        "(nodes)=>nodes.map(n=>n.textContent.split(' · ')[0]).filter(n=>n!=='Все направления')")
+                    ensure(set(expanded)==set(observed),
+                           "EXPANDED_SOURCE_COUNTRIES_STILL_TRUNCATED")
                 first30=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 shown={text.split(" · ")[0] for text in first30}
                 ensure(len(shown)>=3,"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
