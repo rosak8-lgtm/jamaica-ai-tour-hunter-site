@@ -41,7 +41,7 @@ assert.equal(all.get("2027-02"),1);
 assert.equal(all.get("2027-03"),1);
 const filtered=monthsFor(data,{
  origin:"ИРКУТСК",country:"таиланд",today:"2026-11-23"});
-assert.deepEqual(Array.from(filtered.entries()),
+assert.deepEqual(Array.from(filtered,([month,count])=>[month,count]),
  [["2026-12",2],["2027-01",1]]);
 assert.equal(monthsFor(data,{
  origin:"Новосибирск",today:"2026-11-23"}).size,0);
