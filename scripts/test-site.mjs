@@ -516,7 +516,9 @@ assert.ok(!page.includes('id="allCountrySelector"'),"No duplicate country choose
 assert.ok(page.includes('fullCountryNames.length'));
 assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');
 assert.ok(page.includes('data.countries_status'));
-assert.ok(page.includes('if(document.visibilityState==="visible")loadTourPreviews();'));
+assert.ok(page.includes('if(document.visibilityState==="visible"){')&&
+ page.includes('loadTourPreviews();')&&page.includes('loadVisualProofs();'),
+ 'The visible browser refreshes source-backed catalog and bot visual evidence together');
 assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
 assert.ok(page.includes('previewPriceFresh'));
