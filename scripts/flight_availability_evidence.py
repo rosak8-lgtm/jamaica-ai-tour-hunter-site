@@ -1,8 +1,9 @@
 """Read-only flight availability EVIDENCE from official BG extended JSON.
 
 BG docs: tourComposition flight n=0 outbound / n=1 return; q[0] describes
-economy availability (1-9, a=many, r=regular with availability), 0=request,
-c=none. q[1] concerns business class. Unknown/ambiguous means NOT VERIFIED.
+economy availability (1-9, a=many), 0=request, c=none. q[1] concerns
+business class. The undocumented r marker is NOT proof of free seats.
+Unknown/ambiguous means NOT VERIFIED.
 
 This is not a booking hold. Must independently recheck both flights before
 payment and again after payment before creating an agency application.
@@ -12,9 +13,9 @@ from __future__ import annotations
 def economy_q_available(q)->bool:
     if not isinstance(q,str) or len(q)!=2:
         return False
-    if q[0] not in "123456789ar":
+    if q[0] not in "123456789a":
         return False
-    return q[1] in "0123456789acr"
+    return q[1] in "0123456789ac"
 
 def flight_pair_evidence(entry:dict)->dict:
     result={"out_green":False,"back_green":False,"both_green":False,
