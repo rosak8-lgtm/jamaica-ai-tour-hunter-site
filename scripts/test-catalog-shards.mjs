@@ -55,7 +55,7 @@ await assert.rejects(()=>catalog.allPreviews({...root,shards:[{
  path:'../unsafe.json',count:1,sha256:'a'.repeat(64)}]}),
  /UNSAFE_SHARD_ENTRY/);
 files['./tour-previews-shards/part-001.json']={...part,refreshed_at_utc:'2020-01-01T00:00:00Z'};
-await assert.rejects(()=>catalog.allPreviews(root),/CATALOG_SHARD_MISMATCH/);
+await assert.rejects(()=>catalog.allPreviews(root),/INCOMPLETE_SHARDED_CATALOG/);
 files['./tour-previews-shards/part-001.json']={...part,previews:[first]};
 await assert.rejects(()=>catalog.allPreviews(root),/DUPLICATE_SHARDED_PREVIEW/);
 files['./tour-previews-shards/part-001.json']={...part,previews:[{...second,bookable:true}]};
@@ -98,5 +98,42 @@ assert.equal(expanded.length,8);
 assert.equal((await wideContext.window.JamaicaCatalog.findPreview(
   wideRoot,seven[6].id)).id,seven[6].id,
   "Tour deep in the catalog must remain addressable");
+
+/* If a CDN shard fails, do not discard all other real countries in
+   the same wave. Keep their safe rows, report partial coverage, retry the
+   missing shard once, and still find tours in later successful shards. */
+const firstShard="./tour-previews-shards/part-001.json";
+let brokenCalls=0;
+const brokenContext={window:{},fetch:async path=>{
+ if(path===firstShard){
+  brokenCalls++;
+  return {ok:false,json:async()=>null};
+ }
+ return {ok:!!widePages[path],json:async()=>widePages[path]};
+}};
+vm.runInNewContext(source,brokenContext);
+const incomplete=[];
+await assert.rejects(()=>brokenContext.window.JamaicaCatalog.allPreviews(
+ wideRoot,(batch,done,total)=>incomplete.push([batch.length,done,total])),
+ /INCOMPLETE_SHARDED_CATALOG/);
+assert.equal(brokenCalls,2,'Retry a failed CDN shard exactly once');
+assert.deepEqual(incomplete,[[1,0,7],[6,6,7],[7,7,7]],
+ 'Other independently validated countries must survive one failed shard');
+assert.equal((await brokenContext.window.JamaicaCatalog.findPreview(
+ wideRoot,seven[6].id)).id,seven[6].id,
+ 'A good later-shard tour should still open despite an earlier missing shard');
+await assert.rejects(()=>brokenContext.window.JamaicaCatalog.findPreview(
+ wideRoot,"p_"+'f'.repeat(24)),/INCOMPLETE_SHARDED_CATALOG/,
+ 'An incomplete catalog cannot honestly claim that an absent tour does not exist');
+let transientCalls=0;
+const transient={window:{},fetch:async path=>{
+ if(path===firstShard&&transientCalls++===0)
+  return {ok:false,json:async()=>null};
+ return {ok:!!widePages[path],json:async()=>widePages[path]};
+}};
+vm.runInNewContext(source,transient);
+assert.equal((await transient.window.JamaicaCatalog.allPreviews(wideRoot)).length,8,
+ 'Transient CDN errors must heal without a page reload');
+assert.equal(transientCalls,2);
 
 console.log('JAMAICA_SHARDED_60000_LOADER_TEST_PASS');
