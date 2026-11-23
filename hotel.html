@@ -329,7 +329,7 @@ function showTrips(rows){
       Date.now()-Date.parse(item.price_observed_at_utc)<=15*60*1000&&
       Date.now()-Date.parse(item.price_observed_at_utc)>=-30000&&
       typeNumber(item.price_reference_rub))
-   card.append(make("strong","",new Intl.NumberFormat("ru-RU").format(item.price_reference_rub)+" ₽ · 2 взрослых, цена BG при проверке"));
+   card.append(make("strong","",new Intl.NumberFormat("ru-RU").format(item.price_reference_rub)+" ₽ · 2 взрослых, цена при проверке"));
   else card.append(make("p","sub","Рублёвая цена для двух взрослых пока отсутствует"));
   const link=make("a","btn alt","Подробнее о поездке");
   link.href="preview.html?id="+encodeURIComponent(item.id)+"&adults=2&kids=0";
