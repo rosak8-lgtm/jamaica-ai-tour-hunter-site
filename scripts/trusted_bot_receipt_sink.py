@@ -1,0 +1,119 @@
+"""Owner-only sink to attach directly INSIDE a trusted authenticated BG bot.
+
+Not a CLI, HTTP endpoint, mock browser, proof generator or public-data import.
+Call ONLY after the bot has actually CLICKED the BG route carrying
+'ЛУЧШАЯ ЦЕНА' and inspected both green flight indicators on its selected
+hotel/date/room, with exact original source IDs and timestamps.
+This sink never manufactures badge/flight values from a price list.
+"""
+from __future__ import annotations
+
+from datetime import datetime,timezone,timedelta
+from pathlib import Path
+import copy
+import json
+import os
+import stat
+import tempfile
+
+try:
+    import bot_visual_sidecar as visual
+except ModuleNotFoundError:
+    from scripts import bot_visual_sidecar as visual
+from backend.bg_route_first_visual_gate import route_first_pair_matches
+
+PRIVATE_PATH=Path.home()/".local"/"share"/"jamaica-oracle-catalog"/"private-bg-route-first-receipts.json"
+ROUTE_KEYS=frozenset((
+    "source_price_list_id","source_route_id","browser_session_digest",
+    "source","badge_text","badge_scope","route_clicked","page_url",
+    "origin_city_id","origin","country","depart_date",
+    "badge_seen_at_utc","route_clicked_at_utc"))
+FLIGHT_KEYS=frozenset((
+    "source_price_list_id","source_route_id","browser_session_digest",
+    "source","out_green","back_green","stop_sale","origin","country",
+    "depart_date","hotel_id","room","nights","source_preview_id",
+    "flight_checked_at_utc"))
+
+
+def _validated_scope(route,flight,preview,now):
+    if (not isinstance(route,dict) or set(route)!=ROUTE_KEYS or
+        not isinstance(flight,dict) or set(flight)!=FLIGHT_KEYS or
+        not isinstance(preview,dict)):
+        return False
+    return route_first_pair_matches(route,flight,preview,now=now)
+
+
+def _private_directory(path):
+    parent=path.parent
+    info=parent.lstat()
+    if (not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid() or
+        stat.S_IMODE(info.st_mode)&0o077):
+        raise visual.VisualHold("RECEIPT_PARENT_NOT_OWNER_ONLY")
+
+
+def save_from_trusted_browser(route,flight,preview, *,
+                              path=PRIVATE_PATH, now=None):
+    """Persist real receipt, bound to source preview, as 0600 atomic JSON.
+
+    Caller must be the trusted BG browser process, not an unauthenticated
+    message or user-facing web API. Missing/invalid evidence is REJECTED.
+    Never expose route, flight, URL, session digest or IDs in logs.
+    Returns True iff the source-verified receipt was written.
+    """
+    if now is None:
+        now=datetime.now(timezone.utc)
+    if not isinstance(now,datetime) or now.tzinfo is None:
+        raise visual.VisualHold("TRUSTED_BOT_CLOCK_INVALID")
+    if not _validated_scope(route,flight,preview,now):
+        return False
+    path=Path(path)
+    _private_directory(path)
+    current=visual.read_private_receipts(path)
+    if current is None:
+        current={"schema":visual.PRIVATE_SCHEMA,"records":[]}
+    newest={preview["id"]:{
+        "preview_id":preview["id"],
+        "route":copy.deepcopy(route),
+        "flight":copy.deepcopy(flight)}}
+    # Keep other source-bound receipts only for their bounded lifetime.
+    for old in current["records"]:
+        if not isinstance(old,dict) or set(old)!={"preview_id","route","flight"}:
+            continue
+        uid=old.get("preview_id")
+        if uid in newest or not isinstance(uid,str):
+            continue
+        old_flight=old.get("flight")
+        if not isinstance(old_flight,dict):
+            continue
+        try:
+            checked=datetime.fromisoformat(
+                old_flight["flight_checked_at_utc"].replace("Z","+00:00"))
+            if checked.tzinfo is None or not timedelta(0)<=(
+                now.astimezone(timezone.utc)-
+                checked.astimezone(timezone.utc))<=timedelta(minutes=15):
+                continue
+        except (TypeError,KeyError,AttributeError,ValueError):
+            continue
+        if len(newest)>=visual.MAX_PRIVATE_RECORDS:
+            break
+        newest[uid]=old
+    payload={"schema":visual.PRIVATE_SCHEMA,
+             "records":list(newest.values())}
+    encoded=json.dumps(payload,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+    if not 2<=len(encoded)<=visual.MAX_SOURCE_BYTES:
+        raise visual.VisualHold("TRUSTED_BOT_RECEIPT_TOO_LARGE")
+    temp=None
+    try:
+        fd,filename=tempfile.mkstemp(prefix=".bg-route-proof-",dir=path.parent)
+        temp=Path(filename)
+        os.fchmod(fd,0o600)
+        with os.fdopen(fd,"wb") as stream:
+            stream.write(encoded)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp,path)
+        os.chmod(path,0o600)
+        return True
+    finally:
+        if temp is not None and temp.exists():
+            temp.unlink()
