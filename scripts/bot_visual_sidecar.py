@@ -112,7 +112,7 @@ def build_visual_feed(public_previews:list, private:dict|None,
 
 def validate_public_feed(payload:dict, *,now:datetime|None=None)->bool:
     """Defence in depth for the published status, never booking data."""
-    if not isinstance(payload,dict) or set(payload)!={
+    if (not isinstance(payload,dict) or set(payload)!={
         "schema","bookable","quote_verified","availability_verified","entries"
     } or payload.get("schema")!=PUBLIC_SCHEMA or
         payload.get("bookable") is not False or
