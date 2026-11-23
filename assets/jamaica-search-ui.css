@@ -213,3 +213,8 @@ body{background:var(--bg);color:var(--ink)}
 
 .quickCountryMore{border-style:dashed;border-color:#61adb1;background:#f0fbfa;color:#006970}
 .quickCountryMore:hover{border-color:#00878b;background:#e3f8f5}
+
+/* Source-verified route-first bot observations. Visual only — no booking. */
+.visualProofToggle{background:#f0f9f8;border-radius:11px;padding:7px 12px;border:1px solid #bfe2de;color:#086e71;line-height:1.4}
+#visualProofNotice{padding:9px 13px;border-left:3px solid #89bfc4;background:#f5fbfa;border-radius:8px;line-height:1.55;margin-bottom:13px}
+.visualEvidenceStatus{font-size:12px;line-height:1.5;font-weight:650;border-radius:9px;background:#f0f9f6;border-left:4px solid #208874;color:#125c4e;padding:10px 12px}
