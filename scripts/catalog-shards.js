@@ -58,38 +58,56 @@ async function fetchShard(part,refreshed){
     !payload.previews.every(validRow))throw Error("CATALOG_SHARD_MISMATCH");
  return payload.previews;
 }
+async function fetchShardRetry(part,refreshed){
+ // Transient network failures or partial CDN propagation should not hide
+ // every other available country in the same parallel fetch wave.
+ // Still validate each response against the expected source manifest.
+ try{return await fetchShard(part,refreshed);}
+ catch(e){return await fetchShard(part,refreshed);}
+}
 async function allPreviews(feed,onBatch){
  const parts=manifest(feed),rows=[...feed.previews],seen=new Set(rows.map(x=>x.id));
  if(seen.size!==rows.length)throw Error("DUPLICATE_PREVIEW_ROOT");
- // Show actual root results immediately, without waiting for all shards.
  if(onBatch)onBatch(rows,0,parts.length);
+ let failures=0;
  for(let pos=0;pos<parts.length;pos+=SHARD_WINDOW){
-  const fetched=await Promise.all(parts.slice(pos,pos+SHARD_WINDOW)
-    .map(part=>fetchShard(part,feed.refreshed_at_utc)));
-  for(const page of fetched){
-   for(const x of page){
+  const wave=parts.slice(pos,pos+SHARD_WINDOW);
+  const fetched=await Promise.allSettled(wave.map(
+    part=>fetchShardRetry(part,feed.refreshed_at_utc)));
+  for(const result of fetched){
+   if(result.status!=="fulfilled"){
+    // Reject the failed shard's rows, but keep safely validated rows from
+    // the other shards instead of dropping entire waves of real countries.
+    failures++;
+    continue;
+   }
+   for(const x of result.value){
     if(seen.has(x.id))throw Error("DUPLICATE_SHARDED_PREVIEW");
     seen.add(x.id);rows.push(x);
    }
   }
   if(onBatch)onBatch(rows,Math.min(pos+SHARD_WINDOW,parts.length),parts.length);
  }
- if(parts.length&&rows.length!==feed.total_published_previews)
-   throw Error("SHARDED_COUNT_MISMATCH");
+ if(failures||(parts.length&&rows.length!==feed.total_published_previews))
+  throw Error("INCOMPLETE_SHARDED_CATALOG");
  return rows;
 }
 async function findPreview(feed,id){
  const parts=manifest(feed);
  const first=feed.previews.find(x=>x.id===id);
  if(first)return first;
+ let failures=0;
  for(let pos=0;pos<parts.length;pos+=SHARD_WINDOW){
-  const fetched=await Promise.all(parts.slice(pos,pos+SHARD_WINDOW)
-    .map(part=>fetchShard(part,feed.refreshed_at_utc)));
-  for(const rows of fetched){
-   const found=rows.find(x=>x.id===id);
+  const fetched=await Promise.allSettled(
+    parts.slice(pos,pos+SHARD_WINDOW).map(
+      part=>fetchShardRetry(part,feed.refreshed_at_utc)));
+  for(const result of fetched){
+   if(result.status!=="fulfilled"){failures++;continue;}
+   const found=result.value.find(x=>x.id===id);
    if(found)return found;
   }
  }
+ if(failures)throw Error("INCOMPLETE_SHARDED_CATALOG");
  return null;
 }
 window.JamaicaCatalog=Object.freeze({manifest,allPreviews,findPreview,validRow});

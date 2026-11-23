@@ -66,6 +66,10 @@ assert.ok(page.includes('PREVIOUSLY_SEEN_NOT_RECHECKED')&&
 assert.ok(searchStyle.includes('.quickCountryChip')&&
   searchStyle.includes('.previousSourceNotice'),
   'Destination shortcuts and old-source notices require styling');
+assert.ok(page.includes('./scripts/country-offer-balance.js')&&
+ page.includes('window.JamaicaCountryOffers.interleaveCountries(rows)')&&
+ page.includes('window.JamaicaCountryOffers.countryCounts(previewRecords,origin)'),
+ 'Multi-country results must balance actual countries and match the selected departure city');
 assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
  'Search must interleave actual countries without inventing availability');
 const mascotAsset=fs.readFileSync('assets/jamaica-parrot-mascot.svg','utf8');

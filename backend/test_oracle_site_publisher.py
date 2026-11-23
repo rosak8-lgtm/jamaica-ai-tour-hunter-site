@@ -72,6 +72,74 @@ class Tests(unittest.TestCase):
         self.assertTrue(publisher.needs_publish(root,root_changed,
                         now=NOW+timedelta(minutes=5)))
 
+    def test_fast_root_diversifies_real_countries_and_months(self):
+        original=feed()["previews"][0]
+        source=[]
+        # Chronological source: 100 cheap nearby Thailand rows otherwise
+        # push 2027 China/Vietnam/Philippines outside the first 12.
+        for i in range(100):
+            source.append({**original,"id":"p_"+format(i,"024x"),
+                "country":"Таиланд","depart_date":"2026-12-10",
+                "price_reference_rub":50000+i})
+        for i,(country,month) in enumerate((
+            ("Китай","2026-12-20"),("Китай","2027-01-20"),
+            ("Китай","2027-02-20"),("Вьетнам","2026-12-30"),
+            ("Вьетнам","2027-01-10"),("Филиппины","2027-03-15")
+        ),start=100):
+            source.append({**original,"id":"p_"+format(i,"024x"),
+                "country":country,"depart_date":month,
+                "price_reference_rub":75000+i})
+        with patch.object(publisher,"ROOT_ITEMS",12):
+            root,chunks=publisher.make_sharded_catalog({
+                **feed(),"previews":source
+            })
+        self.assertEqual(len(root["previews"]),12)
+        self.assertEqual({x["country"] for x in root["previews"]},
+                         {"Таиланд","Китай","Вьетнам","Филиппины"})
+        self.assertIn("2027-03",
+            {x["depart_date"][:7] for x in root["previews"]})
+        self.assertIn("2027-02",
+            {x["depart_date"][:7] for x in root["previews"]})
+        flat=root["previews"]+[x for part in chunks.values()
+                               for x in part["previews"]]
+        self.assertEqual(len(flat),len(source))
+        self.assertEqual(set(x["id"] for x in flat),
+                         set(x["id"] for x in source))
+        self.assertEqual({x["id"]:x for x in flat},
+                         {x["id"]:x for x in source})
+        self.assertTrue(all(x["bookable"] is False for x in flat))
+        self.assertTrue(all(x["quote_verified"] is False for x in flat))
+        self.assertEqual(root["total_published_previews"],len(source))
+        self.assertEqual(sum(x["count"] for x in root["shards"]),len(source)-12)
+        with patch.object(publisher,"ROOT_ITEMS",12):
+            repeat,_=publisher.make_sharded_catalog({
+                **feed(),"previews":source
+            })
+        self.assertEqual([x["id"] for x in root["previews"]],
+                         [x["id"] for x in repeat["previews"]])
+        self.assertEqual(root["shards"],repeat["shards"])
+
+    def test_root_month_diversity_never_makes_up_a_rate(self):
+        original=feed()["previews"][0]
+        source=[{**original,"id":"p_"+format(i,"024x"),
+                 "country":"Китай","depart_date":
+                    ("2027-01-11" if i%2==0 else "2027-02-11"),
+                 "price_reference_rub":None if i%3==0 else 100000+i,
+                 "price_reference_party":
+                    "UNVERIFIED" if i%3==0 else "TWO_ADULTS"}
+                for i in range(40)]
+        with patch.object(publisher,"ROOT_ITEMS",8):
+            root,chunks=publisher.make_sharded_catalog({
+                **feed(),"previews":source
+            })
+        self.assertEqual(len(root["previews"]),8)
+        self.assertEqual({x["depart_date"][:7] for x in root["previews"]},
+                         {"2027-01","2027-02"})
+        self.assertTrue(all(x["price_reference_rub"] is not None
+                            for x in root["previews"]))
+        self.assertEqual(len(root["previews"])+sum(
+            len(chunk["previews"]) for chunk in chunks.values()),len(source))
+
     def test_shard_limit_cannot_silently_overrun(self):
         with patch.object(publisher,"MAX_SHARDS",0):
             f=feed()
