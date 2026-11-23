@@ -13,7 +13,13 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from scripts import bot_visual_sidecar as visual
+try:
+    # The installed Oracle publisher imports from its pinned checkout's
+    # scripts/ directory, not necessarily from the repository root.
+    import bot_visual_sidecar as visual
+except ModuleNotFoundError:
+    # CI/tests import as scripts.public_tour_eligibility from repo root.
+    from scripts import bot_visual_sidecar as visual
 
 PUBLICATION_RULE="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1"
 
