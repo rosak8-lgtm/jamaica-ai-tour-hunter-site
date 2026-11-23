@@ -12,6 +12,8 @@ import secrets
 from typing import Any, Callable, Protocol
 from urllib.parse import urlsplit
 
+from backend.supplier_sale_policy import check_supplier_evidence, valid_offer_evidence
+
 
 class CheckoutError(Exception):
     code = "CHECKOUT_FAILED"
@@ -84,7 +86,7 @@ REQUIRED = ("quote_verified", "availability_verified", "flights_out_green",
 def valid_offer(offer: dict[str, Any] | None, now: datetime) -> bool:
     if not isinstance(offer, dict) or any(offer.get(k) is not True for k in REQUIRED):
         return False
-    if offer.get("best_price_required") is True and offer.get("best_price_verified") is not True:
+    if not valid_offer_evidence(offer):
         return False
     if (type(offer.get("total_rub")) is not int or offer["total_rub"] <= 0 or
             offer.get("adults") != 2 or offer.get("children") != 0):
@@ -135,10 +137,14 @@ class OrderEngine:
             hold_id = held.get("hold_id")
             if not hold_id or held.get("inventory_confirmed") is not True:
                 raise NotAvailable("Supplier has not confirmed inventory")
-            if held.get("flights_out_green") is not True or held.get("flights_back_green") is not True:
-                raise NotAvailable("Both flights have not been confirmed")
-            if offer.get("best_price_required") is True and held.get("best_price_verified") is not True:
-                raise NotAvailable("Required quality marker not verified for this quote")
+            if (held.get("flights_out_green") is not True or
+                held.get("flights_back_green") is not True or
+                not check_supplier_evidence({
+                    **held,
+                    "flight_out_available":held.get("flights_out_green"),
+                    "flight_back_available":held.get("flights_back_green"),
+                },offer.get("sale_policy"))):
+                raise NotAvailable("Both flights and required supplier quality mark must be verified")
             if held.get("currency") != "RUB" or type(held.get("total_rub")) is not int:
                 raise NotAvailable("Supplier returned invalid price/currency")
             if held["total_rub"] != expected_total_rub:
