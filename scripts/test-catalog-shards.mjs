@@ -59,7 +59,7 @@ await assert.rejects(()=>catalog.allPreviews(root),/INCOMPLETE_SHARDED_CATALOG/)
 files['./tour-previews-shards/part-001.json']={...part,previews:[first]};
 await assert.rejects(()=>catalog.allPreviews(root),/DUPLICATE_SHARDED_PREVIEW/);
 files['./tour-previews-shards/part-001.json']={...part,previews:[{...second,bookable:true}]};
-await assert.rejects(()=>catalog.allPreviews(root),/CATALOG_SHARD_MISMATCH/);
+await assert.rejects(()=>catalog.allPreviews(root),/INCOMPLETE_SHARDED_CATALOG/);
 
 /* 13 sharded files must load in bounded parallel waves; previously three at
    a time held back more countries and made late-shard hotel lookups slow. */
