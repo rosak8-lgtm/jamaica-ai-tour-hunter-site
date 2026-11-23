@@ -96,7 +96,10 @@ def main():
             preview.get("availability_verified") is False,
             "PREVIEWS_WRONG_STATUS")
     records=preview.get("previews")
-    require(isinstance(records,list) and 0<len(records)<=8000,"PREVIEWS_EMPTY")
+    require(isinstance(records,list) and len(records)<=8000 and
+            (bool(records) or
+             preview.get("publication_rule")=="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1"),
+            "PREVIEWS_EMPTY_WITHOUT_STRICT_GATE")
     shards=preview.get("shards",[])
     require(isinstance(shards,list) and len(shards)<=13,"SHARD_MANIFEST_INVALID")
     count=len(records)
@@ -144,10 +147,13 @@ def main():
         require(bool(checkout.get("api_base_url") and checkout.get("seller_legal_name")
                      and checkout.get("terms_url") and checkout.get("privacy_url")),
                 "UNSAFE_LIVE_CHECKOUT_CONFIG")
-    try:
-        proof=property_identity.verify_catalog_hotel_identity(records,directory)
-    except property_identity.IdentityMismatch as exc:
-        raise SystemExit("JAMAICA_NO_NODE_QA_HOLD="+str(exc)) from exc
+    if records:
+        try:
+            proof=property_identity.verify_catalog_hotel_identity(records,directory)
+        except property_identity.IdentityMismatch as exc:
+            raise SystemExit("JAMAICA_NO_NODE_QA_HOLD="+str(exc)) from exc
+    else:
+        proof={"checked":0}
     hotel_ids={str(x.get("id")) for x in directory.get("hotels",[]) if isinstance(x,dict)}
     ids=set()
     by_country=Counter()
@@ -183,11 +189,28 @@ def main():
                     r.get("price_reference_party")=="TWO_ADULTS",
                     "INVALID_PRICE_SCOPE")
             reference_prices+=1
-    require(len(by_country)>=3,"TOO_FEW_COUNTRIES_IN_PREVIEWS")
-    require(future_by_country,"NO_FUTURE_DEPARTURES_REFRESH_REQUIRED")
+    # One or zero real bot-verified countries is legitimate; never pad
+    # the public collection with unverified tours to satisfy an old 3-country KPI.
+    if preview.get("publication_rule")!="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1":
+        require(len(by_country)>=3,"TOO_FEW_COUNTRIES_IN_PREVIEWS")
+        require(future_by_country,"NO_FUTURE_DEPARTURES_REFRESH_REQUIRED")
     expected=preview.get("indicative_two_adult_rub_count")
     if expected is not None:
         require(expected==reference_prices,"REFERENCE_PRICE_COUNT_MISMATCH")
+    if preview.get("publication_rule")=="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1":
+        from datetime import datetime
+        import public_tour_eligibility as public_gate
+        visual=load("tour-visual-evidence.json")
+        try:
+            published_at=datetime.fromisoformat(
+                preview["refreshed_at_utc"].replace("Z","+00:00"))
+            screened=public_gate.select_public_source_rows(
+                preview,visual,now=published_at)
+        except (ValueError,TypeError,KeyError) as exc:
+            raise SystemExit("JAMAICA_NO_NODE_QA_HOLD=VISUAL_PROOF_INVALID") from exc
+        require([r["id"] for r in screened["previews"]]==
+                [r["id"] for r in records],"PUBLIC_PREVIEW_WITHOUT_EXACT_BESTPRICE_GREEN_PAIR")
+        print("PUBLIC_STRICT_VISUAL_ONLY="+str(len(records)))
     print("HOTEL_IDENTITIES_EXACT_MATCHED="+str(proof["checked"]))
     print("HOTEL_ID_NAME_COUNTRY_MISMATCHES=0")
     print("JAMAICA_NO_NODE_PREFLIGHT_PASS")
