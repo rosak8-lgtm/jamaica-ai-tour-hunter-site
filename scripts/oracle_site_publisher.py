@@ -10,6 +10,7 @@
 """
 from __future__ import annotations
 import hashlib
+from collections import deque
 import json
 import os
 import re
@@ -239,6 +240,58 @@ def needs_publish(previous,current,*,now=None):
     prev_time=timestamp(previous.get("refreshed_at_utc"))
     return not prev_time or now-prev_time>=HEARTBEAT
 
+def diverse_root_and_remaining(rows,root_limit=ROOT_ITEMS):
+    """Move authentic diverse country/month source rows into the fast root.
+
+    The exporter sorts all rows primarily by departure date; rows[:8000]
+    could contain almost exclusively nearby departures and hide remote
+    countries or December/2027 tours until up to 13 network files load.
+    This is a STABLE partition: every source row appears exactly once,
+    with no fabricated country/date/price or changes to verification flags.
+
+    Fair allocation is by country, then by actual departure month. Within
+    each country/month prioritize current, known-price reference options,
+    preserving price/date ordering and original index for deterministic ties.
+    """
+    if type(root_limit) is not int or root_limit<1 or root_limit>ROOT_ITEMS:
+        raise CatalogHold("ROOT_COUNTRY_BUDGET_INVALID")
+    if len(rows)<=root_limit:
+        return list(rows),[]
+    grouped={}
+    for index,row in enumerate(rows):
+        grouped.setdefault(row["country"],{}).setdefault(
+            row["depart_date"][:7],[]).append(index)
+    priority={"Таиланд":0,"Китай":1,"Вьетнам":2}
+    groups={}
+    for country,months in grouped.items():
+        ordered={}
+        for month,indices in months.items():
+            indices.sort(key=lambda i:(
+                rows[i].get("status")!="REFERENCE_PRICE_LIST_ONLY",
+                rows[i].get("price_reference_rub") is None,
+                rows[i].get("price_reference_rub") or 100_000_001,
+                rows[i]["depart_date"],i
+            ))
+            ordered[month]=deque(indices)
+        groups[country]=(ordered,deque(sorted(months)))
+    countries=deque(sorted(groups,key=lambda c:(
+        priority.get(c,999),c)))
+    picked=[]
+    while countries and len(picked)<root_limit:
+        country=countries.popleft()
+        month_options,active_months=groups[country]
+        month=active_months.popleft()
+        options=month_options[month]
+        picked.append(options.popleft())
+        if options:
+            active_months.append(month)
+        if active_months:
+            countries.append(country)
+    selected=set(picked)
+    return [rows[i] for i in picked],[row for i,row in enumerate(rows)
+                                       if i not in selected]
+
+
 def make_sharded_catalog(feed):
     """Publish ≤8k fast initial rows plus bounded separate source-backed shards.
 
@@ -250,14 +303,15 @@ def make_sharded_catalog(feed):
     if not isinstance(rows,list) or not 0<len(rows)<=MAX_ITEMS:
         raise CatalogHold("CATALOG_SHARD_SOURCE_SIZE_INVALID")
     root=dict(feed)
-    root["previews"]=rows[:ROOT_ITEMS]
+    root_rows,remainder=diverse_root_and_remaining(rows)
+    root["previews"]=root_rows
     root["total_published_previews"]=len(rows)
     manifest=[]
     chunks={}
-    for i,offset in enumerate(range(ROOT_ITEMS,len(rows),SHARD_ITEMS),start=1):
+    for i,offset in enumerate(range(0,len(remainder),SHARD_ITEMS),start=1):
         if i>MAX_SHARDS:
             raise CatalogHold("TOO_MANY_PUBLIC_SHARDS")
-        part=rows[offset:offset+SHARD_ITEMS]
+        part=remainder[offset:offset+SHARD_ITEMS]
         path=f"{SHARD_FOLDER}/part-{i:03d}.json"
         signature=hashlib.sha256(json.dumps(part,ensure_ascii=False,
             sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
