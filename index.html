@@ -444,6 +444,7 @@ for(const link of document.querySelectorAll('a[href="#hotels"]')){
 if(location.hash==="#hotels")openHotelDirectory();
 let previewRecords=[],previewVisible=0;
 let lastSourceCoverage=[];
+let sourceCoverageFirstExpanded=false;
 let visualProofs=new Map();
 const verifiedRows=()=>window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs);
 /* Simple local browser saved tours; does not make supplier bookings. */
@@ -863,6 +864,7 @@ function renderSourceScanCoverage(){
  const countries=lastSourceCoverage;
  root.hidden=!countries.length;
  if(!countries.length)return;
+ if(!sourceCoverageFirstExpanded){root.open=true;sourceCoverageFirstExpanded=true;}
  const selected=$("destination").value.trim(),fragment=document.createDocumentFragment();
  $("sourceSearchCoverageTitle").textContent=
    "Где бот ищет туры: "+countries.length+
