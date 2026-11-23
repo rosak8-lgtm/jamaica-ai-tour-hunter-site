@@ -641,7 +641,7 @@ def main():
                         timeout=50000)
                     offers=page.locator("#previewCards article.offerCard")
                     if offers.count()==0:
-                        ensure("нет подходящих вариантов" in
+                        ensure("Непроверенные карточки скрыты" in
                                page.locator("#previewCards").inner_text(),
                                "SOURCE_ABSENT_MUST_NOT_FABRICATE_OFFER_"+hid)
                         print("EXACT_HOTEL_NOT_IN_CURRENT_SOURCE="+hid)
