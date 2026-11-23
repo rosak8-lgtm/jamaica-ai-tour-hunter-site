@@ -313,7 +313,10 @@ assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend 
 assert.ok(hotelPage.includes('hotel-media-approved.json'),'Supplier gallery needs explicit commercial-use grant');
 assert.ok(page.includes('./scripts/commons-hotel-media.js'));
 assert.ok(page.includes('window.JamaicaOpenHotelMedia.get('));
-assert.ok(page.includes('Условия лицензии'));
+assert.ok(page.includes('lic.href=photo.licenseUrl')&&
+ page.includes('const attribution=el("a","mediaSourceCredit"')&&
+ !page.includes('renderDestinationPhoto('),
+ 'Only verified exact-hotel thumbnails may show licensed image attribution');
 assert.ok(hotelPage.includes('./scripts/commons-hotel-media.js'));
 assert.ok(hotelPage.includes('loadOpenLicensedHotelPhotos()'));
 assert.ok(hotelPage.includes('showVerifiedOfficialGallery()'));
@@ -427,12 +430,17 @@ assert.ok(page.includes('id="previewCards"'));
 assert.ok(page.includes('function previewCardPhoto(x)'),'Preview cards need identity-verified hotel photo or honest placeholder');
 assert.ok(page.includes('function curatedPreviewPhoto(x)'),'Use verified hotel-specific Commons photos where known');
 assert.ok(!page.includes('function licensedDestinationScene(country)'),'Never mislabel country scenery as a hotel photo');
-assert.ok(page.includes('async function renderDestinationPhoto(area,x,plain)') &&
- page.includes('destination_not_hotel') &&
- page.includes('Пейзаж: "+place+" · © "+e.author') &&
- !page.includes('Фото направления · не фото гостиницы') &&
- page.includes('img.alt="Фотография направления "+x.country+", не выбранной гостиницы"'),
- 'Destination photos may fill empty card visuals ONLY when clearly distinct from actual hotel photos');
+assert.ok(!page.includes('renderDestinationPhoto(')&&
+ !page.includes('destinationPhotoManifest(')&&
+ !page.includes('destination_not_hotel')&&
+ !page.includes('jamaica-destination-media.json'),
+ 'No unrelated country skyline may ever replace the selected hotel on a tour card');
+assert.ok(page.includes('area.dataset.mediaPolicy="EXACT_HOTEL_ONLY"')&&
+ page.includes('img.dataset.mediaEvidence="EXACT_PROPERTY_LICENSED"')&&
+ page.includes('p.hotel_id!==String(x.hotel_id)')&&
+ page.includes('p.hotel_name!==x.hotel||p.country!==x.country')&&
+ page.includes('entry.name!==x.hotel||entry.country!==x.country'),
+ 'Every published hotel thumbnail must match the exact operator hotel ID, name and country');
 assert.ok(page.includes('const frame=el("div","previewPhotoFrame")')&&
  page.includes('const meta=el("div","previewPhotoMeta")')&&
  page.includes('area.replaceChildren(frame,meta)'),
@@ -441,9 +449,10 @@ assert.ok(!page.includes('area.replaceChildren(img,ribbon,credit)')&&
  !page.includes('area.replaceChildren(img,attribution)')&&
  !page.includes('destinationPhotoLabel'),
  'Photo labels may not overlap images or use a redundant warning ribbon');
-assert.ok(page.includes('license.href=e.license_url')&&
- page.includes('lic.href=photo.licenseUrl'),
- 'Author/photographer and license links must remain accessible');
+assert.ok(page.includes('lic.href=photo.licenseUrl')&&
+ page.includes('photo.source')&&
+ page.includes('p.license==="contract-authorized"')===false,
+ 'Only exact hotel images may have their author, source and commercial license shown');
 assert.ok(searchStyle.includes('#previewCards .previewPhotoMeta')&&
  searchStyle.includes('.previewPhotoFrame>img')&&
  searchStyle.includes('position:static!important'),
@@ -471,13 +480,20 @@ for(const filename of ['hotel.html','preview.html','tour.html','quote.html','che
   'All customer pages must use the real mascot photo: '+filename);
 }
 assert.ok(!page.includes('countrySceneNames'),'Country imagery must not replace hotel pictures');
+assert.ok(searchStyle.includes('.previewPlaceholderEmblem')&&
+ searchStyle.includes('linear-gradient(135deg,#35204e')&&
+ !page.includes('Пейзаж:'),
+ 'Hotel placeholder must be branded artwork, not a photograph of a country');
 assert.ok(page.includes('async function approvedPartnerPreviewPhoto(x)'),'Allow only individually approved hotel CDN image feeds');
 assert.ok(page.includes('e.rights_verified!==true'),'Hotel partner rights must be checked');
 assert.ok(page.includes('img.referrerPolicy="no-referrer"'),'Do not leak referral context to photo host');
-assert.ok(page.includes('Проверенная фотография гостиницы пока недоступна'),'Missing hotel photo should be disclosed');
+assert.ok(page.includes('Фотография отеля проверяется'),
+ 'A missing verified hotel photo must have an explicit non-photographic placeholder');
 assert.ok(!page.includes('landscape filetype:bitmap'),'Do not search scenery as hotel photographs');
-assert.ok(page.includes('area.replaceChildren(plain)')&&page.includes('renderDestinationPhoto(area,x,fallback)'),
- 'Broken images must fall back to labelled destination imagery or a plain placeholder');
+assert.ok(page.includes('showVerifiedPlaceholder()')&&
+ page.includes('if(!photo){showVerifiedPlaceholder();return;}')&&
+ !page.includes('showDestination()'),
+ 'Missing or broken hotel photos must fall back to a non-photographic branded placeholder');
 assert.ok(page.includes('nextVerifiedPhoto()'),'Card must retry another rights-verified photo of the same hotel');
 assert.ok(page.includes('fallbackSrc:alternate&&alternate!==src?alternate:null'),
   'Never retry an HTML attribution URL as an image');

@@ -9,6 +9,7 @@ import json
 import hashlib
 import re
 from collections import Counter
+import catalog_property_identity as property_identity
 from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -143,6 +144,10 @@ def main():
         require(bool(checkout.get("api_base_url") and checkout.get("seller_legal_name")
                      and checkout.get("terms_url") and checkout.get("privacy_url")),
                 "UNSAFE_LIVE_CHECKOUT_CONFIG")
+    try:
+        proof=property_identity.verify_catalog_hotel_identity(records,directory)
+    except property_identity.IdentityMismatch as exc:
+        raise SystemExit("JAMAICA_NO_NODE_QA_HOLD="+str(exc)) from exc
     hotel_ids={str(x.get("id")) for x in directory.get("hotels",[]) if isinstance(x,dict)}
     ids=set()
     by_country=Counter()
@@ -183,6 +188,8 @@ def main():
     expected=preview.get("indicative_two_adult_rub_count")
     if expected is not None:
         require(expected==reference_prices,"REFERENCE_PRICE_COUNT_MISMATCH")
+    print("HOTEL_IDENTITIES_EXACT_MATCHED="+str(proof["checked"]))
+    print("HOTEL_ID_NAME_COUNTRY_MISMATCHES=0")
     print("JAMAICA_NO_NODE_PREFLIGHT_PASS")
     print("COUNTRY_DIRECTORY="+str(directory["total_countries"]))
     print("TOUR_PREVIEWS="+str(len(records)))

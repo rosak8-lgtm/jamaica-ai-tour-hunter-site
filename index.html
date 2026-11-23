@@ -598,8 +598,8 @@ async function curatedPreviewPhoto(x){
   }
   const entries=await curatedPhotoIndexPromise;
   const entry=entries[String(x.hotel_id)];
-  if(!entry||(entry.name!==x.hotel&&!entry.name.startsWith(x.hotel+" ("))||
-     entry.country!==x.country||!Array.isArray(entry.photos))return [];
+  if(!entry||entry.name!==x.hotel||entry.country!==x.country||
+     !Array.isArray(entry.photos))return [];
   const candidates=[];
   for(const photo of entry.photos){
    if(!photo||typeof photo.file!=="string"||
@@ -617,6 +617,7 @@ async function curatedPreviewPhoto(x){
      fallbackSrc:filePath+"?width=330",
      source:photo.source,credit:photo.author.trim().slice(0,90),
      license,alt:photo.title,kind:"hotel",
+     hotel_id:String(x.hotel_id),hotel_name:x.hotel,country:x.country,
      label:photo.kind==="hotel_exterior"?"Фото здания выбранного отеля":
       "Общественная зона выбранного отеля"});
    if(candidates.length>=8)break;
@@ -655,8 +656,10 @@ async function approvedPartnerPreviewPhoto(x){
      typeof e.rights_verified_at!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(e.rights_verified_at)||
      !Array.isArray(e.approved_image_hosts)||!Array.isArray(e.approved_source_hosts)||
      !Array.isArray(e.photos))return [];
-  if(e.rights_expires_at&&(!/^\d{4}-\d{2}-\d{2}$/.test(e.rights_expires_at)||
-     Date.now()>Date.parse(e.rights_expires_at+"T23:59:59Z")))return [];
+  if(typeof e.rights_expires_at!=="string"||
+     !/^\d{4}-\d{2}-\d{2}$/.test(e.rights_expires_at)||
+     !Number.isFinite(Date.parse(e.rights_expires_at+"T23:59:59Z"))||
+     Date.now()>Date.parse(e.rights_expires_at+"T23:59:59Z"))return [];
   const candidates=[];
   for(const p of e.photos.slice(0,16)){
    if(!p||p.license!=="contract-authorized"||
@@ -672,81 +675,41 @@ async function approvedPartnerPreviewPhoto(x){
    candidates.push({src,source,
      fallbackSrc:alternate&&alternate!==src?alternate:null,
      license:"Разрешение правообладателя",
-     credit:p.credit.slice(0,100),alt:p.alt,kind:"hotel",label:"Фото выбранного отеля"});
+     credit:p.credit.slice(0,100),alt:p.alt,kind:"hotel",
+     hotel_id:String(x.hotel_id),hotel_name:x.hotel,country:x.country,
+     label:"Фото выбранного отеля"});
    if(candidates.length>=8)break;
   }
   return candidates;
  }catch(e){return [];}
 }
-// Rights-reviewed destination landscapes: never claim these are photos of
-// the chosen hotel. The hotel-specific feed is ALWAYS attempted first.
-let jamaicaDestinationPhotosPromise=null;
-async function destinationPhotoManifest(){
- if(!jamaicaDestinationPhotosPromise){
-  jamaicaDestinationPhotosPromise=fetch("./assets/jamaica-destination-media.json",{cache:"force-cache"})
-   .then(r=>{if(!r.ok)throw Error("DESTINATION_MEDIA");return r.json();})
-   .then(d=>d.schema==="jamaica.destination-media.v1"&&d.countries&&
-     typeof d.countries==="object"?d.countries:{})
-   .catch(()=>({}));
- }
- return jamaicaDestinationPhotosPromise;
-}
-async function renderDestinationPhoto(area,x,plain){
- try{
-  const e=(await destinationPhotoManifest())[x.country];
-  if(!area.isConnected||!e)return;
-  if(e.kind!=="destination_not_hotel"||typeof e.file!=="string"||
-     !/^[\p{L}\p{N}_.', -]{6,180}\.(?:jpe?g|png|webp)$/iu.test(e.file)||
-     e.file.includes("..")||
-     !["CC BY 4.0","CC BY 3.0","CC BY-SA 4.0"].includes(e.license)||
-     typeof e.author!=="string"||e.author.length<1||e.author.length>120||
-     e.source!=="https://commons.wikimedia.org/wiki/File:"+e.file.replaceAll(" ","_")||
-     typeof e.license_url!=="string"||!e.license_url.startsWith("https://creativecommons.org/licenses/"))return;
-  const url="https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(e.file);
-  const img=el("img");
-  img.alt="Фотография направления "+x.country+", не выбранной гостиницы";
-  img.loading="lazy";img.decoding="async";img.referrerPolicy="no-referrer";
-  // Keep the entire photo unobstructed: captions and rights go below it.
-  const frame=el("div","previewPhotoFrame");
-  frame.append(img);
-  const meta=el("div","previewPhotoMeta");
-  // No intrusive disclaimer ribbon. The concise source link identifies the
-  // actual scenery location; ALT keeps the not-a-hotel disclosure explicit.
-  const place=typeof e.place==="string"&&e.place.trim()?e.place.trim():x.country;
-  const credit=el("a","mediaSourceCredit","Пейзаж: "+place+" · © "+e.author+" · источник");
-  credit.href=e.source;credit.rel="noopener noreferrer";credit.target="_blank";
-  credit.title="Пейзаж направления, не фотография выбранного отеля. Оригинал Wikimedia Commons: "+e.file;
-  const license=el("a","mediaLicenseLink",e.license);
-  license.href=e.license_url;license.rel="noopener noreferrer";license.target="_blank";
-  license.title="Условия лицензии "+e.license;
-  meta.append(credit,license);
-  let smaller=false;
-  img.addEventListener("error",()=>{
-   if(!smaller){smaller=true;img.src=url+"?width=330";return;}
-   if(area.isConnected)area.replaceChildren(plain);
-  });
-  if(area.isConnected)area.replaceChildren(frame,meta);
-  img.src=url+"?width=500";
- }catch(e){if(area.isConnected)area.replaceChildren(plain);}
-}
+// Never use country scenery as a hotel photo on a bookable-intent tour card.
+// Only photos proven to depict this exact property may appear below.
 function previewCardPhoto(x){
  const area=el("div","previewMedia");
- const fallback=el("div","previewScenePlaceholder",
-   "🏨 "+x.hotel+" · Проверенная фотография гостиницы пока недоступна");
+ const fallback=el("div","previewScenePlaceholder");
+ const emblem=el("span","previewPlaceholderEmblem","J");
+ emblem.setAttribute("aria-hidden","true");
+ const details=el("div","previewPlaceholderText");
+ details.append(el("strong","","Фотография отеля проверяется"));
+ details.append(el("small","","Изображение будет показано только после подтверждения соответствия "+x.hotel));
+ fallback.append(emblem,details);
+ area.dataset.hotelId=String(x.hotel_id);
+ area.dataset.mediaPolicy="EXACT_HOTEL_ONLY";
  area.append(fallback);
  const candidates=[],seen=new Set();
- let cursor=0,fallbackStarted=false;
- function showDestination(){
-  if(fallbackStarted)return;
-  fallbackStarted=true;
-  renderDestinationPhoto(area,x,fallback);
+ let cursor=0;
+ function showVerifiedPlaceholder(){
+  if(area.isConnected)area.replaceChildren(fallback);
  }
  function nextVerifiedPhoto(){
   if(!area.isConnected)return;
   const photo=candidates[cursor++];
-  if(!photo){showDestination();return;}
+  if(!photo){showVerifiedPlaceholder();return;}
   const img=el("img");
   img.alt=photo.alt;img.loading="lazy";img.decoding="async";
+  img.dataset.hotelId=String(x.hotel_id);
+  img.dataset.mediaEvidence="EXACT_PROPERTY_LICENSED";
   img.referrerPolicy="no-referrer";
   let retried=false;
   img.addEventListener("error",()=>{
@@ -776,7 +739,11 @@ function previewCardPhoto(x){
  function addCandidates(photos){
   for(const p of photos||[]){
    if(candidates.length>=12)break;
-   if(!p||typeof p.src!=="string"||seen.has(p.src))continue;
+   if(!p||p.kind!=="hotel"||p.hotel_id!==String(x.hotel_id)||
+      p.hotel_name!==x.hotel||p.country!==x.country||
+      typeof p.src!=="string"||typeof p.source!=="string"||
+      typeof p.credit!=="string"||typeof p.license!=="string"||
+      seen.has(p.src))continue;
    seen.add(p.src);candidates.push(p);
   }
  }
@@ -796,10 +763,12 @@ function previewCardPhoto(x){
      fallbackSrc:p.src.endsWith("?width=500")?
         p.src.slice(0,-3)+"330":null,
      license:p.license,licenseUrl:p.license_url,
-     alt:p.alt,kind:"hotel",label:"Фото выбранного отеля"})));
+     alt:p.alt,kind:"hotel",
+     hotel_id:String(x.hotel_id),hotel_name:x.hotel,country:x.country,
+     label:"Фото выбранного отеля"})));
   }
-  if(candidates.length)nextVerifiedPhoto();else showDestination();
- })().catch(()=>showDestination());
+  if(candidates.length)nextVerifiedPhoto();else showVerifiedPlaceholder();
+ })().catch(()=>showVerifiedPlaceholder());
  return area;
 }
 function interleaveCountries(rows){

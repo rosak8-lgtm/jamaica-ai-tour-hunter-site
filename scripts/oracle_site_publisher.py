@@ -30,6 +30,7 @@ else:
 import recent_preview_catalog as recent
 import catalog_size_budget as byte_limit
 import bot_visual_sidecar as visual
+import catalog_property_identity as identity
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
 RUNROOT = Path.home()/".local"/"share"/"jamaica-oracle-catalog"
@@ -399,6 +400,12 @@ def publish(env):
                 if item["row"]["id"] in retained_ids]}
     log("JAMAICA_PREVIEWS_DROPPED_BY_BYTE_BUDGET",dropped_by_budget)
     count=validate(new,directory)
+    # Fail closed BEFORE Git staging and publication if ANY of the up to
+    # 60,000 source-backed hotel cards mismatches the official hotel ID/name/
+    # country crosswalk. Do not guess or silently swap properties/photos.
+    proof=identity.verify_catalog_hotel_identity(new["previews"],directory)
+    log("JAMAICA_HOTEL_IDENTITY_VERIFIED_ROWS",proof["checked"])
+    log("JAMAICA_HOTEL_IDENTITY_VERIFIED_COUNTRIES",proof["countries"])
     public_root,public_chunks=make_sharded_catalog(new)
     validate(public_root,directory)
     # Optional authenticated V183 browser-event bridge. A file from the bot

@@ -206,50 +206,57 @@ def main():
                 ensure(len(shown)>=3,"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
                 ensure(page.locator("#previewCards .previewMedia").count()>0,
                        "VISUAL_TOUR_CARD_MISSING")
-                if counts.get("Таиланд",0)>0:
-                    thai_cards=page.locator("#previewCards article.offerCard").filter(has_text="Таиланд ·")
-                    ensure(thai_cards.count()>0,"THAILAND_CARD_MISSING")
-                    # Destination photography is labelled via alt and a concise
-                    # real-place source link below the photo, not a large ribbon.
-                    thai_cards.first.locator(".previewPhotoMeta .mediaSourceCredit").wait_for(timeout=14000)
-                    ensure(thai_cards.first.locator(".destinationPhotoLabel").count()==0,
-                           "REDUNDANT_SCENERY_WARNING_RIBBON_RETURNED")
-                    ensure("Пейзаж:" in thai_cards.first.locator(".mediaSourceCredit").inner_text(),
-                           "DESTINATION_PHOTO_LOCATION_CREDIT_MISSING")
-                    ensure("не выбранной гостиницы" in thai_cards.first.locator(".previewMedia img").first.get_attribute("alt"),
-                           "DESTINATION_ALT_MUST_NOT_CLAIM_HOTEL")
-                    thai_cards.first.locator(".previewMedia img").first.scroll_into_view_if_needed()
-                    page.wait_for_function(
-                      "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
-                      ".some(img=>img.complete&&img.naturalWidth>0)",timeout=14000)
-                    ensure(thai_cards.first.locator(".mediaSourceCredit").count()==1,
-                           "DESTINATION_PHOTO_AUTHOR_AND_LICENSE_MISSING")
-                    ensure(thai_cards.first.locator(".previewPhotoMeta .mediaLicenseLink").count()==1,
-                           "DESTINATION_LICENSE_LINK_MISSING")
-                    clean_image=thai_cards.first.evaluate("""card => {
-                      const frame=card.querySelector('.previewPhotoFrame');
-                      const footer=card.querySelector('.previewPhotoMeta');
-                      const photo=frame?.querySelector('img');
-                      if(!frame||!footer||!photo)return false;
-                      const imageRect=frame.getBoundingClientRect();
-                      const footerRect=footer.getBoundingClientRect();
-                      const attribution=card.querySelector('.previewPhotoMeta .mediaSourceCredit');
-                      return footerRect.top>=imageRect.bottom-1 &&
-                        footerRect.height>0 &&
-                        footer.contains(attribution) &&
-                        !card.querySelector('.destinationPhotoLabel') &&
-                        getComputedStyle(footer).position!=='absolute' &&
-                        getComputedStyle(attribution).position!=='absolute';
+                # A Beijing hotel cannot show a Shanghai skyline or a
+                # Pattaya / Abkhazia destination image as if it were the hotel.
+                # No card, in ANY country, may render an image without exact
+                # hotel ID linkage and independent licensed photo evidence.
+                page.wait_for_timeout(650)
+                photo_audit=page.locator(
+                    "#previewCards article.offerCard").evaluate_all("""cards => {
+                     let photos=0,placeholders=0,bad=0;
+                     for(const card of cards){
+                       const area=card.querySelector('.previewMedia');
+                       const hotelLink=card.querySelector('a.hotelLink');
+                       const id=hotelLink?.getAttribute('href')?.split('id=')[1];
+                       const imgs=area?.querySelectorAll('img')||[];
+                       if(!area||!id||area.dataset.mediaPolicy!=='EXACT_HOTEL_ONLY'||
+                          area.dataset.hotelId!==id)bad++;
+                       if(imgs.length){
+                         photos+=imgs.length;
+                         for(const img of imgs){
+                           if(img.dataset.mediaEvidence!=='EXACT_PROPERTY_LICENSED'||
+                              img.dataset.hotelId!==id||
+                              !area.querySelector('.hotelPhotoLabel')||
+                              !area.querySelector('.mediaSourceCredit'))bad++;
+                         }
+                       }else{
+                         placeholders++;
+                         if(!area.querySelector('.previewScenePlaceholder')&&
+                            !area.querySelector('.previewPlaceholderText'))bad++;
+                       }
+                       if(card.textContent.includes('Пейзаж:')||
+                          area?.querySelector('a[href*="jamaica-destination"]'))bad++;
+                     }
+                     return {cards:cards.length,photos,placeholders,bad};
                     }""")
-                    ensure(clean_image,"CAPTIONS_MUST_APPEAR_BELOW_NOT_ON_TOP_OF_PHOTO")
+                ensure(photo_audit["cards"]>0 and photo_audit["bad"]==0,
+                       "WRONG_HOTEL_IMAGE_OR_ORIGIN_IN_TOUR_CARD")
+                ensure(not page.locator(
+                   "#previewCards img[alt*='Фотография направления']").count(),
+                   "DESTINATION_LANDSCAPE_WAS_DISPLAYED_AS_HOTEL_MEDIA")
+                if counts.get("Таиланд",0)>0:
+                    thai_cards=page.locator("#previewCards article.offerCard").filter(
+                        has_text="Таиланд ·")
+                    ensure(thai_cards.count()>0,"THAILAND_CARD_MISSING")
                 if counts.get("Абхазия",0)>0:
-                    abkh=page.locator("#previewCards article.offerCard").filter(has_text="Абхазия ·")
-                    abkh.first.locator(".previewPhotoMeta .mediaSourceCredit").wait_for(timeout=14000)
-                    ensure(abkh.first.locator(".destinationPhotoLabel").count()==0,
-                           "SCENERY_LABEL_SHOULD_NOT_CROWD_ABKHAZIA_CARD")
-                    ensure(abkh.first.locator(".previewMedia img").count()==1,
-                           "ABKHAZIA_PHOTO_NOT_SHOWN_IN_FIRST_RESULT")
-
+                    abkh=page.locator("#previewCards article.offerCard").filter(
+                        has_text="Абхазия ·")
+                    ensure(abkh.count()>0,"ABKHAZIA_CARD_MISSING")
+                    ensure(abkh.first.locator(".previewMedia img").count()==0,
+                           "UNVERIFIED_ABKHAZIA_PROPERTY_PHOTO_PUBLISHED")
+                print("EXACT_HOTEL_CARD_MEDIA_POLICY_PASS="+
+                      str(photo_audit["cards"])+" cards checked; "+
+                      str(photo_audit["photos"])+" sourced photos")
                 # Price sort must order known two-adult references, not departure dates.
                 page.locator("#previewSort").select_option("price")
                 texts=page.locator("#previewCards article.offerCard strong").all_text_contents()
