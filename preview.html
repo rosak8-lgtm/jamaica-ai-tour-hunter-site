@@ -136,7 +136,7 @@ function showSelection(p,feed,directory){
       p.price_observed_at_utc&&Date.now()-Date.parse(p.price_observed_at_utc)<=15*60*1000&&
       Date.now()-Date.parse(p.price_observed_at_utc)>=-30000&&p.price_reference_party==="TWO_ADULTS"&&
      Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
-    fact("Цена BG при проверке на 2 взрослых",
+    fact("Цена на момент проверки на 2 взрослых",
          new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (на момент наблюдения ботом, требует проверки перед договором)");
     fact("Средняя цена при поездке вдвоём",
          new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(p.price_reference_rub/2)+" ₽ на человека — не цена отдельного одноместного тура");
