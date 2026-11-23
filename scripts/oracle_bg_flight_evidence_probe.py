@@ -7,6 +7,7 @@ flight IDs, passenger info, HTML, auth tokens or supplier URLs are exported.
 from __future__ import annotations
 import argparse
 import json
+import os
 import urllib.parse
 import urllib.error
 import sys
@@ -34,7 +35,8 @@ def detailed_url(listing,country_id):
         ("https","export.bgoperator.ru","/partners",
          urllib.parse.urlencode(p),""))
 
-def inspect(directory,api,*,country_name:str="",max_lists:int=1,probe_slot:int=0):
+def inspect(directory,api,*,country_name:str="",country_names=None,
+            max_lists:int=1,probe_slot:int=0):
     # This is an operator-hosted READ ONLY diagnostic, not an inventory promise.
     # Explicit bounds protect supplier rate limits and time on old Oracle.
     if (type(max_lists) is not int or not 1<=max_lists<=5 or
@@ -46,12 +48,24 @@ def inspect(directory,api,*,country_name:str="",max_lists:int=1,probe_slot:int=0
     countries=directory.get("countries",[])
     if not isinstance(countries,list) or len(countries)>300:
         raise bg.SyncHold("FLIGHT_COUNTRY_DIRECTORY_INVALID")
-    eligible=[c for c in countries
-              if isinstance(c,dict) and c.get("has_tour_catalog") is True
-              and isinstance(c.get("name"),str) and
-              isinstance(c.get("id"),str) and
-              (c["name"]==country_name if country_name else
-               bg.CITY_ID in c.get("origins",[]))]
+    official=[c for c in countries if isinstance(c,dict)
+              and c.get("has_tour_catalog") is True
+              and isinstance(c.get("name"),str)
+              and isinstance(c.get("id"),str)]
+    allowed_names={c["name"] for c in official}
+    if country_names is not None:
+        if (country_name or type(country_names) is not list or
+            not 1<=len(country_names)<=20 or
+            any(type(name) is not str or name not in allowed_names
+                for name in country_names) or
+            len(set(country_names))!=len(country_names)):
+            raise bg.SyncHold("OBSERVED_COUNTRY_SCOPE_INVALID")
+        selected_names=set(country_names)
+        eligible=[c for c in official if c["name"] in selected_names]
+    else:
+        eligible=[c for c in official
+                  if (c["name"]==country_name if country_name else
+                      bg.CITY_ID in c.get("origins",[]))]
     if not eligible or len(eligible)>80:
         raise bg.SyncHold("FLIGHT_COUNTRY_SCOPE_INVALID")
     # An exact named extra country may lack an old origins[] annotation.
@@ -133,11 +147,30 @@ def inspect(directory,api,*,country_name:str="",max_lists:int=1,probe_slot:int=0
         time.sleep(.5)
     return reports
 
+def read_owner_only_country_names(path:str):
+    """Explicit 0600 public-country list staged from validated source shards."""
+    name=Path(path)
+    if not name.is_file() or name.is_symlink():
+        raise bg.SyncHold("OBSERVED_COUNTRY_FILE_INVALID")
+    info=name.stat()
+    if (info.st_uid!=os.geteuid() or info.st_mode&0o077 or
+        not 2<=info.st_size<=4000):
+        raise bg.SyncHold("OBSERVED_COUNTRY_FILE_UNSAFE")
+    value=json.loads(name.read_text(encoding="utf-8"))
+    if (type(value) is not list or not 1<=len(value)<=20 or
+        any(type(x) is not str or not 1<=len(x)<=120 or
+            any(c in x for c in ("\n","\r","\x00")) for x in value) or
+        len(set(value))!=len(value)):
+        raise bg.SyncHold("OBSERVED_COUNTRY_LIST_INVALID")
+    return value
+
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--directory",required=True)
     p.add_argument("--credentials",default="")
     p.add_argument("--country",default="")
+    p.add_argument("--countries-file",default="")
     p.add_argument("--max-lists",type=int,default=1)
     p.add_argument("--probe-slot",type=int,default=0)
     args=p.parse_args()
@@ -146,9 +179,11 @@ def main():
         raise bg.SyncHold("DIRECTORY_SCHEMA_INVALID")
     login,password=bg.read_secret(bg.credentials_path(args.credentials))
     bg.BASE="https://export.bgoperator.ru/"
+    selected_names=(read_owner_only_country_names(args.countries_file)
+                    if args.countries_file else None)
     reports=inspect(directory,bg.ApiClient(login,password),
-                    country_name=args.country,max_lists=args.max_lists,
-                    probe_slot=args.probe_slot)
+                    country_name=args.country,country_names=selected_names,
+                    max_lists=args.max_lists,probe_slot=args.probe_slot)
     print("JAMAICA_FLIGHT_EVIDENCE_READ_ONLY_V1")
     print("COUNTRIES_CHECKED="+str(len(reports)))
     print("COUNTRIES_WITH_BOTH_GREEN_EVIDENCE="+str(sum(r["both_green"]>0 for r in reports)))
