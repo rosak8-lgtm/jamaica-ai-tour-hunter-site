@@ -806,6 +806,7 @@ function interleaveCountries(rows){
  }
  return output;
 }
+let quickCountriesExpanded=false;
 function renderCountryShortcuts(chosen){
  const counts=new Map();
  for(const x of previewRecords)counts.set(x.country,(counts.get(x.country)||0)+1);
@@ -825,8 +826,21 @@ function renderCountryShortcuts(chosen){
    buttons.append(control);
  }
  addCountry("","Все направления");
- for(const name of names.slice(0,10)){
+ const visible=quickCountriesExpanded?names:names.slice(0,18);
+ for(const name of visible){
    addCountry(name,name+" · "+counts.get(name).toLocaleString("ru-RU"));
+ }
+ if(names.length>18){
+   const more=el("button","quickCountryChip quickCountryMore",
+     quickCountriesExpanded?"Свернуть список":
+       "Ещё "+(names.length-18)+" "+(names.length-18===1?"страна":"стран"));
+   more.type="button";
+   more.setAttribute("aria-expanded",String(quickCountriesExpanded));
+   more.addEventListener("click",()=>{
+     quickCountriesExpanded=!quickCountriesExpanded;
+     renderCountryShortcuts(chosen);
+   });
+   buttons.append(more);
  }
  $("quickCountries").replaceChildren(buttons);
 }
