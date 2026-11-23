@@ -13,12 +13,12 @@ def make(q0="a0",q1="90"):
 
 class Tests(unittest.TestCase):
     def test_two_green_economy_flights(self):
-        for out,ret in (("a0","90"),("11","r0"),("a4","a0")):
+        for out,ret in (("a0","90"),("11","90"),("a4","a0")):
             result=flight_pair_evidence(make(out,ret))
             self.assertTrue(result["both_green"])
             self.assertEqual(result["status"],"BOTH_AVAILABLE_AT_SNAPSHOT")
     def test_zero_request_or_no_seats_is_not_green(self):
-        for q in ("00","0a","c0","cc","0",""):
+        for q in ("00","0a","c0","cc","0","","r0","a?"):
             self.assertFalse(economy_q_available(q))
             self.assertFalse(flight_pair_evidence(make(q,"a0"))["both_green"])
     def test_must_check_both_outbound_and_return(self):
@@ -45,8 +45,13 @@ class Tests(unittest.TestCase):
         self.assertFalse(flight_pair_evidence(x)["both_green"])
     def test_malformed_business_class_indicator_not_accepted(self):
         self.assertFalse(economy_q_available("a?"))
-    def test_regular_flight_q_not_booking_confirmation(self):
+    def test_undocumented_r_flight_marker_cannot_turn_plane_green(self):
         r=flight_pair_evidence(make("r0","r0"))
+        self.assertFalse(r["both_green"])
+        self.assertEqual(r["status"],"NOT_CONFIRMED")
+        self.assertNotIn("bookable",r)
+    def test_two_green_snapshot_is_not_booking_confirmation(self):
+        r=flight_pair_evidence(make("a0","90"))
         self.assertTrue(r["both_green"])
         self.assertNotIn("bookable",r)
 if __name__=="__main__":unittest.main()
