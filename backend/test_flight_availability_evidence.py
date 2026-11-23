@@ -2,7 +2,10 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/"scripts"))
-from flight_availability_evidence import economy_q_available,flight_pair_evidence
+from flight_availability_evidence import (
+    economy_q_available,economy_q_reason,flight_pair_evidence,
+    flight_pair_reasons
+)
 
 def make(q0="a0",q1="90"):
     return {"tourComposition":[
@@ -39,6 +42,25 @@ class Tests(unittest.TestCase):
         r=flight_pair_evidence(x)
         self.assertFalse(r["both_green"])
         self.assertEqual(r["status"],"STOP_SALE")
+    def test_provider_documented_r_is_regular_not_numeric_green(self):
+        self.assertEqual(economy_q_reason("r0"),"REGULAR_NOT_SEAT_VERIFIED")
+        self.assertFalse(economy_q_available("r0"))
+        self.assertEqual(economy_q_reason("a0"),"GREEN")
+        self.assertEqual(economy_q_reason("00"),"ON_REQUEST")
+        self.assertEqual(economy_q_reason("0"),"ON_REQUEST")
+        self.assertEqual(economy_q_reason("cc"),"SOLD_OUT")
+        self.assertEqual(economy_q_reason("??"),"UNKNOWN")
+        self.assertEqual(flight_pair_reasons(make("r0","00")),
+                         ("REGULAR_NOT_SEAT_VERIFIED","ON_REQUEST"))
+        self.assertEqual(flight_pair_reasons(make("a0","90")),
+                         ("GREEN","GREEN"))
+
+    def test_missing_or_stop_flights_not_classified_as_green(self):
+        self.assertEqual(flight_pair_reasons({"isstop":True,
+                         "tourComposition":make()["tourComposition"]}),
+                         ("UNKNOWN","UNKNOWN"))
+        self.assertEqual(flight_pair_reasons({}),("UNKNOWN","UNKNOWN"))
+
     def test_html_flight_icons_not_implicitly_evidence(self):
         x={"flights":'<span class="green-plane">green</span>',
            "tourComposition":[]}
