@@ -88,7 +88,7 @@ async function allPreviews(feed,onBatch){
   }
   if(onBatch)onBatch(rows,Math.min(pos+SHARD_WINDOW,parts.length),parts.length);
  }
- if(failures||rows.length!==feed.total_published_previews)
+ if(failures||(parts.length&&rows.length!==feed.total_published_previews))
   throw Error("INCOMPLETE_SHARDED_CATALOG");
  return rows;
 }
