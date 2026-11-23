@@ -532,9 +532,12 @@ def main():
                 page.route("https://commons.wikimedia.org/wiki/Special:FilePath/**",
                   lambda route: route.fulfill(
                      status=200,content_type="image/png",body=pixel))
-                # Three of the real published preview hotels now have exact,
-                # licensed Wikimedia photos (not only unrelated directory pages).
+                # A particular supplier property may disappear from a
+                # rotating source feed. Test exact licensed card images WHEN
+                # that hotel is actually offered in the full current catalog,
+                # never manufacture an offer to satisfy a screenshot test.
                 from urllib.parse import urlencode
+                checked_preview_hotel_photos=0
                 for country,name,hid in (
                     ("Китай","BAIYUN HOTEL GUANGZHOU","102618075164"),
                     ("Китай","CHINA HOTEL GUANGZHOU","102624989868"),
@@ -542,35 +545,32 @@ def main():
                 ):
                     page.goto(base+"?"+urlencode({"country":country,"hotel":name}),
                               wait_until="domcontentloaded")
-                    page.locator("#previewCards .previewMedia img").first.wait_for(timeout=22000)
-                    # Source cards can be atomically rerendered when another
-                    # real catalog shard arrives. Scroll the *current* image
-                    # within the page, without retaining a detached node.
+                    page.wait_for_function(
+                        "()=>(document.querySelector('#previewCoverage')?.textContent||'').includes('В браузере доступны все')",
+                        timeout=50000)
+                    offers=page.locator("#previewCards article.offerCard")
+                    if offers.count()==0:
+                        ensure("нет подходящих вариантов" in
+                               page.locator("#previewCards").inner_text(),
+                               "SOURCE_ABSENT_MUST_NOT_FABRICATE_OFFER_"+hid)
+                        print("EXACT_HOTEL_NOT_IN_CURRENT_SOURCE="+hid)
+                        continue
+                    checked_preview_hotel_photos+=1
+                    ensure(offers.first.locator(".previewMedia img").count()>0,
+                           "CURRENT_EXACT_HOTEL_CARD_PHOTO_MISSING_"+hid)
+                    # Atomic browser-side scroll survives async replacement
+                    # of a preview card by a refreshed source selection.
                     page.evaluate("""() => {
                       document.querySelector('#previewCards .previewMedia img')
                         ?.scrollIntoView({block:'center'});
                     }""")
-                    try:
-                        page.wait_for_function(
-                          "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
-                          ".some(img=>img.complete&&img.naturalWidth>0)",timeout=20000)
-                    except Exception:
-                        details=page.evaluate("""() => ({
-                         country:document.getElementById('destination').value,
-                         hotel:document.getElementById('hotelSearch').value,
-                         cardCount:document.querySelectorAll('#previewCards article').length,
-                         cards:[...document.querySelectorAll('#previewCards article')].slice(0,2).map(c=>c.innerText.slice(0,140)),
-                         imgs:[...document.querySelectorAll('#previewCards .previewMedia img')].slice(0,4).map(img=>({
-                           src:img.src,complete:img.complete,width:img.naturalWidth
-                         })),
-                         placeholders:[...document.querySelectorAll('#previewCards .previewScenePlaceholder')].slice(0,2).map(e=>e.textContent),
-                         notice:document.getElementById('previewCount')?.textContent
-                        })""")
-                        print("EXACT_HOTEL_PHOTO_DEBUG="+str((hid,details)),flush=True)
-                        raise
+                    page.wait_for_function(
+                       "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
+                       ".some(img=>img.complete&&img.naturalWidth>0)",timeout=20000)
                     ensure(page.locator("#previewCards .mediaSourceCredit").count()>=1,
                            "EXACT_PREVIEW_HOTEL_PHOTO_SOURCE_MISSING_"+hid)
-                print("LIVE_PREVIEW_EXACT_HOTEL_PHOTOS_THREE_PROPERTIES_PASS")
+                print("LIVE_PREVIEW_SOURCE_PRESENT_EXACT_HOTEL_PHOTOS_PASS="+
+                      str(checked_preview_hotel_photos))
 
                 # When the actual hotel images fail, do not replace them
                 # with photos of Guangzhou skyline or unrelated hotels.
