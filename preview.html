@@ -48,6 +48,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
    <h1 id="heading">Загружаем выбранный вариант…</h1>
    <p class="sub" id="subtitle">Данные подбираются по конкретному прайс-листу</p>
    <div class="notice" id="notice" role="status">Это предварительный вариант, а не подтверждённый тур. Итоговая цена, номер, рейсы и наличие подлежат повторной проверке перед оформлением.</div>
+    <p class="sub" id="visualDetailStatus" role="status" aria-live="polite">Проверяем, выбирал ли бот маршрут «ЛУЧШАЯ ЦЕНА» и два самолётика именно для этого варианта.</p>
    <section class="card"><h2>Параметры поездки</h2><div class="grid" id="facts"></div></section>
    <section class="card"><h2>Отель и размещение</h2>
     <p class="sub" id="hotelInfo">Загружаем справочник гостиниц…</p>
@@ -71,6 +72,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
  </section>
 </main>
 <script src="./scripts/catalog-shards.js"></script>
+<script src="./scripts/visual-selection.js"></script>
 <script src="./scripts/traveler-party.js"></script>
 <script src="./scripts/preview-alternatives.js"></script>
 <script>
@@ -90,6 +92,21 @@ function ruNoun(n,one,few,many){
 function partyLabel(){return Travelers.label(rooms);}
 function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
 function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
+async function visualForSelected(chosen){
+ try{
+   const r=await fetch("./tour-visual-evidence.json",{cache:"no-store"});
+   if(!r.ok)throw Error("VISUAL_NO_SOURCE");
+   const proof=window.JamaicaVisualSelection.read(await r.json()).get(chosen.id);
+   if(proof){
+     const at=new Date(proof.observed_at_utc).toLocaleString("ru-RU",{
+       dateStyle:"short",timeStyle:"short"});
+     $("visualDetailStatus").textContent="✓ Бот наблюдал маршрут «ЛУЧШАЯ ЦЕНА» и два зелёных перелёта для этой записи "+
+       at+". Визуальное наблюдение не является бронью. Итоговая цена, места, условия договора требуют свежего подтверждения.";
+     return;
+   }
+ }catch(e){/* Missing or invalid proof is never invented. */}
+ $("visualDetailStatus").textContent="Точное свежее совпадение метки и обоих рейсов для этой даты, отеля и номера ещё не найдено. Смотрите другие страны и даты в поиске.";
+}
 function showSelection(p,feed,directory){
   $("heading").textContent=p.country+" — "+p.hotel;
   if(!rooms){
@@ -206,6 +223,7 @@ async function init(){
      }
      selected=found;
      showSelection(found,feed,directory);
+     void visualForSelected(found);
     }
     showAlternatives(rows,selected,done,total);
    });
