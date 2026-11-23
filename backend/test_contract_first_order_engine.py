@@ -11,7 +11,9 @@ def offer():
             "publish_approved":True,"quote_verified":True,
       "availability_verified":True,"flights_out_green":True,"flights_back_green":True,
       "price_scope_verified":True,"total_two_verified":True,
-      "best_price_required":False,"total_rub":95000,
+      "sale_policy":"BG_BEST_PRICE_TWO_FLIGHTS",
+      "flight_pair_evidence_verified":True,
+      "best_price_required":True,"best_price_verified":True,"total_rub":95000,
       "adults":2,"children":0,
       "origin":"Иркутск","destination":"Индонезия",
       "hotel":"CI Test Hotel","hotel_id":"102610001486","room":"DBL HB",
@@ -24,7 +26,9 @@ def quote(price=95000,status="IN_STOCK",**patch):
        "hotel_id":o["hotel_id"],"room":o["room"],"depart_date":o["depart_date"],
        "nights":o["nights"],"adults":o["adults"],"children":o["children"],
        "currency":"RUB","total_rub":price,"flight_out_available":True,
-       "flight_back_available":True,"hotel_stop":False,"hotel_status":status,
+       "flight_back_available":True,"flight_pair_evidence_verified":True,
+       "best_price_required":True,"best_price_verified":True,
+       "hotel_stop":False,"hotel_status":status,
        "two_adults_price_verified":True,"supplier_quote_verified":True,
        "expires_at":(datetime.now(timezone.utc)+timedelta(minutes=10)).isoformat()}
     v.update(patch)
@@ -104,6 +108,22 @@ class Tests(unittest.TestCase):
         self.engine.initiate_payment(id)
         self.psp.status="PAID"
         return id
+    def test_bg_quality_marker_or_green_flight_missing_blocks_contract(self):
+        for changes in (
+            {"best_price_required":False},
+            {"best_price_verified":False},
+            {"flight_pair_evidence_verified":False},
+            {"flight_out_available":False},
+            {"flight_back_available":False},
+        ):
+            with self.subTest(changes=changes):
+                self.supplier.checks_by_stage["BEFORE_CONTRACT"]=quote(**changes)
+                with self.assertRaises(NotAvailable):
+                    self.create()
+                self.assertEqual(self.repo.orders,{})
+                self.assertEqual(self.psp.created,[])
+        self.supplier.checks_by_stage={}
+
     def test_other_customer_cannot_sign_private_quote(self):
         self.repo.offer["buyer_id"]="another-customer"
         with self.assertRaises(BadOrder):
