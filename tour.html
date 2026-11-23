@@ -77,7 +77,7 @@ function valid(o){
  if(o.flight_pair_evidence_verified!==true)return false;
  if(o.sale_policy==="BG_BEST_PRICE_TWO_FLIGHTS"){
   if(o.best_price_required!==true||o.best_price_verified!==true)return false;
- }else if(o.sale_policy==="PEGAS_TWO_FLIGHTS"){
+ }else if(o.sale_policy==="STANDARD_TWO_FLIGHTS"){
   if(o.best_price_required!==false)return false;
  }else return false;
  if(!Number.isInteger(o.total_rub)||o.total_rub<=0||o.adults!==2||o.children!==0)return false;
