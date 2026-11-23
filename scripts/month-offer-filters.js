@@ -28,6 +28,7 @@ function monthsFor(rows,{origin="",country="",today=""}={}){
   if(!row||typeof row.depart_date!=="string"||
      !/^20\d{2}-(0[1-9]|1[0-2])-[0-3]\d$/.test(row.depart_date)||
      !range(row.depart_date.slice(0,7))||
+     row.depart_date>range(row.depart_date.slice(0,7)).to||
      typeof row.origin!=="string"||typeof row.country!=="string"||
      (from&&row.origin.trim().toLocaleLowerCase("ru")!==from)||
      (destination&&row.country.trim().toLocaleLowerCase("ru")!==destination)||
