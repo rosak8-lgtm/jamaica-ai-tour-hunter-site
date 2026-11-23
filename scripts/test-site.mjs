@@ -240,8 +240,8 @@ assert.equal(strictOffer({...sample,sale_policy:"UNKNOWN"},now),false);
 assert.equal(strictOffer({...sample,best_price_required:false},now),false);
 assert.equal(strictOffer({...sample,best_price_verified:false},now),false);
 assert.equal(strictOffer({...sample,sale_policy:"STANDARD_TWO_FLIGHTS",
-  best_price_required:false,best_price_verified:false},now),true,
-  'Other operators need independent policy; BG label requirement is BG-only');
+  best_price_required:false,best_price_verified:false},now),false,
+  'The customer requires the best-price label and both green flights on EVERY published offer');
 const previewPriceSort=functionFrom(page,'function previewPriceCompare(a,b){');
 const cheap={depart_date:'2026-12-10',country:'Таиланд',hotel:'A',price_reference_rub:51000};
 const costly={depart_date:'2026-12-01',country:'Китай',hotel:'B',price_reference_rub:99000};
