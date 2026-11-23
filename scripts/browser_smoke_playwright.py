@@ -543,7 +543,13 @@ def main():
                     page.goto(base+"?"+urlencode({"country":country,"hotel":name}),
                               wait_until="domcontentloaded")
                     page.locator("#previewCards .previewMedia img").first.wait_for(timeout=22000)
-                    page.locator("#previewCards .previewMedia img").first.scroll_into_view_if_needed()
+                    # Source cards can be atomically rerendered when another
+                    # real catalog shard arrives. Scroll the *current* image
+                    # within the page, without retaining a detached node.
+                    page.evaluate("""() => {
+                      document.querySelector('#previewCards .previewMedia img')
+                        ?.scrollIntoView({block:'center'});
+                    }""")
                     try:
                         page.wait_for_function(
                           "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
