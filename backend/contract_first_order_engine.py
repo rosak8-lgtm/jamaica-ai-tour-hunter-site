@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 
 from backend.order_engine import (BadOrder, NotAvailable, NotConfigured,
                                   PriceChanged, GatewayError, Merchant, valid_offer)
+from backend.supplier_sale_policy import BG_BEST_PRICE, check_supplier_evidence
 
 ALLOWED_HOTEL = ("IN_STOCK", "ON_REQUEST")
 SUCCESS = ("CONFIRMED", "ON_REQUEST", "SUBMITTED")
@@ -58,7 +59,8 @@ class Outbox(Protocol):
     def enqueue_once(self, key:str, event:dict[str,Any])->None: ...
     # Transactionally durable outbox; consumer sends Telegram/email later.
 
-def quote_is_valid(check:dict[str,Any]|None, price:int, *, allow_on_request:bool)->bool:
+def quote_is_valid(check:dict[str,Any]|None, price:int, *, allow_on_request:bool,
+                   sale_policy:str=BG_BEST_PRICE)->bool:
     if not isinstance(check,dict):
         return False
     if check.get("currency")!="RUB" or type(check.get("total_rub")) is not int:
@@ -76,7 +78,7 @@ def quote_is_valid(check:dict[str,Any]|None, price:int, *, allow_on_request:bool
         return False
     if check.get("supplier_quote_verified") is not True:
         return False
-    if check.get("best_price_required") is True and check.get("best_price_verified") is not True:
+    if not check_supplier_evidence(check,sale_policy):
         return False
     try:
         expires=datetime.fromisoformat(check["expires_at"].replace("Z","+00:00"))
@@ -140,7 +142,8 @@ class ContractFirstEngine:
         quote=self.supplier.check(offer, stage)
         if not isinstance(quote,dict) or not quote_matches_signed_offer(offer,quote):
             raise NotAvailable("Supplier quote not linked to exact signed itinerary or party")
-        if not quote_is_valid(quote,price,allow_on_request=allow_on_request):
+        if not quote_is_valid(quote,price,allow_on_request=allow_on_request,
+                              sale_policy=offer.get("sale_policy")):
             if quote.get("currency")=="RUB" and quote.get("total_rub")!=price:
                 raise PriceChanged("Supplier price changed; new contract consent required")
             raise NotAvailable("Flight, hotel or supplier quote not verified")
