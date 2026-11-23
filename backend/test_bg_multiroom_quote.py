@@ -58,10 +58,15 @@ def groups():
         "start_date": TOUR["hotel_start_date"],
         "duration_nights": TOUR["nights"],
         "sr": "SYNTHETIC_SR_NOT_A_SUPPLIER_BOOKING",
+        "prx": TOUR["prx"],
+        "template_id": TOUR["template_id"],
+        "commission_id": None,
     }
     return [
-        {**common, "roommeal_id": "104623691678", "passengers": people1},
-        {**common, "roommeal_id": "104623691679", "passengers": people2},
+        {**common, "roommeal_id": "104623691678",
+         "age_marker": "[14-99][14-99][2-11][12-17]", "passengers": people1},
+        {**common, "roommeal_id": "104623691679",
+         "age_marker": "12+,2-11", "passengers": people2},
     ]
 
 
@@ -164,6 +169,41 @@ class Tests(unittest.TestCase):
             with self.subTest(mutation=mutate), self.assertRaises(BadOrder):
                 build_group_price_request(TOUR, ROOMS, g)
 
+    def test_private_price_list_and_route_must_match_every_group(self):
+        for source_field, changed in (
+            ("prx","ANOTHER_PRIVATE_PRX"),
+            ("template_id","121178311486"),
+            ("commission_id","121178311486"),
+            ("sr","ANOTHER_PRIVATE_FLIGHT_ROUTE"),
+        ):
+            g=groups()
+            g[1][source_field]=changed
+            with self.subTest(field=source_field), self.assertRaises(NotAvailable):
+                build_group_price_request(TOUR, ROOMS, g)
+        for missing in ("prx","template_id","age_marker"):
+            g=groups()
+            g[1].pop(missing)
+            with self.subTest(missing=missing), self.assertRaises(NotAvailable):
+                build_group_price_request(TOUR, ROOMS, g)
+
+    def test_real_adult_and_child_ages_must_fit_exact_supplier_ag(self):
+        # An adapter boolean cannot prove a rate's actual passenger DOBs.
+        for index, bad_marker in (
+            (0,"[18-30][18-30][2-11][12-17]"),
+            (0,"[14-99][14-99][2-11][2-11]"),
+            (1,"[18-99][6-11]"),
+            (1,"unrecognized"),
+            (1,""),
+        ):
+            g=groups()
+            g[index]["age_marker"]=bad_marker
+            with self.subTest(index=index,marker=bad_marker), self.assertRaises(NotAvailable):
+                build_group_price_request(TOUR, ROOMS, g)
+        g=groups()
+        g[0]["age_marker"]="[14-99][14-99][2-11][12-17]"
+        _,xml=build_group_price_request(TOUR, ROOMS, g)
+        self.assertNotIn(b"<confirm",xml)
+
     def test_multiple_groups_and_totals_are_strict(self):
         for rooms, sourced in (
             (ROOMS + [{"adults":1,"child_ages":[]}], groups()),
@@ -186,6 +226,7 @@ class Tests(unittest.TestCase):
         with self.assertRaises(NotAvailable):
             build_group_price_request(TOUR, rooms, g)
         g[1]["infant_policy_verified"] = True
+        g[1]["age_marker"] = "12+,0-1"
         _, raw = build_group_price_request(TOUR, rooms, g)
         root = ET.fromstring(raw)
         self.assertEqual(
