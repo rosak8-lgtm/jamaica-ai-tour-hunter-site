@@ -288,6 +288,21 @@ def main():
                        (quote_link.get_attribute("href") or "").startswith("quote.html?preview=p_"),
                        "NO_QUOTE_AND_CONTRACT_HANDOFF")
                 ensure(not page.locator("#providerFrame").count(),"UNAPPROVED_PAYMENT_IFRAME")
+                page.wait_for_function(
+                    "()=>document.querySelector('#alternativesStatus')?.textContent?.includes('Проверены все опубликованные разделы')",
+                    timeout=45000)
+                related=page.locator("#alternatives a.alternativeTour")
+                ensure(related.count()>0,
+                       "SOURCE_BACKED_RELATED_TOURS_NOT_VISIBLE")
+                ensure(related.count()<=12,
+                       "RELATED_TOUR_CAROUSEL_NOT_BOUNDED")
+                ensure(page.locator("#alternatives a[data-category='otherCountry']").count()>0,
+                       "RELATED_TOURS_HIDE_PUBLISHED_OTHER_COUNTRIES")
+                ensure(all("preview.html?id=p_" in (value or "")
+                     for value in related.evaluate_all("(nodes)=>nodes.map(n=>n.getAttribute('href'))")),
+                       "RELATED_TOURS_WITHOUT_REAL_SOURCE_IDS")
+                ensure(all("₽" not in text for text in related.all_text_contents()),
+                       "UNVERIFIED_REFERENCES_ARE_NOT_BOOKABLE_PRICES")
                 quote_link.click()
                 page.wait_for_url("**/quote.html?preview=*",timeout=20000)
                 # The element exists before its async preview JSON resolves:
