@@ -25,6 +25,7 @@ jobs:
           node scripts/test-site.mjs
           node scripts/test-catalog-shards.mjs
           node scripts/test-country-offer-balance.mjs
+          node scripts/test-month-offer-filters.mjs
           node scripts/test-preview-alternatives.mjs
           node scripts/test-visual-selection.mjs
           node scripts/test-quote-price-only.mjs
