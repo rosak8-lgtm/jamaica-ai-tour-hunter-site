@@ -918,7 +918,7 @@ function renderTourPreviews(reset=true){
  const budget=Number($("budget").value)||0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
-   "Бюджет применяется только к свежей цене, увиденной ботом на Библио-Глобусе за двух взрослых. Другой состав и места требуют отдельного расчёта.";
+   "Бюджет применяется только к свежей цене, проверенной ботом за двух взрослых. Другой состав и места требуют отдельного расчёта.";
  $("budgetNotice").textContent=budgetMessage;
  $("budgetNotice").hidden=!budgetMessage;
  const sortMode=$("previewSort").value;
@@ -993,7 +993,7 @@ function renderTourPreviews(reset=true){
      "✓ Метка «ЛУЧШАЯ ЦЕНА» и оба зелёных рейса зафиксированы на выбранном варианте. Места, окончательная стоимость, договор и оплата требуют отдельной проверки."));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
-     const priceTitle=el("strong","", "Цена Библио-Глобуса при проверке на 2 взрослых: ");
+     const priceTitle=el("strong","", "Цена на момент проверки на 2 взрослых: ");
      priceTitle.append(el("span","referenceAmount",
        new Intl.NumberFormat("ru-RU").format(reference)+" ₽"));
      priceBox.append(priceTitle);
