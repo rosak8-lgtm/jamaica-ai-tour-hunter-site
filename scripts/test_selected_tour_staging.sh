@@ -10,7 +10,8 @@ mkdir -p "$TMP/backend"
 for name in oracle_bg_selected_quote_probe.py oracle_bg_preview_export.py \
             catalog_size_budget.py tour_price_reference.py oracle_bg_price_detail_probe.py \
             oracle_bg_route_sync.py oracle_bg_multicountry_price_scan.py \
-            oracle_bg_booking_fields_audit.py; do
+            oracle_bg_booking_fields_audit.py \
+            oracle_bg_flight_evidence_probe.py flight_availability_evidence.py; do
  cp "$ROOT/scripts/$name" "$TMP/$name"
 done
 cp "$ROOT/backend/bg_price_age_scope.py" \
@@ -20,4 +21,5 @@ grep -Fq -- "--private-rooms-file" "$TMP/help.txt"
 # All independent read-only entrypoints share this isolated import stack.
 env PYTHONPATH="" python3 -B "$TMP/oracle_bg_multicountry_price_scan.py" --help >/dev/null
 env PYTHONPATH="" python3 -B "$TMP/oracle_bg_booking_fields_audit.py" --help >/dev/null
+env PYTHONPATH="" python3 -B "$TMP/oracle_bg_flight_evidence_probe.py" --help >/dev/null
 echo "JAMAICA_ORACLE_SELECTED_TOUR_STAGING_IMPORTS=PASS"
