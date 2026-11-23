@@ -54,10 +54,28 @@ def main():
                 "catalog total does not match published shards")
     config=load("checkout-config.json")
     import catalog_property_identity as property_identity
-    try:
-        property_identity.verify_catalog_hotel_identity(previews["previews"],directory)
-    except property_identity.IdentityMismatch as exc:
-        raise SystemExit("JAMAICA_HOTEL_IDENTITY_HOLD="+str(exc)) from exc
+    if previews["previews"]:
+        try:
+            property_identity.verify_catalog_hotel_identity(previews["previews"],directory)
+        except property_identity.IdentityMismatch as exc:
+            raise SystemExit("JAMAICA_HOTEL_IDENTITY_HOLD="+str(exc)) from exc
+    else:
+        require(previews.get("publication_rule")==
+                "BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1",
+                "EMPTY_PUBLIC_CATALOG_REQUIRES_STRICT_VISUAL_GATE")
+    if previews.get("publication_rule")=="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1":
+        import public_tour_eligibility as public_gate
+        from datetime import datetime
+        try:
+            snapshot_at=datetime.fromisoformat(
+                previews["refreshed_at_utc"].replace("Z","+00:00"))
+            expected=public_gate.select_public_source_rows(
+                previews,load("tour-visual-evidence.json"),now=snapshot_at)
+        except (ValueError,TypeError,KeyError) as exc:
+            raise SystemExit("JAMAICA_VISUAL_PROOF_HOLD=INVALID_PUBLIC_GATE") from exc
+        require([r["id"] for r in expected["previews"]]==
+                [r["id"] for r in previews["previews"]],
+                "PUBLIC_TOUR_WITHOUT_SOURCE_BESTPRICE_AND_TWO_GREEN_FLIGHTS")
     require(directory.get("schema")=="jamaica.destination-directory.v1","directory schema")
     require(directory.get("total_countries")==251,"countries missing")
     require(isinstance(directory.get("hotels"),list),"hotel directory missing")
