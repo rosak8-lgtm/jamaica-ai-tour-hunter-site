@@ -536,7 +536,7 @@ assert.ok(page.includes('const priorities=new Map([["Таиланд",0],["Кит
  'Country priority remains in the search datalist');
 assert.ok(!page.includes('id="allCountrySelector"'),"No duplicate country chooser in the results");
 assert.ok(page.includes('fullCountryNames.length'));
-assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');
+assert.ok(page.includes('Непроверенные карточки скрыты')&&page.includes('Нет туров с обязательной проверкой'),'Empty-state must never substitute source-only tours for absent strict bot proof');
 assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible"){')&&
  page.includes('loadTourPreviews();')&&page.includes('loadVisualProofs();'),
