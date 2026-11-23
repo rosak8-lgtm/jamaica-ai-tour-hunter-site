@@ -982,7 +982,7 @@ function renderTourPreviews(reset=true){
  previewVisible=Math.min(list.length,previewVisible+30);
  more.hidden=previewVisible>=list.length;
  const availableCountries=[...window.JamaicaCountryOffers.countryCounts(
-   previewRecords,$("departure").value.trim()).keys()].sort(
+   verifiedRows(),$("departure").value.trim()).keys()].sort(
      window.JamaicaCountryOffers.compareCountries);
  $("catalogBreadth").textContent=previewsLoaded?
   (country?"Выбрано направление «"+$("destination").value.trim()+"». Проверенных направлений: "+availableCountries.length+".":
@@ -1010,19 +1010,19 @@ $("otherCountries").addEventListener("click",()=>{
   form.requestSubmit();
 });
 $("previewSort").addEventListener("change",()=>renderTourPreviews(true));
-$("visualProofOnly").addEventListener("change",()=>renderTourPreviews(true));
+// Evidence is a permanent publication rule, not an optional filter.
 $("previewMore").addEventListener("click",()=>renderTourPreviews(false));
 async function loadVisualProofs(){
- try{
-   const response=await fetch("./tour-visual-evidence.json",{cache:"no-store"});
-   if(!response.ok)throw Error("VISUAL_FEED_UNAVAILABLE");
-   visualProofs=window.JamaicaVisualSelection.read(await response.json());
- }catch(e){visualProofs=new Map();}
+ visualProofs=await window.JamaicaPublicVisualPolicy.load();
  $("visualProofNotice").textContent=visualProofs.size?
-   "Бот визуально выделил "+visualProofs.size+
-   " выбранных вариантов за последние 15 минут. Это не брони, не заблокированные места и не окончательная цена.":
-   "Свежих совпадений «ЛУЧШАЯ ЦЕНА → два рейса» пока нет. Остальные реальные страны и предварительные варианты продолжают отображаться.";
- if(previewsLoaded)renderTourPreviews(true);
+   "За последние 15 минут бот подтвердил "+visualProofs.size+
+   " точных совпадений «ЛУЧШАЯ ЦЕНА» и обоих зелёных самолётиков. Бронь и места ещё не подтверждены.":
+   "Нет свежих совпадений «ЛУЧШАЯ ЦЕНА» → два зелёных самолётика. Непроверенные туры скрыты во всех странах и месяцах.";
+ if(previewsLoaded){
+   sourceFilterOptions();
+   renderTourPreviews(true);
+   if(visualProofs.size&&!previewFullLoaded)void loadTourPreviews();
+ }
 }
 async function loadTourPreviews(){
  const serial=++previewLoadSerial;
@@ -1089,6 +1089,7 @@ async function loadTourPreviews(){
      (Number.isSafeInteger(x.price_reference_rub)&&x.price_reference_rub>0&&
       x.price_reference_party==="TWO_ADULTS")));
   previewsLoaded=true;sourceFilterOptions();renderTourPreviews(true);
+  if(!visualProofs.size)return; // Do not fetch thousands of unverified source rows.
   if(!previewFullLoaded){
    try{
     // Make verified catalog shards visible as they arrive, so countries not
