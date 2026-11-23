@@ -303,7 +303,7 @@ def make_sharded_catalog(feed):
     if not isinstance(rows,list) or not 0<len(rows)<=MAX_ITEMS:
         raise CatalogHold("CATALOG_SHARD_SOURCE_SIZE_INVALID")
     root=dict(feed)
-    root_rows,remainder=diverse_root_and_remaining(rows)
+    root_rows,remainder=diverse_root_and_remaining(rows,ROOT_ITEMS)
     root["previews"]=root_rows
     root["total_published_previews"]=len(rows)
     manifest=[]
