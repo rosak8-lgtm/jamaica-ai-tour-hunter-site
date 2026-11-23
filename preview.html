@@ -73,6 +73,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 </main>
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/visual-selection.js"></script>
+<script src="./scripts/public-visual-policy.js"></script>
 <script src="./scripts/traveler-party.js"></script>
 <script src="./scripts/preview-alternatives.js"></script>
 <script>
@@ -161,7 +162,8 @@ function showSelection(p,feed,directory){
  }
 }
 function showAlternatives(rows,p,done,total){
- const items=window.JamaicaPreviewAlternatives.choose(rows,p);
+ const items=window.JamaicaPreviewAlternatives.choose(
+   window.JamaicaPublicVisualPolicy.filter(rows,selectedProofs),p);
  const fragment=document.createDocumentFragment();
  for(const item of items){
   const choice=item.row;
@@ -184,6 +186,7 @@ function showAlternatives(rows,p,done,total){
   add("p","Других вариантов по проверенным источникам пока не опубликовано.",$("alternatives"));
  }
 }
+let selectedProofs=new Map();
 async function init(){
  if(!/^p_[a-f0-9]{24}$/.test(id)){$("heading").textContent="Выберите путешествие в поиске";return;}
  if(!rooms){
@@ -192,6 +195,14 @@ async function init(){
   return;
  }
  let selected=null,invalid=false;
+ selectedProofs=await window.JamaicaPublicVisualPolicy.load();
+ if(!selectedProofs.has(id)){
+  $("heading").textContent="Тур не прошёл обязательные проверки";
+  $("subtitle").textContent="«ЛУЧШАЯ ЦЕНА» и два зелёных самолётика не подтверждены для этого варианта за последние 15 минут.";
+  $("visualDetailStatus").textContent="Непроверенная карточка снята с публикации. Вернитесь в поиск для выбора подходящего тура.";
+  $("quoteLink").removeAttribute("href");
+  return;
+ }
  try{
   const [pr,hr]=await Promise.all([
    fetch("./tour-previews.json",{cache:"no-store"}),
@@ -211,6 +222,13 @@ async function init(){
     if(invalid)return;
     const found=selected||rows.find(x=>x.id===id);
     if(!found)return;
+    if(!window.JamaicaPublicVisualPolicy.eligible(found,selectedProofs)){
+      invalid=true;
+      $("heading").textContent="Проверка этого тура отсутствует или устарела";
+      $("subtitle").textContent="Требуются метка и два зелёных рейса для того же отеля, даты и номера.";
+      $("quoteLink").removeAttribute("href");
+      return;
+    }
     if(!selected){
      if(found.bookable!==false||found.quote_verified!==false||
         found.availability_verified!==false||found.flight_verified!==false||

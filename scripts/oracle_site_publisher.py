@@ -30,6 +30,7 @@ else:
 import recent_preview_catalog as recent
 import catalog_size_budget as byte_limit
 import bot_visual_sidecar as visual
+import public_tour_eligibility as eligibility
 import catalog_property_identity as identity
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
@@ -139,13 +140,13 @@ def refresh_directory():
     log("JAMAICA_DIRECTORY_REFRESH","UPDATED")
     return True
 
-def validate(feed, directory):
+def validate(feed, directory, *, allow_empty=False):
     if not isinstance(feed,dict) or feed.get("schema")!="jamaica.tour-previews.v1":
         raise CatalogHold("FEED_SCHEMA_INVALID")
     if feed.get("bookable") is not False or feed.get("quote_verified") is not False or feed.get("availability_verified") is not False:
         raise CatalogHold("FEED_FALSE_BOOKING_CLAIM")
     rows=feed.get("previews")
-    if not isinstance(rows,list) or not 0<len(rows)<=MAX_ITEMS:
+    if not isinstance(rows,list) or not len(rows)<=MAX_ITEMS or (not rows and not allow_empty):
         raise CatalogHold("FEED_ROWS_INVALID")
     known={c.get("name") for c in directory["countries"] if isinstance(c,dict)}
     seen=set()
@@ -301,7 +302,7 @@ def make_sharded_catalog(feed):
     every five minutes. All assets are staged in ONE Git commit.
     """
     rows=feed.get("previews")
-    if not isinstance(rows,list) or not 0<len(rows)<=MAX_ITEMS:
+    if not isinstance(rows,list) or len(rows)>MAX_ITEMS:
         raise CatalogHold("CATALOG_SHARD_SOURCE_SIZE_INVALID")
     root=dict(feed)
     root_rows,remainder=diverse_root_and_remaining(rows,ROOT_ITEMS)
@@ -406,8 +407,8 @@ def publish(env):
     proof=identity.verify_catalog_hotel_identity(new["previews"],directory)
     log("JAMAICA_HOTEL_IDENTITY_VERIFIED_ROWS",proof["checked"])
     log("JAMAICA_HOTEL_IDENTITY_VERIFIED_COUNTRIES",proof["countries"])
-    public_root,public_chunks=make_sharded_catalog(new)
-    validate(public_root,directory)
+    # Build only PRIVATE source candidates until the bot has independently
+    # checked the selected route's badge and both flight icons.
     # Optional authenticated V183 browser-event bridge. A file from the bot
     # MUST be owner-only, have exact source lineage, and be <=15 minutes old.
     # A missing, invalid or untrusted proof cannot stall public tour browsing.
@@ -420,6 +421,11 @@ def publish(env):
         log("JAMAICA_BOT_VISUAL_STATUS","RECEIPTS_INVALID_IGNORE")
     if not visual.validate_public_feed(visual_public):
         visual_public=visual.empty_public()
+    published=eligibility.select_public_source_rows(new,visual_public)
+    public_root,public_chunks=make_sharded_catalog(published)
+    validate(public_root,directory,allow_empty=True)
+    log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
+    log("JAMAICA_PUBLIC_HIDDEN_UNVERIFIED",len(new["previews"])-len(published["previews"]))
     visual_path=CHECKOUT/PUBLIC_VISUAL_PATH
     try:
         previous_visual=json.loads(visual_path.read_text(encoding="utf-8")

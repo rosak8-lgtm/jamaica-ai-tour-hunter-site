@@ -75,11 +75,8 @@ function valid(o){
  if(!o||typeof o!=="object"||!/^[a-zA-Z0-9_-]{8,100}$/.test(o.id||""))return false;
  for(const k of ["publish_approved","quote_verified","availability_verified","flights_out_green","flights_back_green","price_scope_verified","total_two_verified"])if(o[k]!==true)return false;
  if(o.flight_pair_evidence_verified!==true)return false;
- if(o.sale_policy==="BG_BEST_PRICE_TWO_FLIGHTS"){
-  if(o.best_price_required!==true||o.best_price_verified!==true)return false;
- }else if(o.sale_policy==="STANDARD_TWO_FLIGHTS"){
-  if(o.best_price_required!==false)return false;
- }else return false;
+ if(o.sale_policy!=="BG_BEST_PRICE_TWO_FLIGHTS"||
+    o.best_price_required!==true||o.best_price_verified!==true)return false;
  if(!Number.isInteger(o.total_rub)||o.total_rub<=0||o.adults!==2||o.children!==0)return false;
  if(!Number.isInteger(o.nights)||o.nights<3||o.nights>180)return false;
  if(!dataSafe(o.hotel)||!dataSafe(o.origin)||!dataSafe(o.destination)||!/^\d{4}-\d{2}-\d{2}$/.test(o.depart_date||""))return false;

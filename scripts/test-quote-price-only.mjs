@@ -22,7 +22,7 @@ function element(){
   addEventListener(name,fn){this.listeners[name]=fn;},
  };
 }
-function setup(rooms,config,priceReply){
+function setup(rooms,config,priceReply,proofOK=true){
  const els=Object.fromEntries([
   "quoteNotice","hotelTitle","tripSummary","checkQuote","quoteResult",
   "quotedPrice","quotedTerms","contractButton","onRequestAccept",
@@ -50,7 +50,14 @@ function setup(rooms,config,priceReply){
   return {ok:true,json:async()=>priceReply};
  }
  const location={search:"?preview="+previewId,assign:()=>{throw Error("Checkout not allowed");}};
- const ctx={window:{JamaicaTravelers:T,JamaicaCatalog:{findPreview:async()=>preview}},
+ const proofMap=proofOK?new Map([[previewId,{
+   preview_id:previewId,route_best_price_seen:true,both_green_planes_seen:true
+ }]]):new Map();
+ const ctx={window:{JamaicaTravelers:T,JamaicaCatalog:{findPreview:async()=>preview},
+   JamaicaPublicVisualPolicy:{
+     load:async()=>proofMap,
+     eligible:(p,proofs)=>p?.id===previewId&&proofs?.has(previewId)===true
+   }},
   document:{getElementById:id=>els[id]},location,URL,URLSearchParams,
   sessionStorage:{getItem:()=>("x".repeat(48))},fetch:fetchMock,Intl};
  vm.runInNewContext(inline,ctx,{filename:"quote.html"});
@@ -74,6 +81,20 @@ function supplierReply(override={}){
  };
 }
 async function tick(){await new Promise(r=>setImmediate(r));}
+{
+ const notApproved=setup(
+   [{adults:2,child_ages:[]}],
+   {schema:"jamaica.checkout-config.v1",
+    price_checks_enabled:true,private_price_api_enabled:true,
+    auth_api_enabled:true,api_base_url:"https://price.jamaica.test/api"},
+   {status:"PRICE_ONLY_NOT_BOOKABLE"},false);
+ await tick();
+ assert.equal(notApproved.els.checkQuote.disabled,true,
+  "Even an enabled private pricing API must NOT unlock an unverified tour");
+ assert.equal(notApproved.requests.length,0,
+  "Missing route-first badge/two green flights must block raw catalog API loads");
+}
+
 
 {
  const v=setup(rooms,config,supplierReply());

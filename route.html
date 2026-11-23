@@ -47,6 +47,16 @@ const add=(tag,text,parent)=>{const e=document.createElement(tag);e.textContent=
 const info=(key,value)=>{const el=document.createElement("div");add("span",key,el);add("b",String(value),el);$("details").append(el);};
 async function init(){
  if(!/^r_[a-f0-9]{24}$/.test(id)){$("title").textContent="Маршрут не выбран";return;}
+ // The route directory has no trustworthy exact price-list + hotel identity
+ // lineage to a public visual proof. Never display unverified route/hotel
+ // recommendation cards through this older direct URL.
+ $("title").textContent="Маршруты без подтверждения скрыты";
+ $("subtitle").textContent="Показываются только туры с меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками для той же даты, гостиницы и тарифа.";
+ $("alert").textContent="Прежние справочные карточки маршрутов не являются проверенными турами. Используйте поиск JAMAICA: неподтверждённые варианты не публикуются.";
+ $("routePreviewCount").textContent="Карточки без точных доказательств не показываются.";
+ $("alternativeCount").textContent="Другие страны появятся в поиске после проверки всех условий.";
+ $("hotelCount").textContent="Общий справочник гостиниц не подтверждает конкретный маршрут.";
+ return;
  try{
   const [r1,r2]=await Promise.all([fetch("./route-discovery.json",{cache:"no-store"}),
                                    fetch("./destination-directory.json",{cache:"no-store"})]);

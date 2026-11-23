@@ -96,6 +96,8 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 </section>
 </main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
 <script src="./scripts/catalog-shards.js"></script>
+<script src="./scripts/visual-selection.js"></script>
+<script src="./scripts/public-visual-policy.js"></script>
 <script src="./scripts/hotel-media-feed.js"></script>
 <script src="./scripts/commons-hotel-media.js"></script>
 <script>
@@ -310,7 +312,7 @@ async function loadPhotos(skipApproved=false){
 
 function showTrips(rows){
  const target=$("trips");target.replaceChildren();
- if(!rows.length){text("tourStatus","В опубликованных данных сейчас нет подходящих дат и комнат для этой гостиницы. Отель остаётся в справочнике.");return;}
+ if(!rows.length){text("tourStatus","У этой гостиницы сейчас нет туров с одновременной меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками. Непроверенные поездки скрыты.");return;}
  const ordered=[...rows].sort((a,b)=>a.depart_date.localeCompare(b.depart_date));
  const unique=new Map();
  for(const r of ordered)unique.set(r.room,r);
@@ -333,13 +335,19 @@ function showTrips(rows){
 function typeNumber(v){return Number.isSafeInteger(v)&&v>0;}
 async function getCurrentTrips(){
  if(!official)return;
+ const proofs=await window.JamaicaPublicVisualPolicy.load();
+ if(!proofs.size){
+  tripRecords=[];
+  showTrips([]);
+  return;
+ }
  try{
   const response=await fetch("./tour-previews.json",{cache:"no-store"});
   if(!response.ok)throw Error("FEED");
   const data=await response.json();
   if(data.schema!=="jamaica.tour-previews.v1"||!Array.isArray(data.previews))throw Error("FEED_SCHEMA");
   const all=await window.JamaicaCatalog.allPreviews(data);
-  tripRecords=all.filter(p=>p&&p.hotel_id===id&&p.bookable===false);
+  tripRecords=window.JamaicaPublicVisualPolicy.filter(all,proofs).filter(p=>p.hotel_id===id);
  }catch(e){tripRecords=[];text("tourStatus","Временная ошибка загрузки прайс-листов. Карточка гостиницы доступна.");}
  showTrips(tripRecords);
 }

@@ -39,6 +39,8 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 </div>
 </section></main>
 <script src="./scripts/catalog-shards.js"></script>
+<script src="./scripts/visual-selection.js"></script>
+<script src="./scripts/public-visual-policy.js"></script>
 <script src="./scripts/traveler-party.js"></script>
 <script>
 (function(){
@@ -80,6 +82,11 @@ async function init(){
   notice("Выберите действующий тур и корректный состав туристов.");return;
  }
  try{
+  const proofs=await window.JamaicaPublicVisualPolicy.load();
+  if(!proofs.has(id)){
+   notice("Этот тур не прошёл обязательные проверки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков. Расчёт и бронирование закрыты.");
+   return;
+  }
   const [p,c]=await Promise.all([
     fetch("./tour-previews.json",{cache:"no-store"}),
     fetch("./checkout-config.json",{cache:"no-store"})]);
@@ -92,7 +99,7 @@ async function init(){
   // become too old; never permit a quote or purchase for that record.
   selected=found&&found.bookable===false&&found.quote_verified===false&&
     found.availability_verified===false?found:null;
-  if(!selected)throw Error("PREVIEW_NOT_CURRENT");
+  if(!selected||!window.JamaicaPublicVisualPolicy.eligible(selected,proofs))throw Error("PREVIEW_NOT_VISUALLY_VERIFIED");
   $("hotelTitle").textContent=selected.country+" · "+selected.hotel;
   $("tripSummary").textContent=selected.origin+" · "+selected.depart_date+
       " · "+selected.nights+" ночей · "+selected.room+
@@ -127,6 +134,12 @@ async function init(){
 }
 $("checkQuote").addEventListener("click",async()=>{
  if(!selected||auth.length<32)return;
+ const currentProofs=await window.JamaicaPublicVisualPolicy.load();
+ if(!window.JamaicaPublicVisualPolicy.eligible(selected,currentProofs)){
+  notice("Метка «ЛУЧШАЯ ЦЕНА» и два зелёных самолётика больше не подтверждены. Расчёт заблокирован.");
+  $("checkQuote").disabled=true;
+  return;
+ }
  const canBook=supportedParty&&cfgReady(config);
  const canPrice=cfgPriceReady(config);
  if(!canBook&&!canPrice)return;

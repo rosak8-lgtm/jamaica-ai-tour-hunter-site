@@ -24,12 +24,16 @@ assert.equal(parsed.read({...feed(good),entries:[{...good,browser_session_digest
 const page=fs.readFileSync('index.html','utf8');
 const visual=JSON.parse(fs.readFileSync('tour-visual-evidence.json','utf8'));
 assert.equal(visual.schema,'jamaica.visual-selection.v1');
-assert.deepEqual(visual.entries,[]);
+assert.ok(Array.isArray(visual.entries)&&visual.entries.length<=300,
+ "Publisher may deliver genuine route-first bot receipts when available");
+assert.ok(visual.entries.every(x=>x.route_best_price_seen===true&&
+ x.both_green_planes_seen===true&&/^p_[a-f0-9]{24}$/.test(x.preview_id)),
+ "Every published visual receipt must contain both required checks");
 assert.equal(visual.bookable,false);
 assert.ok(page.includes('id="visualProofOnly"')&&
  page.includes('id="visualProofNotice"')&&
  page.includes('scripts/visual-selection.js')&&
- page.includes('visualProofs.has(x.id)')&&
+ page.includes('window.JamaicaPublicVisualPolicy.eligible(x,visualProofs)')&&
  page.includes('loadVisualProofs();'));
 assert.ok(page.includes('Карта')||page.includes('Страны')||page.includes('страны'),
  'Never delete broad country discovery UI');

@@ -11,6 +11,7 @@ from base64 import b64decode
 import http.server
 import json
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent.parent
@@ -30,14 +31,31 @@ def main():
         return 3
     preview=json.loads((ROOT/"tour-previews.json").read_text(encoding="utf-8"))
     rows=preview.get("previews",[])
-    ensure(isinstance(rows,list) and len(rows)>0,"EMPTY_PREVIEWS")
+    ensure(isinstance(rows,list),"UNSAFE_PREVIEWS_ARRAY")
+    # Synthetic receipts are used ONLY by Chromium localhost intercepts.
+    # They are never written to GitHub, Oracle or any public JSON asset.
+    today=datetime.now(timezone.utc).date().isoformat()
+    candidate=[r for r in rows if r.get("status")=="REFERENCE_PRICE_LIST_ONLY"
+               and r.get("depart_date","")>today and
+               r.get("bookable") is False]
+    per_country={}
+    for row in candidate:
+        group=per_country.setdefault(row["country"],[])
+        if len(group)<18:group.append(row)
+    test_rows=[row for group in per_country.values() for row in group][:290]
     counts={}
-    for row in rows:
+    for row in test_rows:
         counts[row["country"]]=counts.get(row["country"],0)+1
-    ensure(len(counts)>=3,"NOT_ENOUGH_COUNTRIES")
-    if "Турция" not in counts:
-        print("JAMAICA_BROWSER_SMOKE_HOLD=NO_TURKEY_IN_FEED")
-        return 2
+    fixture_checked_at=datetime.now(timezone.utc).isoformat()
+    fixture_proofs={
+        "schema":"jamaica.visual-selection.v1","bookable":False,
+        "quote_verified":False,"availability_verified":False,
+        "entries":[{
+            "preview_id":r["id"],"observed_at_utc":fixture_checked_at,
+            "route_best_price_seen":True,"both_green_planes_seen":True}
+            for r in test_rows]
+    }
+    empty_proofs={**fixture_proofs,"entries":[]}
 
     handler=functools.partial(QuietHandler,directory=str(ROOT))
     server=http.server.ThreadingHTTPServer(("127.0.0.1",0),handler)
@@ -63,7 +81,55 @@ def main():
                 # Hotel photos must be identity verified: no unrelated country scenery.
                 errors=[]
                 page.on("pageerror",lambda e:errors.append(str(e)[:220]))
+                # FAIL-CLOSED: even 60,000 published source-only entries
+                # MUST produce ZERO tour cards without the private route-first
+                # badge and both-green verified bot sidecar.
+                page.route("**/tour-visual-evidence.json",
+                    lambda route: route.fulfill(status=200,
+                        content_type="application/json",
+                        body=json.dumps(empty_proofs,ensure_ascii=False)))
                 page.goto(base,wait_until="domcontentloaded")
+                page.wait_for_function(
+                   "()=>document.querySelector('#visualProofNotice')?.textContent?.includes('Нет свежих совпадений')",
+                   timeout=18000)
+                ensure(page.locator("#previewCards article.offerCard").count()==0,
+                       "UNVERIFIED_PRICE_LIST_TOURS_WERE_DISPLAYED")
+                ensure(page.locator("#visualProofOnly").is_disabled() and
+                       page.locator("#visualProofOnly").is_checked(),
+                       "VISUAL_PROOF_MUST_BE_MANDATORY_NOT_OPTIONAL")
+                ensure("Непроверенные" in page.locator("#visualProofNotice").inner_text(),
+                       "MISSING_FAIL_CLOSED_EXPLANATION")
+                if rows:
+                    page.goto(base+"preview.html?id="+rows[0]["id"],
+                              wait_until="domcontentloaded")
+                    page.wait_for_function(
+                        "()=>document.querySelector('#heading')?.textContent?.includes('не прошёл обязательные проверки')",
+                        timeout=12000)
+                    ensure(not page.locator("#quoteLink").get_attribute("href"),
+                           "DIRECT_PREVIEW_URL_BYPASSED_VISUAL_GATE")
+                    page.goto(base+"quote.html?preview="+rows[0]["id"]+
+                              "&adults=2&kids=0",wait_until="domcontentloaded")
+                    page.wait_for_function(
+                        "()=>document.querySelector('#quoteNotice')?.textContent?.includes('не прошёл обязательные проверки')",
+                        timeout=12000)
+                    ensure(page.locator("#checkQuote").is_disabled(),
+                           "DIRECT_PRICE_QUERY_BYPASSED_VISUAL_GATE")
+                print("STRICT_PUBLIC_ZERO_CARDS_WITHOUT_BOT_PROOFS=PASS")
+                if not test_rows:
+                    print("STRICT_ZERO_PUBLISHED_SOURCE_CATALOG_BROWSER_PASS")
+                    ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
+                    return 0
+                # POSITIVE only in offline browser: inject distinct synthetic
+                # same-preview proofs so historical layout, filter, families,
+                # hotel media and checkout safety tests still execute.
+                page.unroute("**/tour-visual-evidence.json")
+                page.route("**/tour-visual-evidence.json",
+                    lambda route: route.fulfill(status=200,
+                        content_type="application/json",
+                        body=json.dumps(fixture_proofs,ensure_ascii=False)))
+                page.goto(base,wait_until="domcontentloaded")
+                print("STRICT_SYNTHETIC_PROOF_ONLY_BROWSER_FIXTURE="+str(len(test_rows)))
+
                 png_favicon=page.request.get(base+"favicon.png?v=20261122b")
                 ico_favicon=page.request.get(base+"favicon.ico?v=20261122b")
                 ensure(png_favicon.status==200 and
@@ -279,7 +345,7 @@ def main():
                            "TRUNCATED_CATALOGUE_WARNING_NOT_AVAILABLE")
                     page.locator("#sourceDetails summary").click()
 
-                turkey_dates=sorted({r["depart_date"] for r in rows if r["country"]=="Турция"})
+                turkey_dates=sorted({r["depart_date"] for r in test_rows if r["country"]=="Турция"})
                 ensure(bool(turkey_dates),"NO_TURKEY_DATES_FOR_RANGE_TEST")
                 page.locator("#dateFrom").fill(turkey_dates[0])
                 page.locator("#dateTo").fill(turkey_dates[0])
@@ -575,7 +641,7 @@ def main():
                         timeout=50000)
                     offers=page.locator("#previewCards article.offerCard")
                     if offers.count()==0:
-                        ensure("нет подходящих вариантов" in
+                        ensure("Непроверенные карточки скрыты" in
                                page.locator("#previewCards").inner_text(),
                                "SOURCE_ABSENT_MUST_NOT_FABRICATE_OFFER_"+hid)
                         print("EXACT_HOTEL_NOT_IN_CURRENT_SOURCE="+hid)
@@ -787,6 +853,10 @@ def main():
                 # filter drawer with no horizontal page overflow.
                 mobile=browser.new_page(viewport={"width":390,"height":844})
                 try:
+                    mobile.route("**/tour-visual-evidence.json",
+                        lambda route: route.fulfill(status=200,
+                            content_type="application/json",
+                            body=json.dumps(fixture_proofs,ensure_ascii=False)))
                     mobile.goto(base,wait_until="domcontentloaded")
                     mobile.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
                     ensure(mobile.locator("#filtersDisclosure").get_attribute("open") is None,

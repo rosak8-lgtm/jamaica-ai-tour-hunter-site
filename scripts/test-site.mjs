@@ -68,7 +68,7 @@ assert.ok(searchStyle.includes('.quickCountryChip')&&
   'Destination shortcuts and old-source notices require styling');
 assert.ok(page.includes('./scripts/country-offer-balance.js')&&
  page.includes('window.JamaicaCountryOffers.interleaveCountries(rows)')&&
- page.includes('window.JamaicaCountryOffers.countryCounts(previewRecords,origin)'),
+ page.includes('window.JamaicaCountryOffers.countryCounts(verifiedRows(),origin)'),
  'Multi-country results must balance actual countries and match the selected departure city');
 assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
  'Search must interleave actual countries without inventing availability');
@@ -103,10 +103,12 @@ assert.ok(!page.includes('онлайн-бронирование туров</titl
 
 assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
 assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
-assert.ok(page.includes('ЛУЧШАЯ ЦЕНА')&&page.includes('Туда: места не проверены')&&
+assert.ok(page.includes('ЛУЧШАЯ ЦЕНА')&&
+  page.includes('checked disabled aria-label="Обязательное условие')&&
+  page.includes('let list=verifiedRows().filter(x=>')&&
   previewSelection.includes('Перелёт обратно')&&
   checkout.includes('flight_pair_evidence_verified!==true'),
-  'Do not invent two green plane markers or the BG best-price label');
+  'Do not invent two green planes; all tour listings must require real bot proof');
 assert.ok(page.includes('Цена пока не подтверждена;'),
  'Never imply a price or supplier booking where neither is verified');
 assert.ok(searchStyle.includes('.tourResultCard')&&searchStyle.includes('.fieldsMain'));
@@ -240,8 +242,8 @@ assert.equal(strictOffer({...sample,sale_policy:"UNKNOWN"},now),false);
 assert.equal(strictOffer({...sample,best_price_required:false},now),false);
 assert.equal(strictOffer({...sample,best_price_verified:false},now),false);
 assert.equal(strictOffer({...sample,sale_policy:"STANDARD_TWO_FLIGHTS",
-  best_price_required:false,best_price_verified:false},now),true,
-  'Other operators need independent policy; BG label requirement is BG-only');
+  best_price_required:false,best_price_verified:false},now),false,
+  'The customer requires the best-price label and both green flights on EVERY published offer');
 const previewPriceSort=functionFrom(page,'function previewPriceCompare(a,b){');
 const cheap={depart_date:'2026-12-10',country:'Таиланд',hotel:'A',price_reference_rub:51000};
 const costly={depart_date:'2026-12-01',country:'Китай',hotel:'B',price_reference_rub:99000};
@@ -534,7 +536,7 @@ assert.ok(page.includes('const priorities=new Map([["Таиланд",0],["Кит
  'Country priority remains in the search datalist');
 assert.ok(!page.includes('id="allCountrySelector"'),"No duplicate country chooser in the results");
 assert.ok(page.includes('fullCountryNames.length'));
-assert.ok(page.includes('В текущей опубликованной выборке нет подходящих вариантов по направлению'),'Empty-state scope must stay honest');
+assert.ok(page.includes('Непроверенные карточки скрыты')&&page.includes('Нет туров с обязательной проверкой'),'Empty-state must never substitute source-only tours for absent strict bot proof');
 assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible"){')&&
  page.includes('loadTourPreviews();')&&page.includes('loadVisualProofs();'),

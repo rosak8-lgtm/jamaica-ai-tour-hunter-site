@@ -140,6 +140,20 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(root["previews"])+sum(
             len(chunk["previews"]) for chunk in chunks.values()),len(source))
 
+    def test_zero_qualified_tours_is_valid_safest_public_catalog(self):
+        current=feed()
+        current["previews"]=[]
+        current["publication_rule"]="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1"
+        with self.assertRaises(publisher.CatalogHold):
+            publisher.validate(current,directory())
+        self.assertEqual(publisher.validate(current,directory(),allow_empty=True),0)
+        root,chunks=publisher.make_sharded_catalog(current)
+        self.assertEqual(root["previews"],[])
+        self.assertEqual(root["total_published_previews"],0)
+        self.assertEqual(root["shards"],[])
+        self.assertEqual(chunks,{})
+        self.assertEqual(publisher.validate(root,directory(),allow_empty=True),0)
+
     def test_shard_limit_cannot_silently_overrun(self):
         with patch.object(publisher,"MAX_SHARDS",0):
             f=feed()
