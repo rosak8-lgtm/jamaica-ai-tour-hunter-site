@@ -159,6 +159,13 @@ assert.equal(config.auth_api_enabled,false);
 assert.ok(checkout.includes('/v1/contract-orders/draft'));
 assert.ok(!checkout.includes('/v1/checkout/prepare'),'Legacy pay-before-contract route forbidden');
 assert.ok(previewSelection.includes('quote.html?preview='));
+assert.ok(previewSelection.includes('scripts/preview-alternatives.js')&&
+          previewSelection.includes('JamaicaCatalog.allPreviews(feed')&&
+          previewSelection.includes('id="alternativesStatus"'),
+  'Detail page must find real related trips and other countries from all catalog shards');
+assert.ok(previewSelection.includes('Travelers.suffix(rooms)')&&
+          previewSelection.includes('PREVIOUSLY_SEEN_NOT_RECHECKED'),
+  'Alternatives must keep rooms and suppress unverified archive price');
 assert.ok(quotePage.includes('/v1/preview-quotes'));
 assert.ok(quotePage.includes('if(selected.depart_date<=new Date().toISOString().slice(0,10))')&&
  quotePage.includes('Проверка стоимости и бронирование недоступны'),
