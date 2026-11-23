@@ -147,7 +147,7 @@ class Tests(unittest.TestCase):
 
  def test_extra_stays_or_different_primary_date_cannot_be_quoted(self):
      party=[{"adults":2,"child_ages":[6,12]}]
-     for extra in ({"o_duration":"6"},{"dt":"12.12.2026"},
+     for extra in ({"o_duration":"6"},{"dt":"16.12.2026"},
                    {"id_ns_b":"104625776787"},{"id_ns_a":"104625776787"},
                    {"a_duration":"1"}):
          with self.subTest(extra=extra):
@@ -155,6 +155,22 @@ class Tests(unittest.TestCase):
              self.assertEqual(result["candidate_counts"],[1])
              self.assertEqual(result["source_metadata_counts"],[0])
              self.assertFalse(result["exact_supplier_quote"])
+
+ def test_overnight_travel_uses_real_hotel_start_and_remains_unverified(self):
+     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
+     for delay in ("12.12.2026","15.12.2026"):
+         rows=[row(dt=delay),row(room="FAMILY HB",id_ns="104623691679",
+                              dt=delay,prices=[{"ag":"12+,2-11"}])]
+         report=candidate_report(PREVIEW,rooms,rows)
+         self.assertEqual(report["candidate_counts"],[1,1])
+         self.assertEqual(report["shared_source_candidate_count"],1)
+         self.assertFalse(report["exact_supplier_quote"])
+         self.assertFalse(report["availability_verified"])
+         self.assertFalse(report["bookable"])
+     for impossible in ("10.12.2026","16.12.2026","bad"):
+         report=candidate_report(PREVIEW,[rooms[0]],[row(dt=impossible)])
+         self.assertEqual(report["source_metadata_counts"],[0])
+         self.assertEqual(report["shared_source_candidate_count"],0)
 
  def test_missing_one_room_is_hold_not_price(self):
     rooms=[{"adults":2,"child_ages":[6,12]},{"adults":1,"child_ages":[4]}]
