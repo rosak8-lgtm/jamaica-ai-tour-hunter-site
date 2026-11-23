@@ -36,6 +36,7 @@ python3 -B -m py_compile "$ROOT/scripts/oracle_site_publisher.py" \
   "$ROOT/scripts/catalog_size_budget.py" \
   "$ROOT/scripts/bot_visual_sidecar.py" \
   "$ROOT/scripts/public_tour_eligibility.py" \
+  "$ROOT/scripts/site_bot_price_overlay.py" \
   "$ROOT/scripts/catalog_property_identity.py" \
   "$ROOT/backend/bg_route_first_visual_gate.py"
 [[ -f "$SERVER/oracle_site_publisher.py" ]] || {
@@ -44,6 +45,9 @@ python3 -B -m py_compile "$ROOT/scripts/oracle_site_publisher.py" \
 grep -Fq 'eligibility.select_public_source_rows(new,visual_public)' \
  "$ROOT/scripts/oracle_site_publisher.py" || {
   echo "STOP_SOURCE_PUBLISHER_HAS_NO_BEST_PRICE_BOTH_GREEN_GATE"; exit 2; }
+grep -Fq 'browser_price.apply(published' \
+ "$ROOT/scripts/oracle_site_publisher.py" || {
+  echo "STOP_SOURCE_PUBLISHER_HAS_NO_TRUSTED_DOM_PRICE_OVERLAY"; exit 2; }
 
 # Pause new timer ticks but do not interrupt a running import.
 systemctl --user stop "$TIMER"
