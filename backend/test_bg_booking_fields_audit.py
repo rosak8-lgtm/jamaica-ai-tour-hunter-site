@@ -26,6 +26,44 @@ class BookingAuditTests(unittest.TestCase):
         self.assertNotIn("PRIVATE",str(result))
         self.assertNotIn("115000",str(result))
         self.assertNotIn("102610001486",str(result))
+    def test_actual_irkutsk_supplier_route_beyond_first_three_without_flag(self):
+        # Do not mistake a stale origin flag or the first few files for a
+        # supplier availability check. 7th real list is authoritative source.
+        country={"name":"Индонезия","id":"100410000051",
+                 "has_tour_catalog":True,"origins":[]}
+        directory={"schema":"jamaica.destination-directory.v1",
+                   "countries":[country],"hotels":[HOTEL]}
+        feed={"schema":"jamaica.tour-previews.v1","bookable":False,
+              "previews":[SELECTED]}
+        class Api:
+            def __init__(self):self.calls=[]
+            def get(self,url):
+                self.calls.append(url)
+                if "/yandex?" in url:
+                    listings=[{"date":DAY,"duration":"/7/12",
+                               "url":"https://export.bgoperator.ru/partners?"
+                                 "action=price&tid=211&flt=100410000051"
+                                 "&flt2=100510000863&id_price="+
+                                 str(121132934130+i)+"&data="+DAY+"&xml=11"}
+                               for i in range(7)]
+                    return json.dumps({"entries":listings}).encode()
+                if "/partners?" in url:
+                    return json.dumps({**PAYLOAD,
+                         "entries":[ROW if "121132934136" in url else
+                                    {**ROW,"room":"NOT SELECTED"}]}).encode()
+                raise AssertionError("No other source endpoint")
+        api=Api()
+        results=audit.audit(directory,feed,api,limit=1)
+        self.assertEqual(len(results),1)
+        self.assertEqual(results[0]["matched"],1)
+        self.assertEqual(results[0]["status"],"INSPECTED_SOURCE_ONLY")
+        self.assertEqual(results[0]["lists"],7)
+        self.assertEqual(len(api.calls),8)
+        self.assertIn("flt2=100510000863",api.calls[0])
+        self.assertFalse(results[0]["live_quote_verified"])
+        self.assertFalse(results[0]["bookable"])
+        self.assertNotIn("PRIVATE",str(results))
+
     def test_missing_prx_and_flights_cannot_claim_readiness(self):
         row={**ROW,"sr":""}
         payload={"cur":"EUR","entries":[row]}
