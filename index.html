@@ -853,11 +853,12 @@ function renderMonthShortcuts(){
    origin,country,today:new Date().toISOString().slice(0,10)});
  const active=window.JamaicaMonths.activeMonth(
    $("dateFrom").value,$("dateTo").value);
+ const allDates=!$("dateFrom").value&&!$("dateTo").value;
  const buttons=document.createDocumentFragment();
  function addMonth(month,label){
   const button=el("button","quickMonthChip",label);
   button.type="button";
-  button.setAttribute("aria-pressed",String(month===active));
+  button.setAttribute("aria-pressed",String(month?month===active:allDates));
   button.addEventListener("click",()=>{
    const dates=month?window.JamaicaMonths.range(month):null;
    $("dateFrom").value=dates?dates.from:"";
