@@ -749,6 +749,14 @@ def main():
                     mobile.locator("#filtersDisclosure summary").click()
                     ensure(mobile.locator("#filterCountry").is_visible(),
                            "MOBILE_FILTER_CONTROLS_NOT_ACCESSIBLE")
+                    # Wait for media-query layout on current source cards
+                    # rather than reading computed style during async first paint.
+                    mobile.wait_for_function("""() => {
+                        const card=document.querySelector('#previewCards .tourResultCard');
+                        return window.matchMedia('(max-width: 580px)').matches &&
+                               card && getComputedStyle(card).display==='flex' &&
+                               getComputedStyle(card).flexDirection==='column';
+                    }""",timeout=12000)
                     ensure(mobile.locator("#previewCards .tourResultCard").first.evaluate(
                         "(el)=>getComputedStyle(el).display")=="flex",
                         "MOBILE_CARDS_NOT_STACKED_VERTICALLY")
