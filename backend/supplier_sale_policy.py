@@ -12,7 +12,7 @@ No public catalogue field can authorize these attestations.
 from __future__ import annotations
 
 BG_BEST_PRICE="BG_BEST_PRICE_TWO_FLIGHTS"
-PEGAS="PEGAS_TWO_FLIGHTS"
+PEGAS="STANDARD_TWO_FLIGHTS"
 POLICIES=frozenset((BG_BEST_PRICE,PEGAS))
 
 def valid_policy(policy):
