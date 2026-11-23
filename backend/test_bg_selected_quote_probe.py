@@ -53,6 +53,104 @@ class Tests(unittest.TestCase):
         self.assertNotIn("115000",str(result))
         self.assertNotIn("121132934133",str(result))
         self.assertEqual(len(a.calls),2)
+    def test_additional_country_without_stale_irkutsk_directory_flag(self):
+        # Exporter genuinely found a preview from /yandex?flt2=IRKUTSK.
+        # The directory's origins[] may have been generated earlier.
+        d,feed=self.setup_data()
+        d["countries"][0]={**COUNTRY,"origins":["100510000001"]}
+        api=Api()
+        result=selected.inspect_selected(d,feed,P["id"],api)
+        self.assertEqual(result["matched_rows"],1)
+        self.assertEqual(result["two_adults_with_rub"],1)
+        self.assertFalse(result["quote_verified"])
+        self.assertFalse(result["bookable"])
+        self.assertIn("flt2="+bg.CITY_ID,api.calls[0])
+
+    def test_false_extra_country_without_real_irkutsk_list_stays_unverified(self):
+        d,feed=self.setup_data()
+        d["countries"][0]={**COUNTRY,"origins":[]}
+        class NoIrkutskList(Api):
+            def get(self,url):
+                self.calls.append(url)
+                if "/yandex?" in url:
+                    return b'{"entries":[]}'
+                raise AssertionError("NO_PRICE_LIST_SHOULD_NOT_REQUEST_DETAIL")
+        api=NoIrkutskList()
+        result=selected.inspect_selected(d,feed,P["id"],api)
+        self.assertEqual(result["matched_rows"],0)
+        self.assertEqual(result["detail_lists"],0)
+        self.assertEqual(result["status"],"NO_CURRENT_MATCH")
+        self.assertFalse(result["availability_verified"])
+        self.assertEqual(len(api.calls),1)
+
+    def test_selected_list_after_first_four_same_day_routes_is_found(self):
+        # Exporter may have rotated in the 7th source price-list. A truncated
+        # four-list inspector previously declared the valid preview missing.
+        d,feed=self.setup_data()
+        class ManyLists(Api):
+            def get(self,url):
+                self.calls.append(url)
+                if "/yandex?" in url:
+                    records=[]
+                    for i in range(8):
+                        records.append({
+                          "date":DAY,
+                          "duration":"/7/10/14",
+                          "url":URL.replace("121132934133",str(121132934130+i))})
+                    return json.dumps({"entries":records}).encode()
+                if "/partners?" in url:
+                    target="121132934137" in url
+                    return json.dumps({"prx":"104499999900000025",
+                        "entries":[ROW if target else {**ROW,"room":"OTHER ROOM"}]}).encode()
+                raise AssertionError("unapproved supplier endpoint")
+        api=ManyLists()
+        result=selected.inspect_selected(d,feed,P["id"],api)
+        self.assertEqual(result["matched_rows"],1)
+        self.assertEqual(result["two_adults_with_rub"],1)
+        self.assertEqual(result["detail_lists"],8)
+        self.assertEqual(len(api.calls),9)
+        self.assertFalse(result["quote_verified"])
+
+    def test_source_list_selection_skips_wrong_date_and_advertised_nights(self):
+        listing=lambda date_,n,id_:{"date":date_,"duration":n,
+            "id_price":id_,"url":URL}
+        values=[
+            listing(DAY,"/10/14","wrong_nights"),
+            listing("01.01.2029","/7","wrong_date"),
+            listing(DAY,"","unknown_length"),
+            listing(DAY,"/7/12","right"),
+            listing(DAY,"/7/10","right_second"),
+        ]
+        got=selected.matching_source_listings(values,DATE,7,limit=3)
+        self.assertEqual([x["id_price"] for x in got],
+                         ["right","right_second","unknown_length"])
+        with self.assertRaises(bg.SyncHold):
+            selected.matching_source_listings([{}]*20001,DATE,7)
+        with self.assertRaises(bg.SyncHold):
+            selected.matching_source_listings(values,DATE,7,limit=100)
+
+    def test_many_unrelated_hotel_rows_do_not_block_private_room_matching(self):
+        d,feed=self.setup_data()
+        class LargeList(Api):
+            def get(self,url):
+                self.calls.append(url)
+                if "/yandex?" in url:
+                    return json.dumps({"entries":[{"date":DAY,"url":URL}]}).encode()
+                other={**ROW,"id_hotel":"100000000000","room":"OTHER"}
+                own={**ROW,"id_ns":"104623691678",
+                     "id_price":"121132934133","sr":"PRIVATE_SR",
+                     "dt":DAY,"o_duration":"7"}
+                return json.dumps({"prx":"104499999900000025",
+                    "entries":[other]*10020+[own]}).encode()
+        a=LargeList()
+        out=selected.inspect_selected(d,feed,P["id"],a,
+             selected_rooms=[{"adults":2,"child_ages":[]}])
+        self.assertEqual(out["matched_rows"],1)
+        self.assertEqual(out["private_source_plan_count"],1)
+        self.assertEqual(out["group_source_metadata_counts"],[1])
+        self.assertFalse(out["quote_verified"])
+        self.assertNotIn("PRIVATE_SR",str(out))
+
     def test_exact_selected_family_rooms_are_checked_against_age_buckets(self):
         d,feed=self.setup_data()
         rooms=[{"adults":2,"child_ages":[]},{"adults":1,"child_ages":[6]}]
