@@ -324,8 +324,12 @@ function showTrips(rows){
   const card=make("article","tour");
   card.append(make("strong","",item.depart_date+" · "+item.nights+" ночей"),
     make("p","",item.room+" · "+(item.resort||item.country)));
-  if(typeNumber(item.price_reference_rub))
-   card.append(make("strong","",new Intl.NumberFormat("ru-RU").format(item.price_reference_rub)+" ₽ · 2 взрослых, по прайс-листу"));
+  if(item.price_source==="BG_EXACT_SELECTED_GREEN_BROWSER"&&
+      item.price_observed_at_utc&&
+      Date.now()-Date.parse(item.price_observed_at_utc)<=15*60*1000&&
+      Date.now()-Date.parse(item.price_observed_at_utc)>=-30000&&
+      typeNumber(item.price_reference_rub))
+   card.append(make("strong","",new Intl.NumberFormat("ru-RU").format(item.price_reference_rub)+" ₽ · 2 взрослых, цена при проверке"));
   else card.append(make("p","sub","Рублёвая цена для двух взрослых пока отсутствует"));
   const link=make("a","btn alt","Подробнее о поездке");
   link.href="preview.html?id="+encodeURIComponent(item.id)+"&adults=2&kids=0";

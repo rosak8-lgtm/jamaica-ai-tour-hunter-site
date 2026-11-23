@@ -544,7 +544,10 @@ assert.ok(page.includes('if(document.visibilityState==="visible"){')&&
 assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
 assert.ok(page.includes('previewPriceFresh'));
-assert.ok(page.includes('Цена по прайс-листу на 2 взрослых'));
+assert.ok(page.includes('Цена на момент проверки на 2 взрослых') &&
+ page.includes('x.price_source!=="BG_EXACT_SELECTED_GREEN_BROWSER"') &&
+ page.includes('Date.now()-Date.parse(x.price_observed_at_utc)'),
+ 'Only fresh DOM-observed BG prices for both-green same-tour offers may be displayed');
 assert.ok(page.includes('if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list)'));
 assert.ok(page.includes('id="previewSort"'),'User-selectable tour sorting required');
 assert.ok(page.includes('function previewPriceCompare(a,b)'),'Price comparator required');

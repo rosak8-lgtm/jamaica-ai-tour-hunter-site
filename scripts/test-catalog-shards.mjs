@@ -5,8 +5,23 @@ import assert from 'node:assert/strict';
 const source=fs.readFileSync('scripts/catalog-shards.js','utf8');
 new vm.Script(source,{filename:'catalog-shards.js'});
 const existing=JSON.parse(fs.readFileSync('tour-previews.json','utf8'));
-const model=existing.previews[0];
-assert.ok(model?.id?.startsWith('p_'),'Real source-backed preview fixture required');
+// A real 0-card feed is the ONLY correct production output while no bot
+// receipt has passed BG best-price + both-green. Synthetic source records
+// below exist ONLY in isolated Node tests, never in public JSON.
+const model=existing.previews[0]||{
+ id:'p_'+'a'.repeat(24),hotel_id:'102612345678',
+ hotel:'OFFLINE_SYNTHETIC_TEST_HOTEL',country:'Вьетнам',
+ origin:'Иркутск',resort:'Нячанг',room:'STANDARD AO',
+ depart_date:'2026-12-25',nights:7,
+ status:'REFERENCE_PRICE_LIST_ONLY',price_reference_rub:null,
+ price_reference_party:'UNVERIFIED',
+ bookable:false,quote_verified:false,
+ availability_verified:false,flight_verified:false
+};
+assert.ok(model?.id?.startsWith('p_'),'Source-shard test fixture must be valid');
+assert.ok(existing.previews.length>0||
+ existing.publication_rule==='BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1',
+ 'No synthetic fixture may conceal a non-strict production feed');
 const first={...model,id:'p_'+'1'.repeat(24)};
 const second={...model,id:'p_'+'2'.repeat(24)};
 const root={...existing,previews:[first],shards:[{
