@@ -573,19 +573,39 @@ def main():
                                "SOURCE_ABSENT_MUST_NOT_FABRICATE_OFFER_"+hid)
                         print("EXACT_HOTEL_NOT_IN_CURRENT_SOURCE="+hid)
                         continue
+                    # The text search also looks through resort and room,
+                    # so a non-exact hotel can appear. Never count its photo
+                    # as proof of a different property's identity or license.
+                    exact=page.locator(
+                      "#previewCards article.offerCard:has("+
+                      "a.hotelLink[href='hotel.html?id="+hid+"'])")
+                    if exact.count()==0:
+                        print("EXACT_HOTEL_NOT_IN_VISIBLE_RESULTS="+hid)
+                        continue
                     checked_preview_hotel_photos+=1
-                    ensure(offers.first.locator(".previewMedia img").count()>0,
-                           "CURRENT_EXACT_HOTEL_CARD_PHOTO_MISSING_"+hid)
-                    # Atomic browser-side scroll survives async replacement
-                    # of a preview card by a refreshed source selection.
-                    page.evaluate("""() => {
-                      document.querySelector('#previewCards .previewMedia img')
-                        ?.scrollIntoView({block:'center'});
-                    }""")
+                    # The result feed finishes loading BEFORE its independent
+                    # rights-vetted photo indexes. Wait for the matching ID.
                     page.wait_for_function(
-                       "()=>[...document.querySelectorAll('#previewCards .previewMedia img')]"+
-                       ".some(img=>img.complete&&img.naturalWidth>0)",timeout=20000)
-                    ensure(page.locator("#previewCards .mediaSourceCredit").count()>=1,
+                      """hid=>[...document.querySelectorAll(
+                        '#previewCards article.offerCard')].some(card=>{
+                          const a=card.querySelector('a.hotelLink');
+                          return a?.getAttribute('href')==='hotel.html?id='+hid &&
+                            card.querySelector('.previewMedia img') &&
+                            card.querySelector('.hotelPhotoLabel');
+                        })""",arg=hid,timeout=20000)
+                    ensure(exact.first.locator(".previewMedia img").count()>0 and
+                           exact.first.locator(".hotelPhotoLabel").count()>0,
+                           "CURRENT_EXACT_HOTEL_CARD_PHOTO_MISSING_"+hid)
+                    exact.first.locator(".previewMedia img").scroll_into_view_if_needed()
+                    page.wait_for_function(
+                      """hid=>[...document.querySelectorAll(
+                        '#previewCards article.offerCard')].some(card=>{
+                          const a=card.querySelector('a.hotelLink');
+                          const img=card.querySelector('.previewMedia img');
+                          return a?.getAttribute('href')==='hotel.html?id='+hid &&
+                            img?.complete && img.naturalWidth>0;
+                        })""",arg=hid,timeout=20000)
+                    ensure(exact.first.locator(".mediaSourceCredit").count()>=1,
                            "EXACT_PREVIEW_HOTEL_PHOTO_SOURCE_MISSING_"+hid)
                 print("LIVE_PREVIEW_SOURCE_PRESENT_EXACT_HOTEL_PHOTOS_PASS="+
                       str(checked_preview_hotel_photos))

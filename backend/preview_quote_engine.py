@@ -14,6 +14,7 @@ from backend.contract_first_order_engine import quote_is_valid
 from backend.supplier_sale_policy import (
     BG_BEST_PRICE, valid_policy, check_supplier_evidence
 )
+from backend.bg_route_first_visual_gate import route_first_pair_matches
 
 class PreviewQuoteRepository(Protocol):
     def get_preview(self,preview_id:str)->dict[str,Any]|None: ...
@@ -66,6 +67,14 @@ class PreviewQuoteEngine:
         quoted=self.supplier.check_preview(p,adults,children)
         if not isinstance(quoted,dict) or not _source_matches(p,quoted):
             raise NotAvailable("Supplier response is for another hotel/date/room")
+        # BG bot sequence: select a 'ЛУЧШАЯ ЦЕНА' ROUTE first, then check
+        # BOTH green planes for the EXACT selected hotel/date/room. A bare
+        # supplier best_price_verified=True or unrelated icon is not enough.
+        if (self.sale_policy==BG_BEST_PRICE and
+            not route_first_pair_matches(
+                quoted.get("route_visual_evidence"),
+                quoted.get("flight_visual_evidence"),p,now=self.clock())):
+            raise NotAvailable("Official BG route-first browser evidence absent")
         price=quoted.get("total_rub")
         if (type(price) is not int or price<=0 or
             not check_supplier_evidence(quoted,self.sale_policy) or
