@@ -304,10 +304,24 @@ class Tests(unittest.TestCase):
         self.assertTrue(selected.adult_pair_marker("12+,12+"))
         self.assertTrue(selected.adult_pair_marker("12-99,12-99"))
         self.assertTrue(selected.adult_pair_marker("[14-99],[14-99]"))
+        self.assertTrue(selected.adult_pair_marker("[14-99][14-99]"))
+        self.assertTrue(selected.adult_pair_marker("[18-120][18-120]"))
+        self.assertFalse(selected.adult_pair_marker("[12-12][12-12]"))
+        self.assertFalse(selected.adult_pair_marker("[2-11][12-99]"))
+        self.assertFalse(selected.adult_pair_marker("[14-99][bad]"))
         self.assertFalse(selected.adult_pair_marker("2-11,12+"))
         self.assertFalse(selected.adult_pair_marker("18+,2-11"))
         self.assertFalse(selected.adult_pair_marker("12+,12+,12+"))
         self.assertFalse(selected.adult_pair_marker("any"))
+    def test_compact_real_bg_two_adult_marker_counts_same_price_option(self):
+        # BG documentation uses '[14-99][14-99]' without commas.
+        compact={**ROW,"prices":[
+            {"amount":"1700","RUR":"115000","ag":"[14-99][14-99]"}]}
+        result=selected.inspect_match([compact],P,{HOTEL["id"]:HOTEL})
+        self.assertEqual(result["two_adults_age_markers"],1)
+        self.assertEqual(result["two_adults_with_rub"],1)
+        self.assertFalse(result.get("quote_verified",False))
+
     def test_non_rub_amount_only_is_not_a_sale_price(self):
         row={**ROW,"prices":[{"amount":"1000","ag":"12+,12+"}]}
         result=selected.inspect_match([row],P,{HOTEL["id"]:HOTEL})

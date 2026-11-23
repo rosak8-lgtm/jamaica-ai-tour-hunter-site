@@ -129,7 +129,12 @@ def _operator_source_binding(row:dict):
     started_hotel=_iso(row.get("dt") or row.get("tour_date"))
     total_nights=row.get("duration")
     primary_nights=row.get("o_duration",total_nights)
-    if (started_tour is None or started_hotel!=started_tour or
+    # BG tour_date is the tour departure; dt is the start of the primary
+    # hotel stay. Overnight / connecting journeys may start the hotel later.
+    # The private quote serializer already permits a 0..4 day lag; keep
+    # identical guardrails here, never accept a date before departure.
+    if (started_tour is None or started_hotel is None or
+        not 0 <= (started_hotel-started_tour).days <= 4 or
         str(primary_nights)!=str(total_nights)):
         return None
     sr=row.get("sr")

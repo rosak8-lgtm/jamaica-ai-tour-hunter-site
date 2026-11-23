@@ -24,7 +24,7 @@ import oracle_bg_preview_export as preview
 
 # Reuse private, source-only age-bucket matching with no passenger PII.
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
-from backend.bg_price_age_scope import candidate_report
+from backend.bg_price_age_scope import candidate_report, parse_age_ranges, possible_group
 from backend.bg_private_source_crosswalk import private_source_candidates
 
 ID_RE = re.compile(r"^p_[a-f0-9]{24}$")
@@ -43,20 +43,16 @@ def valid_positive_amount(value):
 
 
 def adult_pair_marker(value):
-    """Recognize two ADULT age bands, but do not infer group price scope."""
-    if not isinstance(value, str):
-        return False
-    parts=[x.strip().strip("[]()") for x in value.split(",")]
-    if len(parts)!=2:
-        return False
-    for part in parts:
-        if part=="12+":
-            continue
-        m=re.fullmatch(r"(\d{1,2})-(\d{1,3})",part)
-        if not m or int(m.group(1))<12 or int(m.group(2))<int(m.group(1)):
-            return False
-    return True
+    """Recognize two adult-capable slots in official BG source price lists.
 
+    The operator emits both '12+,12+' and contiguous '[14-99][14-99]'.
+    Never count child-only bands as two-adult price candidates. This
+    classifies a candidate, never a verified passenger DOB or final price.
+    """
+    bands=parse_age_ranges(value)
+    return (bands is not None and len(bands)==2 and
+            all(low>=12 and high>=18 for low,high in bands) and
+            possible_group(2,[],value))
 
 def inspect_match(rows, selected, hotels):
     """Match real operator rows to the exact selected site preview ID."""
