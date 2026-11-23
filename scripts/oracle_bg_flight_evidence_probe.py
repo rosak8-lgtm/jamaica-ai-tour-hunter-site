@@ -34,11 +34,24 @@ def detailed_url(listing,country_id):
         ("https","export.bgoperator.ru","/partners",
          urllib.parse.urlencode(p),""))
 
-def inspect(directory,api):
-    eligible=[c for c in directory.get("countries",[])
-              if c.get("has_tour_catalog") and bg.CITY_ID in c.get("origins",[])]
+def inspect(directory,api,*,country_name:str=""):
+    if (not isinstance(country_name,str) or len(country_name)>120 or
+        any(x in country_name for x in ("\\n","\\r","\\x00"))):
+        raise bg.SyncHold("INVALID_FLIGHT_COUNTRY_FILTER")
+    countries=directory.get("countries",[])
+    if not isinstance(countries,list) or len(countries)>300:
+        raise bg.SyncHold("FLIGHT_COUNTRY_DIRECTORY_INVALID")
+    eligible=[c for c in countries
+              if isinstance(c,dict) and c.get("has_tour_catalog") is True
+              and isinstance(c.get("name"),str) and
+              isinstance(c.get("id"),str) and
+              (c["name"]==country_name if country_name else
+               bg.CITY_ID in c.get("origins",[]))]
     if not eligible or len(eligible)>80:
         raise bg.SyncHold("FLIGHT_COUNTRY_SCOPE_INVALID")
+    # An exact named extra country may lack an old origins[] annotation.
+    # The authenticated FILES request below STILL binds flt2=Irkutsk,
+    # and without actual returned Irkutsk lists the result remains NO_FUTURE_LIST.
     reports=[]
     for c in eligible:
         report={"country":c["name"],"state":"UNVERIFIED",
@@ -82,17 +95,21 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--directory",required=True)
     p.add_argument("--credentials",default="")
+    p.add_argument("--country",default="")
     args=p.parse_args()
     directory=json.loads(Path(args.directory).read_text(encoding="utf-8"))
     if directory.get("schema")!="jamaica.destination-directory.v1":
         raise bg.SyncHold("DIRECTORY_SCHEMA_INVALID")
     login,password=bg.read_secret(bg.credentials_path(args.credentials))
     bg.BASE="https://export.bgoperator.ru/"
-    reports=inspect(directory,bg.ApiClient(login,password))
+    reports=inspect(directory,bg.ApiClient(login,password),
+                    country_name=args.country)
     print("JAMAICA_FLIGHT_EVIDENCE_READ_ONLY_V1")
     print("COUNTRIES_CHECKED="+str(len(reports)))
     print("COUNTRIES_WITH_BOTH_GREEN_EVIDENCE="+str(sum(r["both_green"]>0 for r in reports)))
     print("NOTE=FLIGHT_Q_IS_SNAPSHOT_NOT_CONFIRMED_BOOKING")
+    print("BG_BEST_PRICE_MARKER_VERIFIED=NO")
+    print("SALE_ELIGIBILITY=NO_SUPPLIER_QUOTE_OR_MARKER")
     for i,r in enumerate(reports,1):
         for k in ("country","state","rows","structured_pairs","both_green",
                   "one_green","stop_sale","missing_composition"):
