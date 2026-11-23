@@ -896,12 +896,15 @@ function renderTourPreviews(reset=true){
  if(!list.length&&previewsLoaded){
    const requested=$("destination").value.trim();
    target.append(el("div","empty",
-      requested?"В текущей опубликованной выборке нет подходящих вариантов по направлению «"+requested+"». Это не означает, что предложения отсутствуют у всех поставщиков. Попробуйте другие даты и ночи.":"По заданным параметрам нет вариантов в текущей опубликованной выборке. Измените дату, страну или длительность."));
+      requested?"Для направления «"+requested+"» сейчас нет туров со свежей меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками. Непроверенные карточки скрыты.":
+      "Нет туров с обязательной проверкой «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков. Непроверенные карточки не публикуются."));
  }
  for(const x of list.slice(previewVisible,previewVisible+30)){
    const card=el("article","offerCard tourResultCard");
+   card.dataset.visualVerified="BEST_PRICE_BOTH_GREEN";
+   card.dataset.previewId=x.id;
    card.append(previewCardPhoto(x));
-   if(visualProofs.has(x.id)){
+   if(window.JamaicaPublicVisualPolicy.eligible(x,visualProofs)){
      const proof=visualProofs.get(x.id);
      const seen=new Date(proof.observed_at_utc).toLocaleString("ru-RU",{
        dateStyle:"short",timeStyle:"short"});
@@ -937,9 +940,7 @@ function renderTourPreviews(reset=true){
 
    const priceBox=el("div","tourResultPrice");
    priceBox.append(el("small","eligibilityUnverified",
-     visualProofs.has(x.id)?
-       "Бот увидел маршрут с меткой и оба перелёта. Нужна новая проверка мест, цены и договора. Оплата закрыта.":
-       "✈ Туда: места не проверены · ✈ Обратно: места не проверены. «ЛУЧШАЯ ЦЕНА»: метка не подтверждена. Предварительный тур, не готов к оплате."));
+     "✓ Метка «ЛУЧШАЯ ЦЕНА» и оба зелёных рейса зафиксированы на выбранном варианте. Места, окончательная стоимость, договор и оплата требуют отдельной проверки."));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      const priceTitle=el("strong","", "Цена по прайс-листу на 2 взрослых: ");
@@ -984,18 +985,19 @@ function renderTourPreviews(reset=true){
    previewRecords,$("departure").value.trim()).keys()].sort(
      window.JamaicaCountryOffers.compareCountries);
  $("catalogBreadth").textContent=previewsLoaded?
-   (country?("Выбрано направление «"+$("destination").value.trim()+"». В опубликованной выборке представлены и другие страны: "+availableCountries.length+"."):
-    ("Предварительные варианты по "+availableCountries.length+" странам: "+availableCountries.slice(0,7).join(", ")+(availableCountries.length>7?" и другие.":".")+
-    " Фото показываются только при подтверждённом соответствии гостинице.")):
-   "Загружаем направления с найденными турами…";
+  (country?"Выбрано направление «"+$("destination").value.trim()+"». Проверенных направлений: "+availableCountries.length+".":
+   "Только туры «ЛУЧШАЯ ЦЕНА» и два зелёных самолётика. Направлений со свежими совпадениями: "+
+   availableCountries.length+(availableCountries.length?": "+availableCountries.slice(0,7).join(", ")+".":"; совпадений пока нет.")+
+   " Обычные записи прайс-листов скрыты.") :
+  "Проверяем обязательные условия туров…";
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
  if(previewsLoaded&&list.length===0){
    $("searchProgress").classList.remove("hide");
-   $("searchProgress").querySelector("strong").textContent="По заданным параметрам нет вариантов в текущем прайс-листе";
-   $("searchProgress").querySelector("p").textContent="Измените дату, страну, гостиницу или число ночей. Справочник гостиниц доступен ниже.";
+   $("searchProgress").querySelector("strong").textContent="Туров со всеми тремя подтверждениями пока нет";
+   $("searchProgress").querySelector("p").textContent="Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков для одного выбранного тура публикация запрещена. Можно изменить даты или страну.";
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
