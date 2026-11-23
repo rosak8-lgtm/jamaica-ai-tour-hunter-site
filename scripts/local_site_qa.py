@@ -53,6 +53,11 @@ def main():
         require(previews["total_published_previews"]==len(previews["previews"]),
                 "catalog total does not match published shards")
     config=load("checkout-config.json")
+    import catalog_property_identity as property_identity
+    try:
+        property_identity.verify_catalog_hotel_identity(previews["previews"],directory)
+    except property_identity.IdentityMismatch as exc:
+        raise SystemExit("JAMAICA_HOTEL_IDENTITY_HOLD="+str(exc)) from exc
     require(directory.get("schema")=="jamaica.destination-directory.v1","directory schema")
     require(directory.get("total_countries")==251,"countries missing")
     require(isinstance(directory.get("hotels"),list),"hotel directory missing")
