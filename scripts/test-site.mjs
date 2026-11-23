@@ -313,7 +313,10 @@ assert.ok(hotelPage.includes('hotel-reviews-config.json'),'Hotel review backend 
 assert.ok(hotelPage.includes('hotel-media-approved.json'),'Supplier gallery needs explicit commercial-use grant');
 assert.ok(page.includes('./scripts/commons-hotel-media.js'));
 assert.ok(page.includes('window.JamaicaOpenHotelMedia.get('));
-assert.ok(page.includes('Условия лицензии'));
+assert.ok(page.includes('lic.href=photo.licenseUrl')&&
+ page.includes('const attribution=el("a","mediaSourceCredit"')&&
+ !page.includes('renderDestinationPhoto('),
+ 'Only verified exact-hotel thumbnails may show licensed image attribution');
 assert.ok(hotelPage.includes('./scripts/commons-hotel-media.js'));
 assert.ok(hotelPage.includes('loadOpenLicensedHotelPhotos()'));
 assert.ok(hotelPage.includes('showVerifiedOfficialGallery()'));
