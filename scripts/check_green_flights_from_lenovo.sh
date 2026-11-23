@@ -26,17 +26,21 @@ PROBE_SLOT="${3:-0}"
 }
 (( PROBE_SLOT <= 10000 )) || { echo "STOP_ROTATION_SLOT_TOO_LARGE"; exit 2; }
 REMOTE_COUNTRY_ARG=" --max-lists $MAX_LISTS --probe-slot $PROBE_SLOT"
-if [[ -n "$COUNTRY" ]]; then
+if [[ -n "$COUNTRY" && "$COUNTRY" != "--all-observed" ]]; then
   # GNU/bash printf %q shell-escapes all user-controlled bytes (including
   # spaces, quotes and metacharacters), prior to constructing remote argv.
-  REMOTE_COUNTRY_ARG=" --country $(printf '%q' "$COUNTRY")"
+  REMOTE_COUNTRY_ARG+=" --country $(printf '%q' "$COUNTRY")"
 fi
 SSH=(ssh -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -i "$KEY")
 SCP=(scp -F /dev/null -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -i "$KEY")
 REMOTE_TMP=""
+LOCAL_TMP=""
 cleanup(){
  if [[ "$REMOTE_TMP" =~ ^/tmp/jamaica-flight-audit\.[[:alnum:]]+$ ]];then
    "${SSH[@]}" "$REMOTE" "rm -rf -- '$REMOTE_TMP'" >/dev/null 2>&1 || true
+ fi
+ if [[ "$LOCAL_TMP" =~ ^/tmp/jamaica-observed-countries\.[[:alnum:]]+$ ]];then
+   rm -rf -- "$LOCAL_TMP"
  fi
 }
 trap cleanup EXIT
@@ -51,6 +55,33 @@ REMOTE_TMP="$("${SSH[@]}" "$REMOTE" 'umask 077; mktemp -d /tmp/jamaica-flight-au
  "$ROOT/scripts/oracle_bg_route_sync.py" \
  "$ROOT/scripts/tour_price_reference.py" \
  "$ROOT/destination-directory.json" "$REMOTE:$REMOTE_TMP/"
+if [[ "$COUNTRY" == "--all-observed" ]]; then
+  # Source names ONLY from the complete locally verified hash-manifest feed.
+  # No dummy locations or every country from the general 251-country list.
+  LOCAL_TMP="$(mktemp -d /tmp/jamaica-observed-countries.XXXXXXXX)"
+  python3 -B - "$ROOT" "$LOCAL_TMP/observed.json" <<'PY'
+import json,os,sys
+from datetime import datetime,timezone
+from pathlib import Path
+root=Path(sys.argv[1])
+sys.path.insert(0,str(root))
+from scripts.local_selected_preview import _all_previews
+feed,rows=_all_previews(root/"tour-previews.json")
+today=datetime.now(timezone.utc).date().isoformat()
+names=sorted({x["country"] for x in rows
+              if x["depart_date"]>today and x["origin"]=="Иркутск"})
+if not 1<=len(names)<=20:
+    raise SystemExit("STOP_OBSERVED_COUNTRY_COUNT_UNSAFE")
+path=Path(sys.argv[2])
+fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+with os.fdopen(fd,"w",encoding="utf-8") as dst:
+    json.dump(names,dst,ensure_ascii=False,separators=(",",":"))
+print("JAMAICA_OBSERVED_SOURCE_COUNTRIES="+str(len(names)))
+PY
+  "${SCP[@]}" "$LOCAL_TMP/observed.json" "$REMOTE:$REMOTE_TMP/observed.json"
+  "${SSH[@]}" "$REMOTE" "chmod 600 '$REMOTE_TMP/observed.json'"
+  REMOTE_COUNTRY_ARG+=" --countries-file '$REMOTE_TMP/observed.json'"
+fi
 echo "=== BG READONLY OUTBOUND/RETURN GREEN FLIGHT EVIDENCE ==="
 "${SSH[@]}" "$REMOTE" "python3 -B '$REMOTE_TMP/oracle_bg_flight_evidence_probe.py' --directory '$REMOTE_TMP/destination-directory.json'$REMOTE_COUNTRY_ARG"
 echo "JAMAICA_GREEN_PLANES_AUDIT_COMPLETE"
