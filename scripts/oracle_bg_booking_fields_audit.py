@@ -25,7 +25,7 @@ import tour_price_reference as price_ref
 
 SAFE_FLAGS=("template_id","roommeal_id","main_duration","departure_date",
             "operator_prx","two_adult_price_option","flight_selection_reference")
-MAX_LISTS_PER_PREVIEW=3
+MAX_LISTS_PER_PREVIEW=12
 
 def assess_row(row,payload,listing,selected,hotels):
     if not isinstance(row,dict) or not isinstance(payload,dict):
@@ -73,10 +73,13 @@ def audit(directory,feed,api,limit=3):
             file_feed=json.loads(api.get("https://export.bgoperator.ru/yandex?"+query))
             sources=file_feed.get("entries",[])
             if not isinstance(sources,list):raise bg.SyncHold("FILES_SCHEMA")
-            sources=[x for x in sources if isinstance(x,dict) and x.get("stop") is None and
-                     bg.date_iso(x.get("date")) and
-                     bg.date_iso(x.get("date")).isoformat()==selected["depart_date"]]
-            for item in sources[:MAX_LISTS_PER_PREVIEW]:
+            # Same on-demand source matching used by customer tour detail:
+            # independent same-day price lists may contain selected route in
+            # the 5th or later file, and FILES origins[] may lag the live API.
+            sources=scan.selected.matching_source_listings(
+                sources,selected["depart_date"],selected["nights"],
+                limit=MAX_LISTS_PER_PREVIEW)
+            for item in sources:
                 url=detail.safe_url(item,country["id"])
                 raw=json.loads(api.get(url))
                 rows=raw.get("entries") if isinstance(raw,dict) else None
