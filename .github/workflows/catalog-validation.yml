@@ -6,6 +6,11 @@ on:
       - tour-previews.json
       - 'tour-previews-shards/**'
       - destination-directory.json
+      - scripts/local_site_qa.py
+      - scripts/site_no_node_qa.py
+      - scripts/test-site.mjs
+      - scripts/test-catalog-shards.mjs
+      - .github/workflows/catalog-validation.yml
   workflow_dispatch:
 permissions:
   contents: read
