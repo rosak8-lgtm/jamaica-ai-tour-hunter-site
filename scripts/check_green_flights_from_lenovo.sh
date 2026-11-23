@@ -13,10 +13,19 @@ for file in oracle_bg_flight_evidence_probe.py flight_availability_evidence.py \
 done
 test -f "$ROOT/destination-directory.json" || {
  echo "STOP_DIRECTORY_MISSING"; exit 2; }
-[[ $# -le 1 ]] || { echo "STOP_ONLY_ONE_COUNTRY_ALLOWED"; exit 2; }
+# Country, number of source lists, and rotation slot are the only inputs.
+# No remote shell evaluation of unvalidated numeric arguments.
+[[ $# -le 3 ]] || { echo "STOP_EXPECT_COUNTRY_LIST_COUNT_SLOT"; exit 2; }
 COUNTRY="${1:-}"
+MAX_LISTS="${2:-1}"
+PROBE_SLOT="${3:-0}"
 [[ ${#COUNTRY} -le 120 ]] || { echo "STOP_COUNTRY_NAME_TOO_LONG"; exit 2; }
-REMOTE_COUNTRY_ARG=""
+[[ "$MAX_LISTS" =~ ^[1-5]$ ]] || { echo "STOP_INVALID_LIST_COUNT"; exit 2; }
+[[ "$PROBE_SLOT" =~ ^(0|[1-9][0-9]{0,4})$ ]] || {
+ echo "STOP_INVALID_ROTATION_SLOT"; exit 2;
+}
+(( PROBE_SLOT <= 10000 )) || { echo "STOP_ROTATION_SLOT_TOO_LARGE"; exit 2; }
+REMOTE_COUNTRY_ARG=" --max-lists $MAX_LISTS --probe-slot $PROBE_SLOT"
 if [[ -n "$COUNTRY" ]]; then
   # GNU/bash printf %q shell-escapes all user-controlled bytes (including
   # spaces, quotes and metacharacters), prior to constructing remote argv.
