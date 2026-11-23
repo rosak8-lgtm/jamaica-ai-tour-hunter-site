@@ -260,3 +260,15 @@ body{background:var(--bg);color:var(--ink)}
  #previewCards .previewScenePlaceholder{min-height:200px;padding:19px!important}
  #previewCards .previewPlaceholderEmblem{width:59px;height:59px;font-size:38px}
 }
+
+/* Transparent scanning geography is metadata, never a tour/price offer card. */
+.sourceSearchCoverage{margin:9px 0 16px;padding:13px 15px;background:#fff;border:1px solid #dfd5e9;border-radius:16px;color:#38204c}
+.sourceSearchCoverage>summary{font-size:13px;line-height:1.6;font-weight:800;cursor:pointer;color:#3b2358;list-style:revert}
+.sourceSearchDisclaimer{font-size:12px;color:#675775;line-height:1.55;margin:12px 0 10px;max-width:780px}
+.sourceSearchCountryChips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 13px}
+.sourceSearchChip{font:inherit;cursor:pointer;font-size:12px;font-weight:700;border:1px solid #d6c6e4;background:#faf7fc;color:#4b2d69;padding:8px 12px;border-radius:999px}
+.sourceSearchChip:hover{background:#f2ebfa;border-color:#a786c1}
+.sourceSearchChip[aria-pressed="true"]{background:#3c225d;color:#fff;border-color:#3c225d}
+.sourceSearchChip:focus-visible{outline:3px solid #05a8ad;outline-offset:3px}
+.sourceSearchMonths{font-size:11px;color:#796b89;line-height:1.6;margin:6px 0 0}
+@media(max-width:580px){.sourceSearchCoverage{padding:12px}.sourceSearchCountryChips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:4px 3px 9px}.sourceSearchChip{flex:none;white-space:nowrap}}
