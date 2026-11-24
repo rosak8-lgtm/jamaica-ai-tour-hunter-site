@@ -363,8 +363,12 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
             # Favor cheaper known prices and date coverage before final cap.
             results.extend(fair_catalog(list(country_by_id.values()),max_rows=MAX_PER_COUNTRY))
             stats["status"]="CHECKED" if stats["lists_read"] else "NO_FUTURE_LIST"
-        except (bg.SyncHold,urllib.error.HTTPError,urllib.error.URLError,
-                ValueError,TimeoutError,KeyError):
+        except urllib.error.HTTPError as exc:
+            # Stop the entire broad sweep after a supplier access/rate hold.
+            # Do not continue issuing requests to the other countries.
+            if exc.code in (401,403,429):raise
+            stats["status"]="UNVERIFIED"
+        except (bg.SyncHold,urllib.error.URLError,ValueError,TimeoutError,KeyError):
             stats["status"]="UNVERIFIED"
         statuses.append(stats)
     selected=fair_catalog(results)
@@ -395,6 +399,7 @@ def main():
     p.add_argument("--max-countries", type=int, default=MAX_COUNTRIES)
     p.add_argument("--per-country", type=int, default=MAX_LISTS_PER_COUNTRY)
     p.add_argument("--discover-state", default="")
+    p.add_argument("--probe-slot",type=int,default=None)
     args = p.parse_args()
     if not 1<=args.max_countries<=MAX_COUNTRIES or not 1<=args.per_country<=MAX_LISTS_PER_COUNTRY:
         raise bg.SyncHold("PROBE_LIMIT_INVALID")
@@ -416,7 +421,7 @@ def main():
     result=build(catalog,bg.ApiClient(login,password),
                  args.max_countries,args.per_country,
                  extra_priority_names=extra_priority,
-                 probe_slot=int(datetime.now(timezone.utc).timestamp()//300))
+                 probe_slot=(args.probe_slot if args.probe_slot is not None else int(datetime.now(timezone.utc).timestamp()//300)))
     if not result["previews"]:
         for i, stats in enumerate(result["countries_status"], 1):
             print("COUNTRY_"+str(i)+"="+stats["country"])
