@@ -75,6 +75,9 @@ class Tests(unittest.TestCase):
             merged,n=publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment)
             self.assertEqual(n,1)
             self.assertEqual(merged["previews"][0],row)
+            projected,n2=publisher.merge_exact_browser_source({**current,"previews":[]},d,receipts,path=target,now=moment)
+            self.assertEqual(n2,1)
+            self.assertEqual(projected["previews"],[row])
             visual=publisher.visual.build_visual_feed(merged["previews"],receipts,now=moment)
             public=publisher.eligibility.select_public_source_rows(merged,visual,now=moment)
             prices={"schema":"jamaica.bg-site-dom-prices.v1","records":[
@@ -93,6 +96,80 @@ class Tests(unittest.TestCase):
             self.assertEqual(publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment)[1],0)
             save(record);target.chmod(0o644)
             self.assertEqual(publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment)[1],0)
+
+    def test_cooldown_and_broad_scan_throttle(self):
+        moment=datetime.now(timezone.utc)
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            state=root/"state.json"
+            with patch.object(publisher,"RUNROOT",root):
+                self.assertFalse(publisher.provider_hold_active(path=state,now=moment))
+                state.write_text(json.dumps({"schema":"jamaica.site-bot.v1",
+                    "provider_hold_until_utc":(moment+timedelta(minutes=25)).isoformat()}))
+                state.chmod(0o600)
+                self.assertTrue(publisher.provider_hold_active(path=state,now=moment))
+                self.assertFalse(publisher.provider_hold_active(path=state,now=moment+timedelta(minutes=26)))
+                state.chmod(0o644)
+                self.assertTrue(publisher.provider_hold_active(path=state,now=moment))
+                self.assertTrue(publisher.source_scan_due(now=moment))
+                publisher.mark_source_attempt(now=moment)
+                self.assertFalse(publisher.source_scan_due(now=moment+timedelta(minutes=29)))
+                self.assertTrue(publisher.source_scan_due(now=moment+timedelta(minutes=31)))
+
+    def test_projection_does_not_renew_old_source_rows_or_timestamp(self):
+        moment=datetime.now(timezone.utc)
+        old=feed()
+        old["refreshed_at_utc"]=(moment-timedelta(hours=1)).isoformat()
+        old["countries_status"]=[{"country":"Турция","previews":1}]
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);path=root/"generated-tour-previews.json"
+            path.write_text(json.dumps(old));path.chmod(0o600)
+            before=path.read_bytes()
+            with patch.object(publisher,"RUNROOT",root):
+                new=publisher.projection_base(now=moment)
+            self.assertEqual(new["previews"],[])
+            self.assertEqual(new["indicative_two_adult_rub_count"],0)
+            self.assertEqual(new["source_scope"]["source_scan_refreshed_at_utc"],old["refreshed_at_utc"])
+            self.assertFalse(new["source_scope"]["source_scan_performed_this_cycle"])
+            self.assertEqual(path.read_bytes(),before)
+            self.assertEqual(publisher.validate(new,directory(),allow_empty=True),0)
+
+    def test_hold_projection_without_any_supplier_request(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);site=root/"site";site.mkdir()
+            (site/"destination-directory.json").write_text(json.dumps(directory()))
+            def git_only(args,**kwargs):
+                self.assertEqual(args[0],"git")
+                return SimpleNamespace(stdout="",returncode=0)
+            with patch.object(publisher,"RUNROOT",root), \
+                 patch.object(publisher,"CHECKOUT",site), \
+                 patch.object(publisher,"provider_hold_active",return_value=True), \
+                 patch.object(publisher,"refresh_directory") as refresh_dir, \
+                 patch.object(publisher,"refresh_source_feed") as scan, \
+                 patch.object(publisher.visual,"read_private_receipts",return_value=None), \
+                 patch.object(publisher.browser_price,"read_ledger",return_value=None), \
+                 patch.object(publisher,"save_recent_source_cache") as save_cache, \
+                 patch.object(publisher,"run",side_effect=git_only):
+                publisher.publish({})
+                refresh_dir.assert_not_called();scan.assert_not_called();save_cache.assert_not_called()
+            out=json.loads((site/"tour-previews.json").read_text())
+            self.assertEqual(out["previews"],[])
+            self.assertEqual(out["total_published_previews"],0)
+            self.assertEqual(json.loads((site/"tour-visual-evidence.json").read_text())["entries"],[])
+
+    def test_visual_serializer_accepts_2000_proofs_and_rejects_stale(self):
+        moment=datetime.now(timezone.utc)
+        proof=publisher.visual.empty_public()
+        proof["entries"]=[{"preview_id":"p_"+format(i,"024x"),
+            "observed_at_utc":moment.isoformat(),"route_best_price_seen":True,
+            "both_green_planes_seen":True} for i in range(2000)]
+        encoded=publisher.encode_public_visual_feed(proof,now=moment)
+        self.assertGreater(len(encoded),100_000)
+        self.assertLess(len(encoded),publisher.MAX_PUBLIC_VISUAL_BYTES)
+        self.assertEqual(len(json.loads(encoded)["entries"]),2000)
+        with self.assertRaises(publisher.CatalogHold):
+            publisher.encode_public_visual_feed(proof,now=moment+timedelta(minutes=16))
 
     def test_private_source_refresh_preserves_previous_feed_until_validated(self):
         with tempfile.TemporaryDirectory() as work:
