@@ -1109,8 +1109,10 @@ async function loadTourPreviews(){
     data.total_candidate_previews:advertisedTotal;
   $("previewCoverage").textContent="Направлений с туристическим каталогом: "+
     (Number.isInteger(scope.source_tour_countries)?scope.source_tour_countries:"уточняется")+
-    "; проверено в этом цикле: "+coverage.length+
+    "; по последнему сканированию: "+coverage.length+
     "; предварительные варианты опубликованы по "+withTours.size+" странам."+
+    (scope.source_scan_refreshed_at_utc&&Number.isFinite(Date.parse(scope.source_scan_refreshed_at_utc))?
+      " Обзор прайс-листов: "+new Date(scope.source_scan_refreshed_at_utc).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"})+".":"")+
     (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
     " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным."+
     (sampledMonths.length?" Месяцы, из которых проверялись прайс-листы в этом цикле: "+sampledMonths.join(", ")+". Даты и цены меняются; остальные месяцы проверяются в последующих циклах.":"")+

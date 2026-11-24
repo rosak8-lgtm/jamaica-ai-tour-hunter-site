@@ -384,7 +384,8 @@ def refresh_source_feed(directory):
         command=[sys.executable,"-B",str(SCRIPTS/"oracle_bg_preview_export.py"),
                  "--directory",str(CHECKOUT/"destination-directory.json"),
                  "--output",str(staged),"--max-countries","120",
-                 "--per-country","5","--discover-state",str(DISCOVERY_STATE)]
+                 "--per-country","5","--discover-state",str(DISCOVERY_STATE),
+                 "--probe-slot",str(int(datetime.now(timezone.utc).timestamp()//1800))]
         run(command,cwd=SCRIPTS,timeout=200,expose=True)
         if not staged.is_file() or staged.is_symlink():
             raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
@@ -462,38 +463,152 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
     return {**feed,"previews":combined[:MAX_ITEMS]},len(accepted)
 
 
+SOURCE_SCAN_INTERVAL=timedelta(minutes=30)
+MAX_PUBLIC_VISUAL_BYTES=500_000
+BOT_STATE=Path.home()/".local"/"state"/"jamaica-site-bg-bot"/"state.json"
+
+def read_owner_json(path, limit):
+    import stat
+    fd=os.open(path,os.O_RDONLY|getattr(os,"O_NOFOLLOW",0)|os.O_NONBLOCK)
+    try:
+        st=os.fstat(fd)
+        if (not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or
+            st.st_mode&0o077 or not 2<=st.st_size<=limit):
+            raise ValueError("PRIVATE_STATE_UNSAFE")
+        with os.fdopen(fd,"rb",closefd=False) as stream:
+            data=stream.read(limit+1)
+        if len(data)>limit:raise ValueError("PRIVATE_STATE_OVERSIZE")
+        result=json.loads(data)
+        if not isinstance(result,dict):raise ValueError("PRIVATE_STATE_SCHEMA")
+        return result
+    finally:os.close(fd)
+
+def provider_hold_active(*,path=None,now=None):
+    now=now or datetime.now(timezone.utc)
+    try:
+        state=read_owner_json(path or BOT_STATE,100_000)
+        if state.get("schema")!="jamaica.site-bot.v1":return True
+        hold=state.get("provider_hold_until_utc")
+        if hold is None:return False
+        end=timestamp(hold)
+        return end is None or now<end
+    except FileNotFoundError:return False
+    except (OSError,ValueError,TypeError):return True
+
+def source_scan_due(*,now=None):
+    now=now or datetime.now(timezone.utc)
+    # Throttle attempts, not just successful scans. Do not repeat a failed
+    # expensive broad sweep every three minutes.
+    marker=RUNROOT/".source-scan-last-attempt-v21.json"
+    try:
+        attempt=read_owner_json(marker,1024)
+        started=timestamp(attempt.get("attempt_at_utc"))
+        if not started:return False
+        if now-started<SOURCE_SCAN_INTERVAL:return False
+    except FileNotFoundError:pass
+    except (OSError,ValueError,TypeError):return False
+    try:
+        st=(RUNROOT/"generated-tour-previews.json").lstat()
+        observed=datetime.fromtimestamp(st.st_mtime,timezone.utc)
+        if now-observed<SOURCE_SCAN_INTERVAL:return False
+    except FileNotFoundError:pass
+    return True
+
+def mark_source_attempt(*,now=None):
+    now=now or datetime.now(timezone.utc)
+    fd,name=tempfile.mkstemp(prefix=".source-attempt-",dir=RUNROOT)
+    target=Path(name)
+    try:
+        with os.fdopen(fd,"w",encoding="utf-8") as stream:
+            json.dump({"attempt_at_utc":now.isoformat()},stream)
+            stream.flush();os.fsync(stream.fileno())
+        os.replace(target,RUNROOT/".source-scan-last-attempt-v21.json")
+    finally:
+        if target.exists():target.unlink()
+
+def projection_base(*,now=None):
+    """Only metadata from last actual scan; no cached candidate becomes fresh.
+    Fresh exact source receipts independently supply all publishable rows.
+    Keep original scan timestamp separate from projection timestamp.
+    """
+    now=now or datetime.now(timezone.utc)
+    metadata={}
+    try:
+        old=read_owner_json(RUNROOT/"generated-tour-previews.json",MAX_BYTES)
+        if old.get("schema")=="jamaica.tour-previews.v1":metadata=old
+    except (OSError,ValueError,TypeError):pass
+    scope=metadata.get("source_scope",{})
+    if not isinstance(scope,dict):scope={}
+    coverage=metadata.get("countries_status",[])
+    if not isinstance(coverage,list):coverage=[]
+    return {"schema":"jamaica.tour-previews.v1",
+        "refreshed_at_utc":now.isoformat(timespec="seconds"),
+        "classification":"PRELIMINARY_DETAILS_NOT_OFFERS","origin":"Иркутск",
+        "countries_status":coverage[:120],
+        "source_scope":{**scope,"source_scan_refreshed_at_utc":metadata.get("refreshed_at_utc"),
+                        "source_scan_performed_this_cycle":False,
+                        "last_24h_unrechecked_previews":0,"last_24h_unrechecked_countries":0},
+        "total_candidate_previews":metadata.get("total_candidate_previews",0),
+        "truncated_to_public_limit":False,
+        "previews":[],"indicative_two_adult_rub_count":0,
+        "bookable":False,"quote_verified":False,"availability_verified":False}
+
+def encode_public_visual_feed(payload,*,now=None):
+    if not visual.validate_public_feed(payload,now=now):
+        raise CatalogHold("PUBLIC_VISUAL_FEED_INVALID")
+    encoded=json.dumps(payload,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
+    if len(encoded)>MAX_PUBLIC_VISUAL_BYTES:
+        raise CatalogHold("PUBLIC_VISUAL_FEED_TOO_LARGE")
+    return encoded
+
 def publish(env):
-    # Destination directory is in this clone. Source secrets remain outside Git.
-    refresh_directory()
+    # Publication and expensive discovery are intentionally decoupled.
+    hold=provider_hold_active()
+    scan=not hold and source_scan_due()
+    if scan:refresh_directory()
     directory=json.loads((CHECKOUT/"destination-directory.json").read_text(encoding="utf-8"))
     directory_check(directory)
     feed_path=CHECKOUT/"tour-previews.json"
     previous=json.loads(feed_path.read_text(encoding="utf-8")) if feed_path.is_file() else None
-    new=refresh_source_feed(directory)
-    previous_cache=load_recent_source_cache()
-    if previous_cache is not None:
-        raw_entries=previous_cache.get("entries")
-        if not isinstance(raw_entries,list) or len(raw_entries)>MAX_ITEMS or any(
-            not isinstance(e,dict) or set(e)!={"row","last_seen_at_utc"}
-            for e in raw_entries):
-            raise CatalogHold("PRIVATE_SOURCE_CACHE_ENTRIES_INVALID")
-        cached_rows=[e["row"] for e in raw_entries]
-        if cached_rows:
-            validate({**new,"previews":cached_rows},directory)
-    new,next_cache=recent.combine(new,previous_cache,max_rows=MAX_ITEMS)
-    new,dropped_by_budget=byte_limit.fit_feed(new,max_bytes=32_000_000)
-    # Never accumulate private history entries that failed the public byte cap.
-    retained_ids={item["id"] for item in new["previews"]}
-    next_cache={**next_cache,"entries":[item for item in next_cache["entries"]
-                if item["row"]["id"] in retained_ids]}
-    log("JAMAICA_PREVIEWS_DROPPED_BY_BYTE_BUDGET",dropped_by_budget)
-    count=validate(new,directory)
-    # Fail closed BEFORE Git staging and publication if ANY of the up to
-    # 60,000 source-backed hotel cards mismatches the official hotel ID/name/
-    # country crosswalk. Do not guess or silently swap properties/photos.
-    proof=identity.verify_catalog_hotel_identity(new["previews"],directory)
-    log("JAMAICA_HOTEL_IDENTITY_VERIFIED_ROWS",proof["checked"])
-    log("JAMAICA_HOTEL_IDENTITY_VERIFIED_COUNTRIES",proof["countries"])
+    next_cache=None
+    new=None
+    if scan:
+        mark_source_attempt()
+        try:new=refresh_source_feed(directory)
+        except (CatalogHold,subprocess.TimeoutExpired,OSError,ValueError,KeyError):
+            log("JAMAICA_BROAD_SOURCE_SCAN","FAILED_USE_EXACT_PROOFS_ONLY")
+    if new is not None:
+        new["source_scope"]={**new.get("source_scope",{}),
+            "source_scan_refreshed_at_utc":new["refreshed_at_utc"],
+            "source_scan_performed_this_cycle":True}
+        previous_cache=load_recent_source_cache()
+        if previous_cache is not None:
+            raw_entries=previous_cache.get("entries")
+            if not isinstance(raw_entries,list) or len(raw_entries)>MAX_ITEMS or any(
+                not isinstance(e,dict) or set(e)!={"row","last_seen_at_utc"}
+                for e in raw_entries):
+                raise CatalogHold("PRIVATE_SOURCE_CACHE_ENTRIES_INVALID")
+            cached_rows=[e["row"] for e in raw_entries]
+            if cached_rows:
+                validate({**new,"previews":cached_rows},directory)
+        new,next_cache=recent.combine(new,previous_cache,max_rows=MAX_ITEMS)
+        new,dropped_by_budget=byte_limit.fit_feed(new,max_bytes=32_000_000)
+        # Never accumulate private history entries that failed the public byte cap.
+        retained_ids={item["id"] for item in new["previews"]}
+        next_cache={**next_cache,"entries":[item for item in next_cache["entries"]
+                    if item["row"]["id"] in retained_ids]}
+        log("JAMAICA_PREVIEWS_DROPPED_BY_BYTE_BUDGET",dropped_by_budget)
+        count=validate(new,directory)
+        # Fail closed BEFORE Git staging and publication if ANY of the up to
+        # 60,000 source-backed hotel cards mismatches the official hotel ID/name/
+        # country crosswalk. Do not guess or silently swap properties/photos.
+        proof=identity.verify_catalog_hotel_identity(new["previews"],directory)
+        log("JAMAICA_HOTEL_IDENTITY_VERIFIED_ROWS",proof["checked"])
+        log("JAMAICA_HOTEL_IDENTITY_VERIFIED_COUNTRIES",proof["countries"])
+    else:
+        new=projection_base()
+        count=validate(new,directory,allow_empty=True)
+        log("JAMAICA_BROAD_SOURCE_SCAN","PROVIDER_BACKOFF" if hold else "DEFERRED")
     # Build only PRIVATE source candidates until the bot has independently
     # checked the selected route's badge and both flight icons.
     # Optional authenticated V183 browser-event bridge. A file from the bot
@@ -502,7 +617,7 @@ def publish(env):
     try:
         private_receipts=visual.read_private_receipts(PRIVATE_BOT_VISUAL_RECEIPTS)
         new,exact_count=merge_exact_browser_source(new,directory,private_receipts)
-        count=validate(new,directory)
+        count=validate(new,directory,allow_empty=True)
         log("JAMAICA_SITE_EXACT_SOURCE_ROWS",exact_count)
         visual_public=visual.build_visual_feed(
             new["previews"],private_receipts)
@@ -536,7 +651,7 @@ def publish(env):
         previous_visual=None
     visual_changed=previous_visual!=visual_public
     log("JAMAICA_VISUAL_ROUTE_FIRST_MATCHES",len(visual_public["entries"]))
-    promoted=update_discovered_source_countries(new,directory)
+    promoted=update_discovered_source_countries(new,directory) if next_cache is not None else 0
     log("JAMAICA_SOURCE_COUNTRIES_TOTAL",new.get("source_scope",{}).get("source_tour_countries","UNKNOWN"))
     log("JAMAICA_OTHER_COUNTRIES_PROBED",new.get("source_scope",{}).get("other_countries_probed_this_cycle","UNKNOWN"))
     log("JAMAICA_DISCOVERED_EXTRA_COUNTRIES",promoted)
@@ -552,7 +667,7 @@ def publish(env):
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
     if not changed_dir and not visual_changed and not needs_publish(previous,public_root):
-        save_recent_source_cache(next_cache)
+        save_recent_source_cache(next_cache) if next_cache is not None else None
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
     # Keep the legacy fast index small; publish the remainder in verifiable
@@ -583,16 +698,13 @@ def publish(env):
     feed_path.write_bytes(root_bytes)
     if visual_path.is_symlink():
         raise CatalogHold("PUBLIC_VISUAL_FEED_SYMLINK")
-    visual_bytes=json.dumps(visual_public,ensure_ascii=False,
-        separators=(",",":")).encode("utf-8")+b"\n"
-    if len(visual_bytes)>100_000:
-        raise CatalogHold("PUBLIC_VISUAL_FEED_TOO_LARGE")
+    visual_bytes=encode_public_visual_feed(visual_public)
     visual_path.write_bytes(visual_bytes)
     run(["git","add","-A","--","tour-previews.json","destination-directory.json",SHARD_FOLDER,PUBLIC_VISUAL_PATH],
         cwd=CHECKOUT,env=env)
     staged=run(["git","diff","--cached","--quiet"],cwd=CHECKOUT,env=env,check=False)
     if staged.returncode==0:
-        save_recent_source_cache(next_cache)
+        save_recent_source_cache(next_cache) if next_cache is not None else None
         log("JAMAICA_ORACLE_PUBLISH","NOTHING_TO_COMMIT")
         return
     if staged.returncode!=1:
@@ -603,7 +715,7 @@ def publish(env):
         cwd=CHECKOUT,env=env)
     # If another process pushed meanwhile, stop instead of force-pushing.
     run(["git","push","origin","HEAD:refs/heads/main"],cwd=CHECKOUT,env=env,timeout=90)
-    save_recent_source_cache(next_cache)
+    save_recent_source_cache(next_cache) if next_cache is not None else None
     log("JAMAICA_ORACLE_PUBLISH","PUSHED_TO_GITHUB_PAGES_SOURCE")
     log("JAMAICA_LAST_PUBLISH_AT_UTC",datetime.now(timezone.utc).isoformat(timespec="seconds"))
 
@@ -640,7 +752,7 @@ def main():
     env=git_env()
     checkout(env)
     publish(env)
-    discover_hotel_media_daily()
+    if not provider_hold_active():discover_hotel_media_daily()
     log("JAMAICA_ORACLE_5MIN_IMPORT_PASS","YES")
 
 if __name__=="__main__":
