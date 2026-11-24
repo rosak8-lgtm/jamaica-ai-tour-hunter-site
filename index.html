@@ -79,7 +79,7 @@
  </div>
  <form id="tourSearchForm">
   <div class="fields fieldsMain">
-   <div class="field wide"><label for="departure">Город вылета</label><input id="departure" name="departure" autocomplete="off" maxlength="80" value="Иркутск" required></div>
+   <div class="field wide"><label for="departure">Город вылета</label><!-- City names from official BG_FLTX registry, 2026-11-24; search scope, not offers. --><select id="departure" name="departure" required aria-describedby="departureStatus"><option value="Иркутск" selected>Иркутск</option><option value="Абакан">Абакан</option><option value="Анадырь">Анадырь</option><option value="Архангельск">Архангельск</option><option value="Астрахань">Астрахань</option><option value="Барнаул">Барнаул</option><option value="Благовещенск">Благовещенск</option><option value="Владивосток">Владивосток</option><option value="Владикавказ">Владикавказ</option><option value="Волгоград">Волгоград</option><option value="Геленджик">Геленджик</option><option value="Горно-Алтайск">Горно-Алтайск</option><option value="Грозный">Грозный</option><option value="Екатеринбург">Екатеринбург</option><option value="Ижевск">Ижевск</option><option value="Казань">Казань</option><option value="Калининград">Калининград</option><option value="Кемерово">Кемерово</option><option value="Киров">Киров</option><option value="Кировск">Кировск</option><option value="Краснодар">Краснодар</option><option value="Красноярск">Красноярск</option><option value="Магадан">Магадан</option><option value="Магнитогорск">Магнитогорск</option><option value="Махачкала">Махачкала</option><option value="Минеральные Воды">Минеральные Воды</option><option value="Москва">Москва</option><option value="Мурманск">Мурманск</option><option value="Нальчик">Нальчик</option><option value="Нижневартовск">Нижневартовск</option><option value="Нижнекамск">Нижнекамск</option><option value="Нижний Новгород">Нижний Новгород</option><option value="Новокузнецк">Новокузнецк</option><option value="Новосибирск">Новосибирск</option><option value="Омск">Омск</option><option value="Оренбург">Оренбург</option><option value="Орск">Орск</option><option value="Пенза">Пенза</option><option value="Пермь">Пермь</option><option value="Петропавловск - Камчатский">Петропавловск - Камчатский</option><option value="Самара">Самара</option><option value="Санкт-Петербург">Санкт-Петербург</option><option value="Саранск">Саранск</option><option value="Саратов">Саратов</option><option value="Сочи">Сочи</option><option value="Ставрополь">Ставрополь</option><option value="Сургут">Сургут</option><option value="Сыктывкар">Сыктывкар</option><option value="Томск">Томск</option><option value="Тюмень">Тюмень</option><option value="Улан-удэ">Улан-удэ</option><option value="Ульяновск">Ульяновск</option><option value="Уфа">Уфа</option><option value="Хабаровск">Хабаровск</option><option value="Ханты-Мансийск">Ханты-Мансийск</option><option value="Чебоксары">Чебоксары</option><option value="Челябинск">Челябинск</option><option value="Элиста">Элиста</option><option value="Южно-Сахалинск">Южно-Сахалинск</option><option value="Якутск">Якутск</option></select><small id="departureStatus" class="micro" aria-live="polite">Проверяем текущие предложения из выбранного города.</small></div>
    <div class="field wide"><label for="destination">Страна / направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Все страны" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
    <div class="field short"><label for="dateFrom">Вылет с</label><input id="dateFrom" name="dateFrom" type="date"></div>
    <div class="field short"><label for="dateTo">Вылет до</label><input id="dateTo" name="dateTo" type="date"></div>
@@ -383,6 +383,11 @@ function runSearch(scroll=false){
  $("offerStatus").textContent=inventoryLoading?"Загрузка предложений…":inventoryLoaded?(activeOffers.length+" подтверждённых туров во всём каталоге. В выдаче только реальные цены и доступные места."):"Актуальные данные не загрузились — продажа закрыта.";
  if(scroll)scrollToResults();
 }
+$("departure").addEventListener("change",()=>{
+ $("destination").value="";
+ sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
+ form.requestSubmit();
+});
 form.addEventListener("submit",e=>{
  e.preventDefault();
  if(!travelerUI.commit()||!form.reportValidity())return;
@@ -907,7 +912,7 @@ function renderMonthShortcuts(){
 }
 function renderSourceScanCoverage(){
  const root=$("sourceSearchCoverage"),chips=$("sourceSearchCountryChips");
- const countries=lastSourceCoverage;
+ const countries=$("departure").value==="Иркутск"?lastSourceCoverage:[];
  root.hidden=!countries.length;
  if(!countries.length)return;
  if(!sourceCoverageFirstExpanded){root.open=true;sourceCoverageFirstExpanded=true;}
@@ -1073,6 +1078,10 @@ function renderTourPreviews(reset=true){
  target.append(frag);
  previewVisible=Math.min(list.length,previewVisible+30);
  more.hidden=previewVisible>=list.length;
+ const cityRows=verifiedRows().filter(x=>x.origin===$("departure").value);
+ $("departureStatus").textContent=!previewsLoaded?"Проверяем текущий каталог…":
+   cityRows.length?"Свежих вариантов: "+cityRows.length.toLocaleString("ru-RU"):
+   "Город в справочнике. Свежих проверенных туров пока нет.";
  const availableCountries=[...window.JamaicaCountryOffers.countryCounts(
    verifiedRows(),$("departure").value.trim()).keys()].sort(
      window.JamaicaCountryOffers.compareCountries);
@@ -1089,7 +1098,7 @@ function renderTourPreviews(reset=true){
  if(previewsLoaded&&list.length===0){
    $("searchProgress").classList.remove("hide");
    $("searchProgress").querySelector("strong").textContent="Туров со всеми тремя подтверждениями пока нет";
-   $("searchProgress").querySelector("p").textContent="Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков для одного выбранного тура публикация запрещена. Можно изменить даты или страну.";
+   $("searchProgress").querySelector("p").textContent="Из города «"+$("departure").value+"» по выбранным параметрам сейчас нет подходящих туров. Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков публикация запрещена. Можно изменить город, даты или страну.";
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
