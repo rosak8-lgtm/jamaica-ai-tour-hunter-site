@@ -321,6 +321,12 @@ def main():
                     geo_page.wait_for_function("()=>document.querySelector('#departure').value==='Красноярск'",timeout=10000)
                     ensure("сохранён" in geo_page.locator("#departureGeoStatus").inner_text(),
                            "MANUAL_CITY_NOT_PRESERVED")
+                    geo_page.goto(base+"?country="+__import__("urllib.parse",fromlist=["quote"]).quote("Китай")+"&hotel=BAIYUN",wait_until="domcontentloaded")
+                    geo_page.wait_for_function("()=>document.querySelector('#departureGeoStatus').textContent.includes('сохранён')",timeout=10000)
+                    ensure(geo_page.locator("#destination").input_value()=="Китай",
+                           "SAVED_CITY_CLEARED_DEEP_LINK_COUNTRY")
+                    ensure(geo_page.locator("#hotelSearch").input_value()=="BAIYUN",
+                           "SAVED_CITY_CLEARED_DEEP_LINK_HOTEL")
                     print("IP_CITY_BROWSER_AUTO_AND_MANUAL_OVERRIDE_PASS")
                 finally:
                     geo_page.close()
