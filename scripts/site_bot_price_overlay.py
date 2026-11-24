@@ -13,8 +13,8 @@ import json,os,stat,re
 from pathlib import Path
 
 SCHEMA="jamaica.bg-site-dom-prices.v1"
-MAX_RECORDS=2000
-MAX_BYTES=1000000
+MAX_RECORDS=10000
+MAX_BYTES=5000000
 IDENT=re.compile(r"^p_[0-9a-f]{24}$")
 SOURCE=re.compile(r"^\d{7,25}$")
 SESSION=re.compile(r"^[0-9a-f]{64}$")

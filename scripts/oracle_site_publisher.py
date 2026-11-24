@@ -414,16 +414,16 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
             import stat
             st=os.fstat(fd)
             if (not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or
-                st.st_mode&0o077 or not 2<=st.st_size<=4_000_000):
+                st.st_mode&0o077 or not 2<=st.st_size<=20_000_000):
                 raise ValueError("UNSAFE_EXACT_SOURCE")
             with os.fdopen(fd,"rb",closefd=False) as stream:
-                raw=stream.read(4_000_001)
+                raw=stream.read(20_000_001)
         finally:os.close(fd)
-        if len(raw)>4_000_000:raise ValueError("EXACT_SOURCE_SIZE")
+        if len(raw)>20_000_000:raise ValueError("EXACT_SOURCE_SIZE")
         payload=json.loads(raw)
         if (not isinstance(payload,dict) or set(payload)!={"schema","records"} or
             payload["schema"]!="jamaica.bg-site-exact-source.v1" or
-            not isinstance(payload["records"],list) or len(payload["records"])>2000):
+            not isinstance(payload["records"],list) or len(payload["records"])>10000):
             raise ValueError("EXACT_SOURCE_SCHEMA")
     except FileNotFoundError:return feed,0
     except (OSError,ValueError,TypeError):
@@ -464,7 +464,7 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
 
 
 SOURCE_SCAN_INTERVAL=timedelta(minutes=30)
-MAX_PUBLIC_VISUAL_BYTES=500_000
+MAX_PUBLIC_VISUAL_BYTES=2_500_000
 BOT_STATE=Path.home()/".local"/"state"/"jamaica-site-bg-bot"/"state.json"
 
 def read_owner_json(path, limit):
