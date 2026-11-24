@@ -1,5 +1,5 @@
 {
   "schema": "jamaica.departure-geo-config.v1",
-  "enabled": false,
-  "endpoint": ""
+  "enabled": true,
+  "endpoint": "https://jamaica-city-geo.zordek555-6c3.workers.dev/api/departure-city"
 }
