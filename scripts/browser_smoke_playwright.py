@@ -347,9 +347,9 @@ def main():
                     page.locator("#sourceDetails summary").click()
 
                 selected_dates=sorted({r["depart_date"] for r in test_rows if r["country"]==test_country})
-                ensure(bool(turkey_dates),"NO_SELECTED_COUNTRY_DATES_FOR_RANGE_TEST")
-                page.locator("#dateFrom").fill(turkey_dates[0])
-                page.locator("#dateTo").fill(turkey_dates[0])
+                ensure(bool(selected_dates),"NO_SELECTED_COUNTRY_DATES_FOR_RANGE_TEST")
+                page.locator("#dateFrom").fill(selected_dates[0])
+                page.locator("#dateTo").fill(selected_dates[0])
                 page.locator("#destination").fill(test_country)
                 page.locator("#tourSearchForm button[type=submit]").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
