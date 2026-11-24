@@ -28,6 +28,16 @@ function filter(rows,proofs,now=Date.now()){
  if(!Array.isArray(rows))return [];
  return rows.filter(x=>eligible(x,proofs,now));
 }
+// A displayed price must belong to the same exact observation as the
+// current route proof. Mixed CDN generations are not a valid price.
+function observedPrice(row,proofs,now=Date.now()){
+ if(!eligible(row,proofs,now)||
+    row.price_source!=="BG_EXACT_SELECTED_GREEN_BROWSER"||
+    row.price_reference_party!=="TWO_ADULTS"||
+    !Number.isSafeInteger(row.price_reference_rub)||row.price_reference_rub<=0||
+    row.price_observed_at_utc!==proofs.get(row.id).observed_at_utc)return null;
+ return row.price_reference_rub;
+}
 async function load(){
  try{
   const response=await fetch("./tour-visual-evidence.json",{cache:"no-store"});
@@ -39,5 +49,5 @@ async function load(){
   return new Map();
  }
 }
-root.JamaicaPublicVisualPolicy=Object.freeze({eligible,filter,load});
+root.JamaicaPublicVisualPolicy=Object.freeze({eligible,filter,observedPrice,load});
 })(typeof window!=="undefined"?window:globalThis);

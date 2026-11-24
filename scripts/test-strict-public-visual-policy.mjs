@@ -43,8 +43,20 @@ assert.equal(policy.eligible({...row,bookable:true},valid(proof),now),false);
 assert.equal(policy.eligible({...row,flight_verified:true},valid(proof),now),false);
 assert.equal(policy.eligible({...row,depart_date:"2020-01-01"},valid(proof),now),false);
 assert.equal(policy.eligible({...row,id:id2},valid(proof),now),false);
+const priced={...row,price_source:"BG_EXACT_SELECTED_GREEN_BROWSER",
+ price_reference_party:"TWO_ADULTS",price_observed_at_utc:proof.observed_at_utc};
+assert.equal(policy.observedPrice(priced,valid(proof),now),137099);
+assert.equal(policy.observedPrice({...priced,price_observed_at_utc:new Date(now-2000).toISOString()},valid(proof),now),null);
+assert.equal(policy.observedPrice(priced,new Map(),now),null);
+assert.equal(policy.observedPrice(priced,valid(proof),now+16*60000),null);
+assert.equal(policy.observedPrice({...priced,price_reference_party:"UNVERIFIED"},valid(proof),now),null);
+assert.equal(policy.observedPrice({...priced,id:id2},valid(proof),now),null);
 const pages=Object.fromEntries(["index.html","preview.html","hotel.html","quote.html",
  "route.html","tour.html","checkout.html"].map(n=>[n,fs.readFileSync(n,"utf8")]));
+assert.ok(pages["index.html"].includes("JamaicaPublicVisualPolicy.observedPrice(x,visualProofs)"));
+assert.ok(pages["preview.html"].includes("JamaicaPublicVisualPolicy.observedPrice(p,selectedProofs)"));
+assert.ok(pages["preview.html"].includes("Зафиксирована для выбранного маршрута"));
+assert.ok(pages["preview.html"].includes("setInterval(expireSelection,15000)"));
 for(const p of ["index.html","preview.html","hotel.html","quote.html"]){
  assert.ok(pages[p].includes("scripts/public-visual-policy.js"),p+" must load gate");
  assert.ok(pages[p].includes("JamaicaPublicVisualPolicy."),p+" must use gate");

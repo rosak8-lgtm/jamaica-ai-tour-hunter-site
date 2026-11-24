@@ -93,20 +93,16 @@ function ruNoun(n,one,few,many){
 function partyLabel(){return Travelers.label(rooms);}
 function add(tag,value,parent){const e=document.createElement(tag);e.textContent=String(value);parent.append(e);return e;}
 function fact(label,value){const e=document.createElement("div");e.className="fact";add("span",label,e);add("strong",value,e);$("facts").append(e);}
-async function visualForSelected(chosen){
- try{
-   const r=await fetch("./tour-visual-evidence.json",{cache:"no-store"});
-   if(!r.ok)throw Error("VISUAL_NO_SOURCE");
-   const proof=window.JamaicaVisualSelection.read(await r.json()).get(chosen.id);
-   if(proof){
-     const at=new Date(proof.observed_at_utc).toLocaleString("ru-RU",{
-       dateStyle:"short",timeStyle:"short"});
-     $("visualDetailStatus").textContent="✓ Бот наблюдал маршрут «ЛУЧШАЯ ЦЕНА» и два зелёных перелёта для этой записи "+
-       at+". Визуальное наблюдение не является бронью. Итоговая цена, места, условия договора требуют свежего подтверждения.";
-     return;
-   }
- }catch(e){/* Missing or invalid proof is never invented. */}
- $("visualDetailStatus").textContent="Точное свежее совпадение метки и обоих рейсов для этой даты, отеля и номера ещё не найдено. Смотрите другие страны и даты в поиске.";
+function visualForSelected(chosen){
+ const proof=selectedProofs.get(chosen.id);
+ if(!window.JamaicaPublicVisualPolicy.eligible(chosen,selectedProofs)){
+  $("visualDetailStatus").textContent="Свежее подтверждение отсутствует. Вернитесь к поиску.";
+  return;
+ }
+ const at=new Date(proof.observed_at_utc).toLocaleString("ru-RU",{
+   dateStyle:"short",timeStyle:"short"});
+ $("visualDetailStatus").textContent="✓ Бот наблюдал маршрут «ЛУЧШАЯ ЦЕНА» и два зелёных перелёта для этой записи "+
+  at+". Это не бронь: окончательные места и стоимость проверяются перед оформлением.";
 }
 function showSelection(p,feed,directory){
   $("heading").textContent=p.country+" — "+p.hotel;
@@ -124,24 +120,22 @@ function showSelection(p,feed,directory){
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
   fact("Выбранные туристы",partyLabel());
-  fact("✈ Перелёт туда","Наличие мест не подтверждено");
-  fact("✈ Перелёт обратно","Наличие мест не подтверждено");
-  fact("Метка «ЛУЧШАЯ ЦЕНА»","Не подтверждена для выбранного тарифа");
+  fact("✈ Перелёт туда","Зелёный индикатор зафиксирован · места требуют подтверждения");
+  fact("✈ Перелёт обратно","Зелёный индикатор зафиксирован · места требуют подтверждения");
+  fact("Метка «ЛУЧШАЯ ЦЕНА»","Зафиксирована для выбранного маршрута");
   fact("Размещение по номерам",Travelers.description(rooms));
   const observed=Date.parse(feed.refreshed_at_utc||"");
   const age=Date.now()-observed;
   const fresh=Number.isFinite(observed)&&age>=-60000&&age<=30*60*1000;
   const listed=Number.isFinite(observed)&&age>=-60000&&age<=24*60*60*1000;
-  if(listed&&pairPrice&&p.price_source==="BG_EXACT_SELECTED_GREEN_BROWSER"&&
-      p.price_observed_at_utc&&Date.now()-Date.parse(p.price_observed_at_utc)<=15*60*1000&&
-      Date.now()-Date.parse(p.price_observed_at_utc)>=-30000&&p.price_reference_party==="TWO_ADULTS"&&
-     Number.isSafeInteger(p.price_reference_rub)&&p.price_reference_rub>0){
+  const amount=listed&&pairPrice?window.JamaicaPublicVisualPolicy.observedPrice(p,selectedProofs):null;
+  if(amount!==null){
     fact("Цена на момент проверки на 2 взрослых",
-         new Intl.NumberFormat("ru-RU").format(p.price_reference_rub)+" ₽ (на момент наблюдения ботом, требует проверки перед договором)");
+         new Intl.NumberFormat("ru-RU").format(amount)+" ₽ (на момент наблюдения ботом, требует проверки перед договором)");
     fact("Средняя цена при поездке вдвоём",
-         new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(p.price_reference_rub/2)+" ₽ на человека — не цена отдельного одноместного тура");
+         new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(amount/2)+" ₽ на человека — не цена отдельного одноместного тура");
     fact("Дата прайс-листа",new Date(observed).toLocaleString("ru-RU"));
-    $("bookingStatus").textContent=(fresh?"Цена взята из обновлённого прайс-листа. ":"С момента выгрузки стоимость могла измениться. ")+
+    $("bookingStatus").textContent=(fresh?"Цена зафиксирована при проверке тура. ":"С момента выгрузки стоимость могла измениться. ")+
       "Перед оформлением договора требуется новый расчёт цены и подтверждение рейсов и номера.";
   }else{
     fact("Стоимость для выбранного состава",
@@ -189,6 +183,21 @@ function showAlternatives(rows,p,done,total){
  }
 }
 let selectedProofs=new Map();
+let activeSelection=null;
+function expireSelection(){
+ if(!activeSelection||window.JamaicaPublicVisualPolicy.eligible(activeSelection,selectedProofs))return;
+ activeSelection=null;
+ $("facts").replaceChildren();
+ $("alternatives").replaceChildren();
+ $("alternativesStatus").textContent="Обновите поиск для просмотра свежих вариантов.";
+ $("heading").textContent="Срок проверки тура истёк";
+ $("subtitle").textContent="Выберите актуальный вариант в поиске.";
+ $("visualDetailStatus").textContent="Нужно новое подтверждение метки и обоих зелёных перелётов.";
+ $("bookingStatus").textContent="Цена и наличие требуют новой проверки.";
+ $("quoteLink").removeAttribute("href");
+}
+setInterval(expireSelection,15000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")expireSelection();});
 async function init(){
  if(!/^p_[a-f0-9]{24}$/.test(id)){$("heading").textContent="Выберите путешествие в поиске";return;}
  if(!rooms){
@@ -242,8 +251,9 @@ async function init(){
       return;
      }
      selected=found;
+     activeSelection=found;
      showSelection(found,feed,directory);
-     void visualForSelected(found);
+     visualForSelected(found);
     }
     showAlternatives(rows,selected,done,total);
    });

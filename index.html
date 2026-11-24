@@ -562,17 +562,13 @@ if(paramsHotel.has("hotel"))$("advancedFilters").open=true;
 let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, previewPriceAsOf="";
 let previewTruncated=false,previewCandidateTotal=0;
 let previewLoadSerial=0,previewFullLoaded=true;
+let catalogRefreshInFlight=false;
 
 const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
   .map(c=>c.n).filter(name=>typeof name==="string");
 function referencePrice(x){
- if(!previewPriceListed||x.price_reference_party!=="TWO_ADULTS"||
-    x.price_source!=="BG_EXACT_SELECTED_GREEN_BROWSER"||
-    !Number.isSafeInteger(x.price_reference_rub)||x.price_reference_rub<=0||
-    typeof x.price_observed_at_utc!=="string")return null;
- const age=Date.now()-Date.parse(x.price_observed_at_utc);
- if(!Number.isFinite(age)||age< -30000||age>15*60*1000)return null;
- return x.price_reference_rub;
+ if(!previewPriceListed)return null;
+ return window.JamaicaPublicVisualPolicy.observedPrice(x,visualProofs);
 }
 function currentReferencePrice(x){
  return previewPriceFresh?referencePrice(x):null;
@@ -1062,16 +1058,15 @@ $("otherCountries").addEventListener("click",()=>{
 $("previewSort").addEventListener("change",()=>renderTourPreviews(true));
 // Evidence is a permanent publication rule, not an optional filter.
 $("previewMore").addEventListener("click",()=>renderTourPreviews(false));
-async function loadVisualProofs(){
+async function loadVisualProofs(render=true){
  visualProofs=await window.JamaicaPublicVisualPolicy.load();
  $("visualProofNotice").textContent=visualProofs.size?
    "За последние 15 минут бот подтвердил "+visualProofs.size+
    " точных совпадений «ЛУЧШАЯ ЦЕНА» и обоих зелёных самолётиков. Бронь и места ещё не подтверждены.":
    "Нет свежих совпадений «ЛУЧШАЯ ЦЕНА» → два зелёных самолётика. Непроверенные туры скрыты во всех странах и месяцах.";
- if(previewsLoaded){
+ if(render&&previewsLoaded){
    sourceFilterOptions();
    renderTourPreviews(true);
-   if(visualProofs.size&&!previewFullLoaded)void loadTourPreviews();
  }
 }
 async function loadTourPreviews(){
@@ -1188,21 +1183,38 @@ async function loadTourPreviews(){
   }
  }catch(e){
   $("previewUpdatedAt").textContent="Не удалось проверить обновление каталога. Последняя загруженная копия может быть устаревшей.";
-  if(!previewsLoaded)renderTourPreviews(true);
+  sourceFilterOptions();renderTourPreviews(true);
  }
 }
-loadTourPreviews();
-loadVisualProofs();
+async function refreshCatalog(){
+ if(catalogRefreshInFlight)return;
+ catalogRefreshInFlight=true;
+ try{
+  await loadVisualProofs(false);
+  await loadTourPreviews();
+ }finally{catalogRefreshInFlight=false;}
+}
+refreshCatalog();
 setInterval(()=>{
- if(document.visibilityState==="visible"){
-   loadTourPreviews();
-   loadVisualProofs();
- }
+ if(document.visibilityState==="visible")void refreshCatalog();
 },3*60*1000);
+// A proof can expire between two network refreshes. Remove stale cards
+// without contacting either GitHub or the supplier.
+setInterval(()=>{
+ if(document.visibilityState!=="visible"||catalogRefreshInFlight)return;
+ const now=Date.now();
+ let changed=false;
+ for(const [id,proof] of visualProofs){
+  if(now-Date.parse(proof.observed_at_utc)>15*60*1000){
+   visualProofs.delete(id);changed=true;
+  }
+ }
+ if(changed){sourceFilterOptions();renderTourPreviews(true);}
+},15000);
 document.addEventListener("visibilitychange",()=>{
  if(document.visibilityState==="visible"){
-   loadTourPreviews();
-   loadVisualProofs();
+  sourceFilterOptions();renderTourPreviews(true);
+  void refreshCatalog();
  }
 });
 })();
