@@ -276,6 +276,30 @@ def main():
                 ensure(page.locator("#previewCards article.offerCard").count()==min(30,len(test_rows)),
                        "MULTI_NIGHTS_RESET_DID_NOT_RESTORE_CATALOG")
                 print("MULTI_NIGHTS_DESKTOP_SEARCH_UNION_PASS")
+                ensure(page.locator("#departure option").count()==60,"OFFICIAL_CITY_COUNT")
+                ensure(page.locator("#departure").input_value()=="Иркутск","IRKUTSK_DEFAULT_LOST")
+                page.locator("#nightPicker summary").click()
+                page.locator('#nightChoices input[value="7"]').check()
+                page.locator('#nightChoices input[value="14"]').check()
+                page.locator("#nightsDone").click()
+                page.locator("#departure").select_option("Москва")
+                ensure(page.locator("#previewCards article.offerCard").count()==0,
+                       "IRKUTSK_ROWS_LEAKED_TO_MOSCOW")
+                ensure(page.locator("#sourceSearchCoverage").is_hidden(),
+                       "IRKUTSK_SOURCE_METADATA_LEAKED_TO_MOSCOW")
+                ensure("Свежих проверенных туров пока нет" in page.locator("#departureStatus").inner_text(),
+                       "CITY_WITHOUT_PROOFS_NOT_EXPLAINED")
+                ensure(page.locator("#nightChoices input:checked").count()==2,
+                       "CITY_CHANGE_LOST_SELECTED_NIGHTS")
+                page.locator("#departure").select_option("Иркутск")
+                page.locator("#nightPicker summary").click()
+                page.locator("#nightsClear").click()
+                page.locator("#nightsDone").click()
+                page.locator("#tourSearchForm button[type=submit]").click()
+                ensure(page.locator("#previewCards article.offerCard").count()==min(30,len(test_rows)),
+                       "IRKUTSK_RESTORE_AFTER_CITY_CHANGE_FAILED")
+                print("OFFICIAL_CITY_PICKER_NO_CROSS_CITY_LEAK_PASS")
+
 
 
                 # Country chips must reflect ALL actually observed source
