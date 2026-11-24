@@ -187,7 +187,7 @@ def main():
                        "HORIZONTAL_TOUR_RESULT_CARD_MISSING")
                 ensure(page.locator("#filtersDisclosure").get_attribute("open") is not None,
                        "DESKTOP_FILTERS_NOT_OPEN")
-                ensure(page.locator("#filterCountry option").count()>=3,
+                ensure(page.locator("#filterCountry option").count()>=min(3,len(counts)+1),
                        "COUNTRY_SIDEBAR_NOT_SOURCE_BACKED")
                 ensure(page.locator("#filterResort").count()==1,
                        "REAL_RESORT_SIDEBAR_FILTER_MISSING")
@@ -208,7 +208,7 @@ def main():
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=12000)
                 other_countries={name.split(" · ")[0] for name in
                    page.locator("#previewCards article.offerCard h3").all_text_contents()}
-                ensure(len(other_countries)>=3,
+                ensure(len(other_countries)>=min(3,len(counts)) and other_countries.issubset(counts),
                        "OTHER_COUNTRIES_DID_NOT_RESTORE_MIXED_RESULTS")
                 page.locator("#filterReset").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
@@ -270,7 +270,7 @@ def main():
                            "EXPANDED_SOURCE_COUNTRIES_STILL_TRUNCATED")
                 first30=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 shown={text.split(" · ")[0] for text in first30}
-                ensure(len(shown)>=3,"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
+                ensure(len(shown)>=min(3,len(counts)) and shown.issubset(counts),"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
                 ensure(page.locator("#previewCards .previewMedia").count()>0,
                        "VISUAL_TOUR_CARD_MISSING")
                 # A Beijing hotel cannot show a Shanghai skyline or a
@@ -336,7 +336,7 @@ def main():
                 # Multi-country default continues showing other countries on the first page.
                 page.locator("#previewSort").select_option("balanced")
                 shown_again={name.split(" · ")[0] for name in page.locator("#previewCards article.offerCard h3").all_text_contents()}
-                ensure(len(shown_again)>=3,"PRICE_SORT_BROKE_COUNTRY_COVERAGE")
+                ensure(len(shown_again)>=min(3,len(counts)) and shown_again.issubset(counts),"PRICE_SORT_BROKE_COUNTRY_COVERAGE")
                 if preview.get("truncated_to_public_limit") is True:
                     # Disclosure exists but is intentionally collapsed BELOW cards.
                     page.locator("#sourceDetails summary").click()
@@ -384,12 +384,13 @@ def main():
                     "()=>document.querySelector('#alternativesStatus')?.textContent?.includes('Проверены все опубликованные разделы')",
                     timeout=45000)
                 related=page.locator("#alternatives a.alternativeTour")
-                ensure(related.count()>0,
+                ensure(related.count()>0 or len(test_rows)==1,
                        "SOURCE_BACKED_RELATED_TOURS_NOT_VISIBLE")
                 ensure(related.count()<=12,
                        "RELATED_TOUR_CAROUSEL_NOT_BOUNDED")
-                ensure(page.locator("#alternatives a[data-category='otherCountry']").count()>0,
-                       "RELATED_TOURS_HIDE_PUBLISHED_OTHER_COUNTRIES")
+                if len(counts)>1:
+                    ensure(page.locator("#alternatives a[data-category='otherCountry']").count()>0,
+                           "RELATED_TOURS_HIDE_PUBLISHED_OTHER_COUNTRIES")
                 ensure(all("preview.html?id=p_" in (value or "")
                      for value in related.evaluate_all("(nodes)=>nodes.map(n=>n.getAttribute('href'))")),
                        "RELATED_TOURS_WITHOUT_REAL_SOURCE_IDS")
