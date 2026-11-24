@@ -432,6 +432,7 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
     proofs={x.get("preview_id"):x for x in (receipts or {}).get("records",[])
             if isinstance(x,dict) and isinstance(x.get("preview_id"),str)}
     accepted={}
+    known=identity.build_hotel_index(directory)
     for record in payload["records"]:
         if not isinstance(record,dict) or set(record)!={"preview","source_price_list_id","observed_at_utc"}:continue
         row=record["preview"]
@@ -453,7 +454,7 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
             if not route_first_pair_matches(route,flight,row,now=now):continue
             if (route.get("source_price_list_id")!=record["source_price_list_id"] or
                 flight.get("flight_checked_at_utc")!=record["observed_at_utc"]):continue
-            identity.verify_catalog_hotel_identity([row],directory)
+            if known.get(row["hotel_id"])!=(row["hotel"],row["country"]) or row["origin"]!="Иркутск":continue
             accepted[row["id"]]=row
         except (ValueError,TypeError,KeyError,CatalogHold):continue
     if not accepted:return feed,0
@@ -501,6 +502,7 @@ def publish(env):
     try:
         private_receipts=visual.read_private_receipts(PRIVATE_BOT_VISUAL_RECEIPTS)
         new,exact_count=merge_exact_browser_source(new,directory,private_receipts)
+        count=validate(new,directory)
         log("JAMAICA_SITE_EXACT_SOURCE_ROWS",exact_count)
         visual_public=visual.build_visual_feed(
             new["previews"],private_receipts)
