@@ -45,7 +45,9 @@ def nights_value(value):
     except (TypeError, ValueError):
         return None
 
-def safe_preview(entry, country, hotel_by_id, price_currency=None):
+def safe_preview(entry, country, hotel_by_id, price_currency=None, *, origin_scope=None):
+    if origin_scope is not None and country != origin_scope.country:
+        return None
     if not isinstance(entry, dict):
         return None
     hotel_id = str(entry.get("id_hotel", ""))
@@ -72,11 +74,11 @@ def safe_preview(entry, country, hotel_by_id, price_currency=None):
     listed_price=price_ref.indicative_two_adult_rub(entry["prices"], price_currency)
     key = "|".join((country, hotel_id, tour_date, str(nights), room))
     return {
-        "id": "p_" + hashlib.sha256(key.encode()).hexdigest()[:24],
+        "id": ("p_" + hashlib.sha256(key.encode()).hexdigest()[:24] if origin_scope is None else origin_scope.preview_id(hotel_id,tour_date,nights,room)),
         "hotel_id": hotel_id,
         "hotel": name,
         "country": country,
-        "origin": ALLOWED_ORIGIN,
+        "origin": ALLOWED_ORIGIN if origin_scope is None else origin_scope.origin,
         "resort": resort or bg.clean(hotel.get("resort"), 100),
         "room": room,
         "depart_date": tour_date,
