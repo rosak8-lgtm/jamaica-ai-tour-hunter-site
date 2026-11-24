@@ -142,7 +142,7 @@ def refresh_directory():
     log("JAMAICA_DIRECTORY_REFRESH","UPDATED")
     return True
 
-def validate(feed, directory, *, allow_empty=False):
+def validate(feed, directory, *, allow_empty=False, allow_browser_prices=False):
     if not isinstance(feed,dict) or feed.get("schema")!="jamaica.tour-previews.v1":
         raise CatalogHold("FEED_SCHEMA_INVALID")
     if feed.get("bookable") is not False or feed.get("quote_verified") is not False or feed.get("availability_verified") is not False:
@@ -156,8 +156,16 @@ def validate(feed, directory, *, allow_empty=False):
              "status","price_reference_rub","price_reference_party","quote_verified",
              "availability_verified","flight_verified","bookable"}
     for row in rows:
-        if not isinstance(row,dict) or set(row)!=allowed:
+        if not isinstance(row,dict) or (set(row)!=allowed and not (
+            allow_browser_prices and set(row)==allowed|{"price_source","price_observed_at_utc"})):
             raise CatalogHold("FEED_UNAPPROVED_FIELDS")
+        if "price_source" in row:
+            observed=timestamp(row.get("price_observed_at_utc"))
+            if (row["price_source"]!="BG_EXACT_SELECTED_GREEN_BROWSER" or
+                row.get("status")!="REFERENCE_PRICE_LIST_ONLY" or
+                type(row.get("price_reference_rub")) is not int or
+                not observed or not -30<=(datetime.now(timezone.utc)-observed).total_seconds()<=900):
+                raise CatalogHold("FEED_BROWSER_PRICE_INVALID")
         if row.get("bookable") is not False or row.get("flight_verified") is not False or row.get("quote_verified") is not False or row.get("availability_verified") is not False:
             raise CatalogHold("FEED_UNVERIFIED_STOCK")
         if row.get("country") not in known or row.get("origin")!="Иркутск":
@@ -392,6 +400,67 @@ def refresh_source_feed(directory):
     log("JAMAICA_PRIVATE_SOURCE_ATOMIC_REPLACE","PASS")
     return new
 
+def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None):
+    """Accept a bounded private source handoff only with current exact proof.
+    The website bot independently fetched the exact clicked BG price list.
+    This does not authorize source-only rows or historical prices.
+    """
+    path=path or RUNROOT/"private-site-exact-source.json"
+    now=now or datetime.now(timezone.utc)
+    try:
+        fd=os.open(path,os.O_RDONLY|getattr(os,"O_NOFOLLOW",0)|os.O_NONBLOCK)
+        try:
+            import stat
+            st=os.fstat(fd)
+            if (not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or
+                st.st_mode&0o077 or not 2<=st.st_size<=1_000_000):
+                raise ValueError("UNSAFE_EXACT_SOURCE")
+            with os.fdopen(fd,"rb",closefd=False) as stream:
+                raw=stream.read(1_000_001)
+        finally:os.close(fd)
+        if len(raw)>1_000_000:raise ValueError("EXACT_SOURCE_SIZE")
+        payload=json.loads(raw)
+        if (not isinstance(payload,dict) or set(payload)!={"schema","records"} or
+            payload["schema"]!="jamaica.bg-site-exact-source.v1" or
+            not isinstance(payload["records"],list) or len(payload["records"])>300):
+            raise ValueError("EXACT_SOURCE_SCHEMA")
+    except FileNotFoundError:return feed,0
+    except (OSError,ValueError,TypeError):
+        log("JAMAICA_EXACT_SOURCE_STATUS","INVALID_IGNORE")
+        return feed,0
+    from backend.bg_route_first_visual_gate import route_first_pair_matches
+    proofs={x.get("preview_id"):x for x in (receipts or {}).get("records",[])
+            if isinstance(x,dict) and isinstance(x.get("preview_id"),str)}
+    accepted={}
+    for record in payload["records"]:
+        if not isinstance(record,dict) or set(record)!={"preview","source_price_list_id","observed_at_utc"}:continue
+        row=record["preview"]
+        if not isinstance(row,dict):continue
+        try:
+            validate({**feed,"previews":[row]},directory)
+            if (row["status"]!="REFERENCE_PRICE_LIST_ONLY" or
+                row["price_reference_rub"] is not None or row["price_reference_party"]!="UNVERIFIED" or
+                not all(isinstance(row[k],str) and row[k] for k in
+                        ("country","hotel_id","depart_date","room")) or
+                type(row["nights"]) is not int or not 3<=row["nights"]<=180):
+                continue
+            key="|".join((row["country"],row["hotel_id"],row["depart_date"],str(row["nights"]),row["room"]))
+            if row["id"]!="p_"+hashlib.sha256(key.encode()).hexdigest()[:24]:continue
+            departure=datetime.fromisoformat(row["depart_date"]).date()
+            if not now.date()<=departure<=now.date()+timedelta(days=180):continue
+            p=proofs.get(row["id"],{})
+            route,flight=p.get("route"),p.get("flight")
+            if not route_first_pair_matches(route,flight,row,now=now):continue
+            if (route.get("source_price_list_id")!=record["source_price_list_id"] or
+                flight.get("flight_checked_at_utc")!=record["observed_at_utc"]):continue
+            identity.verify_catalog_hotel_identity([row],directory)
+            accepted[row["id"]]=row
+        except (ValueError,TypeError,KeyError,CatalogHold):continue
+    if not accepted:return feed,0
+    combined=list(accepted.values())+[r for r in feed["previews"] if r["id"] not in accepted]
+    return {**feed,"previews":combined[:MAX_ITEMS]},len(accepted)
+
+
 def publish(env):
     # Destination directory is in this clone. Source secrets remain outside Git.
     refresh_directory()
@@ -431,6 +500,8 @@ def publish(env):
     # A missing, invalid or untrusted proof cannot stall public tour browsing.
     try:
         private_receipts=visual.read_private_receipts(PRIVATE_BOT_VISUAL_RECEIPTS)
+        new,exact_count=merge_exact_browser_source(new,directory,private_receipts)
+        log("JAMAICA_SITE_EXACT_SOURCE_ROWS",exact_count)
         visual_public=visual.build_visual_feed(
             new["previews"],private_receipts)
     except (visual.VisualHold,ValueError,TypeError):
@@ -452,7 +523,7 @@ def publish(env):
         visual_public,trusted_browser_prices)
     log("JAMAICA_SITE_LIVE_DOM_PRICES",published["indicative_two_adult_rub_count"])
     public_root,public_chunks=make_sharded_catalog(published)
-    validate(public_root,directory,allow_empty=True)
+    validate(public_root,directory,allow_empty=True,allow_browser_prices=True)
     log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
     log("JAMAICA_PUBLIC_HIDDEN_UNVERIFIED",len(new["previews"])-len(published["previews"]))
     visual_path=CHECKOUT/PUBLIC_VISUAL_PATH
