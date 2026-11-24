@@ -171,6 +171,52 @@ class Tests(unittest.TestCase):
         with self.assertRaises(publisher.CatalogHold):
             publisher.encode_public_visual_feed(proof,now=moment+timedelta(minutes=16))
 
+    def test_10000_exact_source_prices_proofs_and_shards_end_to_end(self):
+        import hashlib
+        from backend.test_bg_route_first_visual_gate import bundle
+        moment=datetime.now(timezone.utc)
+        d={"countries":[{"name":"Турция"}],"hotels":[{"id":"123456789","name":"TEST","country":"Турция"}]}
+        base=feed()
+        base.update(refreshed_at_utc=moment.isoformat(),previews=[])
+        rows=[]; records=[]; prices=[]; evidence=[]
+        for i in range(10000):
+            row=dict(feed()["previews"][0])
+            row.update(depart_date=(moment.date()+timedelta(days=10)).isoformat(),
+                       room="DBL "+str(i),price_reference_rub=None,price_reference_party="UNVERIFIED")
+            key="|".join((row["country"],row["hotel_id"],row["depart_date"],str(row["nights"]),row["room"]))
+            row["id"]="p_"+hashlib.sha256(key.encode()).hexdigest()[:24]
+            route,flight=bundle(row,now=moment)
+            source=route["source_price_list_id"];when=flight["flight_checked_at_utc"]
+            rows.append(row)
+            records.append({"preview":row,"source_price_list_id":source,"observed_at_utc":when})
+            prices.append({"preview_id":row["id"],"source_price_list_id":source,
+                "browser_session_digest":route["browser_session_digest"],"observed_at_utc":when,
+                "price_total_rub":99000+i})
+            evidence.append({"preview_id":row["id"],"route":route,"flight":flight})
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            def save(name,doc):
+                p=root/name;p.write_text(json.dumps(doc,ensure_ascii=False,separators=(",",":")));p.chmod(0o600);return p
+            source_path=save("exact.json",{"schema":"jamaica.bg-site-exact-source.v1","records":records})
+            receipt_path=save("proofs.json",{"schema":publisher.visual.PRIVATE_SCHEMA,"records":evidence})
+            price_path=save("prices.json",{"schema":publisher.browser_price.SCHEMA,"records":prices})
+            receipts=publisher.visual.read_private_receipts(receipt_path)
+            ledger=publisher.browser_price.read_ledger(price_path)
+            merged,n=publisher.merge_exact_browser_source(base,d,receipts,path=source_path,now=moment)
+            self.assertEqual(n,10000)
+            proof=publisher.visual.build_visual_feed(merged["previews"],receipts,now=moment)
+            self.assertEqual(len(proof["entries"]),10000)
+            publisher.encode_public_visual_feed(proof,now=moment)
+            filtered=publisher.eligibility.select_public_source_rows(merged,proof,now=moment)
+            priced=publisher.browser_price.apply(filtered,receipts,proof,ledger,now=moment)
+            self.assertEqual(priced["indicative_two_adult_rub_count"],10000)
+            root_feed,chunks=publisher.make_sharded_catalog(priced)
+            self.assertEqual(root_feed["total_published_previews"],10000)
+            self.assertEqual(len(root_feed["previews"]),8000)
+            self.assertEqual(sum(len(c["previews"]) for c in chunks.values()),2000)
+            self.assertEqual(publisher.validate(root_feed,d,allow_browser_prices=True),8000)
+            self.assertEqual(publisher.visual.build_visual_feed(merged["previews"],receipts,now=moment+timedelta(minutes=16))["entries"],[])
+
     def test_private_source_refresh_preserves_previous_feed_until_validated(self):
         with tempfile.TemporaryDirectory() as work:
             root=Path(work)
