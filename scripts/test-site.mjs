@@ -545,8 +545,7 @@ assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
 assert.ok(page.includes('previewPriceFresh'));
 assert.ok(page.includes('Цена на момент проверки на 2 взрослых') &&
- page.includes('x.price_source!=="BG_EXACT_SELECTED_GREEN_BROWSER"') &&
- page.includes('Date.now()-Date.parse(x.price_observed_at_utc)'),
+ page.includes('JamaicaPublicVisualPolicy.observedPrice(x,visualProofs)'),
  'Only fresh DOM-observed BG prices for both-green same-tour offers may be displayed');
 assert.ok(page.includes('if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list)'));
 assert.ok(page.includes('id="previewSort"'),'User-selectable tour sorting required');
@@ -558,7 +557,7 @@ assert.ok(page.includes('previewCandidateTotal.toLocaleString("ru-RU")'),'Candid
 
 assert.ok(page.includes('preview.html?id='));
 const previewDetail=fs.readFileSync('preview.html','utf8');
-assert.ok(previewDetail.includes('price_reference_rub'));
+assert.ok(previewDetail.includes('JamaicaPublicVisualPolicy.observedPrice(p,selectedProofs)'));
 assert.ok(previewDetail.includes('30*60*1000'));
 for(const id of ['heading','subtitle','notice','facts','hotelInfo','hotelLink','bookingStatus','alternatives']){
  assert.ok(previewDetail.includes('id="'+id+'"'),'Preview detail missing '+id);
