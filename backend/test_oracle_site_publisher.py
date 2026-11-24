@@ -158,16 +158,16 @@ class Tests(unittest.TestCase):
             self.assertEqual(out["total_published_previews"],0)
             self.assertEqual(json.loads((site/"tour-visual-evidence.json").read_text())["entries"],[])
 
-    def test_visual_serializer_accepts_2000_proofs_and_rejects_stale(self):
+    def test_visual_serializer_accepts_10000_proofs_and_rejects_stale(self):
         moment=datetime.now(timezone.utc)
         proof=publisher.visual.empty_public()
         proof["entries"]=[{"preview_id":"p_"+format(i,"024x"),
             "observed_at_utc":moment.isoformat(),"route_best_price_seen":True,
-            "both_green_planes_seen":True} for i in range(2000)]
+            "both_green_planes_seen":True} for i in range(10000)]
         encoded=publisher.encode_public_visual_feed(proof,now=moment)
-        self.assertGreater(len(encoded),100_000)
+        self.assertGreater(len(encoded),500_000)
         self.assertLess(len(encoded),publisher.MAX_PUBLIC_VISUAL_BYTES)
-        self.assertEqual(len(json.loads(encoded)["entries"]),2000)
+        self.assertEqual(len(json.loads(encoded)["entries"]),10000)
         with self.assertRaises(publisher.CatalogHold):
             publisher.encode_public_visual_feed(proof,now=moment+timedelta(minutes=16))
 
