@@ -41,6 +41,51 @@ def feed(n=1):
     }
 
 class Tests(unittest.TestCase):
+    def test_private_source_refresh_preserves_previous_feed_until_validated(self):
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            target=root/"generated-tour-previews.json"
+            old=feed()
+            target.write_text(json.dumps(old))
+            target.chmod(0o600)
+            previous=target.read_bytes()
+            new=feed()
+            new["previews"][0]["price_reference_rub"]=99000
+            def export(args, **kwargs):
+                self.assertEqual(target.read_bytes(),previous)
+                staging=Path(args[args.index("--output")+1])
+                self.assertNotEqual(staging,target)
+                staging.write_text(json.dumps(new))
+            with patch.object(publisher,"RUNROOT",root), \
+                 patch.object(publisher,"run",side_effect=export), \
+                 patch.object(publisher.identity,"verify_catalog_hotel_identity") as check:
+                self.assertEqual(publisher.refresh_source_feed(directory()),new)
+                check.assert_called_once_with(new["previews"],directory())
+            self.assertEqual(json.loads(target.read_text()),new)
+            self.assertEqual(target.stat().st_mode & 0o777,0o600)
+            self.assertEqual(list(root.iterdir()),[target])
+
+    def test_private_source_refresh_failure_preserves_previous_bytes(self):
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            target=root/"generated-tour-previews.json"
+            target.write_text(json.dumps(feed()))
+            previous=target.read_bytes()
+            for mode in ("export_failure","missing","invalid"):
+                def export(args, **kwargs):
+                    self.assertEqual(target.read_bytes(),previous)
+                    if mode=="export_failure":
+                        raise publisher.CatalogHold("SOURCE_TEST_FAILURE")
+                    if mode=="invalid":
+                        staging=Path(args[args.index("--output")+1])
+                        staging.write_text(json.dumps({**feed(),"bookable":True}))
+                with patch.object(publisher,"RUNROOT",root), \
+                     patch.object(publisher,"run",side_effect=export):
+                    with self.assertRaises(publisher.CatalogHold):
+                        publisher.refresh_source_feed(directory())
+                self.assertEqual(target.read_bytes(),previous)
+                self.assertEqual(list(root.iterdir()),[target])
+
     def test_valid_source_backed_feed_can_be_published(self):
         self.assertEqual(publisher.validate(feed(),directory()),1)
 

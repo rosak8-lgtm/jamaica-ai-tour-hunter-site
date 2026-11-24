@@ -360,6 +360,38 @@ def update_discovered_source_countries(feed,directory,*,state_path=DISCOVERY_STA
     return len(updated)
 
 
+def refresh_source_feed(directory):
+    """Preserve the last complete private feed during a new operator scan.
+
+    The independent browser process is a concurrent reader. Do not unlink
+    its input before fetching a replacement. Use a private staging directory
+    and atomically promote only a successful, validated fresh source feed.
+    On failure the previous file and its original timestamp remain unchanged.
+    """
+    generated=RUNROOT/"generated-tour-previews.json"
+    if generated.is_symlink():
+        raise CatalogHold("GENERATED_FEED_UNSAFE_TARGET")
+    with tempfile.TemporaryDirectory(prefix=".source-scan-",dir=RUNROOT) as work:
+        staged=Path(work)/"generated-tour-previews.json"
+        command=[sys.executable,"-B",str(SCRIPTS/"oracle_bg_preview_export.py"),
+                 "--directory",str(CHECKOUT/"destination-directory.json"),
+                 "--output",str(staged),"--max-countries","120",
+                 "--per-country","5","--discover-state",str(DISCOVERY_STATE)]
+        run(command,cwd=SCRIPTS,timeout=200,expose=True)
+        if not staged.is_file() or staged.is_symlink():
+            raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
+        generated_bytes=staged.stat().st_size
+        log("JAMAICA_GENERATED_FEED_BYTES",generated_bytes)
+        if not 100<=generated_bytes<=MAX_BYTES:
+            raise CatalogHold("GENERATED_FEED_EMPTY_OR_OVERSIZED")
+        new=json.loads(staged.read_text(encoding="utf-8"))
+        validate(new,directory)
+        identity.verify_catalog_hotel_identity(new["previews"],directory)
+        staged.chmod(0o600)
+        os.replace(staged,generated)
+    log("JAMAICA_PRIVATE_SOURCE_ATOMIC_REPLACE","PASS")
+    return new
+
 def publish(env):
     # Destination directory is in this clone. Source secrets remain outside Git.
     refresh_directory()
@@ -367,24 +399,7 @@ def publish(env):
     directory_check(directory)
     feed_path=CHECKOUT/"tour-previews.json"
     previous=json.loads(feed_path.read_text(encoding="utf-8")) if feed_path.is_file() else None
-    generated=RUNROOT/"generated-tour-previews.json"
-    if generated.exists():
-        generated.unlink()
-    command=[sys.executable,"-B",str(SCRIPTS/"oracle_bg_preview_export.py"),
-             "--directory",str(CHECKOUT/"destination-directory.json"),
-             "--output",str(generated),"--max-countries","120",
-             "--per-country","5","--discover-state",str(DISCOVERY_STATE)]
-    run(command,cwd=SCRIPTS,timeout=200,expose=True)
-    # Distinguish missing/empty/oversized output. Prior single generic HOLD
-    # concealed whether the upstream exporter actually wrote a file.
-    if not generated.is_file() or generated.is_symlink():
-        raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
-    generated_bytes=generated.stat().st_size
-    log("JAMAICA_GENERATED_FEED_BYTES",generated_bytes)
-    if not 100<=generated_bytes<=MAX_BYTES:
-        raise CatalogHold("GENERATED_FEED_EMPTY_OR_OVERSIZED")
-    new=json.loads(generated.read_text(encoding="utf-8"))
-    validate(new,directory)
+    new=refresh_source_feed(directory)
     previous_cache=load_recent_source_cache()
     if previous_cache is not None:
         raw_entries=previous_cache.get("entries")
