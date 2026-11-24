@@ -16,10 +16,12 @@ import os
 import stat
 import tempfile
 
-try:
+# Package callers must use the same module identity even if the publisher
+# previously inserted scripts/ into sys.path for its standalone entrypoint.
+if __package__:
+    from . import bot_visual_sidecar as visual
+else:
     import bot_visual_sidecar as visual
-except ModuleNotFoundError:
-    from scripts import bot_visual_sidecar as visual
 from backend.bg_route_first_visual_gate import route_first_pair_matches
 
 PRIVATE_PATH=Path.home()/".local"/"share"/"jamaica-oracle-catalog"/"private-bg-route-first-receipts.json"
