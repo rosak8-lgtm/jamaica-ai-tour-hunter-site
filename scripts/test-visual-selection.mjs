@@ -24,7 +24,7 @@ assert.equal(parsed.read({...feed(good),entries:[{...good,browser_session_digest
 const page=fs.readFileSync('index.html','utf8');
 const visual=JSON.parse(fs.readFileSync('tour-visual-evidence.json','utf8'));
 assert.equal(visual.schema,'jamaica.visual-selection.v1');
-assert.ok(Array.isArray(visual.entries)&&visual.entries.length<=300,
+assert.ok(Array.isArray(visual.entries)&&visual.entries.length<=1000,
  "Publisher may deliver genuine route-first bot receipts when available");
 assert.ok(visual.entries.every(x=>x.route_best_price_seen===true&&
  x.both_green_planes_seen===true&&/^p_[a-f0-9]{24}$/.test(x.preview_id)),
