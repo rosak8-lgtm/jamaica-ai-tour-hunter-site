@@ -539,7 +539,7 @@ assert.ok(page.includes('fullCountryNames.length'));
 assert.ok(page.includes('Непроверенные карточки скрыты')&&page.includes('Нет туров с обязательной проверкой'),'Empty-state must never substitute source-only tours for absent strict bot proof');
 assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible"){')&&
- page.includes('loadTourPreviews();')&&page.includes('loadVisualProofs();'),
+ page.includes('await loadVisualProofs(false);')&&page.includes('await loadTourPreviews();')&&page.includes('catalogRefreshInFlight'),
  'The visible browser refreshes source-backed catalog and bot visual evidence together');
 assert.ok(page.includes('5*60*1000'));
 assert.ok(page.includes('price_reference_party'));
