@@ -39,7 +39,7 @@ assert.ok(page.includes('id="visualProofOnly"')&&
  page.includes('id="visualProofNotice"')&&
  page.includes('scripts/visual-selection.js')&&
  page.includes('window.JamaicaPublicVisualPolicy.eligible(x,visualProofs)')&&
- page.includes('loadVisualProofs();'));
+ page.includes('await loadVisualProofs(false);'));
 assert.ok(page.includes('Карта')||page.includes('Страны')||page.includes('страны'),
  'Never delete broad country discovery UI');
 console.log('JAMAICA_VISUAL_BOT_PUBLIC_SIDE_CAR_TEST_PASS');
