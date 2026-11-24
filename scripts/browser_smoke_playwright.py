@@ -511,7 +511,8 @@ def main():
                 ensure(all(h.startswith("Мальдивы · ") for h in heads),
                        "COUNTRY_FILTER_MIXED_UNRELATED_TOURS")
                 if not heads:
-                    ensure("нет подходящих вариантов" in page.locator("#previewCards").inner_text(),
+                    ensure("Туров со всеми тремя подтверждениями пока нет" in page.locator("#searchProgress").inner_text()
+                           and "ЛУЧШАЯ ЦЕНА" in page.locator("#searchProgress").inner_text(),
                            "UNAVAILABLE_COUNTRY_NOT_EXPLAINED")
                 print("FULL_COUNTRY_DIRECTORY_SEARCH_IN_RESULTS=PASS")
 
