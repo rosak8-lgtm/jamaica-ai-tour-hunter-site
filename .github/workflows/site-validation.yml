@@ -23,6 +23,7 @@ jobs:
       - name: Validate destinations, public wording and JavaScript
         run: |
           node scripts/test-site.mjs
+          node scripts/test-departure-geo.mjs
           node scripts/test-catalog-shards.mjs
           node scripts/test-country-offer-balance.mjs
           node scripts/test-month-offer-filters.mjs
