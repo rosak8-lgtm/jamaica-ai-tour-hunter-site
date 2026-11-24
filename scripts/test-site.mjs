@@ -252,12 +252,16 @@ assert.ok(previewPriceSort(cheap,costly)<0,'Cheapest should rank before earliest
 assert.ok(previewPriceSort(costly,unknown)<0,'Known reference price before unknown');
 assert.ok(previewPriceSort(unknown,cheap)>0,'Unknown price never ranked as free or cheapest');
 const matching=functionFrom(page,'function matching(o,q){');
-const q={origin:'Иркутск',country:'',date:'',nights:0,adults:2,children:0,rooms:[{adults:2,child_ages:[]}],budget:0,hotel:''};
+const q={origin:'Иркутск',country:'',date:'',nights:[],adults:2,children:0,rooms:[{adults:2,child_ages:[]}],budget:0,hotel:''};
 assert.equal(matching(sample,q),true,'Any duration must show verified quotes');
 assert.equal(matching(sample,{...q,rooms:[{adults:1,child_ages:[]},{adults:1,child_ages:[]}]}),false,
  'Pair reference is not valid for two separate rooms');
-assert.equal(matching(sample,{...q,nights:7}),false);
-assert.equal(matching(sample,{...q,nights:10}),true);
+assert.equal(matching(sample,{...q,nights:[7,9]}),false);
+assert.equal(matching(sample,{...q,nights:[7,10,14]}),true);
+assert.equal(matching({...sample,nights:14},{...q,nights:[7,10,14]}),true);
+assert.equal(matching({...sample,nights:13},{...q,nights:[7,10,14]}),false);
+assert.ok(page.includes('(!nights.length||nights.includes(x.nights))'),"Reference cards use the same OR duration filter");
+assert.ok(page.includes('id="nightPicker"')&&page.includes('id="filterNightPicker"')&&page.includes('input.type="checkbox"'));
 assert.equal(matching(sample,{...q,country:'Таиланд'}),true);
 assert.equal(matching(sample,{...q,country:'Китай'}),false);
 assert.equal(matching(sample,{...q,hotel:'test hotel'}),true,'Normalized hotel query');
