@@ -640,7 +640,12 @@ def main():
                     page.goto(base+"?"+urlencode({"country":country,"hotel":name}),
                               wait_until="domcontentloaded")
                     page.wait_for_function(
-                        "()=>(document.querySelector('#previewCoverage')?.textContent||'').includes('В браузере доступны все')",
+                        """() => {
+                          const coverage=document.querySelector('#previewCoverage')?.textContent||'';
+                          return coverage.includes('В браузере доступны все') ||
+                            (coverage.includes('предварительные варианты опубликованы по') &&
+                             !coverage.includes('Загружается расширенный каталог:'));
+                        }""",
                         timeout=50000)
                     offers=page.locator("#previewCards article.offerCard")
                     if offers.count()==0:
