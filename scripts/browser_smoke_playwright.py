@@ -249,6 +249,34 @@ def main():
                        "NOT_ALL_3_TO_180_NIGHTS_PRESENT")
                 ensure(page.locator("#dateTo").count()==1,
                        "DATE_RANGE_UPPER_BOUND_MISSING")
+                # Select two independent durations, including actual fixture
+                # lengths; assert exact union, not an intersection or last pick.
+                lengths=sorted({r["nights"] for r in test_rows if r["origin"]=="Иркутск"})
+                chosen=lengths[:2] if len(lengths)>1 else [lengths[0],3 if lengths[0]!=3 else 4]
+                page.locator("#nightPicker summary").click()
+                for n in chosen:
+                    page.locator('#nightChoices input[value="'+str(n)+'"]').check()
+                ensure(page.locator("#nightChoices input:checked").count()==2,
+                       "MULTI_NIGHTS_LOST_FIRST_CHOICE")
+                ensure(page.locator("#filterNightChoices input:checked").count()==2,
+                       "MULTI_NIGHTS_SIDEBAR_NOT_SYNCHRONIZED")
+                page.locator("#nightsDone").click()
+                page.locator("#tourSearchForm button[type=submit]").click()
+                expected={r["id"] for r in test_rows if r["origin"]=="Иркутск" and r["nights"] in chosen}
+                shown=set(page.locator("#previewCards article.offerCard").evaluate_all(
+                    "(nodes)=>nodes.map(n=>n.dataset.previewId)"))
+                ensure(len(shown)==min(30,len(expected)) and shown.issubset(expected),
+                       "MULTI_NIGHTS_OR_FILTER_MISMATCH")
+                page.locator("#filterNightPicker summary").click()
+                page.locator("#filterNightsClear").click()
+                page.locator("#filterNightsDone").click()
+                page.locator("#filterApply").click()
+                ensure(page.locator("#nightChoices input:checked").count()==0,
+                       "MULTI_NIGHTS_RESET_NOT_SYNCHRONIZED")
+                ensure(page.locator("#previewCards article.offerCard").count()==min(30,len(test_rows)),
+                       "MULTI_NIGHTS_RESET_DID_NOT_RESTORE_CATALOG")
+                print("MULTI_NIGHTS_DESKTOP_SEARCH_UNION_PASS")
+
 
                 # Country chips must reflect ALL actually observed source
                 # countries while keeping the 251-name reference directory
@@ -867,6 +895,19 @@ def main():
                             body=json.dumps(fixture_proofs,ensure_ascii=False)))
                     mobile.goto(base,wait_until="domcontentloaded")
                     mobile.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
+                    mobile.locator("#nightPicker summary").click()
+                    for n in (7,9,14):
+                        mobile.locator('#nightChoices input[value="'+str(n)+'"]').check()
+                    ensure(mobile.locator("#nightChoices input:checked").count()==3,
+                           "MOBILE_MULTI_NIGHTS_CANNOT_SELECT_THREE")
+                    ensure(mobile.locator("#nightsSummary").inner_text()=="7, 9, 14 ноч.",
+                           "MOBILE_MULTI_NIGHTS_SUMMARY_MISMATCH")
+                    mobile.locator("#nightsClear").click()
+                    mobile.locator("#nightsDone").click()
+                    ensure(mobile.locator("#nightChoices input:checked").count()==0,
+                           "MOBILE_MULTI_NIGHTS_RESET_FAILED")
+                    print("MULTI_NIGHTS_MOBILE_TOUCH_LAYOUT_PASS")
+
                     ensure(mobile.locator("#filtersDisclosure").get_attribute("open") is None,
                            "MOBILE_FILTER_DRAWER_NOT_COLLAPSED")
                     mobile.locator("#filtersDisclosure summary").click()
