@@ -83,7 +83,7 @@
    <div class="field wide"><label for="destination">Страна / направление</label><input id="destination" name="destination" list="countryDatalist" placeholder="Все страны" maxlength="90" autocomplete="off"><datalist id="countryDatalist"></datalist></div>
    <div class="field short"><label for="dateFrom">Вылет с</label><input id="dateFrom" name="dateFrom" type="date"></div>
    <div class="field short"><label for="dateTo">Вылет до</label><input id="dateTo" name="dateTo" type="date"></div>
-   <div class="field short"><label for="nights">Ночей</label><select id="nights" name="nights" aria-label="Продолжительность тура"><option value="0" selected>Любая длительность</option></select></div>
+   <div class="field short"><label id="nightsLabel">Ночей</label><details class="nightPicker" id="nightPicker"><summary aria-labelledby="nightsLabel nightsSummary"><span id="nightsSummary">Любая длительность</span></summary><div class="nightPanel"><p>Выберите несколько вариантов</p><div id="nightChoices" class="nightChoices" role="group" aria-label="Количество ночей"></div><div class="nightActions"><button type="button" id="nightsClear">Сбросить</button><button type="button" id="nightsDone">Готово</button></div></div></details><select id="nights" name="nights" multiple hidden aria-hidden="true" tabindex="-1"><option value="0" selected>Любая длительность</option></select></div>
    <div class="field short"><label for="adults">Взрослых · номер 1</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
    <div class="field short"><label for="kids">Детей · номер 1</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
   </div>
@@ -126,8 +126,8 @@
     <div class="filterGroup"><label for="filterResort">Курорт</label>
      <select id="filterResort" aria-label="Отбор курорта по опубликованным турам"><option value="">Любой курорт</option></select>
     </div>
-    <div class="filterGroup"><label for="filterNights">Продолжительность</label>
-     <select id="filterNights" aria-label="Отбор количества ночей"><option value="0">Любое число ночей</option></select>
+    <div class="filterGroup"><label id="filterNightsLabel">Продолжительность</label>
+     <details class="nightPicker" id="filterNightPicker"><summary aria-labelledby="filterNightsLabel filterNightsSummary"><span id="filterNightsSummary">Любая длительность</span></summary><div class="nightPanel"><p>Выберите несколько вариантов</p><div id="filterNightChoices" class="nightChoices" role="group" aria-label="Отбор количества ночей"></div><div class="nightActions"><button type="button" id="filterNightsClear">Сбросить</button><button type="button" id="filterNightsDone">Готово</button></div></div></details><select id="filterNights" multiple hidden aria-hidden="true" tabindex="-1"><option value="0">Любое число ночей</option></select>
     </div>
     <div class="filterGroup"><label for="filterHotel">Название отеля</label>
      <input id="filterHotel" type="search" maxlength="100" placeholder="Например, Beach Resort">
@@ -243,6 +243,54 @@ for(let n=3;n<=180;n++){
    [2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?"ночи":"ночей");
  nightsSelect.append(option);
 }
+const allNightLengths=Array.from({length:178},(_,i)=>i+3);
+let selectedNights=new Set();
+let availableNightLengths=[];
+function nightLabel(n){
+ return n+" "+(n%10===1&&n%100!==11?"ночь":
+   [2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?"ночи":"ночей");
+}
+function renderNightPicker(prefix,lengths){
+ const select=$(prefix==="nights"?"nights":"filterNights");
+ const choices=$(prefix==="nights"?"nightChoices":"filterNightChoices");
+ const sorted=[...new Set([...lengths,...selectedNights])].sort((a,b)=>a-b);
+ const existing=[...choices.querySelectorAll("input")].map(x=>Number(x.value));
+ if(existing.join(",")!==sorted.join(",")){
+  const frag=document.createDocumentFragment();
+  for(const n of sorted){
+   const label=el("label","nightChoice"),input=document.createElement("input");
+   input.type="checkbox";input.value=String(n);input.checked=selectedNights.has(n);
+   input.addEventListener("change",()=>{
+    if(input.checked)selectedNights.add(n);else selectedNights.delete(n);
+    syncNightPickers();
+   });
+   label.append(input,el("span","",nightLabel(n)));frag.append(label);
+  }
+  choices.replaceChildren(frag);
+ }
+ for(const input of choices.querySelectorAll("input"))input.checked=selectedNights.has(Number(input.value));
+ const values=[...selectedNights].sort((a,b)=>a-b);
+ $(prefix+"Summary").textContent=values.length===0?"Любая длительность":values.length===1?nightLabel(values[0]):values.length<=6?values.join(", ")+" ноч.":"Выбрано: "+values.length+" вариантов";
+ // Keep the form's machine-readable multiple select synchronized.
+ if(prefix!=="nights"){
+  select.replaceChildren(new Option("Любое число ночей","0"));
+  for(const n of sorted)select.add(new Option(nightLabel(n),String(n)));
+ }
+ for(const option of select.options)option.selected=values.length?selectedNights.has(Number(option.value)):option.value==="0";
+}
+function syncNightPickers(){
+ renderNightPicker("nights",allNightLengths);
+ renderNightPicker("filterNights",availableNightLengths.length?availableNightLengths:allNightLengths);
+}
+for(const [prefix,picker] of [["nights","nightPicker"],["filterNights","filterNightPicker"]]){
+ $(prefix+"Clear").addEventListener("click",()=>{selectedNights.clear();syncNightPickers();});
+ $(prefix+"Done").addEventListener("click",()=>{$(picker).open=false;$(picker).querySelector("summary").focus();});
+ $(picker).addEventListener("keydown",e=>{if(e.key==="Escape"){e.preventDefault();$(picker).open=false;$(picker).querySelector("summary").focus();}});
+}
+document.addEventListener("pointerdown",e=>{
+ for(const id of ["nightPicker","filterNightPicker"]){const p=$(id);if(p.open&&!p.contains(e.target))p.open=false;}
+});
+syncNightPickers();
 $("dateFrom").addEventListener("change",()=>{
  $("dateTo").min=$("dateFrom").value;
 });
@@ -283,14 +331,14 @@ function strictOffer(o,now){
 function filters(){
  const val=id=>$(id).value.trim();
  const rooms=travelerUI.current(),summary=Travelers.totals(rooms);
-  return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),dateTo:val("dateTo"),nights:Number(val("nights")),adults:summary.adults,children:summary.children,rooms,budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
+  return {origin:val("departure"),country:val("destination"),date:val("dateFrom"),dateTo:val("dateTo"),nights:[...selectedNights],adults:summary.adults,children:summary.children,rooms,budget:val("budget")?Number(val("budget")):0,hotel:val("hotelSearch").toLocaleLowerCase("ru")};
 }
 function matching(o,q){
  if(o.origin.toLocaleLowerCase("ru")!==q.origin.toLocaleLowerCase("ru"))return false;
  if(q.country&&o.destination.toLocaleLowerCase("ru")!==q.country.toLocaleLowerCase("ru"))return false;
  if(q.date&&o.depart_date<q.date)return false;
  if(q.dateTo&&o.depart_date>q.dateTo)return false;
- if(q.nights!==0&&o.nights!==q.nights)return false;
+ if(q.nights.length&&!q.nights.includes(o.nights))return false;
  if(!Travelers.isTwoAdults(q.rooms)||o.adults!==q.adults||o.children!==q.children)return false;
  if(q.budget>0 && o.total_rub/o.adults>q.budget)return false;
  if(q.hotel && !o.hotel.toLocaleLowerCase("ru").includes(q.hotel))return false;
@@ -481,7 +529,7 @@ let lastFilterCountry="";
 function replaceFilterOptions(select,items,placeholder,wanted){
  const frag=document.createDocumentFragment();
  const empty=document.createElement("option");
- empty.value=select===sidebarNights?"0":"";
+ empty.value="";
  empty.textContent=placeholder;frag.append(empty);
  for(const item of items){
   const option=document.createElement("option");
@@ -519,16 +567,14 @@ function sourceFilterOptions(){
  replaceFilterOptions(sidebarResort,[...resorts].sort(countryCompare).map(x=>({
    value:x,label:x
  })), "Любой курорт",oldResort);
- replaceFilterOptions(sidebarNights,[...lengths].sort((a,b)=>a-b).map(n=>({
-   value:n,label:n+" ночей"
- })), "Любое число ночей",$("nights").value);
+ availableNightLengths=[...lengths].sort((a,b)=>a-b);
+ syncNightPickers();
  sidebarHotel.value=$("hotelSearch").value;
  sidebarBudget.value=$("budget").value;
  lastFilterCountry=formCountry;
 }
 function applyTourSidebar(){
  $("destination").value=sidebarCountry.value;
- $("nights").value=sidebarNights.value;
  $("hotelSearch").value=sidebarHotel.value.trim();
  $("budget").value=sidebarBudget.value;
  lastFilterCountry=sidebarCountry.value;
@@ -542,10 +588,10 @@ sidebarCountry.addEventListener("change",()=>{
 });
 $("filterApply").addEventListener("click",applyTourSidebar);
 $("filterReset").addEventListener("click",()=>{
- sidebarCountry.value="";sidebarResort.value="";sidebarNights.value="0";
+ sidebarCountry.value="";sidebarResort.value="";selectedNights.clear();
  sidebarHotel.value="";sidebarBudget.value="";
  lastFilterCountry="";
- $("destination").value="";$("nights").value="0";
+ $("destination").value="";
  $("hotelSearch").value="";$("budget").value="";
  sourceFilterOptions();form.requestSubmit();
 });
@@ -900,7 +946,7 @@ function renderTourPreviews(reset=true){
  const origin=$("departure").value.trim().toLocaleLowerCase("ru");
  const country=$("destination").value.trim().toLocaleLowerCase("ru");
  const date=$("dateFrom").value,dateTo=$("dateTo").value;
- const nights=Number($("nights").value);
+ const nights=[...selectedNights];
  const hotel=$("hotelSearch").value.trim().toLocaleLowerCase("ru");
  const resortFilter=sidebarResort.value.trim().toLocaleLowerCase("ru");
  const selectedParty=travelerUI.current(),sum=Travelers.totals(selectedParty);
@@ -922,7 +968,7 @@ function renderTourPreviews(reset=true){
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
    (!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)&&
-   (!nights||x.nights===nights)&&
+   (!nights.length||nights.includes(x.nights))&&
    (!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
    (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
    (!budget||!partyTwoAdults||(referencePrice(x)!==null&&
