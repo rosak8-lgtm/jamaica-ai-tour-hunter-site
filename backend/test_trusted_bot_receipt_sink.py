@@ -84,6 +84,27 @@ class Tests(unittest.TestCase):
             sink.save_from_trusted_browser(
                 r,f,self.preview,path=self.path,now=self.now)
 
+    def test_batch_accepts_only_individually_proven_rows_and_retains_fresh_old_rows(self):
+        r,f=bundle(self.preview,now=self.now)
+        self.assertTrue(sink.save_from_trusted_browser(r,f,self.preview,path=self.path,now=self.now))
+        pairs=[]
+        for i in range(320):
+            p={**self.preview,"id":"p_"+format(i,"024x")}
+            route,flight=bundle(p,now=self.now)
+            pairs.append((route,flight,p))
+        bad={**self.preview,"id":"p_"+"e"*24}
+        br,bf=bundle(bad,now=self.now)
+        pairs.append((br,{**bf,"back_green":False},bad))
+        accepted=sink.save_batch_from_trusted_browser(pairs,path=self.path,now=self.now)
+        self.assertEqual(len(accepted),320)
+        self.assertNotIn(bad["id"],accepted)
+        records=visual.read_private_receipts(self.path)["records"]
+        self.assertEqual(len(records),321)
+        self.assertEqual(self.path.stat().st_mode&0o777,0o600)
+        self.assertEqual(sink.save_batch_from_trusted_browser(pairs,path=self.path,
+            now=self.now+timedelta(minutes=16)),[])
+        self.assertEqual(len(visual.read_private_receipts(self.path)["records"]),321)
+
     def test_do_not_replace_corrupt_private_receipt(self):
         self.path.write_text("CORRUPTED EVIDENCE",encoding="utf-8")
         os.chmod(self.path,0o600)
