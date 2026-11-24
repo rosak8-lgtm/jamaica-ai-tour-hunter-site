@@ -19,6 +19,19 @@ class Tests(unittest.TestCase):
         self.now=datetime.now(timezone.utc)
         self.preview={**sample(),"status":"REFERENCE_PRICE_LIST_ONLY"}
 
+    def test_package_import_identity_after_publisher_path_setup(self):
+        import subprocess
+        import sys
+        root=Path(__file__).resolve().parent.parent
+        code=(
+            "import sys; sys.path.insert(0, 'scripts'); "
+            "import bot_visual_sidecar; "
+            "from scripts import bot_visual_sidecar as visual, trusted_bot_receipt_sink as sink; "
+            "assert sink.visual is visual; "
+            "assert sink.visual.VisualHold is visual.VisualHold"
+        )
+        subprocess.run([sys.executable,"-B","-c",code],cwd=root,check=True)
+
     def test_real_source_bound_pair_saved_owner_only(self):
         route,flight=bundle(self.preview,now=self.now)
         self.assertTrue(sink.save_from_trusted_browser(route,flight,self.preview,
