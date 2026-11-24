@@ -1270,8 +1270,8 @@ void window.JamaicaDepartureGeo.start({
  status:text=>{$("departureGeoStatus").textContent=text;},
  apply:city=>{
   $("departure").value=city;
-  $("destination").value="";
-  sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
+  // Preserve explicit destination/hotel deep links on initial city selection.
+  sidebarResort.value="";lastFilterCountry="";
   sourceFilterOptions();runSearch(false);
   if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
   renderTourPreviews(true);
