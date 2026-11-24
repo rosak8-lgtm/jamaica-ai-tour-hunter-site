@@ -41,6 +41,59 @@ def feed(n=1):
     }
 
 class Tests(unittest.TestCase):
+    def test_exact_route_handoff_survives_rotating_source_and_public_price_validation(self):
+        import hashlib
+        moment=datetime.now(timezone.utc)
+        current=feed()
+        current["refreshed_at_utc"]=moment.isoformat()
+        row=dict(current["previews"][0])
+        row.update(depart_date=(moment.date()+timedelta(days=10)).isoformat(),
+                   price_reference_rub=None,price_reference_party="UNVERIFIED")
+        key="|".join((row["country"],row["hotel_id"],row["depart_date"],str(row["nights"]),row["room"]))
+        row["id"]="p_"+hashlib.sha256(key.encode()).hexdigest()[:24]
+        d={"countries":[{"name":"Турция"}],"hotels":[{"id":row["hotel_id"],"name":"TEST","country":"Турция"}]}
+        when=moment.isoformat()
+        common={"source_price_list_id":"123456789","source_route_id":"123456788",
+                "browser_session_digest":"b"*64,"origin":"Иркутск","country":"Турция",
+                "depart_date":row["depart_date"]}
+        route={**common,"source":"BG_OFFICIAL_BROWSER_ROUTE","badge_text":"ЛУЧШАЯ ЦЕНА",
+               "badge_scope":"SELECTED_ROUTE_ROW","route_clicked":True,
+               "page_url":"https://www.bgoperator.ru/price.shtml",
+               "origin_city_id":"100510397223","badge_seen_at_utc":when,"route_clicked_at_utc":when}
+        flight={**common,"source":"BG_OFFICIAL_BROWSER_SELECTED_DETAIL","out_green":True,
+                "back_green":True,"stop_sale":False,"hotel_id":row["hotel_id"],"room":row["room"],
+                "nights":row["nights"],"source_preview_id":row["id"],"flight_checked_at_utc":when}
+        receipts={"schema":"jamaica.bg-bot-private-receipts.v1","records":[
+            {"preview_id":row["id"],"route":route,"flight":flight}]}
+        record={"preview":row,"source_price_list_id":"123456789","observed_at_utc":when}
+        with tempfile.TemporaryDirectory() as work:
+            target=Path(work)/"private-site-exact-source.json"
+            def save(item):
+                target.write_text(json.dumps({"schema":"jamaica.bg-site-exact-source.v1","records":[item]}))
+                target.chmod(0o600)
+            save(record)
+            merged,n=publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment)
+            self.assertEqual(n,1)
+            self.assertEqual(merged["previews"][0],row)
+            visual=publisher.visual.build_visual_feed(merged["previews"],receipts,now=moment)
+            public=publisher.eligibility.select_public_source_rows(merged,visual,now=moment)
+            prices={"schema":"jamaica.bg-site-dom-prices.v1","records":[
+                {"preview_id":row["id"],"source_price_list_id":"123456789","browser_session_digest":"b"*64",
+                 "observed_at_utc":when,"price_total_rub":99000}]}
+            priced=publisher.browser_price.apply(public,receipts,visual,prices,now=moment)
+            self.assertEqual(priced["previews"][0]["price_reference_rub"],99000)
+            self.assertEqual(publisher.validate(priced,d,allow_browser_prices=True),1)
+            with self.assertRaises(publisher.CatalogHold):publisher.validate(priced,d)
+            stale={**priced,"previews":[{**priced["previews"][0],
+                "price_observed_at_utc":(moment-timedelta(minutes=16)).isoformat()}]}
+            with self.assertRaises(publisher.CatalogHold):publisher.validate(stale,d,allow_browser_prices=True)
+            self.assertEqual(publisher.merge_exact_browser_source(current,d,None,path=target,now=moment)[1],0)
+            self.assertEqual(publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment+timedelta(minutes=16))[1],0)
+            save({**record,"source_price_list_id":"123456780"})
+            self.assertEqual(publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment)[1],0)
+            save(record);target.chmod(0o644)
+            self.assertEqual(publisher.merge_exact_browser_source(current,d,receipts,path=target,now=moment)[1],0)
+
     def test_private_source_refresh_preserves_previous_feed_until_validated(self):
         with tempfile.TemporaryDirectory() as work:
             root=Path(work)
