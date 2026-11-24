@@ -53,28 +53,40 @@ def _private_directory(path):
 
 def save_from_trusted_browser(route,flight,preview, *,
                               path=PRIVATE_PATH, now=None):
-    """Persist real receipt, bound to source preview, as 0600 atomic JSON.
+    """Single-row compatibility wrapper; the same strict batch gate."""
+    return bool(save_batch_from_trusted_browser([(route,flight,preview)],path=path,now=now))
 
-    Caller must be the trusted BG browser process, not an unauthenticated
-    message or user-facing web API. Missing/invalid evidence is REJECTED.
-    Never expose route, flight, URL, session digest or IDs in logs.
-    Returns True iff the source-verified receipt was written.
+
+def save_batch_from_trusted_browser(pairs, *, path=PRIVATE_PATH, now=None):
+    """Validate each independently observed pair; atomically write one ledger.
+
+    All pairs are supplied by the trusted browser process after a real click.
+    No mixed or incomplete evidence can be elevated by batching.
+    Return only accepted preview IDs; preserve previous fresh receipts.
     """
     if now is None:
         now=datetime.now(timezone.utc)
     if not isinstance(now,datetime) or now.tzinfo is None:
         raise visual.VisualHold("TRUSTED_BOT_CLOCK_INVALID")
-    if not _validated_scope(route,flight,preview,now):
-        return False
+    if not isinstance(pairs,(list,tuple)) or len(pairs)>visual.MAX_PRIVATE_RECORDS:
+        raise visual.VisualHold("TRUSTED_BOT_BATCH_INVALID")
+    newest={}
+    for pair in pairs:
+        if not isinstance(pair,(tuple,list)) or len(pair)!=3:
+            continue
+        route,flight,preview=pair
+        if not _validated_scope(route,flight,preview,now):
+            continue
+        newest[preview["id"]]={"preview_id":preview["id"],
+            "route":copy.deepcopy(route),"flight":copy.deepcopy(flight)}
+    if not newest:
+        return []
+    accepted=list(newest)
     path=Path(path)
     _private_directory(path)
     current=visual.read_private_receipts(path)
     if current is None:
         current={"schema":visual.PRIVATE_SCHEMA,"records":[]}
-    newest={preview["id"]:{
-        "preview_id":preview["id"],
-        "route":copy.deepcopy(route),
-        "flight":copy.deepcopy(flight)}}
     # Keep other source-bound receipts only for their bounded lifetime.
     for old in current["records"]:
         if not isinstance(old,dict) or set(old)!={"preview_id","route","flight"}:
@@ -113,7 +125,7 @@ def save_from_trusted_browser(route,flight,preview, *,
             os.fsync(stream.fileno())
         os.replace(temp,path)
         os.chmod(path,0o600)
-        return True
+        return accepted
     finally:
         if temp is not None and temp.exists():
             temp.unlink()

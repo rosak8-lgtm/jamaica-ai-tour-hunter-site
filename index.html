@@ -1091,7 +1091,7 @@ async function loadTourPreviews(){
     new Date(refreshed).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"}):"неизвестную дату";
   $("previewUpdatedAt").textContent="Выгрузка: "+previewPriceAsOf+
     ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
-    ". Браузер проверяет новый каталог каждые 5 минут; расписание серверного импорта задаётся отдельно.";
+    ". Браузер проверяет новый каталог каждые 3 минуты; расписание серверного импорта задаётся отдельно.";
   const coverage=Array.isArray(data.countries_status)?data.countries_status.filter(x=>x&&typeof x.country==="string"):[];
   lastSourceCoverage=window.JamaicaSourceCoverage.parse(data);
 
@@ -1196,7 +1196,7 @@ setInterval(()=>{
    loadTourPreviews();
    loadVisualProofs();
  }
-},5*60*1000);
+},3*60*1000);
 document.addEventListener("visibilitychange",()=>{
  if(document.visibilityState==="visible"){
    loadTourPreviews();

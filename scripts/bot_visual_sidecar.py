@@ -20,9 +20,9 @@ from backend.bg_route_first_visual_gate import route_first_pair_matches
 
 PRIVATE_SCHEMA="jamaica.bg-bot-private-receipts.v1"
 PUBLIC_SCHEMA="jamaica.visual-selection.v1"
-MAX_SOURCE_BYTES=1_500_000
-MAX_PRIVATE_RECORDS=500
-MAX_PUBLIC_RECORDS=300
+MAX_SOURCE_BYTES=8_000_000
+MAX_PRIVATE_RECORDS=2000
+MAX_PUBLIC_RECORDS=2000
 
 class VisualHold(ValueError):pass
 

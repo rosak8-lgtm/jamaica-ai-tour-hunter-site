@@ -59,11 +59,27 @@ class Tests(unittest.TestCase):
         self.assertEqual(build_visual_feed([prior],self.input(),
                                            now=self.now)["entries"],[])
 
-    def test_only_latest_300_unique_matching_receipts_public(self):
+    def test_duplicate_receipts_are_collapsed(self):
         result=build_visual_feed([self.p],self.input([self.record]*10),
                                  now=self.now)
         self.assertEqual(len(result["entries"]),1)
         self.assertEqual(result["entries"][0]["preview_id"],self.p["id"])
+
+    def test_capacity_2000_and_expired_receipt_exclusion(self):
+        from scripts.bot_visual_sidecar import MAX_PRIVATE_RECORDS, MAX_PUBLIC_RECORDS
+        self.assertEqual(MAX_PRIVATE_RECORDS,2000)
+        self.assertEqual(MAX_PUBLIC_RECORDS,2000)
+        previews=[]; records=[]
+        for i in range(2000):
+            p={**self.p,"id":"p_"+format(i,"024x")}
+            route,flight=bundle(p,now=self.now)
+            previews.append(p)
+            records.append({"preview_id":p["id"],"route":route,"flight":flight})
+        out=build_visual_feed(previews,self.input(records),now=self.now)
+        self.assertEqual(len(out["entries"]),2000)
+        self.assertTrue(validate_public_feed(out,now=self.now))
+        self.assertFalse(validate_public_feed({**out,"entries":out["entries"]+[out["entries"][0]]},now=self.now))
+        self.assertEqual(build_visual_feed(previews,self.input(records),now=self.now+timedelta(minutes=16))["entries"],[])
 
     def test_empty_or_invalid_source_never_grants_visual_status(self):
         self.assertEqual(build_visual_feed([self.p],None,now=self.now),
