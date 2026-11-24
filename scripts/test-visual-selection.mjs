@@ -21,15 +21,15 @@ assert.equal(parsed.read({...feed(good),bookable:true},now).size,0);
 assert.equal(parsed.read({...feed(good),quote_verified:true},now).size,0);
 assert.equal(parsed.read({...feed(good),entries:[good,good]},now).size,0);
 assert.equal(parsed.read({...feed(good),entries:[{...good,browser_session_digest:'SECRET'}]},now).size,0);
-const thousand=Array.from({length:1000},(_,i)=>({...good,preview_id:'p_'+i.toString(16).padStart(24,'0')}));
-assert.equal(parsed.MAX,1000);
-assert.equal(parsed.read({...feed(good),entries:thousand},now).size,1000);
+const thousand=Array.from({length:2000},(_,i)=>({...good,preview_id:'p_'+i.toString(16).padStart(24,'0')}));
+assert.equal(parsed.MAX,2000);
+assert.equal(parsed.read({...feed(good),entries:thousand},now).size,2000);
 assert.equal(parsed.read({...feed(good),entries:[...thousand,{...good}]},now).size,0);
 assert.equal(parsed.read({...feed(good),entries:thousand},now+16*60*1000).size,0);
 const page=fs.readFileSync('index.html','utf8');
 const visual=JSON.parse(fs.readFileSync('tour-visual-evidence.json','utf8'));
 assert.equal(visual.schema,'jamaica.visual-selection.v1');
-assert.ok(Array.isArray(visual.entries)&&visual.entries.length<=1000,
+assert.ok(Array.isArray(visual.entries)&&visual.entries.length<=2000,
  "Publisher may deliver genuine route-first bot receipts when available");
 assert.ok(visual.entries.every(x=>x.route_best_price_seen===true&&
  x.both_green_planes_seen===true&&/^p_[a-f0-9]{24}$/.test(x.preview_id)),
