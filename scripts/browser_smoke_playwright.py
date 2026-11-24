@@ -72,6 +72,7 @@ def main():
                 return 2
             try:
                 page=browser.new_page(viewport={"width":1365,"height":900})
+                page.route("**/departure-geo-config.json",lambda route:route.fulfill(status=200,content_type="application/json",body='{"schema":"jamaica.departure-geo-config.v1","enabled":false,"endpoint":""}'))
                 # Keep image-load tests deterministic: external photos stay on their
                 # licensed origin in production, but CI serves only a valid pixel.
                 pixel=b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/QRYAAAAASUVORK5CYII=")
@@ -945,6 +946,7 @@ def main():
                 # filter drawer with no horizontal page overflow.
                 mobile=browser.new_page(viewport={"width":390,"height":844})
                 try:
+                    mobile.route("**/departure-geo-config.json",lambda route:route.fulfill(status=200,content_type="application/json",body='{"schema":"jamaica.departure-geo-config.v1","enabled":false,"endpoint":""}'))
                     mobile.route("**/tour-visual-evidence.json",
                         lambda route: route.fulfill(status=200,
                             content_type="application/json",
