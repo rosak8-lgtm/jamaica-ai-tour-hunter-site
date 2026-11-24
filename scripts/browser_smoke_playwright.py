@@ -46,6 +46,7 @@ def main():
     counts={}
     for row in test_rows:
         counts[row["country"]]=counts.get(row["country"],0)+1
+    test_country="Турция" if "Турция" in counts else next(iter(counts),"")
     fixture_checked_at=datetime.now(timezone.utc).isoformat()
     fixture_proofs={
         "schema":"jamaica.visual-selection.v1","bookable":False,
@@ -195,11 +196,11 @@ def main():
                 ensure(page.locator("#favoritesOnly").count()==1,
                        "BROWSER_SAVED_TOURS_CONTROL_MISSING")
                 # A real filter changes the displayed catalog, not just its label.
-                page.locator("#filterCountry").select_option("Турция")
+                page.locator("#filterCountry").select_option(test_country)
                 page.locator("#filterApply").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
                 filtered=page.locator("#previewCards article.offerCard h3").all_text_contents()
-                ensure(filtered and all(x.startswith("Турция · ") for x in filtered),
+                ensure(filtered and all(x.startswith(test_country+" · ") for x in filtered),
                        "SIDEBAR_FILTER_NOT_CONNECTED_TO_PUBLIC_TOURS")
                 ensure(page.locator("#otherCountries").is_visible(),
                        "OTHER_COUNTRIES_ACTION_MISSING")
@@ -345,15 +346,15 @@ def main():
                            "TRUNCATED_CATALOGUE_WARNING_NOT_AVAILABLE")
                     page.locator("#sourceDetails summary").click()
 
-                turkey_dates=sorted({r["depart_date"] for r in test_rows if r["country"]=="Турция"})
-                ensure(bool(turkey_dates),"NO_TURKEY_DATES_FOR_RANGE_TEST")
+                selected_dates=sorted({r["depart_date"] for r in test_rows if r["country"]==test_country})
+                ensure(bool(turkey_dates),"NO_SELECTED_COUNTRY_DATES_FOR_RANGE_TEST")
                 page.locator("#dateFrom").fill(turkey_dates[0])
                 page.locator("#dateTo").fill(turkey_dates[0])
-                page.locator("#destination").fill("Турция")
+                page.locator("#destination").fill(test_country)
                 page.locator("#tourSearchForm button[type=submit]").click()
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=15000)
                 visible=page.locator("#previewCards article.offerCard h3").all_text_contents()
-                ensure(visible and all(text.startswith("Турция · ") for text in visible),
+                ensure(visible and all(text.startswith(test_country+" · ") for text in visible),
                        "COUNTRY_FILTER_DID_NOT_REFRESH_PREVIEWS")
                 ensure(page.locator("#previewCards article.offerCard").count()>0,
                        "EXACT_DATE_RANGE_EXCLUDED_SOURCE_RECORD")
@@ -368,7 +369,7 @@ def main():
                 page.wait_for_url("**/preview.html?id=*",timeout=20000)
                 page.locator("#facts .fact").first.wait_for(timeout=15000)
                 heading=page.locator("#heading").inner_text()
-                ensure("Турция" in heading,"SELECTED_COUNTRY_LOST_IN_DETAILS")
+                ensure(test_country in heading,"SELECTED_COUNTRY_LOST_IN_DETAILS")
                 booking=page.locator("#bookingStatus").inner_text().lower()
                 ensure(any(term in booking for term in ("оплат","подтверд","расчёт","договор")),
                        "BOOKING_SAFETY_MESSAGE_NOT_VISIBLE")
@@ -399,9 +400,9 @@ def main():
                 # The element exists before its async preview JSON resolves:
                 # wait for the *country content*, not just element attachment.
                 page.wait_for_function(
-                   "()=>document.querySelector('#hotelTitle')?.textContent?.includes('Турция')",
+                   "(country)=>document.querySelector('#hotelTitle')?.textContent?.includes(country)",arg=test_country,
                    timeout=20000)
-                ensure("Турция" in page.locator("#hotelTitle").inner_text(),
+                ensure(test_country in page.locator("#hotelTitle").inner_text(),
                        "SELECTED_COUNTRY_LOST_ON_QUOTE_PAGE")
                 ensure(page.locator("#checkQuote").is_disabled(),
                        "UNCONFIGURED_REAL_PAYMENT_WAS_UNEXPECTEDLY_ENABLED")
@@ -419,7 +420,7 @@ def main():
                 # The traveler party from search must NEVER silently become 2 adults.
                 page.goto(base,wait_until="domcontentloaded")
                 page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
-                page.locator("#destination").fill("Турция")
+                page.locator("#destination").fill(test_country)
                 page.locator("#adults").fill("1")
                 page.locator("#kids").fill("1")
                 page.locator("#primaryChildAges select").first.select_option("7")
@@ -889,7 +890,7 @@ def main():
                 print("SELECTED_TOUR_TO_QUOTE=PASS")
                 print("UNCONFIGURED_ACCOUNT_PAYMENT=BLOCKED")
                 print("DIFFERENT_COUNTRIES_ON_FIRST_PAGE="+str(len(shown)))
-                print("FILTERED_COUNTRY=Турция")
+                print("FILTERED_COUNTRY="+test_country)
                 print("DETAILED_TOUR_LINK=PASS")
                 print("PAYMENT_PROTECTED=YES")
                 return 0
