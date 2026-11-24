@@ -26,8 +26,11 @@ CANDIDATES_PER_COUNTRY = 1
 MAX_COUNTRIES = 3
 
 
-def safe_url(entry, country_id):
+def safe_url(entry, country_id, *, origin_scope=None):
     """Rebuild an official price-list URL from whitelisted parameters only."""
+    origin_id = bg.CITY_ID if origin_scope is None else origin_scope.origin_id
+    if origin_scope is not None and country_id != origin_scope.country_id:
+        raise bg.SyncHold("DETAIL_SCOPE_INVALID")
     raw = entry.get("url")
     if not isinstance(raw, str):
         raise bg.SyncHold("DETAIL_URL_ABSENT")
@@ -40,7 +43,7 @@ def safe_url(entry, country_id):
         raise bg.SyncHold("DETAIL_QUERY_INVALID")
     values = {k: params[k][0] for k in required}
     if (values["action"] != "price" or values["flt"] != country_id or
-        values["flt2"] != bg.CITY_ID or values["xml"] != "11"):
+        values["flt2"] != origin_id or values["xml"] != "11"):
         raise bg.SyncHold("DETAIL_SCOPE_INVALID")
     if not DIGITS.fullmatch(values["tid"]) or not DIGITS.fullmatch(values["id_price"]):
         raise bg.SyncHold("DETAIL_IDS_INVALID")
