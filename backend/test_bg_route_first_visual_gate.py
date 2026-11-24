@@ -47,6 +47,33 @@ def sample():
             "quote_verified":False}
 
 class Tests(unittest.TestCase):
+    def test_explicit_city_scope_requires_exact_route_and_distinct_id(self):
+        from scripts.bg_origin_scope import Scope
+        from urllib.parse import urlencode
+        scope=Scope("100510999999","Тестовый город","100410000051","Таиланд")
+        p={**sample(),"origin":scope.origin}
+        p["id"]=scope.preview_id(p["hotel_id"],p["depart_date"],p["nights"],p["room"])
+        route,flight=bundle(p)
+        route.update(origin_city_id=scope.origin_id,page_url=
+            "https://www.bgoperator.ru/price.shtml?"+urlencode({
+                "flt":scope.country_id,"flt2":scope.origin_id,"action":"price",
+                "id_price":route["source_price_list_id"],"data":"12.12.2026"}))
+        flight["origin_city_id"]=scope.origin_id
+        self.assertTrue(route_first_pair_matches(route,flight,p,origin_scope=scope))
+        self.assertFalse(route_first_pair_matches(route,flight,p))
+        for patch in ({"origin_city_id":"100510397223"},
+                      {"page_url":route["page_url"]+"&flt2="+scope.origin_id},
+                      {"page_url":route["page_url"].replace(scope.origin_id,"100510397223")},
+                      {"page_url":route["page_url"].replace("12.12.2026","13.12.2026")},
+                      {"page_url":route["page_url"].replace(route["source_price_list_id"],"123456789")}):
+            self.assertFalse(route_first_pair_matches({**route,**patch},flight,p,origin_scope=scope))
+        for patch in ({"origin_city_id":"100510397223"},{"back_green":False},{"out_green":False}):
+            self.assertFalse(route_first_pair_matches(route,{**flight,**patch},p,origin_scope=scope))
+        self.assertFalse(route_first_pair_matches(route,flight,{**p,"id":sample()["id"]},origin_scope=scope))
+        self.assertFalse(route_first_pair_matches(route,flight,p,origin_scope=Scope("100510888888","Другой город",scope.country_id,scope.country)))
+        self.assertFalse(route_first_pair_matches(route,flight,p,origin_scope=Scope(scope.origin_id,scope.origin,"100410000052","Китай")))
+        self.assertFalse(route_first_pair_matches(route,flight,p,origin_scope={}))
+
     def test_valid_official_route_first_two_green_candidate(self):
         p=sample();route,flight=bundle(p)
         self.assertTrue(route_first_pair_matches(route,flight,p))
