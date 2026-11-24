@@ -78,7 +78,7 @@ class Tests(unittest.TestCase):
             visual=publisher.visual.build_visual_feed(merged["previews"],receipts,now=moment)
             public=publisher.eligibility.select_public_source_rows(merged,visual,now=moment)
             prices={"schema":"jamaica.bg-site-dom-prices.v1","records":[
-                {"preview_id":row["id"],"source_price_list_id":"123456789","browser_session_digest":"b"*64",
+                {"preview_id":row["id"],"source_price_list_id":"123456789","browser_session_digest":"b"*64,
                  "observed_at_utc":when,"price_total_rub":99000}]}
             priced=publisher.browser_price.apply(public,receipts,visual,prices,now=moment)
             self.assertEqual(priced["previews"][0]["price_reference_rub"],99000)
