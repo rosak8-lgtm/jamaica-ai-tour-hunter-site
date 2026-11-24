@@ -272,3 +272,22 @@ body{background:var(--bg);color:var(--ink)}
 .sourceSearchChip:focus-visible{outline:3px solid #05a8ad;outline-offset:3px}
 .sourceSearchMonths{font-size:11px;color:#796b89;line-height:1.6;margin:6px 0 0}
 @media(max-width:580px){.sourceSearchCoverage{padding:12px}.sourceSearchCountryChips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:4px 3px 9px}.sourceSearchChip{flex:none;white-space:nowrap}}
+
+/* Multiple nights: real checkbox choices rather than a single native radio list. */
+.nightPicker{position:relative;min-width:0;width:100%}
+.nightPicker>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;background:#fff;border:1px solid #d8d0e1;border-radius:10px;padding:12px;min-height:44px;color:#35194f;font-size:13px;font-weight:700}
+.nightPicker>summary::-webkit-details-marker{display:none}
+.nightPicker>summary::after{content:"▾";flex:none;color:#007f86}
+.nightPicker>summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nightPicker[open]>summary::after{content:"▴"}
+.nightPanel{position:absolute;z-index:40;top:calc(100% + 5px);left:0;width:min(330px,calc(100vw - 48px));padding:12px;background:#fff;border:1px solid #d8d0e1;border-radius:14px;box-shadow:0 12px 32px rgba(43,25,65,.18);box-sizing:border-box}
+.nightPanel>p{margin:0 0 8px;font-size:12px;color:#675775}
+.nightChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;max-height:min(290px,40vh);overflow-y:auto;overscroll-behavior:contain}
+.nightPicker .nightChoice{display:flex;align-items:center;gap:5px;min-width:0;padding:6px 4px;border:1px solid #e4dce9;border-radius:8px;min-height:40px;margin:0;font-size:11px;font-weight:600;color:#35194f;cursor:pointer}
+.nightPicker .nightChoice:has(input:checked){background:#e3f6f3;border-color:#00878b;color:#006970}
+.nightPicker .nightChoice input{appearance:auto;width:17px;height:17px;min-width:17px;min-height:17px;padding:0;margin:0;accent-color:#00878b}
+.nightActions{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+.nightPicker .nightActions button{font:inherit;font-size:13px;font-weight:800;border:0;border-radius:8px;padding:10px 14px;cursor:pointer;background:#f2edf6;color:#35194f;min-height:44px}
+.nightPicker .nightActions button:last-child{background:#007f86;color:white}
+#nights[hidden],#filterNights[hidden]{display:none!important}
+@media(max-width:790px){.nightPanel{position:static;width:100%;margin-top:6px;box-shadow:none}.nightChoices{grid-template-columns:repeat(2,minmax(0,1fr))}.nightPicker .nightChoice{font-size:12px;min-height:44px}}
