@@ -910,7 +910,7 @@ def main():
 
                     ensure(mobile.locator("#filtersDisclosure").get_attribute("open") is None,
                            "MOBILE_FILTER_DRAWER_NOT_COLLAPSED")
-                    mobile.locator("#filtersDisclosure summary").click()
+                    mobile.locator("#filtersDisclosure > summary").click()
                     ensure(mobile.locator("#filterCountry").is_visible(),
                            "MOBILE_FILTER_CONTROLS_NOT_ACCESSIBLE")
                     # Wait for media-query layout on current source cards
