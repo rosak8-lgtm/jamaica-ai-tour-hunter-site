@@ -384,7 +384,8 @@ def refresh_source_feed(directory):
         command=[sys.executable,"-B",str(SCRIPTS/"oracle_bg_preview_export.py"),
                  "--directory",str(CHECKOUT/"destination-directory.json"),
                  "--output",str(staged),"--max-countries","120",
-                 "--per-country","5","--discover-state",str(DISCOVERY_STATE)]
+                 "--per-country","5","--discover-state",str(DISCOVERY_STATE),
+                 "--probe-slot",str(int(datetime.now(timezone.utc).timestamp()//1800))]
         run(command,cwd=SCRIPTS,timeout=200,expose=True)
         if not staged.is_file() or staged.is_symlink():
             raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
