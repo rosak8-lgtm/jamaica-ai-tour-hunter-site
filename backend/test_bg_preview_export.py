@@ -23,6 +23,37 @@ class Tests(unittest.TestCase):
         self.hotels={HOTEL_ID:{"id":HOTEL_ID,"country":COUNTRY,
                                "name":"Verified Catalog Hotel","resort":"Бали"}}
 
+    def test_explicit_origin_scope_keeps_irkutsk_and_separates_other_cities(self):
+        from bg_origin_scope import Scope,IRKUTSK_ID
+        from urllib.parse import parse_qs,urlsplit
+        import oracle_bg_price_detail_probe as detail
+        cid="100410000051"
+        other="100510000999"  # synthetic fixture only; not an actual city mapping
+        registry={"schema":"jamaica.origin-registry.v1",
+          "classification":"SEARCH_SCOPE_ONLY_NOT_OFFERS",
+          "cities":{IRKUTSK_ID:"Иркутск",other:"Тестовый город"},
+          "countries":{cid:COUNTRY},"pairs":[
+          {"origin_id":oid,"origin":label,"country_id":cid,"country":COUNTRY}
+          for oid,label in [(IRKUTSK_ID,"Иркутск"),(other,"Тестовый город")]]}
+        ir=Scope.from_registry(registry,IRKUTSK_ID,cid)
+        second=Scope.from_registry(registry,other,cid)
+        legacy=exporter.safe_preview(row(),COUNTRY,self.hotels)
+        self.assertEqual(exporter.safe_preview(row(),COUNTRY,self.hotels,origin_scope=ir),legacy)
+        changed=exporter.safe_preview(row(),COUNTRY,self.hotels,origin_scope=second)
+        self.assertNotEqual(legacy["id"],changed["id"])
+        self.assertEqual(changed["origin"],"Тестовый город")
+        self.assertFalse(changed["bookable"])
+        self.assertFalse(changed["flight_verified"])
+        self.assertIsNone(exporter.safe_preview(row(),"Китай",self.hotels,origin_scope=second))
+        self.assertEqual(parse_qs(second.files_query())["flt2"],[other])
+        entry={"url":"https://export.bgoperator.ru/partners?action=price&tid=123&flt="+cid+"&flt2="+other+"&id_price=123456789&data="+DATE+"&xml=11"}
+        self.assertEqual(parse_qs(urlsplit(detail.safe_url(entry,cid,origin_scope=second)).query)["flt2"],[other])
+        with self.assertRaises(bg.SyncHold):detail.safe_url(entry,cid)
+        with self.assertRaises(bg.SyncHold):detail.safe_url(entry,cid,origin_scope=ir)
+        with self.assertRaises(bg.SyncHold):detail.safe_url(entry,"100410000052",origin_scope=second)
+        with self.assertRaises(ValueError):Scope.from_registry(registry,other,"100410000052")
+        with self.assertRaises(ValueError):Scope.from_registry({**registry,"pairs":registry["pairs"]+registry["pairs"]},other,cid)
+
     def test_choose_different_future_price_list_dates(self):
         from datetime import date, timedelta
         today=date(2026,11,20)
