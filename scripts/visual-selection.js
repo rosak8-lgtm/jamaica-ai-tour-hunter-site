@@ -3,7 +3,7 @@
    The private contract verifier generates this document on Oracle. */
 (function(root){
 "use strict";
-const MAX=1000,TTL=15*60*1000;
+const MAX=2000,TTL=15*60*1000;
 function read(feed,now=Date.now()){
  if(!feed||typeof feed!=="object"||
     Object.keys(feed).sort().join("|")!==
