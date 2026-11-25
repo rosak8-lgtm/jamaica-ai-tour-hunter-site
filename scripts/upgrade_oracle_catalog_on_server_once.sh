@@ -26,6 +26,28 @@ TIMER="jamaica-oracle-catalog-5min.timer"
 export GIT_SSH_COMMAND="ssh -F /dev/null -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOSTS -o ConnectTimeout=15 -i $KEY"
 export GIT_TERMINAL_PROMPT=0
 
+# Stop only the publisher's timer. Its already-running service must finish.
+# A oneshot service is "activating", not "active", during execution.
+systemctl --user stop "$TIMER"
+timer_stopped=1
+restore_timer(){
+  if [[ "$timer_stopped" == 1 ]]; then
+    systemctl --user start "$TIMER" || true
+  fi
+}
+trap restore_timer EXIT
+LOCK="$HOME/.cache/jamaica-oracle-catalog/refresh.lock"
+[[ -d "$(dirname "$LOCK")" && ! -L "$LOCK" ]] || {
+  echo "STOP_PUBLISHER_LOCK_UNSAFE"; exit 2; }
+# Use the same lock as ExecStart, BEFORE modifying the dedicated checkout.
+exec 9>"$LOCK"
+flock -w 300 9 || { echo "STOP_ORACLE_IMPORT_STILL_RUNNING"; exit 2; }
+state="$(systemctl --user show "$SERVICE" -p ActiveState --value)"
+case "$state" in
+  inactive|failed) ;;
+  *) echo "STOP_ORACLE_IMPORT_NOT_IDLE=$state"; exit 2 ;;
+esac
+
 # Keep a rollback copy, and never move the private deploy key or credentials.
 git -C "$ROOT" fetch --depth=1 origin main
 git -C "$ROOT" checkout --force -B main origin/main
@@ -49,23 +71,6 @@ grep -Fq 'browser_price.apply(published' \
  "$ROOT/scripts/oracle_site_publisher.py" || {
   echo "STOP_SOURCE_PUBLISHER_HAS_NO_TRUSTED_DOM_PRICE_OVERLAY"; exit 2; }
 
-# Pause new timer ticks but do not interrupt a running import.
-systemctl --user stop "$TIMER"
-timer_stopped=1
-restore_timer(){
-  if [[ "$timer_stopped" == 1 ]]; then
-    systemctl --user start "$TIMER" || true
-  fi
-}
-trap restore_timer EXIT
-# Wait for a run already in progress; never kill a publication mid-push.
-for i in $(seq 1 100); do
-  [[ "$(systemctl --user is-active "$SERVICE")" != "active" ]] && break
-  sleep 3
-done
-[[ "$(systemctl --user is-active "$SERVICE")" != "active" ]] || {
- echo "STOP_ORACLE_IMPORT_STILL_RUNNING"; exit 2; }
-
 BACKUP="$(mktemp "$SERVER/oracle_site_publisher.py.old.XXXXXX")"
 cp "$SERVER/oracle_site_publisher.py" "$BACKUP"
 TMP="$(mktemp "$SERVER/oracle_site_publisher.py.new.XXXXXX")"
@@ -73,6 +78,11 @@ cp "$ROOT/scripts/oracle_site_publisher.py" "$TMP"
 chmod 600 "$TMP"
 mv -f "$TMP" "$SERVER/oracle_site_publisher.py"
 
+echo "JAMAICA_ORACLE_PUBLISHER_SHA256=$(sha256sum "$SERVER/oracle_site_publisher.py" | cut -d" " -f1)"
+cmp -s "$ROOT/scripts/oracle_site_publisher.py" "$SERVER/oracle_site_publisher.py" || { echo "STOP_PUBLISHER_COPY_MISMATCH"; exit 2; }
+# The service itself acquires this lock; release before starting it.
+flock -u 9
+exec 9>&-
 echo "=== VERIFY FIRST FULL SOURCE-BASED SCAN ON ORACLE ==="
 if ! systemctl --user start "$SERVICE"; then
   cp "$BACKUP" "$SERVER/oracle_site_publisher.py"
@@ -126,7 +136,7 @@ timer_stopped=0
 [[ "$(loginctl show-user "$(id -un)" -p Linger --value)" == "yes" ]] || {
   echo "STOP_ORACLE_LINGER_UNAVAILABLE"; exit 2; }
 echo "JAMAICA_ORACLE_FIVE_MINUTE_TIMER=active"
-echo "JAMAICA_ORACLE_NEW_SOURCE_SCAN=PASS"
+echo "JAMAICA_ORACLE_STRICT_PUBLISHER_RUN=PASS"
 echo "JAMAICA_ORACLE_CODE_UPDATES=FROM_SERVER_GITHUB_CLONE"
 echo "JAMAICA_LENOVO_RECURRING_DEPENDENCY=NONE"
 systemctl --user list-timers --all "$TIMER" --no-pager
