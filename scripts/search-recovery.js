@@ -71,7 +71,7 @@ function otherCountryOptions(rows,q,extra=()=>true){
    Number(a.changeNights)-Number(b.changeNights)||a.distance-b.distance||b.count-a.count||a.date.localeCompare(b.date)||a.country.localeCompare(b.country,"ru");
  const unique=new Map();
  for(const g of candidates.sort(order))if(!unique.has(norm(g.country)))unique.set(norm(g.country),g);
- return [...unique.values()].slice(0,8);
+ return [...unique.values()];
 }
 // Concrete date/night groups for the current city and country. Only
 // already eligible rows are accepted by the caller. Never widen filters
