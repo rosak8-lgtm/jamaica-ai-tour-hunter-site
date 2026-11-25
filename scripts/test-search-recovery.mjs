@@ -50,3 +50,17 @@ assert.equal(otherCities(rows,q,()=>false).length,0);
 assert.equal(otherCities(rows,{...q,country:"Вьетнам"}).length,0);
 assert.equal(otherCities(rows,{...q,from:"2026-12-05"}).length,0);
 console.log("JAMAICA_EXPLICIT_OTHER_CITY_OPTIONS_PASS");
+
+const pick=globalThis.JamaicaSearchRecovery.representative;
+const candidates=[{...row("Москва","Вьетнам","2026-12-04",9),price:1},
+ {...row("Иркутск","Вьетнам","2026-12-04",7),price:2},
+ {...row("Иркутск","Вьетнам","2026-12-04",9),price:100},
+ {...row("Иркутск","Вьетнам","2026-12-04",9),price:80},
+ {...row("Иркутск","Вьетнам","2026-12-05",9),price:3}];
+const option={country:"Вьетнам",date:"2026-12-04",nights:[9]};
+assert.equal(pick(candidates,option,"иркутск",()=>true,(a,b)=>a.price-b.price),candidates[3]);
+assert.equal(pick(candidates,option,"Иркутск",x=>x.price>=100),candidates[2]);
+assert.equal(pick(candidates,option,"Иркутск",()=>false),null);
+assert.equal(pick(candidates,{...option,country:"Египет"},"Иркутск"),null);
+assert.equal(pick(candidates,option,"Красноярск"),null);
+console.log("JAMAICA_ACTUAL_ALTERNATIVE_CARD_SELECTION_PASS");
