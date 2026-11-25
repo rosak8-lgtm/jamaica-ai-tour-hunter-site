@@ -1288,6 +1288,30 @@ function renderTourPreviews(reset=true){
    }
    const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
+   const briefButton=el("button","btn btnWhite","Скопировать параметры поиска");
+   briefButton.type="button";
+   briefButton.addEventListener("click",async()=>{
+     const q=filters();
+     const brief=["JAMAICA — параметры поиска (не заявка и не бронь)",
+       "Город вылета: "+(q.origin||"любой"),
+       "Страна: "+(q.country||"любая"),
+       "Даты: "+(q.date||"любые")+" — "+(q.dateTo||"без ограничения"),
+       "Ночей: "+(q.nights.length?q.nights.slice().sort((a,b)=>a-b).join(", "):"любая длительность"),
+       Travelers.description(q.rooms),
+       "Курорт: "+(sidebarResort.value||"любой"),
+       "Отель: "+(q.hotel||"любой"),
+       "Бюджет на человека: "+(q.budget>0?q.budget+" ₽":"не задан")].join("\n");
+     let area=actions.querySelector(".localSearchBrief");
+     if(!area){
+       area=el("textarea","localSearchBrief");
+       area.readOnly=true;area.rows=9;area.style.width="100%";
+       area.setAttribute("aria-label","Параметры поиска. Ничего не отправляется.");
+       actions.append(area);
+     }
+     area.value=brief;
+     try{await navigator.clipboard.writeText(brief);briefButton.textContent="Параметры скопированы";}
+     catch{area.focus();area.select();briefButton.textContent="Скопируйте выделенный текст";}
+   });actions.append(briefButton);
    $("searchProgress").querySelector("p").after(actions);
  }
 }
