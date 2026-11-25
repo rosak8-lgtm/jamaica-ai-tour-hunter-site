@@ -195,6 +195,41 @@ class Tests(unittest.TestCase):
                 self.assertEqual(publisher.guarded_source_scan(),(None,None))
                 scan.assert_called_once()
 
+    def test_optional_media_does_not_compete_with_live_tour_search(self):
+        import fcntl
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);root.chmod(0o700)
+            lock=root/"lock";lock.touch(mode=0o600)
+            with patch.object(publisher,"BOT_STATE",root/"state.json"), \
+                 patch.object(publisher,"provider_hold_active",return_value=False) as hold, \
+                 patch.object(publisher,"browser_recovery_priority",return_value=False) as recovery, \
+                 patch.object(publisher,"discover_hotel_media_daily") as media:
+                with patch.dict(publisher.os.environ,{},clear=True):
+                    publisher.guarded_optional_hotel_media()
+                    media.assert_not_called()
+                with patch.dict(publisher.os.environ,{"JAMAICA_ENABLE_OPTIONAL_BG_MEDIA_DISCOVERY":"yes"},clear=True):
+                    hold.return_value=True
+                    publisher.guarded_optional_hotel_media()
+                    media.assert_not_called()
+                    hold.return_value=False
+                    recovery.return_value=True
+                    publisher.guarded_optional_hotel_media()
+                    media.assert_not_called()
+                    recovery.return_value=False
+                    with lock.open("r+") as existing:
+                        fcntl.flock(existing,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                        publisher.guarded_optional_hotel_media()
+                        media.assert_not_called()
+                    hold.side_effect=[False,True]
+                    publisher.guarded_optional_hotel_media()
+                    media.assert_not_called()
+                    hold.side_effect=None
+                    publisher.guarded_optional_hotel_media()
+                    media.assert_called_once()
+                    lock.chmod(0o644)
+                    publisher.guarded_optional_hotel_media()
+                    media.assert_called_once()
+
     def test_projection_grace_waits_for_existing_browser_and_releases_lock(self):
         import fcntl
         import threading
