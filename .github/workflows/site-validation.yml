@@ -25,6 +25,7 @@ jobs:
           node scripts/test-site.mjs
           node scripts/test-departure-geo.mjs
           node scripts/test-search-recovery.mjs
+          node scripts/test-application-reference.mjs
           node scripts/test-catalog-shards.mjs
           node scripts/test-country-offer-balance.mjs
           node scripts/test-month-offer-filters.mjs
@@ -75,6 +76,7 @@ jobs:
           /tmp/jamaica-playwright-venv/bin/pip install --disable-pip-version-check playwright==1.55.0
           /tmp/jamaica-playwright-venv/bin/python -m playwright install chromium
           /tmp/jamaica-playwright-venv/bin/python -B scripts/browser_smoke_playwright.py
+          /tmp/jamaica-playwright-venv/bin/python -B scripts/test_application_reference_browser.py
       - name: Verify isolated Oracle selected-tour staging imports
         run: bash scripts/test_selected_tour_staging.sh
       - name: Validate safe synchronization scripts
