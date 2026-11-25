@@ -453,7 +453,8 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
             key="|".join((row["country"],row["hotel_id"],row["depart_date"],str(row["nights"]),row["room"]))
             if row["id"]!="p_"+hashlib.sha256(key.encode()).hexdigest()[:24]:continue
             departure=datetime.fromisoformat(row["depart_date"]).date()
-            if not now.date()<=departure<=now.date()+timedelta(days=180):continue
+            # The native browser may find real departure dates beyond six months.
+            if not now.date()<=departure<=now.date()+timedelta(days=730):continue
             p=proofs.get(row["id"],{})
             route,flight=p.get("route"),p.get("flight")
             if not route_first_pair_matches(route,flight,row,now=now):continue
