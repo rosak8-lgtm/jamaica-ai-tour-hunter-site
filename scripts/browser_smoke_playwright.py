@@ -313,6 +313,15 @@ def main():
                        "CITY_WITHOUT_PROOFS_NOT_EXPLAINED")
                 ensure(page.locator("#nightChoices input:checked").count()==2,
                        "CITY_CHANGE_LOST_SELECTED_NIGHTS")
+                page.get_by_role("button",name="Скопировать параметры поиска",exact=True).click()
+                brief=page.locator("#searchRecoveryActions textarea.localSearchBrief")
+                ensure(brief.count()==1 and "Город вылета: Москва" in brief.input_value()
+                       and "Ночей: 7, 14" in brief.input_value()
+                       and "не заявка и не бронь" in brief.input_value(),
+                       "LOCAL_SEARCH_BRIEF_LOST_FILTERS")
+                ensure(page.locator("#previewCards article.offerCard").count()==0,
+                       "LOCAL_SEARCH_BRIEF_CREATED_UNVERIFIED_TOUR")
+                print("LOCAL_SEARCH_BRIEF_NO_BOOKING_PASS")
                 page.locator("#departure").select_option("Иркутск")
                 page.locator("#nightPicker summary").click()
                 page.locator("#nightsClear").click()
