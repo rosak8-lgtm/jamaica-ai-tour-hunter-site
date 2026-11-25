@@ -224,6 +224,7 @@
 <script src="./scripts/traveler-party.js"></script>
 <script src="./scripts/traveler-ui.js"></script>
 <script src="./scripts/departure-geo.js"></script>
+<script src="./scripts/search-recovery.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1087,7 +1088,7 @@ function renderTourPreviews(reset=true){
  more.hidden=previewVisible>=list.length;
  const cityRows=verifiedRows().filter(x=>x.origin===$("departure").value);
  $("departureStatus").textContent=!previewsLoaded?"Проверяем текущий каталог…":
-   cityRows.length?"Свежих вариантов: "+cityRows.length.toLocaleString("ru-RU"):
+   cityRows.length?"Всего свежих вариантов из города (все страны и даты): "+cityRows.length.toLocaleString("ru-RU"):
    "Город в справочнике. Свежих проверенных туров пока нет.";
  const availableCountries=[...window.JamaicaCountryOffers.countryCounts(
    verifiedRows(),$("departure").value.trim()).keys()].sort(
@@ -1101,11 +1102,35 @@ function renderTourPreviews(reset=true){
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
+ $("searchRecoveryActions")?.remove();
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
  if(previewsLoaded&&list.length===0){
    $("searchProgress").classList.remove("hide");
    $("searchProgress").querySelector("strong").textContent="Туров со всеми тремя подтверждениями пока нет";
-   $("searchProgress").querySelector("p").textContent="Из города «"+$("departure").value+"» по выбранным параметрам сейчас нет подходящих туров. Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков публикация запрещена. Можно изменить город, даты или страну.";
+   const extra=x=>(!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
+      (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
+      (!budget||!partyTwoAdults||(referencePrice(x)!==null&&referencePrice(x)<=budget*2))&&
+      (!$("favoritesOnly").checked||favoriteIds.has(x.id));
+   const diag=window.JamaicaSearchRecovery.analyze(verifiedRows(),{origin,country,from:date,to:dateTo,nights},extra);
+   const reason=!diag.city?"Из выбранного города пока нет свежих проверенных карточек.":
+     !diag.country?"По выбранной стране пока нет свежих карточек из этого города.":
+     !diag.dates?"В выбранном диапазоне дат нет свежих карточек этой страны.":
+     !diag.nights?"На выбранные даты есть туры, но другой длительности: "+diag.durations.join(", ")+" ноч.":"Другие фильтры исключили оставшиеся варианты.";
+   $("searchProgress").querySelector("p").textContent=reason+" Из города: "+diag.city+" · по стране: "+diag.country+" · по датам: "+diag.dates+" · по ночам: "+diag.nights+". Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков публикация запрещена.";
+   if(!previewFullLoaded)$("searchProgress").querySelector("p").append(" Каталог ещё загружается; результат предварительный.");
+   const labels={nights:"Любая длительность",dates:"Все даты",both:"Все даты и длительности",countries:"Другие страны"};
+   const actions=el("div","searchRecoveryActions");
+   actions.id="searchRecoveryActions";actions.style.cssText="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px";
+   for(const a of diag.alternatives){
+     const b=el("button","btn btnWhite",labels[a.key]+" ("+a.count+")");b.type="button";
+     b.addEventListener("click",()=>{
+       if(a.key==="nights"||a.key==="both"){selectedNights.clear();syncNightPickers();}
+       if(a.key==="dates"||a.key==="both"){$("dateFrom").value="";$("dateTo").value="";$("dateTo").min="";}
+       if(a.key==="countries"){$("destination").value="";sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";}
+       form.requestSubmit();
+     });actions.append(b);
+   }
+   if(actions.childElementCount)$("searchProgress").querySelector("p").after(actions);
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);

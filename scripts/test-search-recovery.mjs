@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import "./search-recovery.js";
+const {analyze}=globalThis.JamaicaSearchRecovery;
+const row=(origin,country,depart_date,nights)=>({origin,country,depart_date,nights});
+const rows=[row("Иркутск","Китай","2026-12-04",5),row("Иркутск","Китай","2026-12-15",9),row("Иркутск","Вьетнам","2026-12-04",9),row("Москва","Китай","2026-12-04",9)];
+const q={origin:"Иркутск",country:"Китай",from:"2026-12-02",to:"2026-12-10",nights:[7,9,10]};
+const a=analyze(rows,q);
+assert.deepEqual([a.city,a.country,a.dates,a.nights],[3,2,1,0]);
+assert.deepEqual(a.durations,[5]);
+assert.deepEqual(a.alternatives.map(x=>[x.key,x.count]),[["nights",1],["dates",1],["both",2],["countries",1]]);
+assert.equal(analyze(rows,{...q,country:"Вьетнам"}).nights,1);
+assert.equal(analyze(rows,{...q,origin:"Красноярск"}).alternatives.length,0);
+assert.equal(analyze(rows,q,()=>false).alternatives.length,0);
+assert.equal(analyze(rows,{...q,nights:[]}).nights,1);
+console.log("JAMAICA_SEARCH_RECOVERY_CITY_DATE_MULTI_NIGHT_PASS");
