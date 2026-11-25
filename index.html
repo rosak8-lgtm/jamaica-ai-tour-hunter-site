@@ -977,8 +977,7 @@ function renderTourPreviews(reset=true){
  $("budgetNotice").textContent=budgetMessage;
  $("budgetNotice").hidden=!budgetMessage;
  const sortMode=$("previewSort").value;
- const eligibleRows=verifiedRows();
-  let list=eligibleRows.filter(x=>
+ let list=verifiedRows().filter(x=>
    (!origin||x.origin.toLocaleLowerCase("ru")===origin)&&
    (!country||x.country.toLocaleLowerCase("ru")===country)&&
    (!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)&&
@@ -1112,7 +1111,7 @@ function renderTourPreviews(reset=true){
       (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
       (!budget||!partyTwoAdults||(referencePrice(x)!==null&&referencePrice(x)<=budget*2))&&
       (!$("favoritesOnly").checked||favoriteIds.has(x.id));
-   const diag=window.JamaicaSearchRecovery.analyze(eligibleRows,{origin,country,from:date,to:dateTo,nights},extra);
+   const diag=window.JamaicaSearchRecovery.analyze(verifiedRows(),{origin,country,from:date,to:dateTo,nights},extra);
    const reason=!diag.city?"Из выбранного города пока нет свежих проверенных карточек.":
      !diag.country?"По выбранной стране пока нет свежих карточек из этого города.":
      !diag.dates?"В выбранном диапазоне дат нет свежих карточек этой страны.":
