@@ -735,19 +735,25 @@ def publish(env):
     # Optional authenticated V183 browser-event bridge. A file from the bot
     # MUST be owner-only, have exact source lineage, and be <=15 minutes old.
     # A missing, invalid or untrusted proof cannot stall public tour browsing.
+    projection_clock=datetime.now(timezone.utc)
     try:
         private_receipts=visual.read_private_receipts(PRIVATE_BOT_VISUAL_RECEIPTS)
-        new,exact_count=merge_exact_browser_source(new,directory,private_receipts)
+        new,exact_count=merge_exact_browser_source(new,directory,private_receipts,now=projection_clock)
         count=validate(new,directory,allow_empty=True)
         log("JAMAICA_SITE_EXACT_SOURCE_ROWS",exact_count)
         visual_public=visual.build_visual_feed(
-            new["previews"],private_receipts)
+            new["previews"],private_receipts,now=projection_clock)
     except (visual.VisualHold,ValueError,TypeError):
         visual_public=visual.empty_public()
         log("JAMAICA_BOT_VISUAL_STATUS","RECEIPTS_INVALID_IGNORE")
-    if not visual.validate_public_feed(visual_public):
+    publication_clock=datetime.now(timezone.utc)
+    before_trim=len(visual_public["entries"])
+    try:
+        visual_public=visual.trim_for_publication(visual_public,observed_at=projection_clock,now=publication_clock)
+    except visual.VisualHold:
         visual_public=visual.empty_public()
-    published=eligibility.select_public_source_rows(new,visual_public)
+    log("JAMAICA_VISUAL_EXPIRY_TRIMMED",before_trim-len(visual_public["entries"]))
+    published=eligibility.select_public_source_rows(new,visual_public,now=publication_clock)
     # A source XML amount can change many times per day. Never display that
     # amount as a fresh verified-tour price. Only the trusted website bot's
     # independently tied same-session DOM amount may replace it.
@@ -758,7 +764,7 @@ def publish(env):
         log("JAMAICA_WEBSITE_BOT_PRICE_STATUS","PRIVATE_LEDGER_INVALID_HIDE_PRICE")
     published=browser_price.apply(published,
         private_receipts if "private_receipts" in locals() else None,
-        visual_public,trusted_browser_prices)
+        visual_public,trusted_browser_prices,now=publication_clock)
     log("JAMAICA_SITE_LIVE_DOM_PRICES",published["indicative_two_adult_rub_count"])
     public_root,public_chunks=make_sharded_catalog(published)
     validate(public_root,directory,allow_empty=True,allow_browser_prices=True)

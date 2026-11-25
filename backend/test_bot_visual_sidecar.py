@@ -8,7 +8,7 @@ import unittest
 
 from scripts.bot_visual_sidecar import (
     PRIVATE_SCHEMA, read_private_receipts, build_visual_feed,
-    validate_public_feed, VisualHold,empty_public,
+    validate_public_feed, VisualHold,empty_public,trim_for_publication,
 )
 from backend.test_bg_route_first_visual_gate import sample,bundle
 
@@ -94,6 +94,23 @@ class Tests(unittest.TestCase):
               "preview_id":self.p["id"],"observed_at_utc":self.now.isoformat(),
               "route_best_price_seen":True,"both_green_planes_seen":False
             }]},now=self.now))
+
+    def test_publication_expiry_preserves_fresh_rows(self):
+        a={"preview_id":"p_"+"a"*24,"route_best_price_seen":True,
+           "both_green_planes_seen":True,"observed_at_utc":(self.now-timedelta(seconds=899)).isoformat()}
+        b={**a,"preview_id":"p_"+"b"*24,"observed_at_utc":self.now.isoformat()}
+        c={**a,"preview_id":"p_"+"c"*24,"observed_at_utc":(self.now-timedelta(seconds=850)).isoformat()}
+        original={**empty_public(),"entries":[a,b,c]}
+        later=self.now+timedelta(seconds=25)
+        self.assertFalse(validate_public_feed(original,now=later))
+        trimmed=trim_for_publication(original,observed_at=self.now,now=later)
+        self.assertEqual(trimmed["entries"],[b])
+        self.assertTrue(validate_public_feed(trimmed,now=later))
+        self.assertEqual(original["entries"],[a,b,c])
+        with self.assertRaises(VisualHold):
+            trim_for_publication({**original,"bookable":True},observed_at=self.now,now=later)
+        with self.assertRaises(VisualHold):
+            trim_for_publication(original,observed_at=self.now,now=self.now-timedelta(seconds=1))
 
     def test_owner_only_private_file_and_no_symlinks(self):
         with tempfile.TemporaryDirectory() as root:
