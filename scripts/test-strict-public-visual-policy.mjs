@@ -55,7 +55,8 @@ const pages=Object.fromEntries(["index.html","preview.html","hotel.html","quote.
  "route.html","tour.html","checkout.html"].map(n=>[n,fs.readFileSync(n,"utf8")]));
 assert.ok(pages["index.html"].includes("JamaicaPublicVisualPolicy.observedPrice(x,visualProofs)"));
 assert.ok(pages["preview.html"].includes("JamaicaPublicVisualPolicy.observedPrice(p,selectedProofs)"));
-assert.ok(pages["preview.html"].includes("Зафиксирована для выбранного маршрута"));
+assert.ok(pages["preview.html"].includes("JamaicaPublicVisualPolicy.eligible(chosen,selectedProofs)")&&
+ pages["preview.html"].includes("✓ Проверено JAMAICA"),"Brand wording must not replace the exact evidence gate");
 assert.ok(pages["preview.html"].includes("setInterval(expireSelection,15000)"));
 for(const p of ["index.html","preview.html","hotel.html","quote.html"]){
  assert.ok(pages[p].includes("scripts/public-visual-policy.js"),p+" must load gate");
