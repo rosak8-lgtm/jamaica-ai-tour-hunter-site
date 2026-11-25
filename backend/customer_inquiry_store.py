@@ -12,6 +12,7 @@ import re
 import secrets
 import sqlite3
 import stat
+from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -81,10 +82,13 @@ class InquiryStore:
         with self.db() as db:
             db.execute("CREATE TABLE IF NOT EXISTS inquiries(ticket TEXT PRIMARY KEY, request_id TEXT UNIQUE NOT NULL, digest TEXT NOT NULL, actor TEXT NOT NULL, contact_digest TEXT NOT NULL, created INTEGER NOT NULL, payload TEXT NOT NULL, itinerary TEXT NOT NULL)")
             db.execute("CREATE INDEX IF NOT EXISTS inquiries_created ON inquiries(created)")
+    @contextmanager
     def db(self):
         db=sqlite3.connect(self.path,timeout=5)
-        db.execute("PRAGMA secure_delete=ON")
-        return db
+        try:
+            db.execute("PRAGMA secure_delete=ON")
+            with db:yield db
+        finally:db.close()
     def digest(self,v):
         return hmac.new(self.secret,v.encode("utf-8"),hashlib.sha256).hexdigest()
     def purge(self,now=None):
