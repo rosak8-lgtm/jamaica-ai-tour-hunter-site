@@ -168,6 +168,31 @@ class Tests(unittest.TestCase):
             state["last_completed_at_utc"]=moment.isoformat();write()
             self.assertFalse(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=1)))
 
+    def test_rate_limit_recovery_prioritizes_browser_for_one_hour(self):
+        moment=datetime.now(timezone.utc)
+        with tempfile.TemporaryDirectory() as work:
+            path=Path(work)/"state.json"
+            state={"schema":"jamaica.site-bot.v1",
+                   "provider_hold_until_utc":moment.isoformat(),
+                   "last_completed_at_utc":(moment+timedelta(minutes=3)).isoformat(),
+                   "provider_last_hold":{"http_status":429,"stage":"API_FILES",
+                       "observed_at_utc":(moment-timedelta(minutes=30)).isoformat()}}
+            def write():
+                path.write_text(json.dumps(state));path.chmod(0o600)
+            write()
+            self.assertTrue(publisher.provider_hold_active(path=path,now=moment-timedelta(seconds=1)))
+            self.assertFalse(publisher.provider_hold_active(path=path,now=moment))
+            self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=5)))
+            self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=59)))
+            self.assertFalse(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=60)))
+            state["provider_last_hold"]["http_status"]=503;write()
+            self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=10)))
+            state["provider_last_hold"]["http_status"]=401;write()
+            self.assertFalse(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=10)))
+            state["provider_last_hold"]["http_status"]=429
+            state["provider_last_hold"]["observed_at_utc"]="invalid";write()
+            self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment))
+
     def test_shared_scan_guard_serializes_without_blocking_publication(self):
         import fcntl
         with tempfile.TemporaryDirectory() as work:

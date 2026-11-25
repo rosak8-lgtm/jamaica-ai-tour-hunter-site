@@ -511,6 +511,16 @@ def browser_recovery_priority(*,path=None,now=None):
         if raw is None:return False
         end=timestamp(raw)
         if end is None:return True
+        # A completed process does not prove recovered inventory. A recent
+        # provider rate limit warrants a quiet window for the bounded website
+        # browser, rather than immediately competing with a broad API sweep.
+        last=state.get("provider_last_hold")
+        if isinstance(last,dict) and last.get("http_status") in (429,503):
+            observed=timestamp(last.get("observed_at_utc"))
+            if observed is None or observed>now+timedelta(seconds=30) or observed>end:
+                return True
+            if end<=now<end+timedelta(minutes=60):
+                return True
         completed=timestamp(state.get("last_completed_at_utc"))
         return end<=now<end+timedelta(minutes=9) and (completed is None or completed<end)
     except FileNotFoundError:return False
@@ -525,7 +535,7 @@ def guarded_source_scan(*,now=None):
     import fcntl
     import stat
     now=now or datetime.now(timezone.utc)
-    if provider_hold_active(now=now) or not source_scan_due(now=now):
+    if provider_hold_active(now=now) or browser_recovery_priority(now=now) or not source_scan_due(now=now):
         return None,None
     lock=BOT_STATE.parent/"lock"
     fd=None
