@@ -1,0 +1,25 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import "./traveler-party.js";
+import "./customer-inquiry.js";
+const I=globalThis.JamaicaCustomerInquiry;
+const cfg={schema:"jamaica.inquiry-config.v1",enabled:true,privacy_approved:true,endpoint:"https://example.test/v1/customer-inquiries",controller_name:"Test controller",privacy_url:"https://example.test/privacy",policy_version:"v1"};
+assert.equal(I.ready(JSON.parse(fs.readFileSync("inquiry-config.json","utf8"))),false);
+assert.equal(I.ready(cfg),true);
+for(const patch of [{privacy_approved:false},{enabled:false},{controller_name:""},{endpoint:"http://example.test/v1/customer-inquiries"},{endpoint:"https://example.test/pay"},{endpoint:"https://a:b@example.test/v1/customer-inquiries"},{privacy_url:"javascript:alert(1)"}])assert.equal(I.ready({...cfg,...patch}),false);
+const id="p_"+"a".repeat(24),key="b".repeat(32),rooms=[{adults:2,child_ages:[7]},{adults:1,child_ages:[]}];
+const p=I.body(id,rooms,"phone","+7 (999) 123-45-67",true,cfg,key);
+assert.deepEqual(p.rooms,rooms);
+assert.equal(p.contact.value,"+79991234567");
+assert.deepEqual(Object.keys(p).sort(),["request_id","preview_id","rooms","contact","consent","policy_version"].sort());
+assert.throws(()=>I.body(id,rooms,"phone","123",true,cfg,key));
+assert.throws(()=>I.body(id,rooms,"email","a@example.test",false,cfg,key));
+assert.throws(()=>I.body(id,[], "email","a@example.test",true,cfg,key));
+assert.throws(()=>I.body(id,rooms,"email","a@example.test",true,{...cfg,enabled:false},key));
+const result={status:"INQUIRY_RECEIVED",ticket:"j_"+"a".repeat(32),booked:false,payment_required:false};
+assert.equal(I.receipt(result),true);
+assert.equal(I.receipt({...result,booked:true}),false);
+assert.equal(I.receipt({...result,payment_required:true}),false);
+assert.equal(I.receipt({...result,ticket:"invalid"}),false);
+for(const page of ["preview.html","application-detail.html"]){const s=fs.readFileSync(page,"utf8");assert.ok(s.includes("JamaicaCustomerInquiry.mount"));assert.ok(s.includes('id="customerInquiry" hidden'));}
+console.log("JAMAICA_CUSTOMER_INQUIRY_CLIENT_FAIL_CLOSED_PASS");

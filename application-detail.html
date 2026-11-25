@@ -20,6 +20,7 @@ nav{background:#35194f;color:white;padding:18px max(18px,calc((100% - 920px)/2))
 <p id="priceNote" class="note"></p>
 <p class="note">Стоимость на момент проверки включает обязательные сборы. Это не бронь, не окончательная котировка и не разрешение на оплату. Подтверждение действительно не более 15 минут.</p>
 </section>
+<section id="customerInquiry" hidden></section>
 <section id="save" hidden><h2>Сохранить параметры</h2>
 <p>Скопируйте выбранное путешествие для дальнейшего расчёта. Заявка не отправляется.</p>
 <textarea id="selection" readonly rows="7" aria-label="Параметры путешествия"></textarea>
@@ -28,12 +29,14 @@ nav{background:#35194f;color:white;padding:18px max(18px,calc((100% - 920px)/2))
 </main><footer>JAMAICA · Для оформления требуются новая проверка, договор и подключённый защищённый сервис оплаты.</footer>
 <script src="./scripts/traveler-party.js"></script>
 <script src="./scripts/application-reference.js"></script>
+<script src="./scripts/customer-inquiry.js"></script>
 <script>
 (function(){
 "use strict";
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
 const id=params.get("id")||"",T=window.JamaicaTravelers,rooms=T.fromQuery(params),R=window.JamaicaApplicationReference;
 let selected=null,loading=false;
+void window.JamaicaCustomerInquiry.mount($("customerInquiry"),{getSelection:()=>selected,rooms,isCurrent:row=>R.eligible(row)&&row.depart_date>new Date().toISOString().slice(0,10)});
 function clear(message){
  selected=null;$("details").hidden=true;$("save").hidden=true;
  $("selection").value="";$("price").textContent="";$("facts").replaceChildren();

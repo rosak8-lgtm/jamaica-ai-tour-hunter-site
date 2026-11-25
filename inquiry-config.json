@@ -1,0 +1,9 @@
+{
+  "schema": "jamaica.inquiry-config.v1",
+  "enabled": false,
+  "privacy_approved": false,
+  "endpoint": "",
+  "controller_name": "",
+  "privacy_url": "",
+  "policy_version": ""
+}
