@@ -874,12 +874,47 @@ def discover_hotel_media_daily():
         log("JAMAICA_HOTEL_MEDIA_DISCOVERY","TEMPORARILY_UNAVAILABLE")
 
 
+def guarded_optional_hotel_media(*,now=None):
+    """Optional photo discovery must not compete with live tour search.
+    Existing approved media and displayed hotel photos are unaffected.
+    Explicit owner opt-in, shared browser lock, hold/recovery recheck.
+    """
+    import fcntl
+    import stat
+    if os.environ.get("JAMAICA_ENABLE_OPTIONAL_BG_MEDIA_DISCOVERY")!="yes":
+        log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_OPTIONAL_SEARCH_PRIORITY")
+        return
+    now=now or datetime.now(timezone.utc)
+    if provider_hold_active(now=now) or browser_recovery_priority(now=now):
+        log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_PROVIDER_OR_RECOVERY")
+        return
+    lock=BOT_STATE.parent/"lock"
+    fd=None
+    try:
+        parent=lock.parent.lstat()
+        if not stat.S_ISDIR(parent.st_mode) or parent.st_uid!=os.geteuid() or parent.st_mode&0o077:
+            raise ValueError("UNSAFE_BROWSER_LOCK_DIRECTORY")
+        fd=os.open(lock,os.O_RDWR|getattr(os,"O_NOFOLLOW",0)|os.O_NONBLOCK)
+        st=os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or st.st_mode&0o077 or st.st_nlink!=1:
+            raise ValueError("UNSAFE_BROWSER_LOCK")
+        fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        check_now=datetime.now(timezone.utc)
+        if provider_hold_active(now=check_now) or browser_recovery_priority(now=check_now):
+            log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_PROVIDER_OR_RECOVERY")
+            return
+        discover_hotel_media_daily()
+    except (OSError,ValueError):
+        log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_BROWSER_BUSY_OR_LOCK_UNSAFE")
+    finally:
+        if fd is not None:os.close(fd)
+
 def main():
     log("JAMAICA_ORACLE_5MIN_IMPORT_START",datetime.now(timezone.utc).isoformat(timespec="seconds"))
     env=git_env()
     checkout(env)
     publish(env)
-    if not provider_hold_active():discover_hotel_media_daily()
+    guarded_optional_hotel_media()
     log("JAMAICA_ORACLE_5MIN_IMPORT_PASS","YES")
 
 if __name__=="__main__":
