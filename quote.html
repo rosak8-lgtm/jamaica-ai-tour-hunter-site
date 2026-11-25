@@ -19,7 +19,7 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 <link rel="stylesheet" href="./assets/jamaica-app-pages.css"></head>
 <body class="jamaicaAppPage"><nav><a href="./"><picture><source srcset="./assets/jamaica-parrot-logo-v2.avif" type="image/avif"><img src="./assets/jamaica-parrot-mark.svg" alt="" aria-hidden="true" width="34" height="34" style="width:34px;height:34px;object-fit:contain;vertical-align:middle;margin-right:8px"></picture>JAMAICA · Выбрать другой тур</a></nav><main>
 <h1>Проверка стоимости путешествия</h1>
-<p class="sub">Перед оформлением договора сервер повторно рассчитывает выбранный тур для вашего состава туристов. Справочные суммы из прайс-листов не являются ценой продажи.</p>
+<p class="sub">Перед оформлением договора сервер повторно рассчитывает выбранный тур для вашего состава туристов. Стоимость на момент проверки не является окончательной ценой покупки.</p>
 <section><h2 id="hotelTitle">Загрузка выбранного тура…</h2>
 <div id="tripSummary"></div>
 <p class="note" id="quoteNotice" role="status">Заявка ещё не создана. Оплата не начата.</p>
@@ -92,7 +92,7 @@ async function init(){
  try{
   const proofs=await window.JamaicaPublicVisualPolicy.load();
   if(!proofs.has(id)){
-   notice("Этот тур не прошёл обязательные проверки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков. Расчёт и бронирование закрыты.");
+   notice("Для этого тура нет свежего подтверждения. Вернитесь к поиску.");
    return;
   }
   const [p,c]=await Promise.all([
@@ -129,7 +129,7 @@ async function init(){
   const canPrice=cfgPriceReady(config);
   if(!canBook&&!canPrice){
     notice("Состав туристов сохранён: "+Travelers.description(rooms)+
-      ". Точную цену всех выбранных номеров и возрастов можно получить только после подключения защищённого расчёта поставщика. "+
+      ". Точную цену всех выбранных номеров и возрастов можно получить только после подключения защищённого сервиса расчёта. "+
       "Справочную цену за двух взрослых к другому составу не применяем. Оплата и бронирование недоступны.");
     return;
   }
@@ -163,7 +163,7 @@ $("checkQuote").addEventListener("click",async()=>{
  if(!selected||auth.length<32)return;
  const currentProofs=await window.JamaicaPublicVisualPolicy.load();
  if(!window.JamaicaPublicVisualPolicy.eligible(selected,currentProofs)){
-  notice("Метка «ЛУЧШАЯ ЦЕНА» и два зелёных самолётика больше не подтверждены. Расчёт заблокирован.");
+  notice("Срок актуальности варианта истёк. Необходимо обновить поиск.");
   $("checkQuote").disabled=true;
   return;
  }
@@ -204,14 +204,14 @@ $("checkQuote").addEventListener("click",async()=>{
    $("priceOnlyValue").textContent=new Intl.NumberFormat("ru-RU").format(res.total_rub)+
      " ₽ за весь состав";
    $("priceOnlyTerms").textContent=Travelers.description(rooms)+
-     ". Цена поставщика действует до "+res.expires_at+
+     ". Расчёт действителен до "+res.expires_at+
      ". Наличие всех номеров и обоих рейсов проверяется отдельно.";
    $("priceOnlyResult").classList.remove("hide");
    notice("Предварительная цена получена для "+partyLabel()+
      ". Бронь, договор и оплата не созданы.");
   }catch(e){
    notice("Точная цена всего состава пока недоступна: сервер не подтвердил расчёт, "+
-     "источник или актуальность тарифа. Цена за двух взрослых не подставляется. "+
+     "параметры или актуальность тарифа. Цена за двух взрослых не подставляется. "+
      "Бронирование и оплата не выполняются.");
   }finally{$("checkQuote").disabled=false;}
   return;
