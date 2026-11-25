@@ -623,6 +623,6 @@ console.log('JAMAICA_TOUR_DETAILS_QA_PASS 251 countries, 159 historical hotels, 
 // Branding must not expose internal supplier selection or bot observations.
 for(const name of ['index.html','preview.html','application-detail.html','quote.html','route.html','hotel.html','tour.html','account.html','checkout.html']){
  const source=fs.readFileSync(name,'utf8');
- assert.ok(!/Библио[-‑– ]?Глобус|PEGAS|Пегас|ЛУЧШАЯ ЦЕНА|зел[её]н(?:ый|ые|ых|ыми) (?:самол[её]т|рейс|перел[её]т)|\b(?:ботом|бота)\b/i.test(source),name+': internal supplier language must not appear in customer pages');
+ assert.ok(!/Библио[-‑– ]?Глобус|PEGAS|Пегас|ЛУЧШАЯ ЦЕНА|зел[её]н(?:ый|ые|ых|ыми) (?:самол[её]т|рейс|перел[её]т)|ботом|бота/i.test(source),name+': internal supplier language must not appear in customer pages');
 }
 console.log('JAMAICA_BRAND_ONLY_CUSTOMER_COPY_PASS');
