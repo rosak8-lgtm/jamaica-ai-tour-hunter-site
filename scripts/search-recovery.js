@@ -43,5 +43,35 @@ function departures(rows,q,extra=()=>true){
          ...values.filter(g=>!g.same).sort(compare).slice(0,3)]
   .map(g=>({...g,nights:[...g.nights].sort((a,b)=>a-b)}));
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures});
+// Show a concrete, selectable date for every other verified country.
+// Prefer current dates and nights, then explicitly label relaxed filters.
+function otherCountryOptions(rows,q,extra=()=>true){
+ const norm=x=>String(x||"").trim().toLocaleLowerCase("ru");
+ if(!norm(q.origin)||!norm(q.country)||q.allowOtherCountries===false)return [];
+ const day=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||"")?Date.parse(s+"T00:00:00Z"):NaN;
+ const from=day(q.from),to=day(q.to),selected=Array.isArray(q.nights)?q.nights:[];
+ const groups=new Map();
+ for(const x of rows){
+  if(norm(x.origin)!==norm(q.origin)||!x.country||norm(x.country)===norm(q.country)||
+     !Number.isFinite(day(x.depart_date))||!Number.isInteger(x.nights)||!extra(x))continue;
+  const key=JSON.stringify([x.country,x.depart_date]);
+  if(!groups.has(key))groups.set(key,{country:x.country,date:x.depart_date,counts:new Map()});
+  const g=groups.get(key);g.counts.set(x.nights,(g.counts.get(x.nights)||0)+1);
+ }
+ const candidates=[];
+ for(const g of groups.values()){
+  const all=[...g.counts.keys()].sort((a,b)=>a-b),matched=all.filter(n=>!selected.length||selected.includes(n));
+  const changeNights=matched.length===0;
+  const nights=changeNights?all:matched;
+  const d=day(g.date),distance=Math.max(0,Number.isFinite(from)?from-d:0,Number.isFinite(to)?d-to:0);
+  candidates.push({country:g.country,date:g.date,nights,count:nights.reduce((n,v)=>n+g.counts.get(v),0),
+   changeNights,changeDates:distance>0,distance});
+ }
+ const order=(a,b)=>Number(a.changeNights)+Number(a.changeDates)-Number(b.changeNights)-Number(b.changeDates)||
+   Number(a.changeNights)-Number(b.changeNights)||a.distance-b.distance||b.count-a.count||a.date.localeCompare(b.date)||a.country.localeCompare(b.country,"ru");
+ const unique=new Map();
+ for(const g of candidates.sort(order))if(!unique.has(norm(g.country)))unique.set(norm(g.country),g);
+ return [...unique.values()].slice(0,8);
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions});
 })(globalThis);
