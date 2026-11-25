@@ -368,7 +368,7 @@ def update_discovered_source_countries(feed,directory,*,state_path=DISCOVERY_STA
     return len(updated)
 
 
-def refresh_source_feed(directory):
+def refresh_source_feed(directory, *, probe_slot=None):
     """Preserve the last complete private feed during a new operator scan.
 
     The independent browser process is a concurrent reader. Do not unlink
@@ -376,6 +376,10 @@ def refresh_source_feed(directory):
     and atomically promote only a successful, validated fresh source feed.
     On failure the previous file and its original timestamp remain unchanged.
     """
+    if probe_slot is None:
+        probe_slot=int(datetime.now(timezone.utc).timestamp()//1800)
+    if type(probe_slot) is not int or not 0<=probe_slot<10**12:
+        raise CatalogHold("INVALID_DISCOVERY_SLOT")
     generated=RUNROOT/"generated-tour-previews.json"
     if generated.is_symlink():
         raise CatalogHold("GENERATED_FEED_UNSAFE_TARGET")
@@ -385,7 +389,7 @@ def refresh_source_feed(directory):
                  "--directory",str(CHECKOUT/"destination-directory.json"),
                  "--output",str(staged),"--max-countries","120",
                  "--per-country","5","--discover-state",str(DISCOVERY_STATE),
-                 "--probe-slot",str(int(datetime.now(timezone.utc).timestamp()//1800))]
+                 "--probe-slot",str(probe_slot)]
         run(command,cwd=SCRIPTS,timeout=200,expose=True)
         if not staged.is_file() or staged.is_symlink():
             raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
@@ -545,12 +549,12 @@ def guarded_source_scan(*,now=None):
         if provider_hold_active(now=check_now) or browser_recovery_priority(now=check_now) or not source_scan_due(now=check_now):
             log("JAMAICA_BG_SHARED_SCAN_GUARD","DEFER_HOLD_RECOVERY_OR_INTERVAL")
             return None,None
-        mark_source_attempt(now=check_now)
+        probe_slot=mark_source_attempt(now=check_now)
         refresh_directory()
         directory=json.loads((CHECKOUT/"destination-directory.json").read_text(encoding="utf-8"))
         directory_check(directory)
         try:
-            new=refresh_source_feed(directory)
+            new=refresh_source_feed(directory,probe_slot=probe_slot)
         except (CatalogHold,subprocess.TimeoutExpired,OSError,ValueError,KeyError):
             log("JAMAICA_BROAD_SOURCE_SCAN","FAILED_USE_EXACT_PROOFS_ONLY")
             return None,directory
@@ -606,6 +610,8 @@ def source_scan_due(*,now=None):
         attempt=read_owner_json(marker,1024)
         started=timestamp(attempt.get("attempt_at_utc"))
         if not started:return False
+        slot=attempt.get("probe_slot")
+        if "probe_slot" in attempt and (type(slot) is not int or not 0<=slot<10**12-1):return False
         if now-started<SOURCE_SCAN_INTERVAL:return False
     except FileNotFoundError:pass
     except (OSError,ValueError,TypeError):return False
@@ -617,16 +623,32 @@ def source_scan_due(*,now=None):
     return True
 
 def mark_source_attempt(*,now=None):
+    """Advance one durable slot only after the shared scan guard grants an attempt.
+
+    Missed wall-clock intervals must not skip country blocks or month rotations.
+    Old timestamp-only markers migrate automatically; existing throttle remains.
+    """
     now=now or datetime.now(timezone.utc)
+    marker=RUNROOT/".source-scan-last-attempt-v21.json"
+    slot=int(now.timestamp()//1800)
+    try:
+        prior=read_owner_json(marker,1024)
+        if "probe_slot" in prior:
+            previous=prior["probe_slot"]
+            if type(previous) is not int or not 0<=previous<10**12-1:
+                raise ValueError("INVALID_DISCOVERY_SLOT")
+            slot=previous+1
+    except FileNotFoundError:pass
     fd,name=tempfile.mkstemp(prefix=".source-attempt-",dir=RUNROOT)
     target=Path(name)
     try:
         with os.fdopen(fd,"w",encoding="utf-8") as stream:
-            json.dump({"attempt_at_utc":now.isoformat()},stream)
+            json.dump({"attempt_at_utc":now.isoformat(),"probe_slot":slot},stream)
             stream.flush();os.fsync(stream.fileno())
-        os.replace(target,RUNROOT/".source-scan-last-attempt-v21.json")
+        os.replace(target,marker)
     finally:
         if target.exists():target.unlink()
+    return slot
 
 def projection_base(*,now=None):
     """Only metadata from last actual scan; no cached candidate becomes fresh.
