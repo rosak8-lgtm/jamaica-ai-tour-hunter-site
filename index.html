@@ -1165,6 +1165,11 @@ function renderTourPreviews(reset=true){
   "Проверяем обязательные условия туров…";
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
+ if(previewsLoaded){
+   $("visualProofNotice").textContent=verifiedRows().length?
+     "Показываем недавно проверенные варианты. Цена и наличие мест уточняются перед оформлением.":
+     "Пока нет свежих проверенных вариантов. Непроверенные предложения не показываются.";
+ }
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
  $("searchRecoveryActions")?.remove();
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
