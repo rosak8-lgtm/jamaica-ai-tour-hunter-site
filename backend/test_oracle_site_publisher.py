@@ -41,6 +41,17 @@ def feed(n=1):
     }
 
 class Tests(unittest.TestCase):
+    def test_upgrade_gate_structure_accepts_clock_keyword_and_rejects_missing_gate(self):
+        from verify_publisher_gate import verify
+        source=(ROOT/"scripts"/"oracle_site_publisher.py").read_text(encoding="utf-8")
+        self.assertTrue(verify(source))
+        old="def publish(env):\n    published=eligibility.select_public_source_rows(new,visual_public)\n    published=browser_price.apply(published, receipts, visual_public, ledger)\n"
+        self.assertTrue(verify(old))
+        self.assertTrue(verify(old.replace("new,visual_public)", "new, visual_public, now=clock)")))
+        self.assertFalse(verify(old.replace("eligibility.select_public_source_rows(new,visual_public)", "new")))
+        self.assertFalse(verify(old.replace("published=browser_price.apply", "unused=browser_price.apply")))
+        self.assertFalse(verify(old.replace("new,visual_public)", "new,wrong_proof)")))
+
     def test_proof_health_distinguishes_expiry_and_missing_handoff(self):
         from site_proof_health import report
         moment=datetime.now(timezone.utc)
