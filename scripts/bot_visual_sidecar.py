@@ -147,3 +147,23 @@ def validate_public_feed(payload:dict, *,now:datetime|None=None)->bool:
         except (TypeError,AttributeError,ValueError):
             return False
     return True
+
+
+def trim_for_publication(payload, *, observed_at, now, reserve_seconds=30):
+    """Drop only expiring entries from a previously valid local projection.
+
+    A short reserve protects serialization without extending any observation.
+    Malformed input still fails closed; future timestamps are never relaxed.
+    """
+    if (not isinstance(now,datetime) or now.tzinfo is None or
+        not isinstance(observed_at,datetime) or observed_at.tzinfo is None or
+        now<observed_at or type(reserve_seconds) is not int or not 0<=reserve_seconds<=60 or
+        not validate_public_feed(payload,now=observed_at)):
+        raise VisualHold("PUBLIC_TRIM_INPUT_INVALID")
+    entries=[]
+    for e in payload["entries"]:
+        checked=datetime.fromisoformat(e["observed_at_utc"].replace("Z","+00:00"))
+        age=(now-checked).total_seconds()
+        if -30<=age<=900-reserve_seconds:
+            entries.append(e)
+    return {**payload,"entries":entries}
