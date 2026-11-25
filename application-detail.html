@@ -18,7 +18,7 @@ nav{background:#35194f;color:white;padding:18px max(18px,calc((100% - 920px)/2))
 <section id="details" hidden><h2>Параметры путешествия</h2><dl id="facts"></dl>
 <h2>Стоимость на момент наблюдения</h2><div class="price" id="price"></div>
 <p id="priceNote" class="note"></p>
-<p class="note">Проверены фильтры наличия мест и стоимость внутри заявки с обязательными сборами. Это не бронь, не окончательная котировка и не разрешение на оплату. Подтверждение действительно не более 15 минут.</p>
+<p class="note">Стоимость на момент проверки включает обязательные сборы. Это не бронь, не окончательная котировка и не разрешение на оплату. Подтверждение действительно не более 15 минут.</p>
 </section>
 <section id="save" hidden><h2>Сохранить параметры</h2>
 <p>Скопируйте выбранное путешествие для дальнейшего расчёта. Заявка не отправляется.</p>
@@ -44,7 +44,7 @@ function display(row){
  selected=row;$("heading").textContent=row.country+" · "+row.hotel;
  $("status").textContent="Свежая стоимость найдена. Для покупки требуется повторный расчёт.";
  $("facts").replaceChildren();
- for(const [key,value] of [["Вылет из",row.origin],["Курорт",row.resort],["Дата",row.depart_date],["Ночей",String(row.nights)],["Номер по прайсу",row.room],["Туристы",T.description(rooms)]])fact(key,value);
+ for(const [key,value] of [["Вылет из",row.origin],["Курорт",row.resort],["Дата",row.depart_date],["Ночей",String(row.nights)],["Тип номера",row.room],["Туристы",T.description(rooms)]])fact(key,value);
  const pair=T.isTwoAdults(rooms);
  $("price").textContent=pair?new Intl.NumberFormat("ru-RU").format(row.price_reference_rub)+" ₽ за двух взрослых":"Требуется отдельный расчёт";
  $("priceNote").textContent=pair?"Цена с обязательными сборами на "+new Date(row.price_observed_at_utc).toLocaleString("ru-RU")+"; может измениться.":"Цена двух взрослых не переносится на другой состав туристов.";
