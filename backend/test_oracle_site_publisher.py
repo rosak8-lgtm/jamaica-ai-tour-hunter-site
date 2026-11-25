@@ -41,6 +41,23 @@ def feed(n=1):
     }
 
 class Tests(unittest.TestCase):
+    def test_proof_health_distinguishes_expiry_and_missing_handoff(self):
+        from site_proof_health import report
+        moment=datetime.now(timezone.utc)
+        def rec(uid,minutes):
+            return {"preview_id":uid,"route":{"source_price_list_id":"123456789"},
+                    "flight":{"flight_checked_at_utc":(moment-timedelta(minutes=minutes)).isoformat()}}
+        records=[rec("fresh",2),rec("expiring",11),rec("expired",16),rec("future",-2)]
+        exact={"records":[{"preview":{"id":"fresh"},"source_price_list_id":"123456789",
+                          "observed_at_utc":records[0]["flight"]["flight_checked_at_utc"]}]}
+        result=report({"records":records},exact,moment)
+        self.assertEqual(result["receipt_fresh"],2)
+        self.assertEqual(result["receipt_expired"],1)
+        self.assertEqual(result["receipt_future"],1)
+        self.assertEqual(result["receipt_expires_within_5m"],1)
+        self.assertEqual(result["fresh_ids_missing_exact"],1)
+        self.assertEqual(result["exact_timestamp_and_list_matches"],1)
+
     def test_exact_route_handoff_survives_rotating_source_and_public_price_validation(self):
         import hashlib
         moment=datetime.now(timezone.utc)
