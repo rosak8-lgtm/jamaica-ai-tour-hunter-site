@@ -122,6 +122,42 @@ function otherCities(rows,q,extra=()=>true){
  return [...cities.values()].sort((a,b)=>b.count-a.count||a.origin.localeCompare(b.origin,"ru"))
   .slice(0,8).map(g=>({...g,countries:[...g.countries].sort((a,b)=>a.localeCompare(b,"ru"))}));
 }
+// Explicit fallback when a different departure city alone cannot satisfy the
+// request. Group actual eligible rows; never silently change user filters.
+function flexibleCities(rows,q,extra=()=>true){
+ const norm=x=>String(x||"").trim().toLocaleLowerCase("ru");
+ const day=s=>{
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(s||""))return NaN;
+   const t=Date.parse(s+"T00:00:00Z");
+   return Number.isFinite(t)&&new Date(t).toISOString().slice(0,10)===s?t:NaN;
+ };
+ if(!norm(q.origin))return [];
+ const allowed=Array.isArray(q.allowedOrigins)?new Set(q.allowedOrigins):null;
+ const from=day(q.from),to=day(q.to),nights=Array.isArray(q.nights)?q.nights:[];
+ const groups=new Map();
+ for(const x of rows){
+  if(!x||!norm(x.origin)||norm(x.origin)===norm(q.origin)||!norm(x.country)||
+    (allowed&&!allowed.has(x.origin))||!Number.isFinite(day(x.depart_date))||
+    !Number.isInteger(x.nights)||x.nights<3||x.nights>180||!extra(x))continue;
+  const changeCountry=!!q.country&&norm(x.country)!==norm(q.country);
+  if(changeCountry&&q.allowOtherCountries===false)continue;
+  const changeNights=!!nights.length&&!nights.includes(x.nights);
+  const d=day(x.depart_date),distance=Math.max(0,Number.isFinite(from)?from-d:0,Number.isFinite(to)?d-to:0);
+  const changeDates=distance>0;
+  if(!changeCountry&&!changeNights&&!changeDates)continue;
+  const key=JSON.stringify([x.origin,x.country,x.depart_date,x.nights]);
+  if(!groups.has(key))groups.set(key,{origin:x.origin,country:x.country,date:x.depart_date,nights:[x.nights],count:0,changeCountry,changeNights,changeDates,distance});
+  groups.get(key).count++;
+ }
+ const rank=g=>Number(g.changeCountry)+Number(g.changeNights)+Number(g.changeDates);
+ const ordered=[...groups.values()].sort((a,b)=>rank(a)-rank(b)||
+   Number(a.changeCountry)-Number(b.changeCountry)||Number(a.changeNights)-Number(b.changeNights)||
+   a.distance-b.distance||b.count-a.count||a.date.localeCompare(b.date)||
+   a.origin.localeCompare(b.origin,"ru")||a.country.localeCompare(b.country,"ru")||a.nights[0]-b.nights[0]);
+ const unique=new Map();
+ for(const g of ordered)if(!unique.has(norm(g.origin)))unique.set(norm(g.origin),g);
+ return [...unique.values()].slice(0,8);
+}
 // Select an actual row for a displayed option, never synthesize a tour.
 function representative(rows,opt,origin,extra=()=>true,compare){
  if(!Array.isArray(rows)||!opt||!Array.isArray(opt.nights)||!origin)return null;
@@ -132,5 +168,5 @@ function representative(rows,opt,origin,extra=()=>true,compare){
  if(typeof compare==="function")matches.sort(compare);
  return matches[0]||null;
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,representative});
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative});
 })(globalThis);
