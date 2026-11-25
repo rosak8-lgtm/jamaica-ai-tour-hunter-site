@@ -26,18 +26,18 @@ input{width:min(450px,100%);padding:12px 15px;border:1px solid #ded5e2;border-ra
 <main>
 <div class="tag">Маршрут и варианты размещения</div><h1 id="title">Загружаем маршрут…</h1>
 <p class="sub" id="subtitle">Ищем дату, длительность и связанные направления</p>
-<div class="notice" id="alert" role="status">Информация о маршрутах получена из прайс-листов. Наличие мест и итоговая стоимость конкретного тура не подтверждены.</div>
+<div class="notice" id="alert" role="status">Показаны параметры путешествий. Наличие мест и итоговая стоимость конкретного тура не подтверждены.</div>
 <section class="card"><h2>Сведения о маршруте</h2><div class="kv" id="details"></div></section>
 <section class="card"><h2>Гостиницы в этом направлении</h2><p class="sub">Ниже отели из общего справочника выбранной страны. Это ещё не список гостиниц, доступных на конкретном рейсе или выбранные даты.</p>
 <input id="hotelSearch" type="search" placeholder="Название отеля или курорт…" aria-label="Поиск отеля"><p class="sub" id="hotelCount"></p>
 <div class="hotels" id="hotelList"></div><button id="more" type="button" hidden>Показать ещё</button></section>
 
 <section class="card" id="routePreviewSection"><h2>Варианты гостиниц на выбранную дату</h2>
-<p class="sub">Это записи прайс-листов по той же стране и дате. Принадлежность к данному рейсу и возможность бронирования не подтверждены.</p>
+<p class="sub">Это варианты по той же стране и дате. Принадлежность к данному рейсу и возможность бронирования не подтверждены.</p>
 <p class="sub" id="routePreviewCount">Загружаем варианты…</p>
 <div class="hotels" id="routePreviewList"></div>
 </section>
-<section class="card" id="alternativeSection"><h2>Другие страны, маршруты и даты</h2><p class="sub">Варианты из актуальной выгрузки маршрутных прайс-листов. Цена, отель и свободные места проверяются отдельно перед оформлением.</p><div class="alt-tools"><input id="alternativeCountry" type="search" aria-label="Поиск другой страны" placeholder="Любая страна или маршрут"><select id="alternativeNights" aria-label="Количество ночей"><option value="0">Любая длительность</option><option value="3">3 ночи</option><option value="4">4 ночи</option><option value="5">5 ночей</option><option value="7">7 ночей</option><option value="10">10 ночей</option><option value="14">14 ночей</option><option value="21">21 ночь</option><option value="30">30 ночей</option></select><input id="alternativeDate" type="date" aria-label="Дата вылета"></div><p class="alt-note" id="alternativeCount" role="status" aria-live="polite">Загрузка вариантов…</p><div class="alternatives" id="alternativeList"></div><button type="button" id="alternativeMore" hidden>Показать ещё маршруты</button></section>
+<section class="card" id="alternativeSection"><h2>Другие страны, маршруты и даты</h2><p class="sub">Варианты из актуального каталога путешествий. Цена, отель и свободные места проверяются отдельно перед оформлением.</p><div class="alt-tools"><input id="alternativeCountry" type="search" aria-label="Поиск другой страны" placeholder="Любая страна или маршрут"><select id="alternativeNights" aria-label="Количество ночей"><option value="0">Любая длительность</option><option value="3">3 ночи</option><option value="4">4 ночи</option><option value="5">5 ночей</option><option value="7">7 ночей</option><option value="10">10 ночей</option><option value="14">14 ночей</option><option value="21">21 ночь</option><option value="30">30 ночей</option></select><input id="alternativeDate" type="date" aria-label="Дата вылета"></div><p class="alt-note" id="alternativeCount" role="status" aria-live="polite">Загрузка вариантов…</p><div class="alternatives" id="alternativeList"></div><button type="button" id="alternativeMore" hidden>Показать ещё маршруты</button></section>
 </main><script>
 (function(){
 "use strict";
@@ -51,7 +51,7 @@ async function init(){
  // lineage to a public visual proof. Never display unverified route/hotel
  // recommendation cards through this older direct URL.
  $("title").textContent="Маршруты без подтверждения скрыты";
- $("subtitle").textContent="Показываются только туры с меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками для той же даты, гостиницы и тарифа.";
+ $("subtitle").textContent="Показываются только недавно проверенные варианты путешествий.";
  $("alert").textContent="Прежние справочные карточки маршрутов не являются проверенными турами. Используйте поиск JAMAICA: неподтверждённые варианты не публикуются.";
  $("routePreviewCount").textContent="Карточки без точных доказательств не показываются.";
  $("alternativeCount").textContent="Другие страны появятся в поиске после проверки всех условий.";
