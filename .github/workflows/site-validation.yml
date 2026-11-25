@@ -34,6 +34,7 @@ jobs:
           node scripts/test-strict-public-visual-policy.mjs
           node scripts/test-source-coverage.mjs
           node scripts/test-quote-price-only.mjs
+          node scripts/test-customer-inquiry-client.mjs
           node scripts/test-hotel-media-feed.mjs
           node scripts/test-commons-hotel-media.mjs
       - name: Verify deployed IP city endpoint before activation
