@@ -80,6 +80,18 @@ jobs:
           /tmp/jamaica-playwright-venv/bin/python -B scripts/test_application_reference_browser.py
       - name: Verify isolated Oracle selected-tour staging imports
         run: bash scripts/test_selected_tour_staging.sh
+      - name: Validate atomic publisher upgrade
+        run: |
+          bash -n scripts/upgrade_oracle_catalog_on_server_once.sh
+          python3 -B - <<'PY'
+          from pathlib import Path
+          s=Path("scripts/upgrade_oracle_catalog_on_server_once.sh").read_text()
+          assert s.index('systemctl --user stop "$TIMER"') < s.index('flock -w 300 9') < s.index('git -C "$ROOT" fetch')
+          assert s.index('git -C "$ROOT" fetch') < s.index('mv -f "$TMP"')
+          assert s.index('flock -u 9') < s.index('systemctl --user start "$SERVICE"')
+          assert "inactive|failed)" in s
+          assert 'trap restore_timer EXIT' in s
+          PY
       - name: Validate safe synchronization scripts
         run: |
           python3 -m py_compile scripts/sync_destination_directory.py scripts/oracle_bg_route_sync.py scripts/probe_price_catalog.py scripts/oracle_bg_price_detail_probe.py scripts/oracle_bg_preview_export.py scripts/oracle_bg_selected_quote_probe.py scripts/select_future_preview.py scripts/local_selected_preview.py backend/test_local_selected_preview.py scripts/oracle_bg_multicountry_price_scan.py scripts/tour_price_reference.py scripts/oracle_bg_booking_fields_audit.py scripts/browser_smoke_playwright.py scripts/site_no_node_qa.py backend/contract_first_order_engine.py backend/preview_quote_engine.py backend/bg_route_first_visual_gate.py backend/test_bg_route_first_visual_gate.py scripts/audit_bot_route_first_from_lenovo.py backend/test_bot_route_source_audit.py scripts/bot_visual_sidecar.py scripts/trusted_bot_receipt_sink.py backend/test_trusted_bot_receipt_sink.py backend/test_bot_visual_sidecar.py scripts/inspect_v183_bot_contract_from_lenovo.py backend/test_v183_bot_contract_inspector.py backend/sqlite_order_repository.py backend/send_booking_notifications.py backend/bg_tour_api_xml.py backend/bg_read_only_price_client.py backend/bg_multiroom_quote.py backend/test_bg_multiroom_quote.py backend/supplier_sale_policy.py backend/test_supplier_sale_policy.py backend/bg_price_age_scope.py backend/test_bg_price_age_scope.py backend/bg_private_source_crosswalk.py backend/test_bg_private_source_crosswalk.py backend/bg_private_exact_party.py backend/test_bg_private_exact_party.py backend/bg_private_quote_bridge.py backend/test_bg_private_quote_bridge.py backend/hotel_reviews_store.py backend/hotel_reviews_api.py backend/moderate_hotel_reviews.py scripts/flight_availability_evidence.py scripts/oracle_bg_flight_evidence_probe.py backend/test_oracle_bg_flight_evidence_probe.py scripts/oracle_site_publisher.py scripts/public_tour_eligibility.py scripts/site_bot_price_overlay.py backend/test_public_tour_eligibility.py backend/test_site_bot_price_overlay.py scripts/catalog_property_identity.py backend/test_catalog_property_identity.py scripts/recent_preview_catalog.py scripts/catalog_size_budget.py backend/test_catalog_size_budget.py backend/test_recent_preview_catalog.py scripts/oracle_bg_hotel_media_candidates.py scripts/hbx_licensed_hotel_photos.py scripts/hbx_test_probe.py scripts/nuitee_sandbox_hotel_probe.py scripts/hbx_crosswalk_candidates.py scripts/commons_open_hotel_media.py scripts/oracle_hbx_media_sync.py
