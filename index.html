@@ -1106,7 +1106,7 @@ function renderTourPreviews(reset=true){
 
    const priceBox=el("div","tourResultPrice");
    priceBox.append(el("small","eligibilityUnverified",
-     "Перед оформлением подтвердим актуальную стоимость и наличие мест. Бронь не создана."));
+     "Перед оформлением необходимо подтвердить актуальную стоимость и наличие мест. Бронь не создана."));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      const priceTitle=el("strong","", "Цена на момент проверки на 2 взрослых: ");
