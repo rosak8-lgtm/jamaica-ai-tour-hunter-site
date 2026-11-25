@@ -950,15 +950,18 @@ function renderSourceScanCoverage(){
  if(!countries.length)return;
  if(!sourceCoverageFirstExpanded){root.open=true;sourceCoverageFirstExpanded=true;}
  const selected=$("destination").value.trim(),fragment=document.createDocumentFragment();
+ const counts=window.JamaicaCountryOffers.countryCounts(verifiedRows(),$("departure").value.trim());
+ const total=[...counts.values()].reduce((sum,n)=>sum+n,0);
  $("sourceSearchCoverageTitle").textContent=
    "Направления поиска: "+countries.length+
-   " направлений · проверенных вариантов: "+verifiedRows().length;
+   " · свежих вариантов из выбранного города: "+total.toLocaleString("ru-RU");
  let months=[];
  for(const item of countries){
+   const count=counts.get(item.country)||0;
    const button=el("button","sourceSearchChip",
-     item.country);
+     item.country+" · "+(count?count.toLocaleString("ru-RU")+" вар.":"в поиске"));
    button.type="button";
-   button.setAttribute("aria-label","Искать путешествия: "+item.country);
+   button.setAttribute("aria-label","Искать путешествия: "+item.country+(count?", свежих вариантов: "+count:", свежих проверенных вариантов пока нет"));
    button.setAttribute("aria-pressed",String(selected===item.country));
    button.addEventListener("click",()=>{
      $("destination").value=selected===item.country?"":item.country;
