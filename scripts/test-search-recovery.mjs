@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import "./search-recovery.js";
-const {analyze,departures,otherCountryOptions,dateOptions}=globalThis.JamaicaSearchRecovery;
+const {analyze,departures,otherCountryOptions,dateOptions,otherCities}=globalThis.JamaicaSearchRecovery;
 const row=(origin,country,depart_date,nights)=>({origin,country,depart_date,nights});
 const rows=[row("Иркутск","Китай","2026-12-04",5),row("Иркутск","Китай","2026-12-15",9),row("Иркутск","Вьетнам","2026-12-04",9),row("Москва","Китай","2026-12-04",9)];
 const q={origin:"Иркутск",country:"Китай",from:"2026-12-02",to:"2026-12-10",nights:[7,9,10]};
@@ -42,3 +42,11 @@ assert.equal(dateOptions([...rows,row("Иркутск","Китай","2026-02-30"
 assert.equal(dateOptions([...rows,row("Иркутск","Китай","2026-12-15",9)],q)[0].count,2);
 assert.deepEqual(dateOptions(rows,{...q,nights:[]})[0].nights,[5]);
 console.log("JAMAICA_EXACT_DATE_OPTIONS_PASS");
+
+assert.deepEqual(otherCities(rows,q),[{origin:"Москва",count:1,countries:["Китай"]}]);
+assert.equal(otherCities(rows,{...q,allowedOrigins:["Иркутск"]}).length,0);
+assert.equal(otherCities(rows,{...q,nights:[7]}).length,0);
+assert.equal(otherCities(rows,q,()=>false).length,0);
+assert.equal(otherCities(rows,{...q,country:"Вьетнам"}).length,0);
+assert.equal(otherCities(rows,{...q,from:"2026-12-05"}).length,0);
+console.log("JAMAICA_EXPLICIT_OTHER_CITY_OPTIONS_PASS");
