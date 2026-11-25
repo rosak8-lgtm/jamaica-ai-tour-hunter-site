@@ -235,13 +235,40 @@ class ContractFirstEngine:
             raise BadOrder("Signature already processed")
         return {"status":"CONTRACT_SIGNED"}
 
+    def _signed_offer(self, order):
+        """Never substitute a mutable offer for the signed itinerary."""
+        contents=order.get("contract_content")
+        if (not isinstance(contents,dict) or
+                contract_digest(contents)!=order.get("contract_digest") or
+                contents.get("order_id")!=order.get("id") or
+                contents.get("offer_id")!=order.get("offer_id") or
+                contents.get("buyer_id")!=order.get("buyer_id") or
+                contents.get("total_rub")!=order.get("signed_total_rub") or
+                contents.get("currency")!="RUB" or
+                contents.get("hotel_on_request_accepted") is not order.get("hotel_on_request_accepted")):
+            raise NotAvailable("Signed contract integrity mismatch")
+        offer=self.repo.get_offer(order["offer_id"])
+        itinerary=contents.get("itinerary")
+        if (not isinstance(offer,dict) or not isinstance(itinerary,dict) or
+                offer.get("id")!=order["offer_id"] or
+                offer.get("buyer_id")!=order["buyer_id"] or
+                offer.get("total_rub")!=order["signed_total_rub"]):
+            raise NotAvailable("Signed offer identity changed")
+        for key in ("origin","destination","hotel","hotel_id","room","depart_date",
+                    "nights","adults","children"):
+            if key not in itinerary or key not in offer or itinerary[key]!=offer[key]:
+                raise NotAvailable("Signed itinerary changed")
+        if not order.get("signed_at") or not order.get("signature_receipt_id"):
+            raise NotAvailable("Signed contract evidence missing")
+        return offer
+
     def initiate_payment(self, order_id:str)->dict[str,Any]:
         """Stage #2: only verified signed contract can trigger second quote + PSP."""
         self._ready()
         order=self._order(order_id)
         if order["status"]!="CONTRACT_SIGNED":
             raise BadOrder("Verified contract signature required before payment")
-        offer=self.repo.get_offer(order["offer_id"])
+        offer=self._signed_offer(order)
         self._check(offer,"AFTER_SIGNATURE_BEFORE_PAYMENT",order["signed_total_rub"],
                     order["hotel_on_request_accepted"])
         if not self.repo.transition(order_id,"CONTRACT_SIGNED","PAYMENT_CREATING",{}):
@@ -282,8 +309,8 @@ class ContractFirstEngine:
             if not self.repo.transition(order_id,"PAYMENT_PENDING","PAID_RECHECK_REQUIRED",
                                         {"paid_verified_at":datetime.now(timezone.utc).isoformat()}):
                 return "CONCURRENT_RECONCILIATION"
-        offer=self.repo.get_offer(order["offer_id"])
         try:
+            offer=self._signed_offer(order)
             quote=self._check(offer,"AFTER_PAYMENT_BEFORE_BOOKING",
                               order["signed_total_rub"],order["hotel_on_request_accepted"])
         except (PriceChanged,NotAvailable):

@@ -158,6 +158,24 @@ class Tests(unittest.TestCase):
         with self.assertRaises(NotAvailable):
             self.engine.verify_contract_signature(p["order_id"])
         self.assertEqual(self.psp.created,[])
+    def test_mutated_offer_and_matching_new_quote_never_unlock_payment(self):
+        oid=self.signed()
+        self.repo.offer["room"]="SGL BB"
+        self.supplier.checks_by_stage["AFTER_SIGNATURE_BEFORE_PAYMENT"]=quote(room="SGL BB")
+        with self.assertRaises(NotAvailable):self.engine.initiate_payment(oid)
+        self.assertEqual(self.psp.created,[])
+    def test_changed_contract_payload_blocks_payment(self):
+        oid=self.signed()
+        self.repo.orders[oid]["contract_content"]["itinerary"]["room"]="SGL BB"
+        with self.assertRaises(NotAvailable):self.engine.initiate_payment(oid)
+        self.assertEqual(self.psp.created,[])
+    def test_mutated_offer_after_payment_requires_refund_not_booking(self):
+        oid=self.paid()
+        self.repo.offer["room"]="SGL BB"
+        self.supplier.checks_by_stage["AFTER_PAYMENT_BEFORE_BOOKING"]=quote(room="SGL BB")
+        self.assertEqual(self.engine.reconcile_payment_and_book(oid),"REFUND_REQUIRED")
+        self.assertEqual(self.supplier.bookings,[])
+        self.assertEqual(len(self.psp.refunds),1)
     def test_second_quote_only_after_signed_contract(self):
         id=self.signed()
         p=self.engine.initiate_payment(id)
