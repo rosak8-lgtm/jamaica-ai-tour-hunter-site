@@ -1261,6 +1261,28 @@ function renderTourPreviews(reset=true){
      });
      actions.append(b);
    }
+   if(!cityOptions.length){
+     const flexible=window.JamaicaSearchRecovery.flexibleCities(alternativeRows,{
+       origin,country,from:date,to:dateTo,nights,allowOtherCountries:!resortFilter,
+       allowedOrigins:[...$("departure").options].map(o=>o.value)},extra);
+     for(const opt of flexible){
+       const changes=["другой город",opt.changeCountry?"другая страна":"",opt.changeDates?"другие даты":"",opt.changeNights?"другая длительность":""].filter(Boolean);
+       const b=el("button","btn btnWhite",opt.origin+" → "+opt.country+" · "+
+         opt.date.split("-").reverse().join(".")+" · "+opt.nights.join(", ")+" ноч. · "+
+         opt.count.toLocaleString("ru-RU")+" вар. ("+changes.join(", ")+")");
+       b.type="button";b.classList.add("flexibleCityAlternative");
+       b.addEventListener("click",()=>{
+         departureUserInteracted=true;$("departure").value=opt.origin;
+         $("departureGeoStatus").textContent="Город выбран вами.";
+         try{window.JamaicaDepartureGeo.remember(localStorage,opt.origin,[...$("departure").options].map(o=>o.value));}catch{}
+         if(opt.changeCountry){$("destination").value=opt.country;sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";}
+         $("dateFrom").value=opt.date;$("dateTo").value=opt.date;$("dateTo").min=opt.date;
+         if(opt.changeNights){selectedNights.clear();for(const n of opt.nights)selectedNights.add(n);syncNightPickers();}
+         sourceFilterOptions();form.requestSubmit();
+       });
+       actions.append(b);
+     }
+   }
    const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
    $("searchProgress").querySelector("p").after(actions);
