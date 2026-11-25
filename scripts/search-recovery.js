@@ -73,5 +73,33 @@ function otherCountryOptions(rows,q,extra=()=>true){
  for(const g of candidates.sort(order))if(!unique.has(norm(g.country)))unique.set(norm(g.country),g);
  return [...unique.values()].slice(0,8);
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions});
+// Concrete date/night groups for the current city and country. Only
+// already eligible rows are accepted by the caller. Never widen filters
+// without an explicit customer click. Counts refer to the exact option.
+function dateOptions(rows,q,extra=()=>true){
+ const norm=x=>String(x||"").trim().toLocaleLowerCase("ru");
+ if(!norm(q.origin))return [];
+ const selected=Array.isArray(q.nights)?q.nights:[];
+ const groups=new Map();
+ for(const x of rows){
+  if(norm(x.origin)!==norm(q.origin)||(q.country&&norm(x.country)!==norm(q.country))||
+     !/^\d{4}-\d{2}-\d{2}$/.test(x.depart_date||"")||
+     !Number.isInteger(x.nights)||x.nights<3||x.nights>180||!extra(x))continue;
+  const day=Date.parse(x.depart_date+"T00:00:00Z");
+  if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==x.depart_date)continue;
+  if(!groups.has(x.depart_date))groups.set(x.depart_date,new Map());
+  const g=groups.get(x.depart_date);g.set(x.nights,(g.get(x.nights)||0)+1);
+ }
+ const results=[];
+ for(const [date,g] of groups){
+  const all=[...g.keys()].sort((a,b)=>a-b);
+  const match=all.filter(n=>!selected.length||selected.includes(n));
+  const nights=match.length?match:all;
+  results.push({date,nights,count:nights.reduce((sum,n)=>sum+g.get(n),0),
+    changeNights:!match.length,changeDates:!!((q.from&&date<q.from)||(q.to&&date>q.to))});
+ }
+ return results.sort((a,b)=>Number(a.changeDates)+Number(a.changeNights)-Number(b.changeDates)-Number(b.changeNights)||
+  Number(a.changeNights)-Number(b.changeNights)||a.date.localeCompare(b.date));
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions});
 })(globalThis);
