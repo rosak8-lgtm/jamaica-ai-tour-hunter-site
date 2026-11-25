@@ -116,6 +116,26 @@ class Tests(unittest.TestCase):
                 self.assertFalse(publisher.source_scan_due(now=moment+timedelta(minutes=29)))
                 self.assertTrue(publisher.source_scan_due(now=moment+timedelta(minutes=31)))
 
+    def test_discovery_slot_survives_missed_intervals_and_migrates(self):
+        moment=datetime.now(timezone.utc)
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            marker=root/".source-scan-last-attempt-v21.json"
+            marker.write_text(json.dumps({"attempt_at_utc":(moment-timedelta(hours=1)).isoformat()}))
+            marker.chmod(0o600)
+            with patch.object(publisher,"RUNROOT",root):
+                first=publisher.mark_source_attempt(now=moment)
+                self.assertEqual(first,int(moment.timestamp()//1800))
+                self.assertFalse(publisher.source_scan_due(now=moment+timedelta(minutes=29)))
+                self.assertTrue(publisher.source_scan_due(now=moment+timedelta(hours=7)))
+                self.assertEqual(publisher.mark_source_attempt(now=moment+timedelta(hours=7)),first+1)
+                self.assertEqual(publisher.mark_source_attempt(now=moment+timedelta(days=1)),first+2)
+                self.assertEqual(json.loads(marker.read_text())["probe_slot"],first+2)
+                self.assertEqual(marker.stat().st_mode&0o777,0o600)
+                marker.write_text(json.dumps({"attempt_at_utc":moment.isoformat(),"probe_slot":True}))
+                self.assertFalse(publisher.source_scan_due(now=moment+timedelta(days=2)))
+                with self.assertRaises(ValueError):publisher.mark_source_attempt(now=moment+timedelta(days=2))
+
     def test_browser_recovery_priority_is_bounded_and_not_a_hold_override(self):
         moment=datetime.now(timezone.utc)
         with tempfile.TemporaryDirectory() as work:
@@ -142,7 +162,7 @@ class Tests(unittest.TestCase):
                  patch.object(publisher,"provider_hold_active",return_value=False), \
                  patch.object(publisher,"source_scan_due",return_value=True), \
                  patch.object(publisher,"browser_recovery_priority",return_value=False), \
-                 patch.object(publisher,"mark_source_attempt") as mark, \
+                 patch.object(publisher,"mark_source_attempt",return_value=42) as mark, \
                  patch.object(publisher,"refresh_directory") as refresh_dir, \
                  patch.object(publisher,"refresh_source_feed",return_value=feed()) as scan:
                 with lock.open("r+") as existing:
@@ -150,7 +170,7 @@ class Tests(unittest.TestCase):
                     self.assertEqual(publisher.guarded_source_scan(),(None,None))
                     mark.assert_not_called();refresh_dir.assert_not_called();scan.assert_not_called()
                 self.assertEqual(publisher.guarded_source_scan()[0],feed())
-                scan.assert_called_once()
+                scan.assert_called_once_with(directory(),probe_slot=42)
                 with patch.object(publisher,"browser_recovery_priority",return_value=True):
                     self.assertEqual(publisher.guarded_source_scan(),(None,None))
                 scan.assert_called_once()
@@ -299,6 +319,7 @@ class Tests(unittest.TestCase):
             new=feed()
             new["previews"][0]["price_reference_rub"]=99000
             def export(args, **kwargs):
+                self.assertEqual(args[args.index("--probe-slot")+1],"42")
                 self.assertEqual(target.read_bytes(),previous)
                 staging=Path(args[args.index("--output")+1])
                 self.assertNotEqual(staging,target)
@@ -306,7 +327,7 @@ class Tests(unittest.TestCase):
             with patch.object(publisher,"RUNROOT",root), \
                  patch.object(publisher,"run",side_effect=export), \
                  patch.object(publisher.identity,"verify_catalog_hotel_identity") as check:
-                self.assertEqual(publisher.refresh_source_feed(directory()),new)
+                self.assertEqual(publisher.refresh_source_feed(directory(),probe_slot=42),new)
                 check.assert_called_once_with(new["previews"],directory())
             self.assertEqual(json.loads(target.read_text()),new)
             self.assertEqual(target.stat().st_mode & 0o777,0o600)
