@@ -54,6 +54,18 @@ class Tests(unittest.TestCase):
         with self.assertRaises(ValueError):Scope.from_registry(registry,other,"100410000052")
         with self.assertRaises(ValueError):Scope.from_registry({**registry,"pairs":registry["pairs"]+registry["pairs"]},other,cid)
 
+    def test_exact_source_horizon_includes_later_2027_and_rejects_outside_bound(self):
+        today=datetime.now(timezone.utc).date()
+        for delta in (0,181,365,730):
+            day=today+timedelta(days=delta)
+            result=exporter.safe_preview(row(tour_date=day.strftime("%d.%m.%Y")),COUNTRY,self.hotels)
+            self.assertIsNotNone(result)
+            self.assertEqual(result["depart_date"],day.isoformat())
+            self.assertIs(result["bookable"],False)
+        for delta in (-1,731):
+            day=today+timedelta(days=delta)
+            self.assertIsNone(exporter.safe_preview(row(tour_date=day.strftime("%d.%m.%Y")),COUNTRY,self.hotels))
+
     def test_choose_different_future_price_list_dates(self):
         from datetime import date, timedelta
         today=date(2026,11,20)

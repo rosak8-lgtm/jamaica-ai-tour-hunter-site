@@ -30,11 +30,14 @@ MAX_LISTS_PER_COUNTRY = 5
 EXTRA_DISCOVERY_BATCH = 8
 PRIORITY_ADDITIONAL_COUNTRIES = ("Китай","Вьетнам")
 ALLOWED_ORIGIN = "Иркутск"
+# Align exact source rows with the independent native-browser route horizon.
+# Broad price-list discovery retains its existing 180-day request scope.
+EXACT_DEPARTURE_HORIZON_DAYS = 730
 
 def normalize_date(value):
     d = bg.date_iso(value)
     today = datetime.now(timezone.utc).date()
-    if d and today <= d <= today + timedelta(days=180):
+    if d and today <= d <= today + timedelta(days=EXACT_DEPARTURE_HORIZON_DAYS):
         return d.isoformat()
     return None
 
