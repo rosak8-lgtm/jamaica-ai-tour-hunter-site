@@ -15,8 +15,8 @@ ROOT="$HOME/.local/share/jamaica-oracle-catalog"
 CLONE="$ROOT/site"
 BIN="$HOME/.local/opt/jamaica-oracle-catalog"
 CATALOG="jamaica-oracle-catalog-5min"
-BOT="jamaica-bg-browser-v148"
-echo "JAMAICA_VISUAL_PIPELINE_READ_ONLY_DIAGNOSTIC_V1"
+BOT="jamaica-website-bg-bot-v1"
+echo "JAMAICA_VISUAL_PIPELINE_READ_ONLY_DIAGNOSTIC_V60"
 for svc in "$CATALOG.timer" "$BOT.timer"; do
  state="$(systemctl --user is-active "$svc" 2>/dev/null || true)"
  printf 'TIMER_%s=%s\n' "$svc" "$state"
@@ -59,16 +59,16 @@ def inspect(path,maximum):
  except (OSError,ValueError,UnicodeError):
   return None,"INVALID_OR_UNREADABLE"
 private=root/"private-bg-route-first-receipts.json"
-p,state=inspect(private,1500000)
+p,state=inspect(private,40_000_000)
 if state=="OK" and stat.S_IMODE(private.stat().st_mode)&0o077:
  p,state=None,"INSECURE_PERMISSIONS"
 print("PRIVATE_BG_RECEIPTS_STATE="+state)
 records=p.get("records") if isinstance(p,dict) and p.get("schema")=="jamaica.bg-bot-private-receipts.v1" else None
 print("PRIVATE_BG_RECEIPTS_COUNT="+str(len(records)) if isinstance(records,list) else "PRIVATE_BG_RECEIPTS_COUNT=0_OR_INVALID")
-v,vstatus=inspect(root/"site/tour-visual-evidence.json",300000)
+v,vstatus=inspect(root/"site/tour-visual-evidence.json",2_500_000)
 print("PUBLIC_VISUAL_FEED_STATE="+vstatus)
 print("PUBLIC_VISUAL_MATCHES="+str(len(v["entries"])) if isinstance(v,dict) and isinstance(v.get("entries"),list) else "PUBLIC_VISUAL_MATCHES=UNKNOWN")
-c,cstatus=inspect(root/"site/tour-previews.json",9000000)
+c,cstatus=inspect(root/"site/tour-previews.json",45_000_000)
 print("PUBLIC_CATALOG_FEED_STATE="+cstatus)
 if isinstance(c,dict):
  print("PUBLIC_STRICT_PROJECTION_ENABLED="+("YES" if c.get("publication_rule")=="BG_ROUTE_FIRST_BEST_PRICE_BOTH_GREEN_V1" else "NO"))
