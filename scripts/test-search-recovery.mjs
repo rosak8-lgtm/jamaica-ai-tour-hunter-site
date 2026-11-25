@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import "./search-recovery.js";
-const {analyze}=globalThis.JamaicaSearchRecovery;
+const {analyze,departures}=globalThis.JamaicaSearchRecovery;
 const row=(origin,country,depart_date,nights)=>({origin,country,depart_date,nights});
 const rows=[row("Иркутск","Китай","2026-12-04",5),row("Иркутск","Китай","2026-12-15",9),row("Иркутск","Вьетнам","2026-12-04",9),row("Москва","Китай","2026-12-04",9)];
 const q={origin:"Иркутск",country:"Китай",from:"2026-12-02",to:"2026-12-10",nights:[7,9,10]};
@@ -13,3 +13,12 @@ assert.equal(analyze(rows,{...q,origin:"Красноярск"}).alternatives.len
 assert.equal(analyze(rows,q,()=>false).alternatives.length,0);
 assert.equal(analyze(rows,{...q,nights:[]}).nights,1);
 console.log("JAMAICA_SEARCH_RECOVERY_CITY_DATE_MULTI_NIGHT_PASS");
+
+const opts=departures(rows,q);
+assert.deepEqual(opts.map(x=>[x.country,x.date,x.count,x.nights]),[["Китай","2026-12-15",1,[9]],["Вьетнам","2026-12-04",1,[9]]]);
+assert.equal(departures(rows,{...q,allowOtherCountries:false}).length,1);
+assert.equal(departures(rows,q,()=>false).length,0);
+assert.equal(departures(rows,{...q,origin:"Красноярск"}).length,0);
+assert.equal(departures(rows,{...q,nights:[7]}).length,0);
+assert.equal(departures(rows,{...q,nights:[]})[0].date,"2026-12-15");
+console.log("JAMAICA_EXACT_DEPARTURE_ALTERNATIVES_PASS");
