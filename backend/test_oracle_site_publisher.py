@@ -41,6 +41,28 @@ def feed(n=1):
     }
 
 class Tests(unittest.TestCase):
+    def test_pegas_handoff_disabled_by_default_and_missing_evidence_is_empty(self):
+        from backend import pegas_private_handoff
+        from backend.test_pegas_public_projection import Tests as Fixture
+        fixture=Fixture()
+        fixture.setUp()
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            folder=root/"private-pegas-site"
+            folder.mkdir(mode=0o700)
+            path=folder/"evidence.json"
+            with patch.object(publisher,"RUNROOT",root),patch.object(publisher,"CHECKOUT",ROOT):
+                with patch.dict(publisher.os.environ,{},clear=True):
+                    self.assertIsNone(publisher.optional_pegas_projection(now=fixture.now))
+                with patch.dict(publisher.os.environ,{"JAMAICA_ENABLE_PEGAS_SITE_HANDOFF":"yes"},clear=True):
+                    self.assertEqual(publisher.optional_pegas_projection(now=fixture.now)["previews"],[])
+                    path.write_text(json.dumps({"schema":pegas_private_handoff.SCHEMA,"pairs":[[fixture.s,fixture.a]]}))
+                    path.chmod(0o600)
+                    result=publisher.optional_pegas_projection(now=fixture.now)
+                    self.assertEqual(len(result["previews"]),1)
+                    self.assertFalse(result["previews"][0]["bookable"])
+                    self.assertEqual(publisher.optional_pegas_projection(now=fixture.now+timedelta(minutes=16))["previews"],[])
+
     def test_upgrade_gate_structure_accepts_clock_keyword_and_rejects_missing_gate(self):
         from verify_publisher_gate import verify
         source=(ROOT/"scripts"/"oracle_site_publisher.py").read_text(encoding="utf-8")

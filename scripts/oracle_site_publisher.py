@@ -696,6 +696,20 @@ def encode_public_visual_feed(payload,*,now=None):
         raise CatalogHold("PUBLIC_VISUAL_FEED_TOO_LARGE")
     return encoded
 
+def optional_pegas_projection(*,now):
+    """Explicitly enabled only after a trusted browser producer is accepted.
+    Missing or malformed private evidence yields an empty PEGAS feed, not BG failure.
+    """
+    if os.environ.get("JAMAICA_ENABLE_PEGAS_SITE_HANDOFF")!="yes":
+        return None
+    root=str(CHECKOUT)
+    if root not in sys.path:sys.path.insert(0,root)
+    from backend.pegas_private_handoff import project_file
+    status,feed=project_file(RUNROOT/"private-pegas-site"/"evidence.json",now=now)
+    log("JAMAICA_PEGAS_HANDOFF_STATUS",status)
+    log("JAMAICA_PEGAS_PUBLIC_COUNT",len(feed["previews"]))
+    return feed
+
 def publish(env):
     # Publication and expensive discovery are intentionally decoupled.
     hold=provider_hold_active()
@@ -802,9 +816,23 @@ def publish(env):
     log("JAMAICA_RECENT_UNRECHECKED_COUNTRIES",
         new["source_scope"]["last_24h_unrechecked_countries"])
     log("JAMAICA_ORACLE_INDICATIVE_RUB_COUNT",sum(type(x["price_reference_rub"]) is int for x in new["previews"]))
+    pegas_feed=optional_pegas_projection(now=datetime.now(timezone.utc))
+    pegas_path=CHECKOUT/"application-reference.json"
+    pegas_changed=False
+    if pegas_feed is not None:
+        if pegas_path.is_symlink():raise CatalogHold("UNSAFE_PEGAS_PUBLIC_PATH")
+        try:
+            previous_pegas=json.loads(pegas_path.read_text(encoding="utf-8"))
+        except (OSError,ValueError,UnicodeError):
+            previous_pegas={}
+        pegas_changed=(not isinstance(previous_pegas,dict) or
+                       previous_pegas.get("schema")!=pegas_feed["schema"] or
+                       previous_pegas.get("previews")!=pegas_feed["previews"] or
+                       previous_pegas.get("bookable") is not False or
+                       previous_pegas.get("quote_verified") is not False)
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
-    if not changed_dir and not visual_changed and not needs_publish(previous,public_root):
+    if not changed_dir and not visual_changed and not pegas_changed and not needs_publish(previous,public_root):
         save_recent_source_cache(next_cache) if next_cache is not None else None
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
@@ -838,8 +866,13 @@ def publish(env):
         raise CatalogHold("PUBLIC_VISUAL_FEED_SYMLINK")
     visual_bytes=encode_public_visual_feed(visual_public)
     visual_path.write_bytes(visual_bytes)
-    run(["git","add","-A","--","tour-previews.json","destination-directory.json",SHARD_FOLDER,PUBLIC_VISUAL_PATH],
-        cwd=CHECKOUT,env=env)
+    paths=["tour-previews.json","destination-directory.json",SHARD_FOLDER,PUBLIC_VISUAL_PATH]
+    if pegas_changed:
+        data=json.dumps(pegas_feed,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
+        if len(data)>8_000_000:raise CatalogHold("PEGAS_PUBLIC_FEED_TOO_LARGE")
+        pegas_path.write_bytes(data)
+        paths.append("application-reference.json")
+    run(["git","add","-A","--",*paths],cwd=CHECKOUT,env=env)
     staged=run(["git","diff","--cached","--quiet"],cwd=CHECKOUT,env=env,check=False)
     if staged.returncode==0:
         save_recent_source_cache(next_cache) if next_cache is not None else None
