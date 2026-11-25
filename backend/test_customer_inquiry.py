@@ -11,6 +11,7 @@ from urllib.error import HTTPError
 from backend.customer_inquiry_store import InquiryStore,InquiryError
 from backend.customer_inquiry_catalog import LocalCatalog
 from backend.customer_inquiry_api import handler,ORIGIN,ROUTE
+from backend.customer_inquiry_owner import summarize,inspect_ticket
 
 class Tests(unittest.TestCase):
     def setUp(self):
@@ -77,6 +78,31 @@ class Tests(unittest.TestCase):
         row["evidence"]["mandatory_fees_included"]=False
         self.write_private_json("application-reference.json",feed)
         with self.assertRaises(InquiryError):self.store.submit({**self.body,"request_id":"b"*32,"preview_id":pid},"actor",self.now)
+    def test_owner_summary_and_explicit_ticket(self):
+        receipt=self.store.submit(self.body,"actor",self.now)
+        path=self.root/"inquiries.sqlite"
+        report=summarize(path,30,self.now)
+        self.assertEqual(report["retained_count"],1)
+        self.assertEqual(report["entries"][0]["ticket"],receipt["ticket"])
+        self.assertNotIn("test@example.com",json.dumps(report))
+        self.assertNotIn("contact",report["entries"][0])
+        detail=inspect_ticket(path,30,self.now,receipt["ticket"])
+        self.assertEqual(detail["contact"]["value"],"test@example.com")
+        self.assertEqual(detail["rooms"],self.body["rooms"])
+        self.assertEqual(detail["itinerary"]["id"],self.pid)
+    def test_owner_retention_and_file_permissions(self):
+        receipt=self.store.submit(self.body,"actor",self.now)
+        path=self.root/"inquiries.sqlite"
+        later=self.now+timedelta(days=31)
+        self.assertEqual(summarize(path,30,later)["retained_count"],0)
+        with self.assertRaises(InquiryError):inspect_ticket(path,30,later,receipt["ticket"])
+        with self.assertRaises(InquiryError):inspect_ticket(path,30,self.now,"bad-ticket")
+        path.chmod(0o644)
+        with self.assertRaises(InquiryError):summarize(path,30,self.now)
+    def test_owner_rejects_symlink(self):
+        path=self.root/"alias.sqlite"
+        path.symlink_to(self.root/"inquiries.sqlite")
+        with self.assertRaises(InquiryError):summarize(path,30,self.now)
     def test_http_loopback(self):
         server=ThreadingHTTPServer(("127.0.0.1",0),handler(self.store,"s"*32))
         th=threading.Thread(target=server.serve_forever,daemon=True);th.start()
