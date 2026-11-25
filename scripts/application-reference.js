@@ -32,7 +32,7 @@ function parse(feed,now=Date.now()){
  !Array.isArray(feed.previews)||feed.previews.length>5000||!fresh(feed.refreshed_at_utc,now))return [];
  const counts=new Map();
  for(const r of feed.previews)if(r&&typeof r.id==="string")counts.set(r.id,(counts.get(r.id)||0)+1);
- return feed.previews.filter(r=>eligible(r,now)&&counts.get(r.id)===1);
+ return feed.previews.filter(r=>eligible(r,now)&&counts.get(r.id)===1&&Date.parse(r.price_observed_at_utc)<=Date.parse(feed.refreshed_at_utc)+30000);
 }
 async function load(){
  try{
