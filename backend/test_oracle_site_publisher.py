@@ -158,6 +158,35 @@ class Tests(unittest.TestCase):
                 self.assertEqual(publisher.guarded_source_scan(),(None,None))
                 scan.assert_called_once()
 
+    def test_projection_grace_waits_for_existing_browser_and_releases_lock(self):
+        import fcntl
+        import threading
+        import time
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);root.chmod(0o700)
+            lock=root/"lock";lock.touch(mode=0o600)
+            with lock.open("r+") as existing:
+                fcntl.flock(existing,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                self.assertEqual(publisher.wait_for_browser_projection(lock=lock,max_wait=0),
+                                 "BROWSER_STILL_BUSY_USE_STRICT_PROJECTION")
+                def release():
+                    time.sleep(0.04)
+                    fcntl.flock(existing,fcntl.LOCK_UN)
+                t=threading.Thread(target=release)
+                t.start()
+                try:
+                    self.assertEqual(publisher.wait_for_browser_projection(lock=lock,max_wait=1),
+                                     "BROWSER_COMPLETED")
+                finally:t.join()
+                fcntl.flock(existing,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                fcntl.flock(existing,fcntl.LOCK_UN)
+            self.assertEqual(publisher.wait_for_browser_projection(lock=lock,max_wait=0),"BROWSER_IDLE")
+            lock.chmod(0o644)
+            self.assertEqual(publisher.wait_for_browser_projection(lock=lock,max_wait=0),"LOCK_UNAVAILABLE")
+            lock.unlink()
+            self.assertEqual(publisher.wait_for_browser_projection(lock=lock,max_wait=0),"LOCK_UNAVAILABLE")
+            with self.assertRaises(ValueError):publisher.wait_for_browser_projection(lock=lock,max_wait=46)
+
     def test_projection_does_not_renew_old_source_rows_or_timestamp(self):
         moment=datetime.now(timezone.utc)
         old=feed()

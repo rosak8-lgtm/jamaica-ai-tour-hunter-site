@@ -558,6 +558,45 @@ def guarded_source_scan(*,now=None):
     finally:
         os.close(fd)
 
+def wait_for_browser_projection(*,lock=None,max_wait=45):
+    """Bounded local-only grace for a browser already writing fresh evidence.
+
+    Both timers can fire at the same instant. Do not delay the browser by
+    holding its lock during publishing. Wait at most 45 seconds, then
+    release the shared lock immediately and use the existing strict gate.
+    No supplier calls and no change to proof lifetime.
+    """
+    import fcntl
+    import stat
+    import time
+    if type(max_wait) not in (int,float) or not 0<=max_wait<=45:
+        raise ValueError("INVALID_PROJECTION_GRACE")
+    lock=Path(lock) if lock is not None else BOT_STATE.parent/"lock"
+    fd=None
+    try:
+        parent=lock.parent.lstat()
+        if not stat.S_ISDIR(parent.st_mode) or parent.st_uid!=os.geteuid() or parent.st_mode&0o077:
+            return "LOCK_UNAVAILABLE"
+        fd=os.open(lock,os.O_RDONLY|getattr(os,"O_NOFOLLOW",0)|os.O_NONBLOCK)
+        st=os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or st.st_mode&0o077 or st.st_nlink!=1:
+            return "LOCK_UNAVAILABLE"
+        deadline=time.monotonic()+max_wait
+        waited=False
+        while True:
+            try:
+                fcntl.flock(fd,fcntl.LOCK_SH|fcntl.LOCK_NB)
+                return "BROWSER_COMPLETED" if waited else "BROWSER_IDLE"
+            except BlockingIOError:
+                left=deadline-time.monotonic()
+                if left<=0:return "BROWSER_STILL_BUSY_USE_STRICT_PROJECTION"
+                waited=True
+                time.sleep(min(0.5,left))
+    except OSError:
+        return "LOCK_UNAVAILABLE"
+    finally:
+        if fd is not None:os.close(fd)
+
 def source_scan_due(*,now=None):
     now=now or datetime.now(timezone.utc)
     # Throttle attempts, not just successful scans. Do not repeat a failed
@@ -666,6 +705,9 @@ def publish(env):
         new=projection_base()
         count=validate(new,directory,allow_empty=True)
         log("JAMAICA_BROAD_SOURCE_SCAN","PROVIDER_BACKOFF" if hold else "DEFERRED")
+    # Let an in-flight browser finish its atomic evidence writes before we
+    # snapshot the receipts. An unsafe or busy lock never grants eligibility.
+    log("JAMAICA_BG_PROJECTION_GRACE",wait_for_browser_projection())
     # Build only PRIVATE source candidates until the bot has independently
     # checked the selected route's badge and both flight icons.
     # Optional authenticated V183 browser-event bridge. A file from the bot
