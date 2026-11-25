@@ -72,6 +72,7 @@ def main():
                 return 2
             try:
                 page=browser.new_page(viewport={"width":1365,"height":900})
+                page.route("**/departure-geo-config.json",lambda route:route.fulfill(status=200,content_type="application/json",body='{"schema":"jamaica.departure-geo-config.v1","enabled":false,"endpoint":""}'))
                 # Keep image-load tests deterministic: external photos stay on their
                 # licensed origin in production, but CI serves only a valid pixel.
                 pixel=b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/QRYAAAAASUVORK5CYII=")
@@ -299,6 +300,38 @@ def main():
                 ensure(page.locator("#previewCards article.offerCard").count()==min(30,len(test_rows)),
                        "IRKUTSK_RESTORE_AFTER_CITY_CHANGE_FAILED")
                 print("OFFICIAL_CITY_PICKER_NO_CROSS_CITY_LEAK_PASS")
+
+                # Isolated customer browser: mock only the IP endpoint, never
+                # contact a real geo service during tests.
+                geo_page=browser.new_page()
+                try:
+                    geo_url="https://jamaica-city-geo.example.workers.dev/api/departure-city"
+                    geo_page.route("**/departure-geo-config.json",lambda route:route.fulfill(
+                        status=200,content_type="application/json",body=json.dumps({
+                            "schema":"jamaica.departure-geo-config.v1","enabled":True,"endpoint":geo_url})))
+                    geo_page.route(geo_url,lambda route:route.fulfill(status=200,
+                        headers={"Access-Control-Allow-Origin":"*"},
+                        content_type="application/json",body=json.dumps({
+                            "schema":"jamaica.departure-hint.v1","city":"Москва","source":"IP_APPROXIMATE"})))
+                    geo_page.goto(base,wait_until="domcontentloaded")
+                    geo_page.wait_for_function("()=>document.querySelector('#departure').value==='Москва'",timeout=10000)
+                    ensure("по IP" in geo_page.locator("#departureGeoStatus").inner_text(),
+                           "IP_CITY_HINT_NOT_LABELLED")
+                    geo_page.locator("#departure").select_option("Красноярск")
+                    geo_page.reload(wait_until="domcontentloaded")
+                    geo_page.wait_for_function("()=>document.querySelector('#departure').value==='Красноярск'",timeout=10000)
+                    ensure("сохранён" in geo_page.locator("#departureGeoStatus").inner_text(),
+                           "MANUAL_CITY_NOT_PRESERVED")
+                    geo_page.goto(base+"?country="+__import__("urllib.parse",fromlist=["quote"]).quote("Китай")+"&hotel=BAIYUN",wait_until="domcontentloaded")
+                    geo_page.wait_for_function("()=>document.querySelector('#departureGeoStatus').textContent.includes('сохранён')",timeout=10000)
+                    ensure(geo_page.locator("#destination").input_value()=="Китай",
+                           "SAVED_CITY_CLEARED_DEEP_LINK_COUNTRY")
+                    ensure(geo_page.locator("#hotelSearch").input_value()=="BAIYUN",
+                           "SAVED_CITY_CLEARED_DEEP_LINK_HOTEL")
+                    print("IP_CITY_BROWSER_AUTO_AND_MANUAL_OVERRIDE_PASS")
+                finally:
+                    geo_page.close()
+
 
 
 
@@ -913,6 +946,7 @@ def main():
                 # filter drawer with no horizontal page overflow.
                 mobile=browser.new_page(viewport={"width":390,"height":844})
                 try:
+                    mobile.route("**/departure-geo-config.json",lambda route:route.fulfill(status=200,content_type="application/json",body='{"schema":"jamaica.departure-geo-config.v1","enabled":false,"endpoint":""}'))
                     mobile.route("**/tour-visual-evidence.json",
                         lambda route: route.fulfill(status=200,
                             content_type="application/json",

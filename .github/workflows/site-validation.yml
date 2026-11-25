@@ -23,6 +23,7 @@ jobs:
       - name: Validate destinations, public wording and JavaScript
         run: |
           node scripts/test-site.mjs
+          node scripts/test-departure-geo.mjs
           node scripts/test-catalog-shards.mjs
           node scripts/test-country-offer-balance.mjs
           node scripts/test-month-offer-filters.mjs
@@ -33,6 +34,30 @@ jobs:
           node scripts/test-quote-price-only.mjs
           node scripts/test-hotel-media-feed.mjs
           node scripts/test-commons-hotel-media.mjs
+      - name: Verify deployed IP city endpoint before activation
+        if: github.event_name == 'pull_request'
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import './scripts/departure-geo.js';
+          const cfg=JSON.parse(fs.readFileSync('departure-geo-config.json','utf8'));
+          if(cfg.enabled){
+            const endpoint=globalThis.JamaicaDepartureGeo.endpoint(cfg);
+            assert.ok(endpoint,'Invalid city endpoint');
+            const r=await fetch(endpoint,{headers:{Origin:'https://rosak8-lgtm.github.io'},redirect:'error',signal:AbortSignal.timeout(12000)});
+            assert.equal(r.status,200);
+            assert.equal(r.headers.get('access-control-allow-origin'),'https://rosak8-lgtm.github.io');
+            assert.match(r.headers.get('cache-control')||'',/no-store/);
+            const result=await r.json();
+            assert.deepEqual(Object.keys(result).sort(),['city','schema','source']);
+            assert.equal(result.schema,'jamaica.departure-hint.v1');
+            assert.equal(result.source,'IP_APPROXIMATE');
+            const choices=[...fs.readFileSync('index.html','utf8').match(/<select id="departure"[^>]*>(.*?)<\/select>/s)[1].matchAll(/<option value="([^"]+)"/g)].map(x=>x[1]);
+            assert.ok(result.city===null||choices.includes(result.city));
+            console.log('LIVE_IP_CITY_WORKER_HTTP_CORS_PRIVACY_PASS');
+          }
+          JS
       - name: Validate current public tour feed and multi-country customer path without Node
         run: |
           python3 -B scripts/local_site_qa.py
