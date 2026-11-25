@@ -48,4 +48,7 @@ assert.ok(css.includes(".sourceSearchCoverage")&&
  css.includes(".sourceSearchChip")&&
  css.includes("@media(max-width:580px)"),
  "Scanning geography must have an accessible mobile experience");
+assert.ok(index.includes('const counts=window.JamaicaCountryOffers.countryCounts(verifiedRows(),$("departure").value.trim())')&&
+ index.includes('counts.get(item.country)||0')&&index.includes('"в поиске"'),
+ "Coverage chips must distinguish actual city-specific verified tours from source-only search directions");
 console.log("JAMAICA_NONCOMMERCIAL_SEARCH_COVERAGE_WITH_ZERO_VERIFIED_TOURS_PASS");
