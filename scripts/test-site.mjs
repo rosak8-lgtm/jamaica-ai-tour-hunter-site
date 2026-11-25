@@ -103,7 +103,7 @@ assert.ok(!page.includes('онлайн-бронирование туров</titl
 
 assert.ok(page.includes('const card=el("article","offerCard tourResultCard")'));
 assert.ok(page.includes('favoriteIds.has(x.id)')&&page.includes('localStorage.setItem('));
-assert.ok(page.includes('ЛУЧШАЯ ЦЕНА')&&
+assert.ok(page.includes('✓ Проверено JAMAICA')&&page.includes('window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs)')&&
   page.includes('checked disabled aria-label="Обязательное условие')&&
   page.includes('let list=verifiedRows().filter(x=>')&&
   previewSelection.includes('Перелёт обратно')&&
@@ -143,7 +143,7 @@ assert.ok(page.includes('for(let n=3;n<=180;n++)'),'Every supported 3–180-nigh
 assert.ok(page.includes('(!date||x.depart_date>=date)&&(!dateTo||x.depart_date<=dateTo)'),
  'Preview results must respect the inclusive date interval');
 assert.ok(page.includes('sampled_departure_months'),'Source-backed months sampled this cycle should be visible');
-assert.ok(page.includes('Месяцы, из которых проверялись прайс-листы'),'Do not claim all months were checked');
+assert.ok(page.includes('Месяцы, по которым выполнен поиск'),'Do not claim all months were checked');
 
 assert.ok(!page.includes('id="destinations"'),'Do not put 251 empty country cards between search and real tours');
 assert.ok(!page.includes('id="destinationGrid"'),'Country-card wall must be absent');
@@ -540,7 +540,7 @@ assert.ok(page.includes('const priorities=new Map([["Таиланд",0],["Кит
  'Country priority remains in the search datalist');
 assert.ok(!page.includes('id="allCountrySelector"'),"No duplicate country chooser in the results");
 assert.ok(page.includes('fullCountryNames.length'));
-assert.ok(page.includes('Непроверенные карточки скрыты')&&page.includes('Нет туров с обязательной проверкой'),'Empty-state must never substitute source-only tours for absent strict bot proof');
+assert.ok(page.includes('Пока нет свежих вариантов по выбранным параметрам')&&page.includes('Показываем только актуальные проверенные варианты'),'Empty-state must never substitute source-only tours for absent strict bot proof');
 assert.ok(page.includes('data.countries_status'));
 assert.ok(page.includes('if(document.visibilityState==="visible"){')&&
  page.includes('await loadVisualProofs(false);')&&page.includes('await loadTourPreviews();')&&page.includes('catalogRefreshInFlight'),
@@ -619,3 +619,10 @@ new vm.Script(routeScripts[0],{filename:'jamaica-route.js'});
 console.log('JAMAICA_GLOBAL_DIRECTORY_PASS countries='+directory.total_countries+' hotels='+directory.total_hotels);
 
 console.log('JAMAICA_TOUR_DETAILS_QA_PASS 251 countries, 159 historical hotels, flexible search, offer -> tour -> checkout, no unsupported sales');
+
+// Branding must not expose internal supplier selection or bot observations.
+for(const name of ['index.html','preview.html','application-detail.html','quote.html','route.html','hotel.html','tour.html','account.html','checkout.html']){
+ const source=fs.readFileSync(name,'utf8');
+ assert.ok(!/Библио[-‑– ]?Глобус|PEGAS|Пегас|ЛУЧШАЯ ЦЕНА|зел[её]н(?:ый|ые|ых|ыми) (?:самол[её]т|рейс|перел[её]т)|\b(?:ботом|бота)\b/i.test(source),name+': internal supplier language must not appear in customer pages');
+}
+console.log('JAMAICA_BRAND_ONLY_CUSTOMER_COPY_PASS');
