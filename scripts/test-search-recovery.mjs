@@ -64,3 +64,12 @@ assert.equal(pick(candidates,option,"Иркутск",()=>false),null);
 assert.equal(pick(candidates,{...option,country:"Египет"},"Иркутск"),null);
 assert.equal(pick(candidates,option,"Красноярск"),null);
 console.log("JAMAICA_ACTUAL_ALTERNATIVE_CARD_SELECTION_PASS");
+
+// A selected country must not hide the ninth or later verified destination.
+const broadCountries=["Вьетнам","Таиланд","Индия","Египет","Турция","Индонезия","Мальдивы","Сейшелы","Шри-Ланка","ОАЭ","Россия","Абхазия"];
+const broad=broadCountries.map(country=>row("Иркутск",country,"2026-12-04",9));
+const allAlternatives=otherCountryOptions(broad,q);
+assert.equal(allAlternatives.length,broadCountries.length);
+assert.deepEqual(new Set(allAlternatives.map(x=>x.country)),new Set(broadCountries));
+assert.equal(otherCountryOptions([...broad,row("Москва","Япония","2026-12-04",9)],q).length,broadCountries.length);
+console.log("JAMAICA_ALL_ELIGIBLE_ALTERNATIVE_COUNTRIES_PASS");
