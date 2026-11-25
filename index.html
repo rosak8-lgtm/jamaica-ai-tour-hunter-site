@@ -402,6 +402,7 @@ form.addEventListener("submit",e=>{
  sourceFilterOptions();runSearch(true);
  if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
  if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();
+ requestFreshSearchCatalog();
 });
 async function loadOffers(){
  inventoryLoading=true;
@@ -622,6 +623,7 @@ let previewsLoaded=false, previewPriceFresh=false, previewPriceListed=false, pre
 let previewTruncated=false,previewCandidateTotal=0;
 let previewLoadSerial=0,previewFullLoaded=true;
 let catalogRefreshInFlight=false;
+let lastCatalogRefreshAt=0, searchRefreshTimer=null;
 
 const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
   .map(c=>c.n).filter(name=>typeof name==="string");
@@ -1130,7 +1132,9 @@ function renderTourPreviews(reset=true){
        form.requestSubmit();
      });actions.append(b);
    }
-   if(actions.childElementCount)$("searchProgress").querySelector("p").after(actions);
+   const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
+   refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
+   $("searchProgress").querySelector("p").after(actions);
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
@@ -1273,13 +1277,32 @@ async function loadTourPreviews(){
   sourceFilterOptions();renderTourPreviews(true);
  }
 }
+function requestFreshSearchCatalog(force=false){
+ if(catalogRefreshInFlight||searchRefreshTimer!==null)return;
+ // Only static published files, no supplier requests.
+ if(Date.now()-lastCatalogRefreshAt<(force?5000:30000))return;
+ searchRefreshTimer=setTimeout(()=>{
+  searchRefreshTimer=null;void refreshCatalog();
+ },250);
+}
 async function refreshCatalog(){
  if(catalogRefreshInFlight)return;
  catalogRefreshInFlight=true;
  try{
   await loadVisualProofs(false);
   await loadTourPreviews();
- }finally{catalogRefreshInFlight=false;}
+  // Retry once if Pages briefly serves mismatched publication generations.
+  const missing=previewRecords.some(row=>row.status==="REFERENCE_PRICE_LIST_ONLY"&&
+   (!visualProofs.has(row.id)||(row.price_source==="BG_EXACT_SELECTED_GREEN_BROWSER"&&
+    row.price_observed_at_utc!==visualProofs.get(row.id)?.observed_at_utc)));
+  if(missing){
+   await new Promise(resolve=>setTimeout(resolve,650));
+   await loadVisualProofs(false);
+   await loadTourPreviews();
+  }
+ }finally{
+  lastCatalogRefreshAt=Date.now();catalogRefreshInFlight=false;
+ }
 }
 refreshCatalog();
 // A late IP hint must never override a customer who has begun searching.
