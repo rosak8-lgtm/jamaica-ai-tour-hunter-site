@@ -101,5 +101,26 @@ function dateOptions(rows,q,extra=()=>true){
  return results.sort((a,b)=>Number(a.changeDates)+Number(a.changeNights)-Number(b.changeDates)-Number(b.changeNights)||
   Number(a.changeNights)-Number(b.changeNights)||a.date.localeCompare(b.date));
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions});
+// Alternatives from other cities must be a separate, explicit choice.
+// Keep the requested country, date range, nights and extra filters.
+// If they do not match, do not claim an alternative.
+function otherCities(rows,q,extra=()=>true){
+ const norm=x=>String(x||"").trim().toLocaleLowerCase("ru");
+ if(!norm(q.origin))return [];
+ const allowed=Array.isArray(q.allowedOrigins)?new Set(q.allowedOrigins):null;
+ const cities=new Map();
+ for(const x of rows){
+  if(!x||typeof x.origin!=="string"||!norm(x.origin)||norm(x.origin)===norm(q.origin)||
+     (allowed&&!allowed.has(x.origin))||
+     (q.country&&norm(x.country)!==norm(q.country))||
+     !/^\d{4}-\d{2}-\d{2}$/.test(x.depart_date||"")||
+     (q.from&&x.depart_date<q.from)||(q.to&&x.depart_date>q.to)||
+     (q.nights.length&&!q.nights.includes(x.nights))||!extra(x))continue;
+  if(!cities.has(x.origin))cities.set(x.origin,{origin:x.origin,count:0,countries:new Set()});
+  const g=cities.get(x.origin);g.count++;g.countries.add(x.country);
+ }
+ return [...cities.values()].sort((a,b)=>b.count-a.count||a.origin.localeCompare(b.origin,"ru"))
+  .slice(0,8).map(g=>({...g,countries:[...g.countries].sort((a,b)=>a.localeCompare(b,"ru"))}));
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities});
 })(globalThis);

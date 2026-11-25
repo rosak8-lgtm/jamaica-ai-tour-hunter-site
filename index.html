@@ -1208,6 +1208,20 @@ function renderTourPreviews(reset=true){
        form.requestSubmit();
      });actions.append(b);
    }
+   const cityOptions=window.JamaicaSearchRecovery.otherCities(verifiedRows(),
+     {origin,country,from:date,to:dateTo,nights,allowedOrigins:[...$("departure").options].map(o=>o.value)},extra);
+   for(const option of cityOptions){
+     const b=el("button","btn btnWhite","Другой город: "+option.origin+" · "+option.count.toLocaleString("ru-RU")+" вар.");
+     b.type="button";
+     b.addEventListener("click",()=>{
+       departureUserInteracted=true;
+       $("departure").value=option.origin;
+       $("departureGeoStatus").textContent="Город выбран вами.";
+       try{window.JamaicaDepartureGeo.remember(localStorage,option.origin,[...$("departure").options].map(o=>o.value));}catch{}
+       sourceFilterOptions();form.requestSubmit();
+     });
+     actions.append(b);
+   }
    const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
    $("searchProgress").querySelector("p").after(actions);

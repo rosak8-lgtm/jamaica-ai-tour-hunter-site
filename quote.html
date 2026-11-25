@@ -25,6 +25,14 @@ button:disabled{opacity:.5;cursor:not-allowed}.hide{display:none!important}
 <p class="note" id="quoteNotice" role="status">Заявка ещё не создана. Оплата не начата.</p>
 <label><input type="checkbox" id="onRequestAccept"> Согласен на отель со статусом «под запрос» — окончательное подтверждение гостиницы может потребовать времени, а при отказе применяется предусмотренный договором возврат</label>
 <button type="button" id="checkQuote" disabled>Проверить цену, рейсы и гостиницу</button>
+<div id="saveSelectionPanel" class="hide">
+<h2>Сохранить выбранный вариант</h2>
+<p class="sub">Скопируйте параметры путешествия для дальнейшего расчёта. Это не отправка заявки и не бронь.</p>
+<textarea id="selectionText" readonly rows="6" aria-label="Параметры выбранного путешествия" style="box-sizing:border-box;width:100%;font:inherit;resize:vertical;padding:10px;border:1px solid #ddd;border-radius:8px"></textarea>
+<button type="button" id="copySelection">Скопировать параметры</button>
+<p id="selectionCopyStatus" role="status" aria-live="polite"></p>
+<a href="./#offers">Вернуться к поиску туров</a>
+</div>
 <div id="priceOnlyResult" class="hide" role="status" aria-live="polite">
 <h2>Стоимость для выбранного состава</h2>
 <div class="price" id="priceOnlyValue"></div>
@@ -108,6 +116,14 @@ async function init(){
     notice("Дата вылета наступила или прошла. Проверка стоимости и бронирование недоступны; выберите новый будущий вылет в поиске туров.");
     return;
   }
+  $("selectionText").value=[
+   "JAMAICA — выбранное путешествие (требуется повторная проверка)",
+   "Идентификатор варианта: "+selected.id,
+   $("hotelTitle").textContent,
+   $("tripSummary").textContent,
+   "Стоимость и места не подтверждены для оформления. Заявка не отправлена, бронь не создана."
+  ].join("\n");
+  $("saveSelectionPanel").classList.remove("hide");
   auth=sessionStorage.getItem("jamaica_auth_token")||"";
   const canBook=supportedParty&&cfgReady(config);
   const canPrice=cfgPriceReady(config);
@@ -132,6 +148,17 @@ async function init(){
   }
  }catch(e){notice("Не удалось получить актуальные сведения о выбранной поездке. Выберите другой вариант.");}
 }
+$("copySelection").addEventListener("click",async()=>{
+ const field=$("selectionText");
+ if(!field.value)return;
+ try{
+  await navigator.clipboard.writeText(field.value);
+  $("selectionCopyStatus").textContent="Параметры скопированы. Заявка не отправлена.";
+ }catch(e){
+  field.focus();field.select();
+  $("selectionCopyStatus").textContent="Текст выделен. Скопируйте его вручную. Заявка не отправлена.";
+ }
+});
 $("checkQuote").addEventListener("click",async()=>{
  if(!selected||auth.length<32)return;
  const currentProofs=await window.JamaicaPublicVisualPolicy.load();

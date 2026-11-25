@@ -12,7 +12,7 @@ const depart=new Date(Date.now()+21*86400000).toISOString().slice(0,10);
 function element(){
  const flags=new Set(["hide"]);
  return {
-  disabled:true, checked:false,textContent:"",
+  disabled:true, checked:false,textContent:"",value:"",focus(){},select(){},
   listeners:{},
   classList:{
    add:c=>flags.add(c),
@@ -27,8 +27,9 @@ function setup(rooms,config,priceReply,proofOK=true){
   "quoteNotice","hotelTitle","tripSummary","checkQuote","quoteResult",
   "quotedPrice","quotedTerms","contractButton","onRequestAccept",
   "priceOnlyResult","priceOnlyValue","priceOnlyTerms",
+  "saveSelectionPanel","selectionText","copySelection","selectionCopyStatus",
  ].map(x=>[x,element()]));
- const requests=[];
+ const requests=[],copied=[];
  const T={
   fromQuery:()=>rooms,
   totals:()=>({adults:rooms.reduce((n,r)=>n+r.adults,0),
@@ -59,9 +60,9 @@ function setup(rooms,config,priceReply,proofOK=true){
      eligible:(p,proofs)=>p?.id===previewId&&proofs?.has(previewId)===true
    }},
   document:{getElementById:id=>els[id]},location,URL,URLSearchParams,
-  sessionStorage:{getItem:()=>("x".repeat(48))},fetch:fetchMock,Intl};
+  sessionStorage:{getItem:()=>("x".repeat(48))},navigator:{clipboard:{writeText:async text=>copied.push(text)}},fetch:fetchMock,Intl};
  vm.runInNewContext(inline,ctx,{filename:"quote.html"});
- return {els,requests};
+ return {els,requests,copied};
 }
 const config={schema:"jamaica.checkout-config.v1",price_checks_enabled:true,
  private_price_api_enabled:true,auth_api_enabled:true,
@@ -156,3 +157,19 @@ async function tick(){await new Promise(r=>setImmediate(r));}
  assert.equal(v.els.priceOnlyResult.classList.contains("hide"),false);
 }
 console.log("JAMAICA private-only all-party price quote page: PASS");
+
+{
+ const v=setup(rooms,{schema:"jamaica.checkout-config.v1"},supplierReply());
+ await tick();
+ assert.equal(v.els.checkQuote.disabled,true);
+ assert.equal(v.els.saveSelectionPanel.classList.contains("hide"),false);
+ assert.match(v.els.selectionText.value,/Иркутск/);
+ assert.match(v.els.selectionText.value,/Заявка не отправлена/);
+ await v.els.copySelection.listeners.click();
+ assert.equal(v.copied.length,1);
+ assert.equal(v.requests.length,2);
+ const invalid=setup(rooms,config,supplierReply(),false);
+ await tick();
+ assert.equal(invalid.els.saveSelectionPanel.classList.contains("hide"),true);
+}
+console.log("JAMAICA_NO_SEND_SELECTION_COPY_PASS");
