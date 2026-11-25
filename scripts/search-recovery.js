@@ -122,5 +122,15 @@ function otherCities(rows,q,extra=()=>true){
  return [...cities.values()].sort((a,b)=>b.count-a.count||a.origin.localeCompare(b.origin,"ru"))
   .slice(0,8).map(g=>({...g,countries:[...g.countries].sort((a,b)=>a.localeCompare(b,"ru"))}));
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities});
+// Select an actual row for a displayed option, never synthesize a tour.
+function representative(rows,opt,origin,extra=()=>true,compare){
+ if(!Array.isArray(rows)||!opt||!Array.isArray(opt.nights)||!origin)return null;
+ const norm=x=>String(x||"").trim().toLocaleLowerCase("ru");
+ const matches=rows.filter(x=>x&&norm(x.origin)===norm(origin)&&
+   norm(x.country)===norm(opt.country)&&x.depart_date===opt.date&&
+   opt.nights.includes(x.nights)&&extra(x));
+ if(typeof compare==="function")matches.sort(compare);
+ return matches[0]||null;
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,representative});
 })(globalThis);

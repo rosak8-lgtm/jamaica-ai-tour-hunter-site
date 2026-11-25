@@ -187,6 +187,7 @@
  <strong>Другие страны с найденными вылетами</strong>
  <p class="micro">Выберите конкретную дату. Если длительность или даты отличаются от вашего запроса, это указано на кнопке.</p>
  <div id="exactCountryChoices" class="quickCountryChips" role="group" aria-label="Конкретные альтернативные вылеты"></div>
+ <div id="alternativeTourCards" class="alternativeTourCards" aria-label="Конкретные туры в других странах"></div>
 </section>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
@@ -1039,12 +1040,13 @@ function renderTourPreviews(reset=true){
  $("exactDateOptions").hidden=!dateOptions.length;
  // Concrete alternative countries remain visible even when the selected
  // country already has matches. The current filters are never changed silently.
- const options=window.JamaicaSearchRecovery.otherCountryOptions(verifiedRows(),
-   {origin,country,from:date,to:dateTo,nights,allowOtherCountries:!resortFilter},
-   x=>(!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
+ const alternativeRows=verifiedRows();
+ const alternativeFilter=x=>(!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
      (!budget||!partyTwoAdults||(referencePrice(x)!==null&&referencePrice(x)<=budget*2))&&
-     (!$("favoritesOnly").checked||favoriteIds.has(x.id)));
- const choices=document.createDocumentFragment();
+     (!$("favoritesOnly").checked||favoriteIds.has(x.id));
+ const options=window.JamaicaSearchRecovery.otherCountryOptions(alternativeRows,
+   {origin,country,from:date,to:dateTo,nights,allowOtherCountries:!resortFilter},alternativeFilter);
+ const choices=document.createDocumentFragment(),alternativeCards=document.createDocumentFragment();
  for(const opt of options){
    const changes=[opt.changeDates?"другие даты":"",opt.changeNights?"другая длительность":""].filter(Boolean);
    const control=el("button","quickCountryChip",opt.country+" · "+
@@ -1058,8 +1060,27 @@ function renderTourPreviews(reset=true){
      form.requestSubmit();
    });
    choices.append(control);
+   const candidate=window.JamaicaSearchRecovery.representative(
+     alternativeRows,opt,origin,alternativeFilter,partyTwoAdults?previewPriceCompare:undefined);
+   if(!candidate)continue;
+   const card=el("article","alternativeTourCard");
+   card.dataset.alternativePreviewId=candidate.id;
+   card.append(el("span","countryBadge",candidate.country));
+   card.append(el("strong","",candidate.hotel));
+   card.append(el("span","micro",candidate.origin+" · "+opt.date.split("-").reverse().join(".")+
+     " · "+candidate.nights+" ноч."));
+   if(changes.length)card.append(el("span","micro","Отличается от запроса: "+changes.join(", ")));
+   const amount=partyTwoAdults?referencePrice(candidate):null;
+   card.append(el("strong","alternativeTourPrice",amount===null?"Стоимость уточняется":
+     new Intl.NumberFormat("ru-RU").format(amount)+" ₽ за 2 взрослых на момент проверки"));
+   const details=el("a","btn btnWhite","Посмотреть тур →");
+   details.href=(isApplicationReference(candidate)?"application-detail.html?id=":"preview.html?id=")+
+     encodeURIComponent(candidate.id)+partySuffix;
+   card.append(details);
+   alternativeCards.append(card);
  }
  $("exactCountryChoices").replaceChildren(choices);
+ $("alternativeTourCards").replaceChildren(alternativeCards);
  $("exactCountryOptions").hidden=!options.length;
  // Mandatory evidence cannot be turned off by the customer.
  $("otherCountries").hidden=!country;
