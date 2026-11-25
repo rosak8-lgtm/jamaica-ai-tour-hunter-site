@@ -60,6 +60,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
     <div class="tag">Следующий шаг</div>
     <h2>Проверка стоимости</h2>
     <p class="sub">Даты и тип номера сохранены. Для оплаты необходима актуальная подтверждённая стоимость, места, договор и действующее бронирование.</p>
+    <div id="customerInquiry" hidden></div>
     <div id="bookingStatus" class="notice">Сейчас предложение нельзя оплатить: подтверждённая котировка и бронирование ещё не подключены.</div>
     <a class="btn" id="quoteLink" href="./#offers">Проверить стоимость и условия</a>
     <a class="btn secondary" href="./#offers">Выбрать другой вариант</a>
@@ -76,6 +77,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
 <script src="./scripts/public-visual-policy.js"></script>
 <script src="./scripts/traveler-party.js"></script>
 <script src="./scripts/preview-alternatives.js"></script>
+<script src="./scripts/customer-inquiry.js"></script>
 <script>
 (function(){
 "use strict";
@@ -183,6 +185,7 @@ function showAlternatives(rows,p,done,total){
 }
 let selectedProofs=new Map();
 let activeSelection=null;
+void window.JamaicaCustomerInquiry.mount($("customerInquiry"),{getSelection:()=>activeSelection,rooms,isCurrent:row=>window.JamaicaPublicVisualPolicy.eligible(row,selectedProofs)&&row.depart_date>new Date().toISOString().slice(0,10)});
 function expireSelection(){
  if(!activeSelection||window.JamaicaPublicVisualPolicy.eligible(activeSelection,selectedProofs))return;
  activeSelection=null;
