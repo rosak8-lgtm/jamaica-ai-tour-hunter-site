@@ -92,7 +92,7 @@ def main():
                         body=json.dumps(empty_proofs,ensure_ascii=False)))
                 page.goto(base,wait_until="domcontentloaded")
                 page.wait_for_function(
-                   "()=>document.querySelector('#visualProofNotice')?.textContent?.includes('Нет свежих совпадений')",
+                   "()=>document.querySelector('#visualProofNotice')?.textContent?.includes('Пока нет свежих проверенных вариантов')",
                    timeout=18000)
                 ensure(page.locator("#previewCards article.offerCard").count()==0,
                        "UNVERIFIED_PRICE_LIST_TOURS_WERE_DISPLAYED")
@@ -112,7 +112,7 @@ def main():
                     page.goto(base+"quote.html?preview="+rows[0]["id"]+
                               "&adults=2&kids=0",wait_until="domcontentloaded")
                     page.wait_for_function(
-                        "()=>document.querySelector('#quoteNotice')?.textContent?.includes('не прошёл обязательные проверки')",
+                        "()=>document.querySelector('#quoteNotice')?.textContent?.includes('нет свежего подтверждения')",
                         timeout=12000)
                     ensure(page.locator("#checkQuote").is_disabled(),
                            "DIRECT_PRICE_QUERY_BYPASSED_VISUAL_GATE")
