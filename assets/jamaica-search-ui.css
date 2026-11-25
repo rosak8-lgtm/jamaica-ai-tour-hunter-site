@@ -291,3 +291,10 @@ body{background:var(--bg);color:var(--ink)}
 .nightPicker .nightActions button:last-child{background:#007f86;color:white}
 #nights[hidden],#filterNights[hidden]{display:none!important}
 @media(max-width:790px){.nightPanel{position:static;width:100%;margin-top:6px;box-shadow:none}.nightChoices{grid-template-columns:repeat(2,minmax(0,1fr))}.nightPicker .nightChoice{font-size:12px;min-height:44px}}
+
+/* V57: concrete alternatives stay separate from selected-country results. */
+.alternativeTourCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;margin:10px 0 14px}
+.alternativeTourCard{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px;border:1px solid #d9e5df;border-radius:14px;background:#fff;color:#193b32;min-width:0;overflow-wrap:anywhere}
+.alternativeTourCard .alternativeTourPrice{margin-top:auto;color:#176345}
+.alternativeTourCard .btn{width:100%;text-align:center;box-sizing:border-box}
+@media(max-width:580px){.alternativeTourCards{grid-template-columns:1fr}.alternativeTourCard{padding:12px}}
