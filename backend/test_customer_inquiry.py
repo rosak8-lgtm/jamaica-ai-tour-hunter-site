@@ -27,9 +27,15 @@ class Tests(unittest.TestCase):
         self.store=InquiryStore(self.root/"inquiries.sqlite",b"x"*32,"test-v1",LocalCatalog(self.root))
         self.body={"request_id":"a"*32,"preview_id":self.pid,"rooms":[{"adults":2,"child_ages":[6]}],"contact":{"kind":"email","value":"test@example.com"},"consent":True,"policy_version":"test-v1"}
     def tearDown(self):self.tmp.cleanup()
+    def write_private_json(self,name,value):
+        path=self.root/name
+        fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|os.O_NOFOLLOW,0o600)
+        with os.fdopen(fd,"w",encoding="utf-8") as stream:
+            os.fchmod(stream.fileno(),0o600)
+            json.dump(value,stream)
     def write(self):
         for name,value in (("tour-previews.json",self.feed),("tour-visual-evidence.json",self.proofs)):
-            (self.root/name).write_text(json.dumps(value))
+            self.write_private_json(name,value)
     def test_receive_once_and_no_booking(self):
         a=self.store.submit(self.body,"actor",self.now)
         self.assertEqual(a,self.store.submit(self.body,"actor",self.now))
@@ -54,14 +60,22 @@ class Tests(unittest.TestCase):
         self.assertEqual((self.root/"inquiries.sqlite").stat().st_mode&0o777,0o600)
         (self.root/"inquiries.sqlite").chmod(0o644)
         with self.assertRaises(InquiryError):InquiryStore(self.root/"inquiries.sqlite",b"x"*32,"test-v1",LocalCatalog(self.root))
+    def test_group_writable_catalog_rejected(self):
+        path=self.root/"tour-previews.json"
+        path.chmod(0o664)
+        with self.assertRaisesRegex(InquiryError,"TOUR_NOT_CURRENT"):
+            self.store.submit(self.body,"actor",self.now)
+        self.write()
+        self.assertEqual(path.stat().st_mode&0o777,0o600)
+        self.assertEqual(self.store.submit(self.body,"actor",self.now)["status"],"INQUIRY_RECEIVED")
     def test_second_source(self):
         pid="pg_"+"b"*24
         row={**self.row,"id":pid,"status":"PEGAS_APPLICATION_PRICE_REFERENCE_ONLY","price_source":"PEGAS_OPEN_APPLICATION_MANDATORY_FEES_INCLUDED","evidence":{"hotel_filter_verified":True,"flight_filter_verified":True,"cheapest_eligible_price_clicked":True,"final_price_observed":True,"mandatory_fees_included":True,"observed_at_utc":self.stamp}}
         feed={"schema":"jamaica.pegas-reference-catalog.v1","bookable":False,"quote_verified":False,"refreshed_at_utc":self.stamp,"previews":[row]}
-        (self.root/"application-reference.json").write_text(json.dumps(feed))
+        self.write_private_json("application-reference.json",feed)
         self.assertEqual(self.store.submit({**self.body,"preview_id":pid},"actor",self.now)["status"],"INQUIRY_RECEIVED")
         row["evidence"]["mandatory_fees_included"]=False
-        (self.root/"application-reference.json").write_text(json.dumps(feed))
+        self.write_private_json("application-reference.json",feed)
         with self.assertRaises(InquiryError):self.store.submit({**self.body,"request_id":"b"*32,"preview_id":pid},"actor",self.now)
     def test_http_loopback(self):
         server=ThreadingHTTPServer(("127.0.0.1",0),handler(self.store,"s"*32))
