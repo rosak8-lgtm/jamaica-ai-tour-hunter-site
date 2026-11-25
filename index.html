@@ -1132,6 +1132,18 @@ function renderTourPreviews(reset=true){
        form.requestSubmit();
      });actions.append(b);
    }
+   const nearest=window.JamaicaSearchRecovery.departures(verifiedRows(),{origin,country,from:date,to:dateTo,nights,allowOtherCountries:!resortFilter},extra);
+   for(const dep of nearest){
+     const formatted=dep.date.split("-").reverse().join(".");
+     const label=dep.country+" · "+formatted+" · "+dep.nights.join(", ")+" ноч. · "+dep.count.toLocaleString("ru-RU")+" вар.";
+     const b=el("button","btn btnWhite",label);b.type="button";
+     b.classList.add("exactDepartureAlternative");
+     b.addEventListener("click",()=>{
+       $("dateFrom").value=dep.date;$("dateTo").value=dep.date;$("dateTo").min=dep.date;
+       if($("destination").value!==dep.country){$("destination").value=dep.country;sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";}
+       form.requestSubmit();
+     });actions.append(b);
+   }
    const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
    $("searchProgress").querySelector("p").after(actions);
