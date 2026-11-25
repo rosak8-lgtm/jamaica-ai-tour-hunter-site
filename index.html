@@ -236,6 +236,7 @@
 <script src="./scripts/traveler-ui.js"></script>
 <script src="./scripts/departure-geo.js"></script>
 <script src="./scripts/search-recovery.js"></script>
+<script src="./scripts/application-reference.js"></script>
 <script>
 (function(){
 "use strict";
@@ -519,21 +520,24 @@ let previewRecords=[],previewVisible=0;
 let lastSourceCoverage=[];
 let sourceCoverageFirstExpanded=false;
 let visualProofs=new Map();
-const verifiedRows=()=>window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs);
+let applicationRows=[];
+const isApplicationReference=x=>/^pg_[a-f0-9]{24}$/.test(x.id||"");
+const verifiedRows=()=>[...window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs),
+ ...applicationRows.filter(x=>window.JamaicaApplicationReference.eligible(x))];
 /* Simple local browser saved tours; does not make supplier bookings. */
 const favoriteStoreKey="jamaica.favorite-tour-ids.v1";
 const favoriteIds=new Set();
 try{
  const saved=JSON.parse(localStorage.getItem(favoriteStoreKey)||"[]");
  if(Array.isArray(saved))for(const id of saved.slice(0,300)){
-  if(typeof id==="string"&&/^p_[a-f0-9]{24}$/.test(id))favoriteIds.add(id);
+  if(typeof id==="string"&&/^(?:p|pg)_[a-f0-9]{24}$/.test(id))favoriteIds.add(id);
  }
 }catch(error){}
 function updateFavoriteCounter(){
  $("favoritesCount").textContent=String(favoriteIds.size);
 }
 function saveFavorite(id){
- if(!/^p_[a-f0-9]{24}$/.test(id))return false;
+ if(!/^(?:p|pg)_[a-f0-9]{24}$/.test(id))return false;
  if(favoriteIds.has(id))favoriteIds.delete(id);
  else{
   if(favoriteIds.size>=300)return false;
@@ -639,6 +643,7 @@ let lastCatalogRefreshAt=0, searchRefreshTimer=null;
 const fullCountryNames=JSON.parse(document.getElementById("countries-data").textContent)
   .map(c=>c.n).filter(name=>typeof name==="string");
 function referencePrice(x){
+ if(isApplicationReference(x))return window.JamaicaApplicationReference.eligible(x)?x.price_reference_rub:null;
  if(!previewPriceListed)return null;
  return window.JamaicaPublicVisualPolicy.observedPrice(x,visualProofs);
 }
@@ -778,6 +783,7 @@ function previewCardPhoto(x){
  area.dataset.hotelId=String(x.hotel_id);
  area.dataset.mediaPolicy="EXACT_HOTEL_ONLY";
  area.append(fallback);
+ if(isApplicationReference(x))return area; // No unverified cross-provider hotel photo mapping.
  const candidates=[],seen=new Set();
  let cursor=0;
  function showVerifiedPlaceholder(){
@@ -1064,12 +1070,12 @@ function renderTourPreviews(reset=true){
  if(!list.length&&previewsLoaded){
    const requested=$("destination").value.trim();
    target.append(el("div","empty",
-      requested?"Для направления «"+requested+"» сейчас нет туров со свежей меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками. Непроверенные карточки скрыты.":
+      applicationRows.length?"Нет свежих предложений по выбранным параметрам. Измените условия поиска.":requested?"Для направления «"+requested+"» сейчас нет туров со свежей меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками. Непроверенные карточки скрыты.":
       "Нет туров с обязательной проверкой «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков. Непроверенные карточки не публикуются."));
  }
  for(const x of list.slice(previewVisible,previewVisible+30)){
    const card=el("article","offerCard tourResultCard");
-   card.dataset.visualVerified="BEST_PRICE_BOTH_GREEN";
+   card.dataset.visualVerified=isApplicationReference(x)?"APPLICATION_PRICE_AND_FILTERS":"BEST_PRICE_BOTH_GREEN";
    card.dataset.previewId=x.id;
    card.append(previewCardPhoto(x));
    if(window.JamaicaPublicVisualPolicy.eligible(x,visualProofs)){
@@ -1083,6 +1089,9 @@ function renderTourPreviews(reset=true){
      card.append(label);
    }
 
+   if(isApplicationReference(x)){
+     card.append(el("div","visualEvidenceStatus","✓ Проверены фильтры наличия и стоимость внутри заявки. Перед оформлением нужна повторная проверка."));
+   }
    const info=el("div","tourResultMain");
    info.append(el("span","countryBadge",x.country));
    info.append(el("h3","",x.country+" · "+x.hotel));
@@ -1108,13 +1117,14 @@ function renderTourPreviews(reset=true){
 
    const priceBox=el("div","tourResultPrice");
    priceBox.append(el("small","eligibilityUnverified",
+     isApplicationReference(x)?"✓ Стоимость наблюдалась внутри заявки с обязательными сборами. Бронь и оплата не подтверждены.":
      "✓ Метка «ЛУЧШАЯ ЦЕНА» и оба зелёных рейса зафиксированы на выбранном варианте. Места, окончательная стоимость, договор и оплата требуют отдельной проверки."));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      const priceTitle=el("strong","", "Цена на момент проверки на 2 взрослых: ");
      const priceLink=el("a","referenceAmount",
        new Intl.NumberFormat("ru-RU").format(reference)+" ₽");
-     priceLink.href="preview.html?id="+encodeURIComponent(x.id)+partySuffix;
+     priceLink.href=(isApplicationReference(x)?"application-detail.html?id=":"preview.html?id=")+encodeURIComponent(x.id)+partySuffix;
      priceLink.setAttribute("aria-label","Посмотреть детали тура и проверить стоимость");
      priceLink.style.textDecoration="underline";priceTitle.append(priceLink);
      priceBox.append(priceTitle);
@@ -1132,7 +1142,7 @@ function renderTourPreviews(reset=true){
        "Без проверенной цены и подтверждения мест оплата недоступна."));
    }
    const details=el("a","btn btnWhite","Посмотреть тур →");
-   details.href="preview.html?id="+encodeURIComponent(x.id)+partySuffix;
+   details.href=(isApplicationReference(x)?"application-detail.html?id=":"preview.html?id=")+encodeURIComponent(x.id)+partySuffix;
    priceBox.append(details);
    const save=el("button","saveTour",
      favoriteIds.has(x.id)?"♥ В избранном":"♡ Сохранить");
@@ -1167,6 +1177,12 @@ function renderTourPreviews(reset=true){
   "Проверяем обязательные условия туров…";
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
+ const hasApplicationRows=applicationRows.some(x=>window.JamaicaApplicationReference.eligible(x));
+ if(hasApplicationRows){
+   $("catalogBreadth").textContent="Свежие предложения по правилам проверки каждого источника. Найдено направлений из выбранного города: "+availableCountries.length+".";
+ }
+ $("visualProofOnly").nextElementSibling.textContent=hasApplicationRows?"✓ Проверка условий источника — обязательно":"✓ «ЛУЧШАЯ ЦЕНА» + ✈✈ оба зелёных — обязательно";
+ $("visualProofOnly").setAttribute("aria-label",hasApplicationRows?"Обязательная проверка условий каждого источника":"Обязательное условие: ЛУЧШАЯ ЦЕНА и два зелёных самолётика");
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
  $("searchRecoveryActions")?.remove();
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
@@ -1182,7 +1198,7 @@ function renderTourPreviews(reset=true){
      !diag.country?"По выбранной стране пока нет свежих карточек из этого города.":
      !diag.dates?"В выбранном диапазоне дат нет свежих карточек этой страны.":
      !diag.nights?"На выбранные даты есть туры, но другой длительности: "+diag.durations.join(", ")+" ноч.":"Другие фильтры исключили оставшиеся варианты.";
-   $("searchProgress").querySelector("p").textContent=reason+" Из города: "+diag.city+" · по стране: "+diag.country+" · по датам: "+diag.dates+" · по ночам: "+diag.nights+". Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков публикация запрещена.";
+   $("searchProgress").querySelector("p").textContent=reason+" Из города: "+diag.city+" · по стране: "+diag.country+" · по датам: "+diag.dates+" · по ночам: "+diag.nights+(hasApplicationRows?". Непроверенные предложения каждого источника скрыты.":". Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков публикация запрещена.");
    if(!previewFullLoaded)$("searchProgress").querySelector("p").append(" Каталог ещё загружается; результат предварительный.");
    const labels={nights:"Любая длительность",dates:"Все даты",both:"Все даты и длительности",countries:"Другие страны"};
    const actions=el("div","searchRecoveryActions");
@@ -1379,8 +1395,12 @@ async function refreshCatalog(){
  if(catalogRefreshInFlight)return;
  catalogRefreshInFlight=true;
  try{
+  const secondFeed=window.JamaicaApplicationReference.load();
   await loadVisualProofs(false);
   await loadTourPreviews();
+  applicationRows=await secondFeed;
+  if(applicationRows.length)previewsLoaded=true;
+  sourceFilterOptions();renderTourPreviews(true);
   // Retry once if Pages briefly serves mismatched publication generations.
   const missing=previewRecords.some(row=>row.status==="REFERENCE_PRICE_LIST_ONLY"&&
    (!visualProofs.has(row.id)||(row.price_source==="BG_EXACT_SELECTED_GREEN_BROWSER"&&
@@ -1424,6 +1444,9 @@ setInterval(()=>{
  if(document.visibilityState!=="visible"||catalogRefreshInFlight)return;
  const now=Date.now();
  let changed=false;
+ const previousApplicationCount=applicationRows.length;
+ applicationRows=applicationRows.filter(x=>window.JamaicaApplicationReference.eligible(x,now));
+ if(previousApplicationCount!==applicationRows.length)changed=true;
  for(const [id,proof] of visualProofs){
   if(now-Date.parse(proof.observed_at_utc)>15*60*1000){
    visualProofs.delete(id);changed=true;
