@@ -73,3 +73,14 @@ assert.equal(allAlternatives.length,broadCountries.length);
 assert.deepEqual(new Set(allAlternatives.map(x=>x.country)),new Set(broadCountries));
 assert.equal(otherCountryOptions([...broad,row("Москва","Япония","2026-12-04",9)],q).length,broadCountries.length);
 console.log("JAMAICA_ALL_ELIGIBLE_ALTERNATIVE_COUNTRIES_PASS");
+
+const flexibleCities=globalThis.JamaicaSearchRecovery.flexibleCities;
+const flexibleRows=[row("Москва","Китай","2026-12-12",9),row("Москва","Китай","2026-12-12",9),row("Москва","Вьетнам","2026-12-05",5),row("Красноярск","Таиланд","2026-12-04",9),row("Иркутск","Китай","2026-12-15",9),row("Омск","Китай","2026-02-30",9)];
+const fc=flexibleCities(flexibleRows,q);
+assert.deepEqual(fc.map(x=>[x.origin,x.country,x.date,x.count,x.changeCountry,x.changeDates,x.changeNights]),[["Москва","Китай","2026-12-12",2,false,true,false],["Красноярск","Таиланд","2026-12-04",1,true,false,false]]);
+assert.deepEqual(flexibleCities(flexibleRows,{...q,allowOtherCountries:false}).map(x=>x.origin),["Москва"]);
+assert.deepEqual(flexibleCities(flexibleRows,{...q,allowedOrigins:["Красноярск"]}).map(x=>x.origin),["Красноярск"]);
+assert.equal(flexibleCities(flexibleRows,q,()=>false).length,0);
+assert.equal(flexibleCities([row("Москва","Китай","2026-12-04",9)],q).length,0);
+assert.equal(flexibleCities([row("Москва","Китай","2026-12-04",5)],q)[0].changeNights,true);
+console.log("JAMAICA_EXPLICIT_FLEXIBLE_OTHER_CITY_RECOVERY_PASS");
