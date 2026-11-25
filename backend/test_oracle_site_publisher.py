@@ -116,6 +116,48 @@ class Tests(unittest.TestCase):
                 self.assertFalse(publisher.source_scan_due(now=moment+timedelta(minutes=29)))
                 self.assertTrue(publisher.source_scan_due(now=moment+timedelta(minutes=31)))
 
+    def test_browser_recovery_priority_is_bounded_and_not_a_hold_override(self):
+        moment=datetime.now(timezone.utc)
+        with tempfile.TemporaryDirectory() as work:
+            path=Path(work)/"state.json"
+            state={"schema":"jamaica.site-bot.v1",
+                   "provider_hold_until_utc":moment.isoformat(),
+                   "last_completed_at_utc":(moment-timedelta(minutes=30)).isoformat()}
+            def write():
+                path.write_text(json.dumps(state));path.chmod(0o600)
+            write()
+            self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment))
+            self.assertFalse(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=9)))
+            state["last_completed_at_utc"]=moment.isoformat();write()
+            self.assertFalse(publisher.browser_recovery_priority(path=path,now=moment+timedelta(minutes=1)))
+
+    def test_shared_scan_guard_serializes_without_blocking_publication(self):
+        import fcntl
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);root.chmod(0o700)
+            state=root/"state.json";lock=root/"lock";lock.touch(mode=0o600)
+            site=root/"site";site.mkdir()
+            (site/"destination-directory.json").write_text(json.dumps(directory()))
+            with patch.object(publisher,"BOT_STATE",state),patch.object(publisher,"CHECKOUT",site), \
+                 patch.object(publisher,"provider_hold_active",return_value=False), \
+                 patch.object(publisher,"source_scan_due",return_value=True), \
+                 patch.object(publisher,"browser_recovery_priority",return_value=False), \
+                 patch.object(publisher,"mark_source_attempt") as mark, \
+                 patch.object(publisher,"refresh_directory") as refresh_dir, \
+                 patch.object(publisher,"refresh_source_feed",return_value=feed()) as scan:
+                with lock.open("r+") as existing:
+                    fcntl.flock(existing,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                    self.assertEqual(publisher.guarded_source_scan(),(None,None))
+                    mark.assert_not_called();refresh_dir.assert_not_called();scan.assert_not_called()
+                self.assertEqual(publisher.guarded_source_scan()[0],feed())
+                scan.assert_called_once()
+                with patch.object(publisher,"browser_recovery_priority",return_value=True):
+                    self.assertEqual(publisher.guarded_source_scan(),(None,None))
+                scan.assert_called_once()
+                lock.chmod(0o644)
+                self.assertEqual(publisher.guarded_source_scan(),(None,None))
+                scan.assert_called_once()
+
     def test_projection_does_not_renew_old_source_rows_or_timestamp(self):
         moment=datetime.now(timezone.utc)
         old=feed()

@@ -495,6 +495,69 @@ def provider_hold_active(*,path=None,now=None):
     except FileNotFoundError:return False
     except (OSError,ValueError,TypeError):return True
 
+def browser_recovery_priority(*,path=None,now=None):
+    """Give the browser the first scheduled recovery opportunities after a hold.
+    This never authorizes a supplier request or shortens Retry-After.
+    """
+    now=now or datetime.now(timezone.utc)
+    try:
+        state=read_owner_json(path or BOT_STATE,100_000)
+        if state.get("schema")!="jamaica.site-bot.v1":return True
+        raw=state.get("provider_hold_until_utc")
+        if raw is None:return False
+        end=timestamp(raw)
+        if end is None:return True
+        completed=timestamp(state.get("last_completed_at_utc"))
+        return end<=now<end+timedelta(minutes=9) and (completed is None or completed<end)
+    except FileNotFoundError:return False
+    except (OSError,ValueError,TypeError):return True
+
+def guarded_source_scan(*,now=None):
+    """Serialize broad BG scans with the existing private website bot lock.
+
+    Return (new source feed, directory). Publication is never blocked by
+    another process's lock. The hold is checked again INSIDE the lock.
+    """
+    import fcntl
+    import stat
+    now=now or datetime.now(timezone.utc)
+    if provider_hold_active(now=now) or not source_scan_due(now=now):
+        return None,None
+    lock=BOT_STATE.parent/"lock"
+    fd=None
+    try:
+        parent=lock.parent.lstat()
+        if not stat.S_ISDIR(parent.st_mode) or parent.st_uid!=os.geteuid() or parent.st_mode&0o077:
+            raise ValueError("UNSAFE_BROWSER_LOCK_DIRECTORY")
+        fd=os.open(lock,os.O_RDWR|getattr(os,"O_NOFOLLOW",0)|os.O_NONBLOCK)
+        st=os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or st.st_mode&0o077:
+            raise ValueError("UNSAFE_BROWSER_LOCK")
+        fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except (OSError,ValueError):
+        if fd is not None:os.close(fd)
+        log("JAMAICA_BG_SHARED_SCAN_GUARD","DEFER_BROWSER_BUSY_OR_LOCK_UNSAFE")
+        return None,None
+    try:
+        # Production callers omit now, so re-read the current clock after
+        # acquiring the lock rather than trusting an earlier decision.
+        check_now=datetime.now(timezone.utc)
+        if provider_hold_active(now=check_now) or browser_recovery_priority(now=check_now) or not source_scan_due(now=check_now):
+            log("JAMAICA_BG_SHARED_SCAN_GUARD","DEFER_HOLD_RECOVERY_OR_INTERVAL")
+            return None,None
+        mark_source_attempt(now=check_now)
+        refresh_directory()
+        directory=json.loads((CHECKOUT/"destination-directory.json").read_text(encoding="utf-8"))
+        directory_check(directory)
+        try:
+            new=refresh_source_feed(directory)
+        except (CatalogHold,subprocess.TimeoutExpired,OSError,ValueError,KeyError):
+            log("JAMAICA_BROAD_SOURCE_SCAN","FAILED_USE_EXACT_PROOFS_ONLY")
+            return None,directory
+        return new,directory
+    finally:
+        os.close(fd)
+
 def source_scan_due(*,now=None):
     now=now or datetime.now(timezone.utc)
     # Throttle attempts, not just successful scans. Do not repeat a failed
@@ -564,19 +627,13 @@ def encode_public_visual_feed(payload,*,now=None):
 def publish(env):
     # Publication and expensive discovery are intentionally decoupled.
     hold=provider_hold_active()
-    scan=not hold and source_scan_due()
-    if scan:refresh_directory()
-    directory=json.loads((CHECKOUT/"destination-directory.json").read_text(encoding="utf-8"))
-    directory_check(directory)
+    new,directory=guarded_source_scan() if not hold else (None,None)
+    if directory is None:
+        directory=json.loads((CHECKOUT/"destination-directory.json").read_text(encoding="utf-8"))
+        directory_check(directory)
     feed_path=CHECKOUT/"tour-previews.json"
     previous=json.loads(feed_path.read_text(encoding="utf-8")) if feed_path.is_file() else None
     next_cache=None
-    new=None
-    if scan:
-        mark_source_attempt()
-        try:new=refresh_source_feed(directory)
-        except (CatalogHold,subprocess.TimeoutExpired,OSError,ValueError,KeyError):
-            log("JAMAICA_BROAD_SOURCE_SCAN","FAILED_USE_EXACT_PROOFS_ONLY")
     if new is not None:
         new["source_scope"]={**new.get("source_scope",{}),
             "source_scan_refreshed_at_utc":new["refreshed_at_utc"],
