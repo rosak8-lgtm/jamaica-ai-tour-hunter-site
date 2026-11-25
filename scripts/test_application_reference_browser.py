@@ -38,6 +38,7 @@ def main():
             card=page.locator("#previewCards [data-preview-id='"+row["id"]+"']")
             card.wait_for(timeout=25000)
             assert card.get_attribute("data-visual-verified")=="APPLICATION_PRICE_AND_FILTERS"
+            assert "Проверено JAMAICA" in card.inner_text()
             assert "ЛУЧШАЯ ЦЕНА" not in card.inner_text()
             link=card.locator('a[href^="application-detail.html?id="]').first
             link.click()

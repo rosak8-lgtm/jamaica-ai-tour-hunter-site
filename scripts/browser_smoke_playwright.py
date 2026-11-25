@@ -92,7 +92,7 @@ def main():
                         body=json.dumps(empty_proofs,ensure_ascii=False)))
                 page.goto(base,wait_until="domcontentloaded")
                 page.wait_for_function(
-                   "()=>document.querySelector('#visualProofNotice')?.textContent?.includes('Нет свежих совпадений')",
+                   "()=>document.querySelector('#visualProofNotice')?.textContent?.includes('Пока нет свежих проверенных вариантов')",
                    timeout=18000)
                 ensure(page.locator("#previewCards article.offerCard").count()==0,
                        "UNVERIFIED_PRICE_LIST_TOURS_WERE_DISPLAYED")
@@ -112,7 +112,7 @@ def main():
                     page.goto(base+"quote.html?preview="+rows[0]["id"]+
                               "&adults=2&kids=0",wait_until="domcontentloaded")
                     page.wait_for_function(
-                        "()=>document.querySelector('#quoteNotice')?.textContent?.includes('не прошёл обязательные проверки')",
+                        "()=>document.querySelector('#quoteNotice')?.textContent?.includes('нет свежего подтверждения')",
                         timeout=12000)
                     ensure(page.locator("#checkQuote").is_disabled(),
                            "DIRECT_PRICE_QUERY_BYPASSED_VISUAL_GATE")
@@ -618,8 +618,8 @@ def main():
                 ensure(all(h.startswith("Мальдивы · ") for h in heads),
                        "COUNTRY_FILTER_MIXED_UNRELATED_TOURS")
                 if not heads:
-                    ensure("Туров со всеми тремя подтверждениями пока нет" in page.locator("#searchProgress").inner_text()
-                           and "ЛУЧШАЯ ЦЕНА" in page.locator("#searchProgress").inner_text(),
+                    ensure("Пока нет подходящих туров" in page.locator("#searchProgress").inner_text()
+                           and "Показываем только актуальные проверенные варианты" in page.locator("#searchProgress").inner_text(),
                            "UNAVAILABLE_COUNTRY_NOT_EXPLAINED")
                 print("FULL_COUNTRY_DIRECTORY_SEARCH_IN_RESULTS=PASS")
 
@@ -748,14 +748,14 @@ def main():
                     page.wait_for_function(
                         """() => {
                           const coverage=document.querySelector('#previewCoverage')?.textContent||'';
-                          return coverage.includes('В браузере доступны все') ||
+                          return coverage.includes('вариантов каталога.') ||
                             (coverage.includes('предварительные варианты опубликованы по') &&
                              !coverage.includes('Загружается расширенный каталог:'));
                         }""",
                         timeout=50000)
                     offers=page.locator("#previewCards article.offerCard")
                     if offers.count()==0:
-                        ensure("Непроверенные карточки скрыты" in
+                        ensure("пока нет свежих вариантов" in
                                page.locator("#previewCards").inner_text(),
                                "SOURCE_ABSENT_MUST_NOT_FABRICATE_OFFER_"+hid)
                         print("EXACT_HOTEL_NOT_IN_CURRENT_SOURCE="+hid)

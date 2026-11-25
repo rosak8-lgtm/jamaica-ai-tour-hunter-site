@@ -38,7 +38,7 @@ assert.equal(visual.bookable,false);
 assert.ok(page.includes('id="visualProofOnly"')&&
  page.includes('id="visualProofNotice"')&&
  page.includes('scripts/visual-selection.js')&&
- page.includes('window.JamaicaPublicVisualPolicy.eligible(x,visualProofs)')&&
+ page.includes('window.JamaicaPublicVisualPolicy.filter(previewRecords,visualProofs)')&&
  page.includes('await loadVisualProofs(false);'));
 assert.ok(page.includes('Карта')||page.includes('Страны')||page.includes('страны'),
  'Never delete broad country discovery UI');

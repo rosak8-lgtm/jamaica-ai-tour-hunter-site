@@ -44,7 +44,7 @@
 <header class="top">
  <div class="utilityBar"><div class="wrap utilityInner">
   <span>JAMAICA · подбор путешествий из Иркутска и других городов</span>
-  <span>Варианты из опубликованных прайс-листов · стоимость проверяется перед оформлением</span>
+  <span>Путешествия JAMAICA · стоимость уточняется перед оформлением</span>
  </div></div>
  <div class="wrap"><nav class="nav" aria-label="Главная навигация">
   <a class="logo" href="./" aria-label="JAMAICA — главная">
@@ -61,7 +61,7 @@
  <div>
   <span class="kicker">✈ Туры с перелётом · Иркутск и другие города</span>
   <h1>Отдых начинается <em>с правильного выбора.</em></h1>
-  <p>Страна, даты, отель и предварительная цена — в одном поиске. Сравнивайте настоящие записи прайс-листов и изучайте отели, не уходя с JAMAICA.</p>
+  <p>Страна, даты, отель и предварительная цена — в одном поиске. Сравнивайте варианты путешествий и изучайте отели, не уходя с JAMAICA.</p>
   <div class="heroFine">Окончательная цена, наличие мест и перелёт проверяются перед договором и оплатой.</div>
  </div>
  <div class="heroArt" aria-label="Весёлый фирменный попугай JAMAICA в фиолетовых очках" role="img">
@@ -93,7 +93,7 @@
    <div id="extraRooms" class="extraRooms"></div>
    <button type="button" id="addRoom" class="addRoomButton">+ Добавить номер</button>
    <p id="partyError" class="partyError" role="alert" hidden></p>
-   <p class="partyHint">Для каждого номера можно указать свой состав. Стоимость и возможность такого размещения должны быть подтверждены поставщиком — цена за двух взрослых не переносится на семью автоматически.</p>
+   <p class="partyHint">Для каждого номера можно указать свой состав. Стоимость и возможность такого размещения уточняются перед оформлением — цена за двух взрослых не переносится на семью автоматически.</p>
   </section>
   <details class="advancedFilters" id="advancedFilters">
    <summary>Дополнительные параметры: бюджет и название гостиницы</summary>
@@ -104,7 +104,7 @@
   </details>
   <div class="formBottom">
    <button class="btn btnTeal" type="submit">Найти туры <span aria-hidden="true">⌕</span></button>
-   <span class="hint">Цены предварительные. Бронирование и оплата будут доступны после подключения проверенного поставщика.</span>
+   <span class="hint">Цены предварительные. Онлайн-бронирование и оплата пока недоступны.</span>
   </div>
  </form>
 </section></div>
@@ -113,7 +113,7 @@
 <h2>Найдите подходящий тур</h2>
 <p>Выберите отель и дату поездки. Указанные цены предварительные; стоимость, рейсы и наличие проверяются до оформления.</p></div>
 <div class="count" id="searchResultsCount" role="status">Загрузка вариантов…</div></div>
-<div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Загружаем предложения</strong><p>Проверяем опубликованные данные прайс-листов. Если подходящих вариантов пока нет, измените параметры поиска.</p></div></div>
+<div class="offerBox" id="searchProgress" role="status" style="margin-bottom:18px"><span class="offerIcon" aria-hidden="true">🔎</span><div><strong>Загружаем предложения</strong><p>Проверяем актуальные предложения. Если подходящих вариантов пока нет, измените параметры поиска.</p></div></div>
 <div class="resultsLayout">
  <aside class="resultsSidebar" aria-label="Фильтры найденных путешествий">
   <details class="filtersDisclosure" id="filtersDisclosure">
@@ -121,7 +121,7 @@
    <div class="filtersContent">
     <div class="filterGroup"><label for="filterCountry">Страна</label>
      <select id="filterCountry" aria-label="Отбор страны по опубликованным турам"><option value="">Все страны с предложениями</option></select>
-     <small>Показываются направления из загруженного прайс-листа</small>
+     <small>Показываются направления с найденными вариантами</small>
     </div>
     <div class="filterGroup"><label for="filterResort">Курорт</label>
      <select id="filterResort" aria-label="Отбор курорта по опубликованным турам"><option value="">Любой курорт</option></select>
@@ -152,18 +152,18 @@
     <option value="date">Сначала ближайшие даты</option>
   </select>
   <label class="favoritesToggle visualProofToggle" for="visualProofOnly">
-   <input id="visualProofOnly" type="checkbox" checked disabled aria-label="Обязательное условие: ЛУЧШАЯ ЦЕНА и два зелёных самолётика">
-   <span>✓ «ЛУЧШАЯ ЦЕНА» + ✈✈ оба зелёных — обязательно</span></label>
+   <input id="visualProofOnly" type="checkbox" checked disabled aria-label="Обязательное условие: актуальная проверка тура">
+   <span>✓ Только проверенные варианты</span></label>
   <label class="favoritesToggle" for="favoritesOnly"><input id="favoritesOnly" type="checkbox" aria-label="Показать только сохранённые туры">
    <span>♡ Избранное <b id="favoritesCount">0</b></span></label>
   <button type="button" class="resultsEdit resultsOtherCountries" id="otherCountries" hidden>Другие страны</button>
   <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
 <p id="budgetNotice" class="micro" role="status" aria-live="polite" hidden></p>
-<p id="visualProofNotice" class="micro" role="status" aria-live="polite">Проверяем визуальные результаты бота. Окончательное наличие мест и цены требуют отдельного подтверждения.</p>
+<p id="visualProofNotice" class="micro" role="status" aria-live="polite">Проверяем актуальные варианты путешествий. Цена и наличие мест уточняются перед оформлением.</p>
 <p class="catalogBreadth" id="catalogBreadth" role="status" aria-live="polite">Загружаем направления с найденными турами…</p>
 <div class="quickCountryBar" aria-label="Выбор опубликованного направления">
- <span class="quickCountryIntro">Направления из прайс-листов</span>
+ <span class="quickCountryIntro">Направления путешествий</span>
  <div id="quickCountries" class="quickCountryChips" role="group" aria-label="Страны с предварительными вариантами"></div>
 </div>
 <div class="quickMonthBar" aria-label="Выбор месяца вылета">
@@ -173,7 +173,7 @@
 
 <details class="sourceSearchCoverage" id="sourceSearchCoverage" hidden>
  <summary id="sourceSearchCoverageTitle">Где ищем туры · проверяем направления</summary>
- <p class="sourceSearchDisclaimer">Это страны, где обнаружены <strong>предварительные записи прайс-листов</strong>, а не туры к продаже. Карточки появляются только после проверки «ЛУЧШАЯ ЦЕНА» и обоих зелёных самолётиков у того же отеля, номера и даты.</p>
+ <p class="sourceSearchDisclaimer">Эти направления доступны для поиска. Число проверенных путешествий зависит от дат, города и текущей доступности.</p>
  <div id="sourceSearchCountryChips" class="sourceSearchCountryChips" role="group" aria-label="Направления фонового поиска без показа непроверенных туров"></div>
  <p id="sourceSearchMonths" class="sourceSearchMonths"></p>
 </details>
@@ -191,8 +191,8 @@
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
 <details class="sourceDetails" id="sourceDetails">
- <summary>Источники, охват стран и актуальность цен</summary>
- <p class="micro">Это предварительные записи прайс-листов, не подтверждённые к покупке туры. Проверка окончательной цены, рейсов и наличия обязательна до договора и оплаты.</p>
+ <summary>Актуальность предложений</summary>
+ <p class="micro">Стоимость указана на момент проверки, не является гарантированной ценой покупки. Проверка окончательной цены, рейсов и наличия обязательна до договора и оплаты.</p>
  <p class="micro" id="previewCount" role="status">Загрузка конкретных вариантов…</p>
  <p class="micro" id="previewUpdatedAt" role="status" aria-live="polite">Проверяем время последней выгрузки.</p>
  <p class="micro" id="previewCoverage" role="status">Проверяем проверенные направления…</p>
@@ -388,7 +388,7 @@ function runSearch(scroll=false){
  }else if(!inventoryLoaded){
   setEmpty("Не удалось загрузить актуальные предложения","Проверьте соединение и повторите поиск. Неподтверждённые цены не показываются.");
  }else if(!found.length){
-  setEmpty("Поиск поездок по разным странам","Ниже показываются конкретные отели, даты и типы номеров из проверенных прайс-листов. Для покупки нужна окончательная стоимость, подтверждение рейсов и мест. Вы можете открыть любую карточку и сравнить поездки.");
+  setEmpty("Поиск поездок по разным странам","Ниже показываются конкретные отели, даты и типы номеров из актуального каталога. Для покупки нужна окончательная стоимость, подтверждение рейсов и мест. Вы можете открыть любую карточку и сравнить поездки.");
  }else{
   $("noOffers").classList.add("hide");
   const frag=document.createDocumentFragment();
@@ -945,16 +945,14 @@ function renderSourceScanCoverage(){
  if(!sourceCoverageFirstExpanded){root.open=true;sourceCoverageFirstExpanded=true;}
  const selected=$("destination").value.trim(),fragment=document.createDocumentFragment();
  $("sourceSearchCoverageTitle").textContent=
-   "Где бот ищет туры: "+countries.length+
-   " направлений в прайс-листах · с полной проверкой: "+verifiedRows().length;
+   "Направления поиска: "+countries.length+
+   " направлений · проверенных вариантов: "+verifiedRows().length;
  let months=[];
  for(const item of countries){
    const button=el("button","sourceSearchChip",
-     item.country+" · "+item.source_rows_observed.toLocaleString("ru-RU"));
+     item.country);
    button.type="button";
-   button.setAttribute("aria-label",item.country+
-     ": предварительных записей "+item.source_rows_observed+
-     ". Искать только туры со всеми тремя проверками.");
+   button.setAttribute("aria-label","Искать путешествия: "+item.country);
    button.setAttribute("aria-pressed",String(selected===item.country));
    button.addEventListener("click",()=>{
      $("destination").value=selected===item.country?"":item.country;
@@ -966,11 +964,11 @@ function renderSourceScanCoverage(){
  chips.replaceChildren(fragment);
  months=[...new Set(months)].sort();
  $("sourceSearchMonths").textContent=months.length?
-   "Месяцы, по которым просмотрены прайс-листы: "+
+   "Месяцы поиска: "+
      months.slice(0,18).join(", ")+
      (months.length>18?" и другие.":".")+
      " Наличие туров с полной проверкой не гарантировано.":
-   "Месяцы исследования прайс-листов не указаны; наличие подходящих туров пока не подтверждено.";
+   "Даты подходящих путешествий пока уточняются.";
 }
 function renderTourPreviews(reset=true){
  const target=$("previewCards"),more=$("previewMore");
@@ -992,7 +990,7 @@ function renderTourPreviews(reset=true){
  const budget=Number($("budget").value)||0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
-   "Бюджет применяется только к свежей цене, проверенной ботом за двух взрослых. Другой состав и места требуют отдельного расчёта.";
+   "Бюджет применяется к недавно проверенной цене за двух взрослых. Другой состав и места требуют отдельного расчёта.";
  $("budgetNotice").textContent=budgetMessage;
  $("budgetNotice").hidden=!budgetMessage;
  const sortMode=$("previewSort").value;
@@ -1070,28 +1068,19 @@ function renderTourPreviews(reset=true){
  if(!list.length&&previewsLoaded){
    const requested=$("destination").value.trim();
    target.append(el("div","empty",
-      applicationRows.length?"Нет свежих предложений по выбранным параметрам. Измените условия поиска.":requested?"Для направления «"+requested+"» сейчас нет туров со свежей меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками. Непроверенные карточки скрыты.":
-      "Нет туров с обязательной проверкой «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков. Непроверенные карточки не публикуются."));
+      requested?"Для направления «"+requested+"» пока нет свежих вариантов по выбранным параметрам. Попробуйте другие даты или страны.":
+      "Пока нет свежих вариантов по выбранным параметрам. Измените условия поиска."));
  }
  for(const x of list.slice(previewVisible,previewVisible+30)){
    const card=el("article","offerCard tourResultCard");
    card.dataset.visualVerified=isApplicationReference(x)?"APPLICATION_PRICE_AND_FILTERS":"BEST_PRICE_BOTH_GREEN";
    card.dataset.previewId=x.id;
    card.append(previewCardPhoto(x));
-   if(window.JamaicaPublicVisualPolicy.eligible(x,visualProofs)){
-     const proof=visualProofs.get(x.id);
-     const seen=new Date(proof.observed_at_utc).toLocaleString("ru-RU",{
-       dateStyle:"short",timeStyle:"short"});
-     const label=el("div","visualEvidenceStatus",
-       "✓ Маршрут «ЛУЧШАЯ ЦЕНА» · ✈✈ два рейса. Визуально отмечено ботом: "+
-       seen+". Окончательная цена и бронь не подтверждены.");
-     label.title="Недавняя визуальная проверка бота не гарантирует места или возможность оплаты.";
-     card.append(label);
-   }
-
-   if(isApplicationReference(x)){
-     card.append(el("div","visualEvidenceStatus","✓ Проверены фильтры наличия и стоимость внутри заявки. Перед оформлением нужна повторная проверка."));
-   }
+   const observedAt=isApplicationReference(x)?x.price_observed_at_utc:visualProofs.get(x.id)?.observed_at_utc;
+   const seen=new Date(observedAt).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"});
+   const label=el("div","visualEvidenceStatus","✓ Проверено JAMAICA · "+seen);
+   label.title="Цена и наличие мест требуют повторного подтверждения перед оформлением.";
+   card.append(label);
    const info=el("div","tourResultMain");
    info.append(el("span","countryBadge",x.country));
    info.append(el("h3","",x.country+" · "+x.hotel));
@@ -1101,11 +1090,11 @@ function renderTourPreviews(reset=true){
    facts.append(el("span","", "📅 "+x.depart_date));
    facts.append(el("span","", "◷ "+x.nights+" ночей"));
    info.append(facts);
-   info.append(el("div","roomKind",(partyTwoAdults?"Размещение: ":"Тип номера по исходному прайсу: ")+x.room+
+   info.append(el("div","roomKind",(partyTwoAdults?"Размещение: ":"Предлагаемый тип номера: ")+x.room+
    (partyTwoAdults?"":" · вместимость для этого состава не подтверждена")));
   if(x.status==="PREVIOUSLY_SEEN_NOT_RECHECKED"){
    info.append(el("div","previousSourceNotice",
-     "Найдено в прайс-листе за последние 24 часа; в этом цикле не перепроверено. Цена и наличие требуют нового расчёта."));
+     "Вариант найден ранее; требуется обновление. Цена и наличие требуют нового расчёта."));
   }
   info.append(el("div","partyInCard","Туристы: "+chosenParty));
    if(/^\d{7,20}$/.test(String(x.hotel_id||""))){
@@ -1117,8 +1106,7 @@ function renderTourPreviews(reset=true){
 
    const priceBox=el("div","tourResultPrice");
    priceBox.append(el("small","eligibilityUnverified",
-     isApplicationReference(x)?"✓ Стоимость наблюдалась внутри заявки с обязательными сборами. Бронь и оплата не подтверждены.":
-     "✓ Метка «ЛУЧШАЯ ЦЕНА» и оба зелёных рейса зафиксированы на выбранном варианте. Места, окончательная стоимость, договор и оплата требуют отдельной проверки."));
+     "Перед оформлением необходимо подтвердить актуальную стоимость и наличие мест. Бронь не создана."));
    const reference=partyTwoAdults?referencePrice(x):null;
    if(reference!==null){
      const priceTitle=el("strong","", "Цена на момент проверки на 2 взрослых: ");
@@ -1133,7 +1121,7 @@ function renderTourPreviews(reset=true){
        new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(reference/2)+
        " ₽. Одиночное размещение рассчитывается отдельно."));
      priceBox.append(el("small","",
-       "Проверена ботом: "+new Date(x.price_observed_at_utc).toLocaleString("ru-RU",{
+       "Цена проверена: "+new Date(x.price_observed_at_utc).toLocaleString("ru-RU",{
          dateStyle:"short",timeStyle:"short"})+
        ". Цена может измениться. Наличие мест и возможность оплаты не подтверждены."));
    }else{
@@ -1171,24 +1159,23 @@ function renderTourPreviews(reset=true){
      window.JamaicaCountryOffers.compareCountries);
  $("catalogBreadth").textContent=previewsLoaded?
   (country?"Выбрано направление «"+$("destination").value.trim()+"». Проверенных направлений: "+availableCountries.length+".":
-   "Только туры «ЛУЧШАЯ ЦЕНА» и два зелёных самолётика. Направлений со свежими совпадениями: "+
+   "Направлений с проверенными вариантами: "+
    availableCountries.length+(availableCountries.length?": "+availableCountries.slice(0,7).join(", ")+".":"; совпадений пока нет.")+
-   " Обычные записи прайс-листов скрыты.") :
+   "") :
   "Проверяем обязательные условия туров…";
  $("previewCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" вариантов по выбранным параметрам в текущей публикации"+(previewTruncated?" (каталог усечён, возможны другие варианты).":"."):
  "Не удалось загрузить текущие подробные варианты; доступен общий справочник отелей.";
- const hasApplicationRows=applicationRows.some(x=>window.JamaicaApplicationReference.eligible(x));
- if(hasApplicationRows){
-   $("catalogBreadth").textContent="Свежие предложения по правилам проверки каждого источника. Найдено направлений из выбранного города: "+availableCountries.length+".";
+ if(previewsLoaded){
+   $("visualProofNotice").textContent=verifiedRows().length?
+     "Показываем недавно проверенные варианты. Цена и наличие мест уточняются перед оформлением.":
+     "Пока нет свежих проверенных вариантов. Непроверенные предложения не показываются.";
  }
- $("visualProofOnly").nextElementSibling.textContent=hasApplicationRows?"✓ Проверка условий источника — обязательно":"✓ «ЛУЧШАЯ ЦЕНА» + ✈✈ оба зелёных — обязательно";
- $("visualProofOnly").setAttribute("aria-label",hasApplicationRows?"Обязательная проверка условий каждого источника":"Обязательное условие: ЛУЧШАЯ ЦЕНА и два зелёных самолётика");
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
  $("searchRecoveryActions")?.remove();
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
  if(previewsLoaded&&list.length===0){
    $("searchProgress").classList.remove("hide");
-   $("searchProgress").querySelector("strong").textContent="Туров со всеми тремя подтверждениями пока нет";
+   $("searchProgress").querySelector("strong").textContent="Пока нет подходящих туров";
    const extra=x=>(!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
       (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
       (!budget||!partyTwoAdults||(referencePrice(x)!==null&&referencePrice(x)<=budget*2))&&
@@ -1198,7 +1185,7 @@ function renderTourPreviews(reset=true){
      !diag.country?"По выбранной стране пока нет свежих карточек из этого города.":
      !diag.dates?"В выбранном диапазоне дат нет свежих карточек этой страны.":
      !diag.nights?"На выбранные даты есть туры, но другой длительности: "+diag.durations.join(", ")+" ноч.":"Другие фильтры исключили оставшиеся варианты.";
-   $("searchProgress").querySelector("p").textContent=reason+" Из города: "+diag.city+" · по стране: "+diag.country+" · по датам: "+diag.dates+" · по ночам: "+diag.nights+(hasApplicationRows?". Непроверенные предложения каждого источника скрыты.":". Без метки «ЛУЧШАЯ ЦЕНА» и двух зелёных самолётиков публикация запрещена.");
+   $("searchProgress").querySelector("p").textContent=reason+" Из города: "+diag.city+" · по стране: "+diag.country+" · по датам: "+diag.dates+" · по ночам: "+diag.nights+". Показываем только актуальные проверенные варианты.";
    if(!previewFullLoaded)$("searchProgress").querySelector("p").append(" Каталог ещё загружается; результат предварительный.");
    const labels={nights:"Любая длительность",dates:"Все даты",both:"Все даты и длительности",countries:"Другие страны"};
    const actions=el("div","searchRecoveryActions");
@@ -1257,10 +1244,7 @@ $("previewSort").addEventListener("change",()=>renderTourPreviews(true));
 $("previewMore").addEventListener("click",()=>renderTourPreviews(false));
 async function loadVisualProofs(render=true){
  visualProofs=await window.JamaicaPublicVisualPolicy.load();
- $("visualProofNotice").textContent=visualProofs.size?
-   "За последние 15 минут бот подтвердил "+visualProofs.size+
-   " точных совпадений «ЛУЧШАЯ ЦЕНА» и обоих зелёных самолётиков. Бронь и места ещё не подтверждены.":
-   "Нет свежих совпадений «ЛУЧШАЯ ЦЕНА» → два зелёных самолётика. Непроверенные туры скрыты во всех странах и месяцах.";
+ $("visualProofNotice").textContent="Показываем недавно проверенные варианты. Цена и наличие мест уточняются перед оформлением.";
  if(render&&previewsLoaded){
    sourceFilterOptions();
    renderTourPreviews(true);
@@ -1283,7 +1267,7 @@ async function loadTourPreviews(){
     new Date(refreshed).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"}):"неизвестную дату";
   $("previewUpdatedAt").textContent="Выгрузка: "+previewPriceAsOf+
     ". Статус: "+(previewPriceFresh?"свежая":previewPriceListed?"старше 30 минут, цена могла измениться":"устарела, требуется новое обновление")+
-    ". Браузер проверяет новый каталог каждые 3 минуты; расписание серверного импорта задаётся отдельно.";
+    ". Каталог обновляется автоматически.";
   const coverage=Array.isArray(data.countries_status)?data.countries_status.filter(x=>x&&typeof x.country==="string"):[];
   lastSourceCoverage=window.JamaicaSourceCoverage.parse(data);
 
@@ -1304,13 +1288,13 @@ async function loadTourPreviews(){
     "; по последнему сканированию: "+coverage.length+
     "; предварительные варианты опубликованы по "+withTours.size+" странам."+
     (scope.source_scan_refreshed_at_utc&&Number.isFinite(Date.parse(scope.source_scan_refreshed_at_utc))?
-      " Обзор прайс-листов: "+new Date(scope.source_scan_refreshed_at_utc).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"})+".":"")+
+      " Последнее обновление направлений: "+new Date(scope.source_scan_refreshed_at_utc).toLocaleString("ru-RU",{dateStyle:"short",timeStyle:"short"})+".":"")+
     (missing.length?" Дополнительно проверены: "+missing.join(", ")+".":"")+
-    " Весь справочник — "+fullCountryNames.length+" страна. Без прайс-листа из выбранного города тур не считается доступным."+
-    (sampledMonths.length?" Месяцы, из которых проверялись прайс-листы в этом цикле: "+sampledMonths.join(", ")+". Даты и цены меняются; остальные месяцы проверяются в последующих циклах.":"")+
+    " Весь справочник — "+fullCountryNames.length+" страна. Предложения зависят от выбранного города вылета."+
+    (sampledMonths.length?" Месяцы, по которым выполнен поиск: "+sampledMonths.join(", ")+". Даты и цены меняются; остальные месяцы проверяются в последующих циклах.":"")+
     (previewTruncated?" ВАЖНО: опубликовано "+advertisedTotal.toLocaleString("ru-RU")+
      " из "+previewCandidateTotal.toLocaleString("ru-RU")+
-     " найденных предварительных записей. Другие варианты могли не попасть из-за ограничения каталога.":"")+
+     " найденных вариантов поиска. Другие варианты могли не попасть из-за ограничения каталога.":"")+
     (Number.isSafeInteger(scope.last_24h_unrechecked_previews)&&scope.last_24h_unrechecked_previews>0?
       " За последние 24 часа сохранено "+scope.last_24h_unrechecked_previews+
       " ранее найденных вариантов по "+scope.last_24h_unrechecked_countries+
@@ -1358,8 +1342,8 @@ async function loadTourPreviews(){
       if(stillMissing.length)summary+=" Дополнительно проверены: "+
         stillMissing.join(", ")+".";
       $("previewCoverage").textContent=summary+(complete?
-        " В браузере доступны все "+rows.length.toLocaleString("ru-RU")+
-        " опубликованных вариантов из отдельных частей каталога.":
+        " Загружено "+rows.length.toLocaleString("ru-RU")+
+        " вариантов каталога.":
         " Загружается расширенный каталог: "+rows.length.toLocaleString("ru-RU")+
         " из "+advertisedTotal.toLocaleString("ru-RU")+
         " предложений ("+done+"/"+total+" разделов).");

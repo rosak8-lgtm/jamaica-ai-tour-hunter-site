@@ -74,7 +74,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 <div id="enrichedFeatures"></div>
 <p class="sub" id="detailExplanation">Гостиничные услуги и комплектация номеров проверяются по актуальной карточке объекта; подробности, которых нет в источнике, не выдумываются.</p></section>
 <section class="box" id="hotelRooms"><h2>Номера, размещение и питание</h2><div id="curatedRooms"></div><div id="rooms"></div>
-<p class="sub">Показанные категории номеров встречались в опубликованных прайс-листах, но не означают свободный номер сегодня.</p></section>
+<p class="sub">Показанные категории номеров встречались в каталоге путешествий, но не означают свободный номер сегодня.</p></section>
 <section class="box" id="hotelTrips"><h2>Найденные даты и цены туров</h2>
 <p class="sub" id="tourStatus">Ищем туры для выбранной гостиницы…</p><div id="trips" class="grid"></div>
 <p><a class="btn" id="searchHotel" href="./#offers">Найти поездку в этот отель</a></p></section>
@@ -94,7 +94,7 @@ footer{padding-bottom:30px;color:var(--muted);font-size:13px}
 <p id="reviewNotice" role="status" class="status">Система отзывов требует подключения защищённого сервера. До этого отправка недоступна.</p>
 </form>
 </section>
-</main><footer class="wrap">JAMAICA · Информация о гостинице и прайс-листе предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
+</main><footer class="wrap">JAMAICA · Информация о гостинице предоставлена для выбора путешествия. Наличие, цена и подтверждение брони проверяются при оформлении.</footer>
 <script src="./scripts/catalog-shards.js"></script>
 <script src="./scripts/visual-selection.js"></script>
 <script src="./scripts/public-visual-policy.js"></script>
@@ -206,7 +206,7 @@ async function loadRightsApprovedHotelPhotos(){
    img.src=photo.src;
   }
   text("photoStatus",sourceImages.length+
-      " фотографий выбранного отеля с внешнего сервера по подтверждённому разрешению. Изображения не хранятся в JAMAICA. Фотографии номеров показывают категории из каталога поставщика и не гарантируют, что выбранный тур включает именно этот номер.");
+      " фотографий выбранного отеля с внешнего сервера по подтверждённому разрешению. Изображения не хранятся в JAMAICA. Фотографии номеров показывают категории из каталога гостиницы и не гарантируют, что выбранный тур включает именно этот номер.");
   return true;
  }catch(e){return false;}
 }
@@ -312,7 +312,7 @@ async function loadPhotos(skipApproved=false){
 
 function showTrips(rows){
  const target=$("trips");target.replaceChildren();
- if(!rows.length){text("tourStatus","У этой гостиницы сейчас нет туров с одновременной меткой «ЛУЧШАЯ ЦЕНА» и двумя зелёными самолётиками. Непроверенные поездки скрыты.");return;}
+ if(!rows.length){text("tourStatus","У этой гостиницы пока нет свежих проверенных вариантов путешествия. Попробуйте другие даты или отели.");return;}
  const ordered=[...rows].sort((a,b)=>a.depart_date.localeCompare(b.depart_date));
  const unique=new Map();
  for(const r of ordered)unique.set(r.room,r);
@@ -352,7 +352,7 @@ async function getCurrentTrips(){
   if(data.schema!=="jamaica.tour-previews.v1"||!Array.isArray(data.previews))throw Error("FEED_SCHEMA");
   const all=await window.JamaicaCatalog.allPreviews(data);
   tripRecords=window.JamaicaPublicVisualPolicy.filter(all,proofs).filter(p=>p.hotel_id===id);
- }catch(e){tripRecords=[];text("tourStatus","Временная ошибка загрузки прайс-листов. Карточка гостиницы доступна.");}
+ }catch(e){tripRecords=[];text("tourStatus","Временная ошибка загрузки каталога. Карточка гостиницы доступна.");}
  showTrips(tripRecords);
 }
 
@@ -472,12 +472,12 @@ function setHotelInfo(h,older=false){
    "Гостиница "+name+" находится в туристическом справочнике направления «"+h.country+"»"+
     (h.resort?", курорт «"+h.resort+"»":"")+
     (h.stars?", категория — "+h.stars:"")+
-    ". Ниже показаны известные справочные сведения и найденные варианты поездок из актуальных прайс-листов. Услуги, инфраструктура и описание номеров требуют подтверждения от гостиницы.");
+    ". Ниже показаны известные справочные сведения и найденные варианты поездок из актуального каталога. Услуги, инфраструктура и описание номеров требуют подтверждения от гостиницы.");
  fact("Страна",h.country);
  fact("Курорт / регион",h.resort||h.region||"Не указан");
  fact("Категория",h.stars||"Не указана");
  fact("Идентификатор гостиницы",id);
- text("warning","Важное условие: цена в прайс-листе не фиксирует наличие мест. Перед договором, оплатой и созданием заявки Jamaica должен повторно проверить рейсы, номер и полную стоимость.");
+ text("warning","Важное условие: указанная цена не гарантирует наличие мест. Перед договором, оплатой и созданием заявки Jamaica должен повторно проверить рейсы, номер и полную стоимость.");
  $("searchHotel").href="./?country="+encodeURIComponent(h.country)+
    "&hotel="+encodeURIComponent(name)+"#offers";
  loadEnrichment().then(curatedPhotosUsed=>{

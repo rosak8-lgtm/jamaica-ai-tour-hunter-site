@@ -46,9 +46,9 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
   <div class="selectionMain">
    <div class="tag">Подробности предложения</div>
    <h1 id="heading">Загружаем выбранный вариант…</h1>
-   <p class="sub" id="subtitle">Данные подбираются по конкретному прайс-листу</p>
+   <p class="sub" id="subtitle">Загружаем параметры путешествия</p>
    <div class="notice" id="notice" role="status">Это предварительный вариант, а не подтверждённый тур. Итоговая цена, номер, рейсы и наличие подлежат повторной проверке перед оформлением.</div>
-    <p class="sub" id="visualDetailStatus" role="status" aria-live="polite">Проверяем, выбирал ли бот маршрут «ЛУЧШАЯ ЦЕНА» и два самолётика именно для этого варианта.</p>
+    <p class="sub" id="visualDetailStatus" role="status" aria-live="polite">Проверяем актуальность выбранного путешествия.</p>
    <section class="card"><h2>Параметры поездки</h2><div class="grid" id="facts"></div></section>
    <section class="card"><h2>Отель и размещение</h2>
     <p class="sub" id="hotelInfo">Загружаем справочник гостиниц…</p>
@@ -59,7 +59,7 @@ h1{font-size:clamp(29px,4vw,43px);line-height:1.12;margin:10px 0}h2{font-size:22
    <section class="card" id="bookingPanel">
     <div class="tag">Следующий шаг</div>
     <h2>Проверка стоимости</h2>
-    <p class="sub">Даты и тип номера сохранены. Для оплаты необходима подтверждённая поставщиком стоимость, места, договор и действующее бронирование.</p>
+    <p class="sub">Даты и тип номера сохранены. Для оплаты необходима актуальная подтверждённая стоимость, места, договор и действующее бронирование.</p>
     <div id="bookingStatus" class="notice">Сейчас предложение нельзя оплатить: подтверждённая котировка и бронирование ещё не подключены.</div>
     <a class="btn" id="quoteLink" href="./#offers">Проверить стоимость и условия</a>
     <a class="btn secondary" href="./#offers">Выбрать другой вариант</a>
@@ -101,7 +101,7 @@ function visualForSelected(chosen){
  }
  const at=new Date(proof.observed_at_utc).toLocaleString("ru-RU",{
    dateStyle:"short",timeStyle:"short"});
- $("visualDetailStatus").textContent="✓ Бот наблюдал маршрут «ЛУЧШАЯ ЦЕНА» и два зелёных перелёта для этой записи "+
+ $("visualDetailStatus").textContent="✓ Проверено JAMAICA · "+
   at+". Это не бронь: окончательные места и стоимость проверяются перед оформлением.";
 }
 function showSelection(p,feed,directory){
@@ -120,9 +120,8 @@ function showSelection(p,feed,directory){
   fact("Гостиница",p.hotel);
   fact("Тип номера / размещения",p.room);
   fact("Выбранные туристы",partyLabel());
-  fact("✈ Перелёт туда","Зелёный индикатор зафиксирован · места требуют подтверждения");
-  fact("✈ Перелёт обратно","Зелёный индикатор зафиксирован · места требуют подтверждения");
-  fact("Метка «ЛУЧШАЯ ЦЕНА»","Зафиксирована для выбранного маршрута");
+  fact("✈ Перелёт туда","Места требуют подтверждения перед оформлением");
+  fact("✈ Перелёт обратно","Места требуют подтверждения перед оформлением");
   fact("Размещение по номерам",Travelers.description(rooms));
   const observed=Date.parse(feed.refreshed_at_utc||"");
   const age=Date.now()-observed;
@@ -131,15 +130,15 @@ function showSelection(p,feed,directory){
   const amount=listed&&pairPrice?window.JamaicaPublicVisualPolicy.observedPrice(p,selectedProofs):null;
   if(amount!==null){
     fact("Цена на момент проверки на 2 взрослых",
-         new Intl.NumberFormat("ru-RU").format(amount)+" ₽ (на момент наблюдения ботом, требует проверки перед договором)");
+         new Intl.NumberFormat("ru-RU").format(amount)+" ₽ (на момент проверки, требует проверки перед договором)");
     fact("Средняя цена при поездке вдвоём",
          new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(amount/2)+" ₽ на человека — не цена отдельного одноместного тура");
-    fact("Дата прайс-листа",new Date(observed).toLocaleString("ru-RU"));
+    fact("Дата обновления каталога",new Date(observed).toLocaleString("ru-RU"));
     $("bookingStatus").textContent=(fresh?"Цена зафиксирована при проверке тура. ":"С момента выгрузки стоимость могла измениться. ")+
       "Перед оформлением договора требуется новый расчёт цены и подтверждение рейсов и номера.";
   }else{
     fact("Стоимость для выбранного состава",
-      pairPrice?"Требуется новый расчёт по прайс-листу":
+      pairPrice?"Требуется новый расчёт":
         "Для выбранного состава ("+partyLabel()+") нужна отдельная котировка, цена на двух взрослых не подходит");
   }
   if(!pairPrice){
@@ -154,7 +153,7 @@ function showSelection(p,feed,directory){
   }
 
  if(p.status==="PREVIOUSLY_SEEN_NOT_RECHECKED"){
-  $("bookingStatus").textContent="Этот вариант найден ранее, но в текущем цикле прайс-листа не проверялся. Старая цена скрыта, для покупки нужна новая цена и подтверждение мест и рейсов.";
+  $("bookingStatus").textContent="Этот вариант найден ранее, но требует обновления. Старая цена скрыта, для покупки нужна новая цена и подтверждение мест и рейсов.";
  }
 }
 function showAlternatives(rows,p,done,total){
@@ -179,7 +178,7 @@ function showAlternatives(rows,p,done,total){
    "Проверены все опубликованные разделы: "+items.length+" вариантов для сравнения.":
    "Просматриваем полный каталог: "+done+" из "+total+" разделов.";
  if(done===total&&!items.length){
-  add("p","Других вариантов по проверенным источникам пока не опубликовано.",$("alternatives"));
+  add("p","Других проверенных вариантов пока нет.",$("alternatives"));
  }
 }
 let selectedProofs=new Map();
@@ -192,7 +191,7 @@ function expireSelection(){
  $("alternativesStatus").textContent="Обновите поиск для просмотра свежих вариантов.";
  $("heading").textContent="Срок проверки тура истёк";
  $("subtitle").textContent="Выберите актуальный вариант в поиске.";
- $("visualDetailStatus").textContent="Нужно новое подтверждение метки и обоих зелёных перелётов.";
+ $("visualDetailStatus").textContent="Требуется повторная проверка выбранного путешествия.";
  $("bookingStatus").textContent="Цена и наличие требуют новой проверки.";
  $("quoteLink").removeAttribute("href");
 }
@@ -209,7 +208,7 @@ async function init(){
  selectedProofs=await window.JamaicaPublicVisualPolicy.load();
  if(!selectedProofs.has(id)){
   $("heading").textContent="Тур не прошёл обязательные проверки";
-  $("subtitle").textContent="«ЛУЧШАЯ ЦЕНА» и два зелёных самолётика не подтверждены для этого варианта за последние 15 минут.";
+  $("subtitle").textContent="Срок актуальности этого варианта истёк. Вернитесь к поиску.";
   $("visualDetailStatus").textContent="Непроверенная карточка снята с публикации. Вернитесь в поиск для выбора подходящего тура.";
   $("quoteLink").removeAttribute("href");
   return;
@@ -236,7 +235,7 @@ async function init(){
     if(!window.JamaicaPublicVisualPolicy.eligible(found,selectedProofs)){
       invalid=true;
       $("heading").textContent="Проверка этого тура отсутствует или устарела";
-      $("subtitle").textContent="Требуются метка и два зелёных рейса для того же отеля, даты и номера.";
+      $("subtitle").textContent="Требуется новое подтверждение выбранного отеля, даты и номера.";
       $("quoteLink").removeAttribute("href");
       return;
     }
@@ -269,7 +268,7 @@ async function init(){
   }
  }catch(err){
   $("heading").textContent="Информация временно недоступна";
-  $("subtitle").textContent="Не удалось загрузить проверенный источник предварительных данных.";
+  $("subtitle").textContent="Не удалось загрузить актуальные данные путешествия.";
  }
 }
 
