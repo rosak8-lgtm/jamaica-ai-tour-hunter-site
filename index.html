@@ -177,6 +177,12 @@
  <div id="sourceSearchCountryChips" class="sourceSearchCountryChips" role="group" aria-label="Направления фонового поиска без показа непроверенных туров"></div>
  <p id="sourceSearchMonths" class="sourceSearchMonths"></p>
 </details>
+<section id="exactDateOptions" hidden aria-label="Найденные даты вылета" style="margin:12px 0 18px">
+ <strong>Найденные даты вылета</strong>
+ <p class="micro">Даты и длительности из свежего каталога. Нажмите на подходящий вариант; изменения ваших фильтров указаны на кнопке.</p>
+ <div id="exactDateChoices" class="quickCountryChips" role="group" aria-label="Даты и длительности найденных туров"></div>
+ <details id="exactDateMore" hidden><summary>Ещё даты вылета</summary><div id="exactDateMoreChoices" class="quickCountryChips"></div></details>
+</section>
 <section id="exactCountryOptions" hidden aria-label="Другие найденные страны" style="margin:12px 0 18px">
  <strong>Другие страны с найденными вылетами</strong>
  <p class="micro">Выберите конкретную дату. Если длительность или даты отличаются от вашего запроса, это указано на кнопке.</p>
@@ -1001,6 +1007,32 @@ function renderTourPreviews(reset=true){
  }
  if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
  if($("favoritesOnly").checked)list=list.filter(x=>favoriteIds.has(x.id));
+ // Actual date availability for this city and country, including dates
+ // outside the selected range only as explicitly labelled alternatives.
+ const dateOptions=window.JamaicaSearchRecovery.dateOptions(verifiedRows(),
+   {origin,country,from:date,to:dateTo,nights},
+   x=>(!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
+     (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
+     (!budget||!partyTwoAdults||(referencePrice(x)!==null&&referencePrice(x)<=budget*2))&&
+     (!$("favoritesOnly").checked||favoriteIds.has(x.id)));
+ const dateChoices=document.createDocumentFragment(),dateMoreChoices=document.createDocumentFragment();
+ for(const [i,opt] of dateOptions.entries()){
+   const changes=[opt.changeDates?"другие даты":"",opt.changeNights?"другая длительность":""].filter(Boolean);
+   const control=el("button","quickCountryChip",opt.date.split("-").reverse().join(".")+
+     " · "+opt.nights.join(", ")+" ноч. · "+opt.count.toLocaleString("ru-RU")+" вар."+
+     (changes.length?" · "+changes.join(", "):""));
+   control.type="button";
+   control.addEventListener("click",()=>{
+     $("dateFrom").value=opt.date;$("dateTo").value=opt.date;$("dateTo").min=opt.date;
+     if(opt.changeNights){selectedNights.clear();for(const n of opt.nights)selectedNights.add(n);syncNightPickers();}
+     form.requestSubmit();
+   });
+   (i<8?dateChoices:dateMoreChoices).append(control);
+ }
+ $("exactDateChoices").replaceChildren(dateChoices);
+ $("exactDateMoreChoices").replaceChildren(dateMoreChoices);
+ $("exactDateMore").hidden=dateOptions.length<=8;
+ $("exactDateOptions").hidden=!dateOptions.length;
  // Concrete alternative countries remain visible even when the selected
  // country already has matches. The current filters are never changed silently.
  const options=window.JamaicaSearchRecovery.otherCountryOptions(verifiedRows(),
