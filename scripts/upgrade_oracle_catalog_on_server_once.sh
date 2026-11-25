@@ -63,13 +63,17 @@ python3 -B -m py_compile "$ROOT/scripts/oracle_site_publisher.py" \
   "$ROOT/backend/bg_route_first_visual_gate.py"
 [[ -f "$SERVER/oracle_site_publisher.py" ]] || {
   echo "STOP_PREVIOUS_PUBLISHER_MISSING"; exit 2; }
-# Do not install a publisher that only prints old source-price-list tours.
-grep -Fq 'eligibility.select_public_source_rows(new,visual_public)' \
- "$ROOT/scripts/oracle_site_publisher.py" || {
-  echo "STOP_SOURCE_PUBLISHER_HAS_NO_BEST_PRICE_BOTH_GREEN_GATE"; exit 2; }
-grep -Fq 'browser_price.apply(published' \
- "$ROOT/scripts/oracle_site_publisher.py" || {
-  echo "STOP_SOURCE_PUBLISHER_HAS_NO_TRUSTED_DOM_PRICE_OVERLAY"; exit 2; }
+# Check actual Python call structure, not a brittle exact text match.
+# The strict projection may receive additional clock keyword arguments.
+python3 -B "$ROOT/scripts/verify_publisher_gate.py" "$ROOT/scripts/oracle_site_publisher.py"
+# Verify the real strict gate and price handoff offline before replacing code.
+(
+  cd "$ROOT"
+  python3 -B -m unittest -v \
+    backend.test_oracle_site_publisher.Tests.test_exact_route_handoff_survives_rotating_source_and_public_price_validation \
+    backend.test_public_tour_eligibility backend.test_site_bot_price_overlay
+)
+echo "JAMAICA_PUBLISHER_OFFLINE_STRICT_TESTS=PASS"
 
 BACKUP="$(mktemp "$SERVER/oracle_site_publisher.py.old.XXXXXX")"
 cp "$SERVER/oracle_site_publisher.py" "$BACKUP"
