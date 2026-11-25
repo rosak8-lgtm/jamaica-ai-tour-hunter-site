@@ -64,7 +64,7 @@ class Tests(unittest.TestCase):
         current=feed()
         current["refreshed_at_utc"]=moment.isoformat()
         row=dict(current["previews"][0])
-        row.update(depart_date=(moment.date()+timedelta(days=10)).isoformat(),
+        row.update(depart_date=(moment.date()+timedelta(days=365)).isoformat(),
                    price_reference_rub=None,price_reference_party="UNVERIFIED")
         key="|".join((row["country"],row["hotel_id"],row["depart_date"],str(row["nights"]),row["room"]))
         row["id"]="p_"+hashlib.sha256(key.encode()).hexdigest()[:24]
