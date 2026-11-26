@@ -78,6 +78,10 @@ jobs:
           /tmp/jamaica-playwright-venv/bin/python -m playwright install chromium
           /tmp/jamaica-playwright-venv/bin/python -B scripts/browser_smoke_playwright.py
           /tmp/jamaica-playwright-venv/bin/python -B scripts/test_application_reference_browser.py
+      - name: Observe real public Pages catalog in Chromium
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: /tmp/jamaica-playwright-venv/bin/python -B scripts/public_browser_acceptance.py
       - name: Verify isolated Oracle selected-tour staging imports
         run: bash scripts/test_selected_tour_staging.sh
       - name: Validate atomic publisher upgrade
