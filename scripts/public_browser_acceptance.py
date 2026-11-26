@@ -43,6 +43,26 @@ def main():
             result["result_label"]=page.locator("#searchResultsCount").inner_text()[:120]
             result["country_shortcuts"]=page.locator("#quickCountries .quickCountryChip:not(.quickCountryMore)").all_text_contents()[:20]
             result["status"]="VISIBLE_VERIFIED_CARDS" if result["visible_cards"]>0 else "HOLD_NO_VISIBLE_CARDS"
+            # Observe the deployed recovery path, not a synthetic fixture.
+            if result["visible_cards"]>0:
+                party_before=page.locator("#partySummary").inner_text()
+                page.locator("#dateFrom").fill("2099-12-01")
+                page.locator("#dateTo").fill("2099-12-10")
+                page.locator("#tourSearchForm button[type=submit]").click()
+                exact=page.locator("#previewCards article.offerCard").count()
+                fallback=page.locator("#searchProgress .recoveryTourCard")
+                result["empty_exact_cards"]=exact
+                result["empty_alternative_cards"]=fallback.count()
+                result["empty_search_preserved"]=(page.locator("#departure").input_value()=="Иркутск"
+                    and page.locator("#dateFrom").input_value()=="2099-12-01"
+                    and page.locator("#dateTo").input_value()=="2099-12-10"
+                    and page.locator("#partySummary").inner_text()==party_before)
+                result["empty_alternatives_have_detail_links"]=fallback.count()>0 and fallback.locator("a[href]").count()==fallback.count()
+                result["empty_search_status"]=("PASS_PUBLIC_ALTERNATIVES" if exact==0 and
+                    result["empty_search_preserved"] and result["empty_alternatives_have_detail_links"]
+                    else "HOLD_PUBLIC_ALTERNATIVES")
+            else:
+                result["empty_search_status"]="HOLD_NO_BASELINE_INVENTORY"
         except Exception as exc:
             result["status"]="HOLD_PUBLIC_BROWSER"
             result["error_type"]=type(exc).__name__
