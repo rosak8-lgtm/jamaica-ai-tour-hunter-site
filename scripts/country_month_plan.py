@@ -57,8 +57,102 @@ def plan(feed, *, now):
             "catalog_timestamp":feed.get("refreshed_at_utc"),"shards_incomplete":incomplete,
             "countries":result}
 
+# Shadow scheduling only: 15-minute proof lifetime, one authorized slot per
+# three minutes. Do not infer that a source candidate is available to book.
+PREFERRED_EXPANSION=("Египет","Индия","Индонезия","Объединенные Арабские Эмираты",
+                     "Россия","Турция","Шри-Ланка","Сейшелы","Мальдивы")
+def expiry_plan(feed,visual,*,now):
+    base=plan(feed,now=now)
+    if base["shards_incomplete"]:
+        return {"classification":"SHADOW_ONLY","execution_allowed":False,
+                "status":"HOLD_INCOMPLETE_ROOT","slots":[]}
+    if visual.get("schema")!="jamaica.visual-selection.v1" or any(
+        visual.get(k) is not False for k in ("bookable","quote_verified","availability_verified")):
+        raise ValueError("VISUAL_SCHEMA")
+    entries=visual.get("entries")
+    if not isinstance(entries,list) or len(entries)>10000:raise ValueError("VISUAL_SIZE")
+    proofs={}
+    for p in entries:
+        if not isinstance(p,dict) or not isinstance(p.get("preview_id"),str) or p["preview_id"] in proofs:
+            raise ValueError("VISUAL_ID")
+        proofs[p["preview_id"]]=p
+    fresh=Counter(); expiring=Counter(); scopes=Counter(); expiring_scopes=Counter(); ids=set()
+    for row in feed["previews"]:
+        if not isinstance(row,dict) or row.get("origin")!="Иркутск":continue
+        pid=row.get("id")
+        if not isinstance(pid,str) or not re.fullmatch(r"p_[a-f0-9]{24}",pid) or pid in ids:
+            raise ValueError("CATALOG_ID")
+        ids.add(pid)
+        p=proofs.get(pid,{})
+        stamp=p.get("observed_at_utc")
+        if (p.get("route_best_price_seen") is not True or p.get("both_green_planes_seen") is not True
+            or not isinstance(stamp,str) or stamp!=row.get("price_observed_at_utc")
+            or row.get("price_source")!="BG_EXACT_SELECTED_GREEN_BROWSER"):continue
+        try:
+            t=datetime.fromisoformat(stamp.replace("Z","+00:00"))
+            d=datetime.strptime(row["depart_date"],"%Y-%m-%d").date()
+            if t.tzinfo is None or d<=now.astimezone(timezone.utc).date():continue
+            age=(now-t).total_seconds()
+        except (ValueError,TypeError,KeyError):continue
+        if not -30<=age<=900:continue
+        c=row.get("country")
+        if not valid_name(c):continue
+        fresh[c]+=1
+        scopes[c,row["depart_date"][:7]]+=1
+        if age>=600:
+            expiring[c]+=1
+            expiring_scopes[c,row["depart_date"][:7]]+=1
+    countries={x["country"]:x for x in base["countries"]}
+    # A published month with expired proofs is missing for current search.
+    month_now=now.astimezone(timezone.utc).strftime("%Y-%m")
+    fresh_missing={e["country"]:sorted({m for m in e["sampled_departure_months"]
+        if m>=month_now and not scopes[e["country"],m]})
+        for e in feed["search_coverage"]["countries"]}
+    slots=[]
+    # One refresh recommendation for each observed core country; prioritize
+    # missing/expiring evidence, then use remaining slots for breadth.
+    core=sorted((c for c in PRIMARY if c in countries),
+        key=lambda c:(fresh[c]>0,-expiring[c],fresh[c],PRIMARY.index(c)))
+    used=set()
+    for c in core:
+        # If there is already evidence, renew its biggest expiring scope.
+        observed=sorted((m for cc,m in scopes if cc==c),
+                        key=lambda m:(-expiring_scopes[c,m],-scopes[c,m],m))
+        missing=fresh_missing[c]
+        month=(observed or missing or [None])[0]
+        if month:
+            slots.append({"country":c,"month":month,"reason":"CORE_REFRESH",
+                          "fresh_rows":fresh[c],"expiring_within_5m":expiring[c]})
+            used.add((c,month))
+    # Reserve at least one expansion slot when a supported extra country
+    # exists, rather than spending all capacity on core-country dates.
+    extras=sorted((c for c in countries if c not in PRIMARY),
+        key=lambda c:(fresh[c]>0,PREFERRED_EXPANSION.index(c) if c in PREFERRED_EXPANSION else len(PREFERRED_EXPANSION),c))
+    def append_missing(options,reason):
+        for c in options:
+            for m in fresh_missing[c]:
+                if (c,m) not in used:
+                    slots.append({"country":c,"month":m,"reason":reason,
+                                  "fresh_rows":fresh[c],"expiring_within_5m":expiring[c]})
+                    used.add((c,m));return
+    if len(slots)<5:append_missing(extras,"EXPANSION")
+    if len(slots)<5:append_missing(core,"MISSING_CORE_MONTH")
+    while len(slots)<5:
+        before=len(slots);append_missing(extras,"EXPANSION")
+        if len(slots)==before:break
+    for i,s in enumerate(slots):s["earliest_offset_seconds"]=180*i
+    return {"classification":"SHADOW_ONLY","execution_allowed":False,"status":"PLAN_READY",
+            "proof_ttl_seconds":900,"minimum_gap_seconds":180,
+            "slots":slots,"fresh_rows_by_country":dict(fresh),
+            "expiring_rows_by_country":dict(expiring)}
+
 def main():
-    p=argparse.ArgumentParser();p.add_argument("catalog",type=Path);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument("catalog",type=Path);p.add_argument("--visual",type=Path);args=p.parse_args()
     with args.catalog.open(encoding="utf-8") as f:feed=json.load(f)
-    print(json.dumps(plan(feed,now=datetime.now(timezone.utc)),ensure_ascii=False,indent=2))
+    now=datetime.now(timezone.utc)
+    if args.visual:
+        with args.visual.open(encoding="utf-8") as f:visual=json.load(f)
+        result=expiry_plan(feed,visual,now=now)
+    else:result=plan(feed,now=now)
+    print(json.dumps(result,ensure_ascii=False,indent=2))
 if __name__=="__main__":main()
