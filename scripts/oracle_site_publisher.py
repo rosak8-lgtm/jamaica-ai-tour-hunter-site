@@ -33,6 +33,7 @@ import bot_visual_sidecar as visual
 import public_tour_eligibility as eligibility
 import site_bot_price_overlay as browser_price
 import catalog_property_identity as identity
+from scripts import bg_scoped_publisher_bridge as scoped_bridge
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
 RUNROOT = Path.home()/".local"/"share"/"jamaica-oracle-catalog"
@@ -174,7 +175,7 @@ def refresh_directory():
     log("JAMAICA_DIRECTORY_REFRESH","UPDATED")
     return True
 
-def validate(feed, directory, *, allow_empty=False, allow_browser_prices=False):
+def validate(feed, directory, *, allow_empty=False, allow_browser_prices=False, scoped_ids=None):
     if not isinstance(feed,dict) or feed.get("schema")!="jamaica.tour-previews.v1":
         raise CatalogHold("FEED_SCHEMA_INVALID")
     if feed.get("bookable") is not False or feed.get("quote_verified") is not False or feed.get("availability_verified") is not False:
@@ -200,7 +201,13 @@ def validate(feed, directory, *, allow_empty=False, allow_browser_prices=False):
                 raise CatalogHold("FEED_BROWSER_PRICE_INVALID")
         if row.get("bookable") is not False or row.get("flight_verified") is not False or row.get("quote_verified") is not False or row.get("availability_verified") is not False:
             raise CatalogHold("FEED_UNVERIFIED_STOCK")
-        if row.get("country") not in known or row.get("origin")!="Иркутск":
+        if row.get("country") not in known:
+            raise CatalogHold("FEED_WRONG_ORIGIN")
+        if row.get("origin")!="Иркутск" and not (
+            allow_browser_prices and isinstance(scoped_ids,dict) and
+            isinstance(row.get("id"),str) and scoped_ids.get(row["id"])==(
+                row.get("origin"),row.get("country")) and
+            row.get("price_source")=="BG_EXACT_SELECTED_GREEN_BROWSER"):
             raise CatalogHold("FEED_WRONG_ORIGIN")
         if not isinstance(row.get("id"),str) or not re.fullmatch(r"p_[a-f0-9]{24}",row["id"]):
             raise CatalogHold("FEED_INVALID_ID")
@@ -823,10 +830,27 @@ def publish(env):
         private_receipts if "private_receipts" in locals() else None,
         visual_public,trusted_browser_prices,now=publication_clock)
     log("JAMAICA_SITE_LIVE_DOM_PRICES",published["indicative_two_adult_rub_count"])
+    legacy_count=len(published["previews"])
+    # Existing Irkutsk evidence and price overlay stay independent. A trusted
+    # non-Irkutsk staging ledger is the only additional admission path.
+    scoped_ids={}
+    try:
+        scoped_clock=datetime.now(timezone.utc)
+        candidate,candidate_visual,candidate_ids,scoped_stats=scoped_bridge.extend(
+            published,visual_public,directory,
+            Path.home()/".local/state/jamaica-multi-city-preflight/registry.json",
+            RUNROOT/"private-bg-scoped-staging",now=scoped_clock)
+        if candidate_ids:
+            validate(candidate,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=candidate_ids)
+            encode_public_visual_feed(candidate_visual)
+            published,visual_public,scoped_ids=candidate,candidate_visual,candidate_ids
+        log("JAMAICA_SCOPED_PROJECTION",json.dumps(scoped_stats,separators=(",",":")))
+    except (CatalogHold,ValueError,OSError,TypeError,KeyError):
+        log("JAMAICA_SCOPED_PROJECTION","HOLD_KEEP_LEGACY")
     public_root,public_chunks=make_sharded_catalog(published)
-    validate(public_root,directory,allow_empty=True,allow_browser_prices=True)
+    validate(public_root,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=scoped_ids)
     log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
-    log("JAMAICA_PUBLIC_HIDDEN_UNVERIFIED",len(new["previews"])-len(published["previews"]))
+    log("JAMAICA_PUBLIC_HIDDEN_UNVERIFIED",len(new["previews"])-legacy_count)
     visual_path=CHECKOUT/PUBLIC_VISUAL_PATH
     try:
         previous_visual=json.loads(visual_path.read_text(encoding="utf-8")
