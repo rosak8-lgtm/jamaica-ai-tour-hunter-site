@@ -76,7 +76,7 @@ def expiry_plan(feed,visual,*,now):
         if not isinstance(p,dict) or not isinstance(p.get("preview_id"),str) or p["preview_id"] in proofs:
             raise ValueError("VISUAL_ID")
         proofs[p["preview_id"]]=p
-    fresh=Counter(); expiring=Counter(); scopes=Counter(); ids=set()
+    fresh=Counter(); expiring=Counter(); scopes=Counter(); expiring_scopes=Counter(); ids=set()
     for row in feed["previews"]:
         if not isinstance(row,dict) or row.get("origin")!="Иркутск":continue
         pid=row.get("id")
@@ -99,8 +99,15 @@ def expiry_plan(feed,visual,*,now):
         if not valid_name(c):continue
         fresh[c]+=1
         scopes[c,row["depart_date"][:7]]+=1
-        if age>=600:expiring[c]+=1
+        if age>=600:
+            expiring[c]+=1
+            expiring_scopes[c,row["depart_date"][:7]]+=1
     countries={x["country"]:x for x in base["countries"]}
+    # A published month with expired proofs is missing for current search.
+    month_now=now.astimezone(timezone.utc).strftime("%Y-%m")
+    fresh_missing={e["country"]:sorted({m for m in e["sampled_departure_months"]
+        if m>=month_now and not scopes[e["country"],m]})
+        for e in feed["search_coverage"]["countries"]}
     slots=[]
     # One refresh recommendation for each observed core country; prioritize
     # missing/expiring evidence, then use remaining slots for breadth.
@@ -110,8 +117,8 @@ def expiry_plan(feed,visual,*,now):
     for c in core:
         # If there is already evidence, renew its biggest expiring scope.
         observed=sorted((m for cc,m in scopes if cc==c),
-                        key=lambda m:(-scopes[c,m],m))
-        missing=countries[c]["missing_sampled_months"] or []
+                        key=lambda m:(-expiring_scopes[c,m],-scopes[c,m],m))
+        missing=fresh_missing[c]
         month=(observed or missing or [None])[0]
         if month:
             slots.append({"country":c,"month":month,"reason":"CORE_REFRESH",
@@ -123,8 +130,7 @@ def expiry_plan(feed,visual,*,now):
         key=lambda c:(fresh[c]>0,PREFERRED_EXPANSION.index(c) if c in PREFERRED_EXPANSION else len(PREFERRED_EXPANSION),c))
     def append_missing(options,reason):
         for c in options:
-            row=countries[c]
-            for m in row["missing_sampled_months"] or []:
+            for m in fresh_missing[c]:
                 if (c,m) not in used:
                     slots.append({"country":c,"month":m,"reason":reason,
                                   "fresh_rows":fresh[c],"expiring_within_5m":expiring[c]})
