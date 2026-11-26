@@ -323,6 +323,13 @@ def main():
                 ensure(page.locator("#departure").input_value()=="Москва" and
                        page.locator("#nightChoices input:checked").count()==2,
                        "EMPTY_CITY_ALTERNATIVE_CHANGED_SEARCH")
+                city_shortcut=page.locator("#liveDepartureChoices .liveDepartureChoice")
+                ensure(city_shortcut.count()==1 and city_shortcut.first.is_visible(),
+                       "EMPTY_CITY_PRE_SEARCH_SHORTCUT_MISSING")
+                ensure(city_shortcut.first.get_attribute("data-origin")=="Иркутск",
+                       "EMPTY_CITY_PRE_SEARCH_WRONG_ORIGIN")
+                ensure(page.locator("#departure").input_value()=="Москва",
+                       "PRE_SEARCH_SHORTCUT_CHANGED_CITY_WITHOUT_CLICK")
                 print("EMPTY_CITY_REAL_ALTERNATIVE_CARDS_PASS")
                 page.get_by_role("button",name="Скопировать параметры поиска",exact=True).click()
                 brief=page.locator("#searchRecoveryActions textarea.localSearchBrief")
@@ -365,6 +372,8 @@ def main():
                        "EMPTY_SEARCH_FULL_CATALOG_RECOVERY_NO_CARDS")
                 ensure(page.locator("#searchProgress .recoveryTourCard").count()==0,
                        "EMPTY_CITY_ALTERNATIVES_NOT_CLEARED_AFTER_RECOVERY")
+                ensure(not page.locator("#liveDepartureChoices").is_visible(),
+                       "LIVE_DEPARTURE_SHORTCUT_VISIBLE_WITH_MATCHING_CITY")
                 print("EMPTY_SEARCH_EXPLICIT_CITY_FULL_FILTER_RECOVERY_PASS")
 
                 page.locator("#departure").select_option("Иркутск")
