@@ -1214,6 +1214,7 @@ function renderTourPreviews(reset=true){
  }
  $("searchResultsCount").textContent=previewsLoaded?list.length.toLocaleString("ru-RU")+" найдено":"Поиск данных…";
  $("searchRecoveryActions")?.remove();
+ $("searchProgress").querySelector(".recoveryTourSection")?.remove();
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
  if(previewsLoaded&&list.length===0){
    $("searchProgress").classList.remove("hide");
@@ -1344,6 +1345,40 @@ function renderTourPreviews(reset=true){
      catch{area.focus();area.select();briefButton.textContent="Скопируйте выделенный текст";}
    });actions.append(briefButton);
    $("searchProgress").querySelector("p").after(actions);
+   // Keep the exact search count truthful. Separately show real alternatives,
+   // even if several filters or the selected departure city exclude every row.
+   const fallbackRows=verifiedRows().filter(row=>allowedOrigins.has(row.origin));
+   if(fallbackRows.length){
+     const section=el("section","recoveryTourSection");
+     section.setAttribute("aria-label","Свежие туры с другими параметрами");
+     section.append(el("h3","","Другие свежие туры JAMAICA"));
+     section.append(el("p","micro","Не совпадают с текущими фильтрами. Город, даты, длительность и цена указаны отдельно; параметры вашего поиска не изменены."));
+     const cards=el("div","alternativeTourCards");
+     const unique=new Map();
+     const ordered=fallbackRows.slice().sort((a,b)=>
+       Number(b.origin===currentOrigin)-Number(a.origin===currentOrigin)||
+       Number(b.country.toLocaleLowerCase("ru")===country)-Number(a.country.toLocaleLowerCase("ru")===country)||
+       (partyTwoAdults?previewPriceCompare(a,b):a.depart_date.localeCompare(b.depart_date)));
+     for(const candidate of ordered){
+       const key=JSON.stringify([candidate.origin,candidate.country]);
+       if(!unique.has(key))unique.set(key,candidate);
+     }
+     for(const candidate of [...unique.values()].slice(0,6)){
+       const card=el("article","alternativeTourCard recoveryTourCard");
+       card.dataset.recoveryPreviewId=candidate.id;
+       card.append(el("span","countryBadge",candidate.country));
+       card.append(el("strong","",candidate.hotel));
+       card.append(el("span","micro","Вылет: "+candidate.origin+" · "+candidate.depart_date.split("-").reverse().join(".")+" · "+candidate.nights+" ноч."));
+       const amount=partyTwoAdults?referencePrice(candidate):null;
+       card.append(el("strong","alternativeTourPrice",amount===null?"Стоимость уточняется":
+         new Intl.NumberFormat("ru-RU").format(amount)+" ₽ за 2 взрослых на момент проверки"));
+       const details=el("a","btn btnWhite","Посмотреть тур →");
+       details.href=(isApplicationReference(candidate)?"application-detail.html?id=":"preview.html?id=")+
+         encodeURIComponent(candidate.id)+partySuffix;
+       card.append(details);cards.append(card);
+     }
+     section.append(cards);actions.after(section);
+   }
  }
 }
 window.jamaicaUpdatePreviews=()=>renderTourPreviews(true);
