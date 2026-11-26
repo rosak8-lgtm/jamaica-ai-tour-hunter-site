@@ -164,7 +164,8 @@
 <p class="catalogBreadth" id="catalogBreadth" role="status" aria-live="polite">Загружаем направления с найденными турами…</p>
 <div class="quickCountryBar" aria-label="Выбор опубликованного направления">
  <span class="quickCountryIntro">Направления путешествий</span>
- <div id="quickCountries" class="quickCountryChips" role="group" aria-label="Страны с предварительными вариантами"></div>
+ <p id="quickCountriesHint" class="micro">Все свежие туры по странам: выбор ниже сбрасывает даты, ночи, отель, бюджет и избранное, но сохраняет город и состав туристов.</p>
+ <div id="quickCountries" class="quickCountryChips" role="group" aria-label="Страны с предварительными вариантами" aria-describedby="quickCountriesHint"></div>
 </div>
 <div class="quickMonthBar" aria-label="Выбор месяца вылета">
  <span class="quickMonthIntro">Вылеты по месяцам</span>
@@ -868,6 +869,13 @@ function interleaveCountries(rows){
  return window.JamaicaCountryOffers.interleaveCountries(rows);
 }
 let quickCountriesExpanded=false;
+function resetCatalogRestrictions(country=""){
+ $("destination").value=country;sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
+ $("dateFrom").value="";$("dateTo").value="";$("dateTo").min="";
+ selectedNights.clear();
+ $("hotelSearch").value="";$("budget").value="";$("favoritesOnly").checked=false;
+ syncNightPickers();sourceFilterOptions();form.requestSubmit();
+}
 function renderCountryShortcuts(chosen){
  const counts=window.JamaicaCountryOffers.countryCounts(
    verifiedRows(),$("departure").value.trim());
@@ -882,12 +890,7 @@ function renderCountryShortcuts(chosen){
    const control=el("button","quickCountryChip",label);
    control.type="button";
    control.setAttribute("aria-pressed",String(name===chosen));
-   control.addEventListener("click",()=>{
-     $("destination").value=name;
-     sidebarResort.value="";
-     sourceFilterOptions();
-     form.requestSubmit();
-   });
+   control.addEventListener("click",()=>resetCatalogRestrictions(name));
    buttons.append(control);
  }
  addCountry("","Все направления");
@@ -1305,11 +1308,7 @@ function renderTourPreviews(reset=true){
        $("departure").value=city;
        $("departureGeoStatus").textContent="Город выбран вами.";
        try{window.JamaicaDepartureGeo.remember(localStorage,city,[...allowedOrigins]);}catch{}
-       $("destination").value="";sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
-       $("dateFrom").value="";$("dateTo").value="";$("dateTo").min="";
-       selectedNights.clear();
-       $("hotelSearch").value="";$("budget").value="";$("favoritesOnly").checked=false;
-       syncNightPickers();sourceFilterOptions();form.requestSubmit();
+       resetCatalogRestrictions();
      });
      actions.append(resetButton);
    }
