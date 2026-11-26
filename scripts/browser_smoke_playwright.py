@@ -322,6 +322,38 @@ def main():
                 ensure(page.locator("#previewCards article.offerCard").count()==0,
                        "LOCAL_SEARCH_BRIEF_CREATED_UNVERIFIED_TOUR")
                 print("LOCAL_SEARCH_BRIEF_NO_BOOKING_PASS")
+                # A different city plus restrictive filters must not strand the
+                # customer, and the explicit recovery must never change party.
+                page.locator("#dateFrom").fill("2099-12-01")
+                page.locator("#dateTo").fill("2099-12-10")
+                advanced=page.locator("#advancedFilters")
+                if advanced.get_attribute("open") is None:
+                    advanced.locator("summary").click()
+                ensure(page.locator("#hotelSearch").is_visible() and page.locator("#budget").is_visible(),
+                       "EMPTY_SEARCH_ADVANCED_FILTERS_NOT_VISIBLE")
+                party_before=page.locator("#partySummary").inner_text()
+                page.locator("#hotelSearch").fill("NO_SUCH_HOTEL")
+                page.locator("#budget").fill("1000")
+                page.locator("#tourSearchForm button[type=submit]").click()
+                ensure(page.locator("#previewCards article.offerCard").count()==0,
+                       "EMPTY_SEARCH_RESTRICTIVE_FILTERS_NOT_APPLIED")
+                recovery=page.locator(".resetAllSearchFilters").filter(has_text="Иркутск")
+                ensure(recovery.count()==1,"EMPTY_SEARCH_FULL_CATALOG_RECOVERY_MISSING")
+                recovery.click()
+                ensure(page.locator("#departure").input_value()=="Иркутск"
+                       and page.locator("#destination").input_value()==""
+                       and page.locator("#dateFrom").input_value()==""
+                       and page.locator("#dateTo").input_value()==""
+                       and page.locator("#hotelSearch").input_value()==""
+                       and page.locator("#budget").input_value()==""
+                       and page.locator("#nightChoices input:checked").count()==0,
+                       "EMPTY_SEARCH_FULL_CATALOG_RECOVERY_FILTERS_NOT_RESET")
+                ensure(page.locator("#partySummary").inner_text()==party_before,
+                       "EMPTY_SEARCH_FULL_CATALOG_RECOVERY_PARTY_CHANGED")
+                ensure(page.locator("#previewCards article.offerCard").count()==min(30,len(test_rows)),
+                       "EMPTY_SEARCH_FULL_CATALOG_RECOVERY_NO_CARDS")
+                print("EMPTY_SEARCH_EXPLICIT_CITY_FULL_FILTER_RECOVERY_PASS")
+
                 page.locator("#departure").select_option("Иркутск")
                 page.locator("#nightPicker summary").click()
                 page.locator("#nightsClear").click()

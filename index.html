@@ -1286,6 +1286,38 @@ function renderTourPreviews(reset=true){
        actions.append(b);
      }
    }
+   // Offer an explicit full-catalog recovery even if several filters exclude
+   // all rows at once. Never silently change the customer's departure city.
+   const countsByOrigin=new Map();
+   const allowedOrigins=new Set([...$("departure").options].map(o=>o.value));
+   for(const row of verifiedRows()){
+     if(!allowedOrigins.has(row.origin))continue;
+     countsByOrigin.set(row.origin,(countsByOrigin.get(row.origin)||0)+1);
+   }
+   const currentOrigin=$("departure").value;
+   const availableOrigins=[...countsByOrigin].sort((a,b)=>
+     Number(b[0]===currentOrigin)-Number(a[0]===currentOrigin)||b[1]-a[1]||a[0].localeCompare(b[0],"ru"));
+   for(const [city,count] of availableOrigins.slice(0,5)){
+     const resetButton=el("button","btn btnWhite","Все свежие туры: "+city+" ("+count.toLocaleString("ru-RU")+")");
+     resetButton.type="button";resetButton.classList.add("resetAllSearchFilters");
+     resetButton.addEventListener("click",()=>{
+       departureUserInteracted=true;
+       $("departure").value=city;
+       $("departureGeoStatus").textContent="Город выбран вами.";
+       try{window.JamaicaDepartureGeo.remember(localStorage,city,[...allowedOrigins]);}catch{}
+       $("destination").value="";sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
+       $("dateFrom").value="";$("dateTo").value="";$("dateTo").min="";
+       selectedNights.clear();
+       $("hotelSearch").value="";$("budget").value="";$("favoritesOnly").checked=false;
+       syncNightPickers();sourceFilterOptions();form.requestSubmit();
+     });
+     actions.append(resetButton);
+   }
+   if(availableOrigins.length){
+     $("searchProgress").querySelector("p").append(" Можно явно сбросить все ограничения поиска и показать свежие туры из указанного города. Состав туристов сохранится.");
+   }else if(previewRecords.length){
+     $("searchProgress").querySelector("p").append(" Получены карточки каталога, но свежие подтверждения пока не совпали или истекли. Повторяем обновление.");
+   }
    const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
    const briefButton=el("button","btn btnWhite","Скопировать параметры поиска");
