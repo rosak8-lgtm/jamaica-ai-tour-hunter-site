@@ -415,6 +415,38 @@ def main():
                         "(nodes)=>nodes.map(n=>n.textContent.split(' · ')[0]).filter(n=>n!=='Все направления')")
                     ensure(set(expanded)==set(observed),
                            "EXPANDED_SOURCE_COUNTRIES_STILL_TRUNCATED")
+                # Country shortcuts must open the fresh inventory they count.
+                if observed:
+                    selected=observed[0]
+                    page.locator("#dateFrom").fill("2099-12-01")
+                    page.locator("#dateTo").fill("2099-12-10")
+                    if page.locator("#advancedFilters").get_attribute("open") is None:
+                        page.locator("#advancedFilters summary").click()
+                    page.locator("#hotelSearch").fill("NO_SUCH_HOTEL")
+                    page.locator("#budget").fill("1000")
+                    page.locator("#tourSearchForm button[type=submit]").click()
+                    ensure(page.locator("#previewCards article.offerCard").count()==0,
+                           "COUNTRY_SHORTCUT_FIXTURE_NOT_RESTRICTED")
+                    before=page.locator("#partySummary").inner_text()
+                    chip=page.locator("#quickCountries .quickCountryChip").filter(
+                        has_text=__import__("re").compile("^"+__import__("re").escape(selected)+" · "))
+                    if not chip.count():
+                        page.locator("#quickCountries .quickCountryMore").click()
+                    chip.first.click()
+                    ensure(page.locator("#destination").input_value()==selected
+                           and page.locator("#dateFrom").input_value()==""
+                           and page.locator("#dateTo").input_value()==""
+                           and page.locator("#hotelSearch").input_value()==""
+                           and page.locator("#budget").input_value()==""
+                           and page.locator("#nightChoices input:checked").count()==0,
+                           "COUNTRY_SHORTCUT_LEFT_CONFLICTING_FILTERS")
+                    ensure(page.locator("#departure").input_value()=="Иркутск"
+                           and page.locator("#partySummary").inner_text()==before,
+                           "COUNTRY_SHORTCUT_CHANGED_CITY_OR_PARTY")
+                    ensure(page.locator("#previewCards article.offerCard").count()>0,
+                           "COUNTRY_SHORTCUT_DID_NOT_DISPLAY_VERIFIED_TOURS")
+                    page.locator("#quickCountries").get_by_role("button",name="Все направления",exact=True).click()
+                    print("COUNTRY_SHORTCUT_OPENS_FRESH_INVENTORY_PASS")
                 first30=page.locator("#previewCards article.offerCard h3").all_text_contents()
                 shown={text.split(" · ")[0] for text in first30}
                 ensure(len(shown)>=min(3,len(counts)) and shown.issubset(counts),"FIRST_PAGE_DOES_NOT_SHOW_MULTIPLE_COUNTRIES")
