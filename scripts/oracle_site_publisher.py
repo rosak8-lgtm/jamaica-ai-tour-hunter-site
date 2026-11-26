@@ -89,6 +89,37 @@ def git_env():
     env["GIT_TERMINAL_PROMPT"]="0"
     return env
 
+def normalize_public_catalog_modes(root):
+    """Repair only the owner-controlled checkout's known public catalog paths."""
+    import stat
+    root=Path(root)
+    def secure_dir(path):
+        st=path.lstat()
+        if not stat.S_ISDIR(st.st_mode) or st.st_uid!=os.getuid() or st.st_mode&0o022:
+            raise CatalogHold("UNSAFE_PUBLIC_CATALOG_DIRECTORY")
+    secure_dir(root)
+    paths=[root/name for name in ("tour-previews.json",PUBLIC_VISUAL_PATH,
+                                 "application-reference.json","inquiry-config.json")]
+    shard_dir=root/SHARD_FOLDER
+    if shard_dir.exists() or shard_dir.is_symlink():
+        secure_dir(shard_dir)
+        paths.extend(shard_dir/f"part-{i:03}.json" for i in range(1,MAX_SHARDS+1))
+    for path in paths:
+        try:
+            fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise CatalogHold("UNSAFE_PUBLIC_CATALOG_FILE") from exc
+        try:
+            st=os.fstat(fd)
+            if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.getuid() or st.st_nlink!=1:
+                raise CatalogHold("UNSAFE_PUBLIC_CATALOG_FILE")
+            if st.st_mode&0o022:
+                os.fchmod(fd,stat.S_IMODE(st.st_mode)&~0o022)
+        finally:
+            os.close(fd)
+
 def checkout(env):
     RUNROOT.mkdir(parents=True,exist_ok=True)
     RUNROOT.chmod(0o700)
@@ -104,6 +135,7 @@ def checkout(env):
     run(["git","fetch","--depth=1","origin","main"],cwd=CHECKOUT,env=env,timeout=90)
     run(["git","checkout","--force","-B","main","origin/main"],cwd=CHECKOUT,env=env)
     run(["git","reset","--hard","origin/main"],cwd=CHECKOUT,env=env)
+    normalize_public_catalog_modes(CHECKOUT)
 
 def timestamp(value):
     try:
@@ -872,6 +904,7 @@ def publish(env):
         if len(data)>8_000_000:raise CatalogHold("PEGAS_PUBLIC_FEED_TOO_LARGE")
         pegas_path.write_bytes(data)
         paths.append("application-reference.json")
+    normalize_public_catalog_modes(CHECKOUT)
     run(["git","add","-A","--",*paths],cwd=CHECKOUT,env=env)
     staged=run(["git","diff","--cached","--quiet"],cwd=CHECKOUT,env=env,check=False)
     if staged.returncode==0:
@@ -954,6 +987,7 @@ def guarded_optional_hotel_media(*,now=None):
         if fd is not None:os.close(fd)
 
 def main():
+    os.umask(0o022)  # inherited by Git and public catalog writers
     log("JAMAICA_ORACLE_5MIN_IMPORT_START",datetime.now(timezone.utc).isoformat(timespec="seconds"))
     env=git_env()
     checkout(env)
