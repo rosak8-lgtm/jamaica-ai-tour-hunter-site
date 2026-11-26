@@ -87,6 +87,7 @@
    <div class="field short"><label for="adults">Взрослых · номер 1</label><input id="adults" name="adults" type="number" min="1" max="12" value="2" required></div>
    <div class="field short"><label for="kids">Детей · номер 1</label><input id="kids" name="kids" type="number" min="0" max="10" value="0" required></div>
   </div>
+  <div id="liveDepartureChoices" hidden aria-label="Города со свежими турами" style="margin:10px 0 14px"></div>
   <section class="travelerBuilder" aria-label="Туристы и размещение по номерам">
    <div class="travelerIntro"><div><strong>Состав туристов по номерам</strong><span>Возраст каждого ребёнка указывается <b>на дату начала тура</b>.</span></div><span id="partySummary" aria-live="polite">2 взрослых · 1 номер</span></div>
    <div id="primaryChildAges" class="partyAges" aria-label="Возраст детей в номере 1"></div>
@@ -1193,6 +1194,33 @@ function renderTourPreviews(reset=true){
  previewVisible=Math.min(list.length,previewVisible+30);
  more.hidden=previewVisible>=list.length;
  const cityRows=verifiedRows().filter(x=>x.origin===$("departure").value);
+ const departureChoices=$("liveDepartureChoices");
+ departureChoices.replaceChildren();
+ const coverage=new Map();
+ const permittedCities=new Set([...$("departure").options].map(o=>o.value));
+ for(const row of verifiedRows()){
+   if(!permittedCities.has(row.origin))continue;
+   const slot=coverage.get(row.origin)||{count:0,countries:new Set()};
+   slot.count++;slot.countries.add(row.country);coverage.set(row.origin,slot);
+ }
+ departureChoices.hidden=!previewsLoaded||cityRows.length>0||coverage.size===0;
+ if(!departureChoices.hidden){
+   departureChoices.append(el("p","micro","Из выбранного города пока нет свежих вариантов. Сейчас доступны другие города вылета. Выберите город, чтобы показать все его свежие туры; состав туристов сохранится."));
+   const choices=el("div","quickCountryChips");
+   for(const [city,slot] of [...coverage].sort((a,b)=>b[1].count-a[1].count||a[0].localeCompare(b[0],"ru")).slice(0,5)){
+     const control=el("button","quickCountryChip liveDepartureChoice",city+" · "+slot.count.toLocaleString("ru-RU")+" вар. · "+slot.countries.size+" напр.");
+     control.type="button";control.dataset.origin=city;
+     control.addEventListener("click",()=>{
+       departureUserInteracted=true;
+       $("departure").value=city;
+       $("departureGeoStatus").textContent="Город выбран вами.";
+       try{window.JamaicaDepartureGeo.remember(localStorage,city,[...permittedCities]);}catch{}
+       resetCatalogRestrictions();
+     });
+     choices.append(control);
+   }
+   departureChoices.append(choices);
+ }
  $("departureStatus").textContent=!previewsLoaded?"Проверяем текущий каталог…":
    cityRows.length?"Всего свежих вариантов из города (все страны и даты): "+cityRows.length.toLocaleString("ru-RU"):
    "Город в справочнике. Свежих проверенных туров пока нет.";
