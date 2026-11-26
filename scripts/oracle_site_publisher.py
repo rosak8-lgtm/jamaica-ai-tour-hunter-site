@@ -836,15 +836,17 @@ def publish(env):
     scoped_ids={}
     try:
         scoped_clock=datetime.now(timezone.utc)
-        published,visual_public,scoped_ids,scoped_stats=scoped_bridge.extend(
+        candidate,candidate_visual,candidate_ids,scoped_stats=scoped_bridge.extend(
             published,visual_public,directory,
             Path.home()/".local/state/jamaica-multi-city-preflight/registry.json",
             RUNROOT/"private-bg-scoped-staging",now=scoped_clock)
+        if candidate_ids:
+            validate(candidate,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=candidate_ids)
+            encode_public_visual_feed(candidate_visual)
+            published,visual_public,scoped_ids=candidate,candidate_visual,candidate_ids
         log("JAMAICA_SCOPED_PROJECTION",json.dumps(scoped_stats,separators=(",",":")))
-    except (ValueError,OSError,TypeError,KeyError):
+    except (CatalogHold,ValueError,OSError,TypeError,KeyError):
         log("JAMAICA_SCOPED_PROJECTION","HOLD_KEEP_LEGACY")
-    if scoped_ids:
-        validate(published,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=scoped_ids)
     public_root,public_chunks=make_sharded_catalog(published)
     validate(public_root,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=scoped_ids)
     log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
