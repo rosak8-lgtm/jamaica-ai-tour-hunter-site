@@ -313,6 +313,17 @@ def main():
                        "CITY_WITHOUT_PROOFS_NOT_EXPLAINED")
                 ensure(page.locator("#nightChoices input:checked").count()==2,
                        "CITY_CHANGE_LOST_SELECTED_NIGHTS")
+                fallback=page.locator("#searchProgress .recoveryTourCard")
+                ensure(fallback.count()>0,"EMPTY_CITY_NO_ACTUAL_ALTERNATIVE_CARDS")
+                fallback_ids=set(fallback.evaluate_all("(nodes)=>nodes.map(n=>n.dataset.recoveryPreviewId)"))
+                ensure(fallback_ids.issubset({r["id"] for r in test_rows}),
+                       "EMPTY_CITY_ALTERNATIVE_NOT_IN_VERIFIED_FIXTURE")
+                ensure(all("Вылет: Иркутск" in t for t in fallback.all_text_contents()),
+                       "EMPTY_CITY_ALTERNATIVE_ORIGIN_NOT_DISCLOSED")
+                ensure(page.locator("#departure").input_value()=="Москва" and
+                       page.locator("#nightChoices input:checked").count()==2,
+                       "EMPTY_CITY_ALTERNATIVE_CHANGED_SEARCH")
+                print("EMPTY_CITY_REAL_ALTERNATIVE_CARDS_PASS")
                 page.get_by_role("button",name="Скопировать параметры поиска",exact=True).click()
                 brief=page.locator("#searchRecoveryActions textarea.localSearchBrief")
                 ensure(brief.count()==1 and "Город вылета: Москва" in brief.input_value()
@@ -352,6 +363,8 @@ def main():
                        "EMPTY_SEARCH_FULL_CATALOG_RECOVERY_PARTY_CHANGED")
                 ensure(page.locator("#previewCards article.offerCard").count()==min(30,len(test_rows)),
                        "EMPTY_SEARCH_FULL_CATALOG_RECOVERY_NO_CARDS")
+                ensure(page.locator("#searchProgress .recoveryTourCard").count()==0,
+                       "EMPTY_CITY_ALTERNATIVES_NOT_CLEARED_AFTER_RECOVERY")
                 print("EMPTY_SEARCH_EXPLICIT_CITY_FULL_FILTER_RECOVERY_PASS")
 
                 page.locator("#departure").select_option("Иркутск")
