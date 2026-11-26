@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime,timezone
-from scripts.country_month_plan import plan
+from scripts.country_month_plan import plan, expiry_plan
 
 def fixture():
     return {"schema":"jamaica.tour-previews.v1","refreshed_at_utc":"2026-11-25T08:00:00Z",
@@ -41,5 +41,39 @@ class PlanTests(unittest.TestCase):
     def test_no_metadata_no_plan(self):
         f=fixture();f.pop("search_coverage")
         with self.assertRaises(ValueError):plan(f,now=self.now)
+
+class ExpiryPlanTests(unittest.TestCase):
+    def setUp(self):
+        self.now=datetime(2026,11,25,8,12,tzinfo=timezone.utc)
+        self.feed=fixture()
+        self.visual={"schema":"jamaica.visual-selection.v1","bookable":False,
+                     "quote_verified":False,"availability_verified":False,"entries":[]}
+        for i,row in enumerate(self.feed["previews"]):
+            pid="p_"+str(i+1)*24
+            stamp="2026-11-25T08:00:00Z" if i==0 else "2026-11-25T08:10:00Z"
+            row.update(id=pid,price_observed_at_utc=stamp,price_source="BG_EXACT_SELECTED_GREEN_BROWSER")
+            self.visual["entries"].append({"preview_id":pid,"observed_at_utc":stamp,
+                 "route_best_price_seen":True,"both_green_planes_seen":True})
+    def test_prioritize_expiring_and_reserve_expansion(self):
+        result=expiry_plan(self.feed,self.visual,now=self.now)
+        self.assertFalse(result["execution_allowed"])
+        self.assertEqual(result["slots"][0]["country"],"Китай")
+        self.assertEqual(result["expiring_rows_by_country"],{"Китай":1})
+        self.assertTrue(any(x["country"]=="Египет" for x in result["slots"]))
+        self.assertTrue(any(x["country"]=="Китай" and x["month"]=="2027-01" for x in result["slots"]))
+        slots=result["slots"]
+        self.assertLessEqual(len(slots),5)
+        self.assertEqual([x["earliest_offset_seconds"] for x in slots],list(range(0,180*len(slots),180)))
+        self.assertEqual(len({(x["country"],x["month"]) for x in slots}),len(slots))
+    def test_expired_and_mismatched_proofs_not_counted(self):
+        self.feed["previews"][0]["price_observed_at_utc"]="2026-11-25T07:59:00Z"
+        self.visual["entries"][1]["both_green_planes_seen"]=False
+        result=expiry_plan(self.feed,self.visual,now=self.now)
+        self.assertEqual(result["fresh_rows_by_country"],{})
+    def test_incomplete_root_is_not_actionable(self):
+        self.feed["shards"]=[{"count":10}]
+        result=expiry_plan(self.feed,self.visual,now=self.now)
+        self.assertEqual(result["status"],"HOLD_INCOMPLETE_ROOT")
+        self.assertEqual(result["slots"],[])
 
 if __name__=="__main__":unittest.main()
