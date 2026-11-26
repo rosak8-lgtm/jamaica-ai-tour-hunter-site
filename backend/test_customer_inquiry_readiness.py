@@ -36,6 +36,20 @@ class Tests(unittest.TestCase):
         self.assertFalse(r["catalog"]["BG_EXACT_SAMPLE_RESOLVED"])
         self.assertNotIn(self.env["JAMAICA_INQUIRY_HASH_SECRET"],json.dumps(r))
         self.assertNotIn(self.env["JAMAICA_INQUIRY_PROXY_SECRET"],json.dumps(r))
+    def test_missing_unsafe_empty_are_distinct(self):
+        r=report(self.root,now=self.now,env={})
+        self.assertEqual(r["config_read_state"],"ABSENT")
+        self.assertEqual(r["catalog"]["BG_READ_STATE"],"ABSENT")
+        self.write("inquiry-config.json",self.config)
+        (self.root/"inquiry-config.json").chmod(0o664)
+        self.write("tour-previews.json",{"previews":[]})
+        r=report(self.root,now=self.now,env={})
+        self.assertEqual(r["config_read_state"],"UNSAFE_FILE")
+        self.assertEqual(r["catalog"]["BG_READ_STATE"],"OK")
+        self.assertEqual(r["catalog"]["BG_ROOT_ROWS"],0)
+        (self.root/"tour-previews.json").chmod(0o664)
+        r=report(self.root,now=self.now,env={})
+        self.assertEqual(r["catalog"]["BG_READ_STATE"],"UNSAFE_FILE")
     def test_endpoint_checks(self):
         for url in ("http://example.invalid/v1/customer-inquiries",
                     "https://x:y@example.invalid/v1/customer-inquiries",
