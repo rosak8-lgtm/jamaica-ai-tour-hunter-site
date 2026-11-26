@@ -79,7 +79,7 @@ jobs:
           /tmp/jamaica-playwright-venv/bin/python -B scripts/browser_smoke_playwright.py
           /tmp/jamaica-playwright-venv/bin/python -B scripts/test_application_reference_browser.py
       - name: Observe real public Pages catalog in Chromium
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: /tmp/jamaica-playwright-venv/bin/python -B scripts/public_browser_acceptance.py
       - name: Verify isolated Oracle selected-tour staging imports
