@@ -41,6 +41,50 @@ def feed(n=1):
     }
 
 class Tests(unittest.TestCase):
+    def test_public_catalog_modes_repair_without_relaxing_reader(self):
+        from backend.customer_inquiry_catalog import read
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            shard_dir=root/publisher.SHARD_FOLDER
+            shard_dir.mkdir(mode=0o700)
+            paths=[root/name for name in ("tour-previews.json","tour-visual-evidence.json",
+                                           "application-reference.json","inquiry-config.json")]
+            paths.append(shard_dir/"part-001.json")
+            for path in paths:
+                path.write_text('{"previews":[]}')
+                path.chmod(0o664)
+                with self.assertRaisesRegex(ValueError,"UNSAFE_FILE"):
+                    read(path,1024)
+            private=root/"private-test.json"
+            private.write_text("{}");private.chmod(0o600)
+            publisher.normalize_public_catalog_modes(root)
+            publisher.normalize_public_catalog_modes(root)
+            for path in paths:
+                self.assertEqual(path.stat().st_mode&0o777,0o644)
+                self.assertEqual(read(path,1024)[0],{"previews":[]})
+            self.assertEqual(private.stat().st_mode&0o777,0o600)
+
+    def test_public_catalog_modes_reject_links_and_unsafe_directory(self):
+        import os
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work)
+            path=root/"tour-previews.json"
+            target=root/"unrelated.json"
+            target.write_text("{}");target.chmod(0o664)
+            path.symlink_to(target)
+            with self.assertRaisesRegex(publisher.CatalogHold,"UNSAFE_PUBLIC_CATALOG_FILE"):
+                publisher.normalize_public_catalog_modes(root)
+            self.assertEqual(target.stat().st_mode&0o777,0o664)
+            path.unlink();os.link(target,path)
+            with self.assertRaisesRegex(publisher.CatalogHold,"UNSAFE_PUBLIC_CATALOG_FILE"):
+                publisher.normalize_public_catalog_modes(root)
+            path.unlink()
+            shard_dir=root/publisher.SHARD_FOLDER
+            shard_dir.mkdir();shard_dir.chmod(0o775)
+            with self.assertRaisesRegex(publisher.CatalogHold,"UNSAFE_PUBLIC_CATALOG_DIRECTORY"):
+                publisher.normalize_public_catalog_modes(root)
+            self.assertEqual(target.stat().st_mode&0o777,0o664)
+
     def test_pegas_handoff_disabled_by_default_and_missing_evidence_is_empty(self):
         from backend import pegas_private_handoff
         from backend.test_pegas_public_projection import Tests as Fixture
