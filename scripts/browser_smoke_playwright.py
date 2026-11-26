@@ -133,14 +133,14 @@ def main():
                 print("STRICT_SYNTHETIC_PROOF_ONLY_BROWSER_FIXTURE="+str(len(test_rows)))
 
                 # Simulate a Pages generation mismatch: first proof request has
-                # no matching entries, then the next returns the fixture.
+                # no matching entries twice, then the third returns the fixture.
                 retry_page=browser.new_page(viewport={"width":390,"height":844})
                 try:
                     hits=[]
                     def changing_proofs(route):
                         hits.append(1)
                         route.fulfill(status=200,content_type="application/json",
-                            body=json.dumps(empty_proofs if len(hits)==1 else fixture_proofs,
+                            body=json.dumps(empty_proofs if len(hits)<=2 else fixture_proofs,
                                             ensure_ascii=False))
                     retry_page.route("**/departure-geo-config.json",lambda route:route.fulfill(
                         status=200,content_type="application/json",
@@ -148,7 +148,7 @@ def main():
                     retry_page.route("**/tour-visual-evidence.json",changing_proofs)
                     retry_page.goto(base,wait_until="domcontentloaded")
                     retry_page.locator("#previewCards article.offerCard").first.wait_for(timeout=25000)
-                    ensure(len(hits)>=2,"MIXED_PUBLICATION_GENERATIONS_NOT_RETRIED")
+                    ensure(len(hits)>=3,"MIXED_PUBLICATION_GENERATIONS_NOT_RETRIED")
                     print("PUBLICATION_MISMATCH_RETRY_RECOVERS_VERIFIED_CARDS_PASS")
                 finally:
                     retry_page.close()

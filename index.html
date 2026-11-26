@@ -1316,7 +1316,7 @@ function renderTourPreviews(reset=true){
    if(availableOrigins.length){
      $("searchProgress").querySelector("p").append(" Можно явно сбросить все ограничения поиска и показать свежие туры из указанного города. Состав туристов сохранится.");
    }else if(previewRecords.length){
-     $("searchProgress").querySelector("p").append(" Получены карточки каталога, но свежие подтверждения пока не совпали или истекли. Повторяем обновление.");
+     $("searchProgress").querySelector("p").append(" Получены карточки каталога, но свежие подтверждения пока не совпали или истекли. Каталог проверяется автоматически; это не означает, что туров у поставщика нет.");
    }
    const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
@@ -1502,12 +1502,14 @@ async function refreshCatalog(){
   applicationRows=await secondFeed;
   if(applicationRows.length)previewsLoaded=true;
   sourceFilterOptions();renderTourPreviews(true);
-  // Retry once if Pages briefly serves mismatched publication generations.
-  const missing=previewRecords.some(row=>row.status==="REFERENCE_PRICE_LIST_ONLY"&&
+  // Pages can briefly serve different generations of the two files. Retry
+  // the pair with bounded delays; never relax proof or exact-price checks.
+  const needsPairRetry=()=>previewRecords.some(row=>row.status==="REFERENCE_PRICE_LIST_ONLY"&&
    (!visualProofs.has(row.id)||(row.price_source==="BG_EXACT_SELECTED_GREEN_BROWSER"&&
     row.price_observed_at_utc!==visualProofs.get(row.id)?.observed_at_utc)));
-  if(missing){
-   await new Promise(resolve=>setTimeout(resolve,650));
+  for(const delay of [650,1800]){
+   if(!needsPairRetry())break;
+   await new Promise(resolve=>setTimeout(resolve,delay));
    await loadVisualProofs(false);
    await loadTourPreviews();
   }
@@ -1536,9 +1538,14 @@ void window.JamaicaDepartureGeo.start({
   renderTourPreviews(true);
  }
 }).finally(()=>clearTimeout(departureDeadline));
+// When there are no eligible cards, recover from Pages publication lag or
+// a transient network error without waiting another three minutes. Only
+// static public files are requested; no tour-operator calls are triggered.
 setInterval(()=>{
- if(document.visibilityState==="visible")void refreshCatalog();
-},3*60*1000);
+ if(document.visibilityState!=="visible"||catalogRefreshInFlight)return;
+ const delay=verifiedRows().length?180000:30000;
+ if(Date.now()-lastCatalogRefreshAt>=delay)requestFreshSearchCatalog();
+},15000);
 // A proof can expire between two network refreshes. Remove stale cards
 // without contacting either GitHub or the supplier.
 setInterval(()=>{
@@ -1553,7 +1560,10 @@ setInterval(()=>{
    visualProofs.delete(id);changed=true;
   }
  }
- if(changed){sourceFilterOptions();renderTourPreviews(true);}
+ if(changed){
+   sourceFilterOptions();renderTourPreviews(true);
+   requestFreshSearchCatalog();
+ }
 },15000);
 document.addEventListener("visibilitychange",()=>{
  if(document.visibilityState==="visible"){
