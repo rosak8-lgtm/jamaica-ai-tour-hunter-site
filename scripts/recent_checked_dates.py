@@ -1,4 +1,4 @@
-"""One-hour history of actually verified BG date groups, not live inventory.
+"""Adaptive 30/120-minute history of actually verified BG date groups, not live inventory.
 No supplier I/O, no renewal of proof timestamps, no booking permission.
 """
 from datetime import datetime, timezone, timedelta
@@ -7,7 +7,9 @@ import re
 SCHEMA="jamaica.recent-checked-dates.v1"
 FILENAME="recent-checked-dates.json"
 MAX_GROUPS=2000
-WINDOW=timedelta(hours=1)
+WINDOW=timedelta(hours=2)
+URGENT_WINDOW=timedelta(minutes=30)
+URGENT_DAYS=7
 KEYS={"origin","country","date","nights","observed_at_utc","count","last_min_rub"}
 def instant(value):
     try:
@@ -30,14 +32,14 @@ def valid_group(g,now):
     except (ValueError,TypeError):return False
     at=instant(g["observed_at_utc"])
     return (now.date()<=day<=now.date()+timedelta(days=730) and at is not None
-        and -timedelta(seconds=30)<=now-at<=WINDOW
+        and -timedelta(seconds=30)<=now-at<=(URGENT_WINDOW if (day-now.date()).days<=URGENT_DAYS else WINDOW)
         and type(g["nights"]) is int and 3<=g["nights"]<=180
         and type(g["count"]) is int and 1<=g["count"]<=10000
         and type(g["last_min_rub"]) is int and 1000<=g["last_min_rub"]<=10_000_000)
 
 def build(previous,rows,visual_feed,*,now):
     """Only accept fresh exact same-observation two-adult prices; retain groups
-    for 60 minutes from original observation. A new batch replaces a group's
+    for 30 minutes for departures within 7 days, otherwise 120 minutes from original observation. A new batch replaces a group's
     older observation rather than summing old and new counts.
     """
     merged={}
