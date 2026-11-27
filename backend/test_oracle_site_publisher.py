@@ -270,6 +270,54 @@ class Tests(unittest.TestCase):
             state["provider_last_hold"]["observed_at_utc"]="invalid";write()
             self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment))
 
+    def test_v107_broad_rate_quarantine_boundary_and_no_browser_gap_change(self):
+        moment=datetime.now(timezone.utc)
+        with tempfile.TemporaryDirectory() as work:
+            path=Path(work)/"state.json"
+            state={"schema":"jamaica.site-bot.v1","provider_hold_until_utc":moment.isoformat(),
+                   "provider_last_hold":{"http_status":429,"stage":"API_FILES",
+                   "observed_at_utc":(moment-timedelta(minutes=30)).isoformat()}}
+            def write():
+                path.write_text(json.dumps(state));path.chmod(0o600)
+            write()
+            before=path.read_bytes()
+            self.assertFalse(publisher.provider_hold_active(path=path,now=moment+timedelta(hours=2)))
+            self.assertFalse(publisher.browser_recovery_priority(path=path,now=moment+timedelta(hours=2)))
+            self.assertTrue(publisher.broad_scan_rate_quarantine(path=path,now=moment+timedelta(hours=2)))
+            self.assertTrue(publisher.broad_scan_rate_quarantine(path=path,now=moment+timedelta(hours=24,seconds=-1)))
+            self.assertFalse(publisher.broad_scan_rate_quarantine(path=path,now=moment+timedelta(hours=24)))
+            self.assertEqual(path.read_bytes(),before)
+            state["provider_last_hold"]["http_status"]=503;write()
+            self.assertTrue(publisher.broad_scan_rate_quarantine(path=path,now=moment+timedelta(hours=2)))
+            state["provider_last_hold"]["observed_at_utc"]="bad";write()
+            self.assertTrue(publisher.broad_scan_rate_quarantine(path=path,now=moment+timedelta(days=2)))
+            state["provider_last_hold"]["http_status"]=401;write()
+            self.assertFalse(publisher.broad_scan_rate_quarantine(path=path,now=moment+timedelta(hours=2)))
+            self.assertFalse(publisher.broad_scan_rate_quarantine(path=path.with_name("missing"),now=moment))
+
+    def test_v107_quarantine_no_supplier_calls_even_when_scan_due(self):
+        with patch.object(publisher,"broad_scan_rate_quarantine",return_value=True), \
+             patch.object(publisher,"source_scan_due",return_value=True), \
+             patch.object(publisher,"mark_source_attempt") as mark, \
+             patch.object(publisher,"refresh_directory") as refresh, \
+             patch.object(publisher,"refresh_source_feed") as scan:
+            self.assertEqual(publisher.guarded_source_scan(),(None,None))
+            mark.assert_not_called();refresh.assert_not_called();scan.assert_not_called()
+
+    def test_v107_quarantine_rechecked_after_lock(self):
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);root.chmod(0o700)
+            state=root/"state.json";(root/"lock").touch(mode=0o600)
+            with patch.object(publisher,"BOT_STATE",state), \
+                 patch.object(publisher,"broad_scan_rate_quarantine",side_effect=[False,True]), \
+                 patch.object(publisher,"source_scan_due",return_value=True), \
+                 patch.object(publisher,"provider_hold_active",return_value=False), \
+                 patch.object(publisher,"browser_recovery_priority",return_value=False), \
+                 patch.object(publisher,"mark_source_attempt") as mark, \
+                 patch.object(publisher,"refresh_source_feed") as scan:
+                self.assertEqual(publisher.guarded_source_scan(),(None,None))
+                mark.assert_not_called();scan.assert_not_called()
+
     def test_shared_scan_guard_serializes_without_blocking_publication(self):
         import fcntl
         with tempfile.TemporaryDirectory() as work:
