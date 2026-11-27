@@ -270,6 +270,20 @@ class Tests(unittest.TestCase):
             state["provider_last_hold"]["observed_at_utc"]="invalid";write()
             self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment))
 
+    def test_v109_public_multicity_qa_does_not_relax_legacy_admission(self):
+        from catalog_property_identity import verify_catalog_hotel_identity, public_departure_cities, IdentityMismatch
+        cities=public_departure_cities('<select id="departure"><option value="Иркутск">Иркутск</option><option value="Екатеринбург">Екатеринбург</option></select>')
+        self.assertEqual(cities,{"Иркутск","Екатеринбург"})
+        row={**feed()["previews"][0],"origin":"Екатеринбург"}
+        with self.assertRaisesRegex(IdentityMismatch,"SOURCE_PREVIEW_WRONG_DEPARTURE_CITY"):
+            verify_catalog_hotel_identity([row],directory())
+        self.assertEqual(verify_catalog_hotel_identity([row],directory(),public_qa_origins=cities)["checked"],1)
+        for patch in ({"origin":"Неизвестный город"},{"hotel":"Wrong hotel"},{"flight_verified":True}):
+            with self.assertRaises(IdentityMismatch):
+                verify_catalog_hotel_identity([{**row,**patch}],directory(),public_qa_origins=cities)
+        with self.assertRaises(IdentityMismatch):
+            public_departure_cities('<select id="departure"><option value="Иркутск"></option><option value="Иркутск"></option></select>')
+
     def test_v109_hourly_dates_never_renew_or_count_unverified(self):
         from recent_checked_dates import build
         now=datetime.now(timezone.utc)
