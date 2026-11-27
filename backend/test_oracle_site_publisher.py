@@ -290,7 +290,7 @@ class Tests(unittest.TestCase):
         now=datetime.now(timezone.utc)
         at=now.isoformat()
         row={"id":"p_"+format(1,"024x"),"origin":"Иркутск","country":"Китай",
-             "depart_date":(now.date()+timedelta(days=2)).isoformat(),"nights":7,
+             "depart_date":(now.date()+timedelta(days=14)).isoformat(),"nights":7,
              "price_observed_at_utc":at,"status":"REFERENCE_PRICE_LIST_ONLY",
              "bookable":False,"quote_verified":False,"availability_verified":False,"flight_verified":False,
              "price_source":"BG_EXACT_SELECTED_GREEN_BROWSER","price_reference_party":"TWO_ADULTS",
@@ -303,9 +303,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(out["groups"]),1)
         g=out["groups"][0]
         self.assertEqual((g["count"],g["last_min_rub"],g["observed_at_utc"]),(2,75000,at))
-        self.assertEqual(build(out,[],{},now=now+timedelta(minutes=59)),out)
-        self.assertEqual(build(out,[],{},now=now+timedelta(minutes=61))["groups"],[])
+        self.assertEqual(build(out,[],{},now=now+timedelta(minutes=119)),out)
+        self.assertEqual(build(out,[],{},now=now+timedelta(minutes=121))["groups"],[])
         self.assertEqual(build(None,[row],feed,now=now+timedelta(minutes=16))["groups"],[])
+        urgent={**row,"depart_date":(now.date()+timedelta(days=2)).isoformat()}
+        urgent_history=build(None,[urgent],feed,now=now)
+        self.assertEqual(len(urgent_history["groups"]),1)
+        self.assertEqual(build(urgent_history,[],{},now=now+timedelta(minutes=30)),urgent_history)
+        self.assertEqual(build(urgent_history,[],{},now=now+timedelta(minutes=30,seconds=1))["groups"],[])
+
         for change in ({"bookable":True},{"flight_verified":True},{"price_reference_party":"ONE_ADULT"},
                        {"price_observed_at_utc":(now-timedelta(seconds=1)).isoformat()}):
             self.assertEqual(build(None,[{**row,**change}],feed,now=now)["groups"],[])
