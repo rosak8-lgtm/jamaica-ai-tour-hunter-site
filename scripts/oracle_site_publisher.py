@@ -530,6 +530,7 @@ def merge_exact_browser_source(feed, directory, receipts, *, path=None, now=None
 
 
 SOURCE_SCAN_INTERVAL=timedelta(minutes=30)
+BROAD_SCAN_RATE_QUARANTINE=timedelta(hours=24)
 MAX_PUBLIC_VISUAL_BYTES=2_500_000
 BOT_STATE=Path.home()/".local"/"state"/"jamaica-site-bg-bot"/"state.json"
 
@@ -633,6 +634,26 @@ def browser_recovery_priority(*,path=None,now=None):
     except FileNotFoundError:return False
     except (OSError,ValueError,TypeError):return True
 
+def broad_scan_rate_quarantine(*,path=None,now=None):
+    """Defer OPTIONAL broad API sweeps for 24h after a rate/service hold.
+    The independent exact-price browser retains its existing pacing. Neither
+    this guard nor a cached feed can renew a proof or authorize a request.
+    """
+    now=now or datetime.now(timezone.utc)
+    try:
+        state=read_owner_json(path or BOT_STATE,100_000)
+        if state.get("schema")!="jamaica.site-bot.v1":return True
+        last=state.get("provider_last_hold")
+        if not isinstance(last,dict) or last.get("http_status") not in (429,503):
+            return False
+        end=timestamp(state.get("provider_hold_until_utc"))
+        observed=timestamp(last.get("observed_at_utc"))
+        if end is None or observed is None or observed>end or observed>now+timedelta(seconds=30):
+            return True
+        return now<end+BROAD_SCAN_RATE_QUARANTINE
+    except FileNotFoundError:return False
+    except (OSError,ValueError,TypeError,AttributeError):return True
+
 def guarded_source_scan(*,now=None):
     """Serialize broad BG scans with the existing private website bot lock.
 
@@ -642,6 +663,9 @@ def guarded_source_scan(*,now=None):
     import fcntl
     import stat
     now=now or datetime.now(timezone.utc)
+    if broad_scan_rate_quarantine(now=now):
+        log("JAMAICA_BG_BROAD_SCAN_QUARANTINE_V107","DEFER_OPTIONAL_SWEEP")
+        return None,None
     if provider_hold_active(now=now) or browser_recovery_priority(now=now) or not source_scan_due(now=now):
         return None,None
     lock=BOT_STATE.parent/"lock"
@@ -663,6 +687,9 @@ def guarded_source_scan(*,now=None):
         # Production callers omit now, so re-read the current clock after
         # acquiring the lock rather than trusting an earlier decision.
         check_now=datetime.now(timezone.utc)
+        if broad_scan_rate_quarantine(now=check_now):
+            log("JAMAICA_BG_BROAD_SCAN_QUARANTINE_V107","DEFER_AFTER_LOCK")
+            return None,None
         if provider_hold_active(now=check_now) or browser_recovery_priority(now=check_now) or not source_scan_due(now=check_now):
             log("JAMAICA_BG_SHARED_SCAN_GUARD","DEFER_HOLD_RECOVERY_OR_INTERVAL")
             return None,None
@@ -1057,7 +1084,7 @@ def guarded_optional_hotel_media(*,now=None):
         log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_OPTIONAL_SEARCH_PRIORITY")
         return
     now=now or datetime.now(timezone.utc)
-    if provider_hold_active(now=now) or browser_recovery_priority(now=now):
+    if broad_scan_rate_quarantine(now=now) or provider_hold_active(now=now) or browser_recovery_priority(now=now):
         log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_PROVIDER_OR_RECOVERY")
         return
     lock=BOT_STATE.parent/"lock"
@@ -1072,7 +1099,7 @@ def guarded_optional_hotel_media(*,now=None):
             raise ValueError("UNSAFE_BROWSER_LOCK")
         fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
         check_now=datetime.now(timezone.utc)
-        if provider_hold_active(now=check_now) or browser_recovery_priority(now=check_now):
+        if broad_scan_rate_quarantine(now=check_now) or provider_hold_active(now=check_now) or browser_recovery_priority(now=check_now):
             log("JAMAICA_HOTEL_MEDIA_DISCOVERY","DEFER_PROVIDER_OR_RECOVERY")
             return
         discover_hotel_media_daily()
