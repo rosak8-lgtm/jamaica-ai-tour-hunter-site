@@ -192,5 +192,27 @@ function savedSearch(q,{origins,countries,today,travelers}){
  return {origin:q.origin,country:q.country,date:q.date,dateTo:q.dateTo,
     nights:[...new Set(q.nights)].sort((a,b)=>a-b),rooms,budget:q.budget,hotel:q.hotel};
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative,savedSearch});
+// Historical date options are NEVER offer rows. Their observation clock is immutable.
+function hourlyDateGroups(payload,now=Date.now()){
+ if(!payload||payload.schema!=="jamaica.recent-checked-dates.v1"||
+    payload.classification!=="HISTORICAL_SEARCH_ONLY_NOT_OFFERS"||
+    !Array.isArray(payload.groups)||payload.groups.length>2000||!Number.isFinite(now))return [];
+ const today=new Date(now).toISOString().slice(0,10),end=new Date(now+730*86400000).toISOString().slice(0,10);
+ const groups=new Map(),keys=["origin","country","date","nights","observed_at_utc","count","last_min_rub"];
+ for(const g of payload.groups){
+  if(!g||typeof g!=="object"||Object.keys(g).length!==keys.length||!keys.every(k=>Object.hasOwn(g,k)))continue;
+  if(![g.origin,g.country].every(s=>typeof s==="string"&&s.length>=2&&s.length<=100&&s===s.trim()&&!/[<>\x00-\x1f]/.test(s)))continue;
+  if(typeof g.date!=="string"||!/^20\d{2}-\d{2}-\d{2}$/.test(g.date)||g.date<today||g.date>end)continue;
+  const day=Date.parse(g.date+"T00:00:00Z");
+  if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==g.date)continue;
+  if(typeof g.observed_at_utc!=="string"||!/(Z|[+-]\d{2}:\d{2})$/.test(g.observed_at_utc))continue;
+  const stamp=Date.parse(g.observed_at_utc),age=now-stamp;
+  if(!Number.isFinite(stamp)||age< -30000||age>3600000||!Number.isInteger(g.nights)||g.nights<3||g.nights>180||
+     !Number.isInteger(g.count)||g.count<1||g.count>10000||!Number.isSafeInteger(g.last_min_rub)||g.last_min_rub<1000||g.last_min_rub>10000000)continue;
+  const key=JSON.stringify([g.origin,g.country,g.date,g.nights]),prior=groups.get(key);
+  if(!prior||Date.parse(prior.observed_at_utc)<stamp)groups.set(key,{...g});
+ }
+ return [...groups.values()];
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative,savedSearch,hourlyDateGroups});
 })(globalThis);
