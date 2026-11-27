@@ -963,7 +963,8 @@ def publish(env):
         previous_hotels=json.loads(hotel_history_path.read_text(encoding="utf-8")) if hotel_history_path.stat().st_size<=checked_hotels.MAX_BYTES else None
     except (OSError,ValueError,UnicodeError):
         previous_hotels=None
-    hotel_history=checked_hotels.build(previous_hotels,published["previews"],visual_public,identity.build_hotel_index(directory),now=datetime.now(timezone.utc))
+    hotel_index=identity.build_hotel_index(directory) if published["previews"] or previous_hotels else {}
+    hotel_history=checked_hotels.build(previous_hotels,published["previews"],visual_public,hotel_index,now=datetime.now(timezone.utc))
     hotel_history_changed=hotel_history!=previous_hotels
     log("JAMAICA_HISTORICAL_HOTELS_V114",len(hotel_history["rows"]))
     public_root,public_chunks=make_sharded_catalog(published)
