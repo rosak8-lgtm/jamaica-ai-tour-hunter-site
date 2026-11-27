@@ -1100,7 +1100,7 @@ function renderHistoricalHotels(reset=false){
  const target=$("historicalHotelCards"),frag=document.createDocumentFragment();
  const notice=$("historicalHotelsNotice");
  notice.textContent=historicalHotelLoad?"Загрузка истории…":historicalHotelPayload===null?
-   "История пока недоступна. Свежий каталог работает независимо.":
+   "История пока недоступна. Свежий каталог доступен отдельно.":
    "Ранее проверенных вариантов по фильтрам: "+rows.length.toLocaleString("ru-RU");
  for(const r of rows.slice(0,historicalHotelLimit)){
   const card=el("article","historicalHotelCard");
