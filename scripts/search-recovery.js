@@ -207,7 +207,7 @@ function hourlyDateGroups(payload,now=Date.now()){
   if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==g.date)continue;
   if(typeof g.observed_at_utc!=="string"||!/(Z|[+-]\d{2}:\d{2})$/.test(g.observed_at_utc))continue;
   const stamp=Date.parse(g.observed_at_utc),age=now-stamp;
-  if(!Number.isFinite(stamp)||age< -30000||age>3600000||!Number.isInteger(g.nights)||g.nights<3||g.nights>180||
+  if(!Number.isFinite(stamp)||age< -30000||age>(day-Date.parse(today+'T00:00:00Z')<=7*86400000?1800000:7200000)||!Number.isInteger(g.nights)||g.nights<3||g.nights>180||
      !Number.isInteger(g.count)||g.count<1||g.count>10000||!Number.isSafeInteger(g.last_min_rub)||g.last_min_rub<1000||g.last_min_rub>10000000)continue;
   const key=JSON.stringify([g.origin,g.country,g.date,g.nights]),prior=groups.get(key);
   if(!prior||Date.parse(prior.observed_at_utc)<stamp)groups.set(key,{...g});
