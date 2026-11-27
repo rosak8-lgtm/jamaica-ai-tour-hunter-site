@@ -11,7 +11,7 @@ from base64 import b64decode
 import http.server
 import json
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent.parent
@@ -35,7 +35,9 @@ def main():
     # Synthetic receipts are used ONLY by Chromium localhost intercepts.
     # They are never written to GitHub, Oracle or any public JSON asset.
     today=datetime.now(timezone.utc).date().isoformat()
-    candidate=[r for r in rows if r.get("status")=="REFERENCE_PRICE_LIST_ONLY"
+    # The legacy journey below explicitly selects Irkutsk, then tests an empty Moscow.
+    # Do not mix other-origin fixture rows into this origin-specific scenario.
+    candidate=[r for r in rows if r.get("origin")=="Иркутск" and r.get("status")=="REFERENCE_PRICE_LIST_ONLY"
                and r.get("depart_date","")>today and
                r.get("bookable") is False]
     per_country={}
@@ -117,6 +119,39 @@ def main():
                     ensure(page.locator("#checkQuote").is_disabled(),
                            "DIRECT_PRICE_QUERY_BYPASSED_VISUAL_GATE")
                 print("STRICT_PUBLIC_ZERO_CARDS_WITHOUT_BOT_PROOFS=PASS")
+                # Independent local-only history fixture: no live proof, no offers.
+                historical=browser.new_page(viewport={"width":390,"height":844})
+                try:
+                    moment=datetime.now(timezone.utc)
+                    future=(moment.date()+timedelta(days=14)).isoformat()
+                    urgent=(moment.date()+timedelta(days=2)).isoformat()
+                    item={"origin":"Иркутск","country":"Таиланд","date":future,
+                          "nights":7,"observed_at_utc":(moment-timedelta(minutes=90)).isoformat(),
+                          "count":5,"last_min_rub":85000}
+                    history={"schema":"jamaica.recent-checked-dates.v1",
+                             "classification":"HISTORICAL_SEARCH_ONLY_NOT_OFFERS",
+                             "groups":[item,{**item,"date":urgent,"observed_at_utc":(moment-timedelta(minutes=31)).isoformat()}]}
+                    historical.route("**/departure-geo-config.json",lambda route:route.fulfill(
+                        status=200,content_type="application/json",body='{"schema":"jamaica.departure-geo-config.v1","enabled":false,"endpoint":""}'))
+                    historical.route("**/tour-visual-evidence.json",lambda route:route.fulfill(
+                        status=200,content_type="application/json",body=json.dumps(empty_proofs)))
+                    historical.route("**/application-reference.json",lambda route:route.fulfill(
+                        status=404,body=""))
+                    historical.route("**/recent-checked-dates.json",lambda route:route.fulfill(
+                        status=200,content_type="application/json",body=json.dumps(history,ensure_ascii=False)))
+                    historical.goto(base,wait_until="domcontentloaded")
+                    button=historical.locator("#hourlyCheckedChoices button").first
+                    button.wait_for(timeout=18000)
+                    ensure(historical.locator("#hourlyCheckedChoices button").count()==1,"V113_URGENT_EXPIRED_HISTORY_VISIBLE")
+                    ensure("ранее" in button.inner_text() and "мин. назад" in button.inner_text(),"V113_HISTORY_LABEL_MISSING")
+                    ensure(historical.locator("#previewCards article.offerCard").count()==0,"V113_HISTORY_ADMITTED_AS_LIVE")
+                    button.click()
+                    ensure(historical.locator("#dateFrom").input_value()==future,"V113_HISTORY_DATE_NOT_APPLIED")
+                    ensure(historical.locator("#previewCards article.offerCard").count()==0,"V113_HISTORY_CLICK_CREATED_OFFER")
+                    print("V113_HISTORICAL_120_MIN_ONLY_BROWSER_PASS")
+                finally:
+                    historical.close()
+
                 if not test_rows:
                     print("STRICT_ZERO_PUBLISHED_SOURCE_CATALOG_BROWSER_PASS")
                     ensure(not errors,"BROWSER_SCRIPT_ERRORS: "+"; ".join(errors[:3]))
