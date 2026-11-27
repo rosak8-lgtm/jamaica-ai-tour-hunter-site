@@ -121,7 +121,7 @@
    <summary>Фильтры поездок</summary>
    <div class="filtersContent">
     <div class="filterGroup"><label for="filterCountry">Страна</label>
-     <select id="filterCountry" aria-label="Отбор страны по опубликованным турам"><option value="">Все страны с предложениями</option></select>
+     <select id="filterCountry" aria-label="Страна поиска: свежие предложения или направление без свежих туров"><option value="">Все страны</option></select>
      <small>Показываются направления с найденными вариантами</small>
     </div>
     <div class="filterGroup"><label for="filterResort">Курорт</label>
@@ -163,6 +163,7 @@
 <p id="budgetNotice" class="micro" role="status" aria-live="polite" hidden></p>
 <p id="visualProofNotice" class="micro" role="status" aria-live="polite">Проверяем актуальные варианты путешествий. Цена и наличие мест уточняются перед оформлением.</p>
 <p class="catalogBreadth" id="catalogBreadth" role="status" aria-live="polite">Загружаем направления с найденными турами…</p>
+<section id="otherOriginCountrySection" hidden aria-label="Свежие туры из других городов" style="margin:12px 0 16px"><strong>Свежие туры из других городов</strong><p class="micro">Выберите направление, чтобы изменить город вылета и показать его свежие туры. Состав туристов сохранится.</p><div id="otherOriginCountryChoices" class="quickCountryChips"></div></section>
 <div class="quickCountryBar" aria-label="Выбор опубликованного направления">
  <span class="quickCountryIntro">Направления путешествий</span>
  <p id="quickCountriesHint" class="micro">Все свежие туры по странам: выбор ниже сбрасывает даты, ночи, отель, бюджет и избранное, но сохраняет город и состав туристов.</p>
@@ -576,29 +577,46 @@ function replaceFilterOptions(select,items,placeholder,wanted){
  select.replaceChildren(frag);
  select.value=items.some(x=>String(x.value)===wanted)?wanted:empty.value;
 }
+function catalogCountryOptions(rows,origin,sourceCountries,selected){
+ const counts=window.JamaicaCountryOffers.countryCounts(rows,origin);
+ const names=new Set([...counts.keys(),...sourceCountries.filter(x=>typeof x==="string"&&x.trim())]);
+ if(selected)names.add(selected);
+ return [...names].sort((a,b)=>Number(counts.has(b))-Number(counts.has(a))||
+   window.JamaicaCountryOffers.compareCountries(a,b)).map(name=>({
+   value:name,label:name+" ("+(counts.has(name)?counts.get(name).toLocaleString("ru-RU"):"нет свежих туров")+")"
+ }));
+}
+function otherOriginCountryOptions(rows,origin,allowed){
+ const current=origin.trim().toLocaleLowerCase("ru"),groups=new Map();
+ for(const row of rows){
+   if(!row||typeof row.origin!=="string"||typeof row.country!=="string"||
+      !row.country||!allowed.has(row.origin)||row.origin.trim().toLocaleLowerCase("ru")===current)continue;
+   const key=JSON.stringify([row.origin,row.country]);
+   const item=groups.get(key)||{origin:row.origin,country:row.country,count:0};
+   item.count++;groups.set(key,item);
+ }
+ return [...groups.values()].sort((a,b)=>b.count-a.count||
+    a.origin.localeCompare(b.origin,"ru")||a.country.localeCompare(b.country,"ru"));
+}
 function sourceFilterOptions(){
  const origin=$("departure").value.trim().toLocaleLowerCase("ru");
- const countryCounts=window.JamaicaCountryOffers.countryCounts(verifiedRows(),origin);
+ const rows=verifiedRows();
  const resorts=new Set(),lengths=new Set();
  const formCountry=$("destination").value.trim();
  const countryCompare=(a,b)=>a.localeCompare(b,"ru");
- for(const row of verifiedRows()){
+ for(const row of rows){
   if(origin&&row.origin.trim().toLocaleLowerCase("ru")!==origin)continue;
   if(!formCountry||row.country===formCountry){
    if(row.resort)resorts.add(row.resort);
    lengths.add(row.nights);
   }
  }
- const names=[...countryCounts.keys()].sort(
-   window.JamaicaCountryOffers.compareCountries);
- const countryOptions=names.map(name=>({
-   value:name,label:name+" ("+countryCounts.get(name).toLocaleString("ru-RU")+")"
- }));
- // Preserve the selected destination even when no published tours currently match.
- if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({
-   value:formCountry,label:formCountry+" (нет в текущей выгрузке)"
- });
- replaceFilterOptions(sidebarCountry,countryOptions,"Все страны с предложениями",formCountry);
+ // Searchable destinations are not offers. The full country directory stays in the main form.
+ const preferred=["Таиланд","Китай","Вьетнам","Египет","Турция","ОАЭ","Индия","Индонезия","Шри-Ланка","Россия","Сейшелы","Мальдивы"];
+ const searchNames=[...preferred.filter(name=>countries.some(c=>c.n===name)),
+   ...(origin==="иркутск"?lastSourceCoverage.map(x=>x.country):[])];
+ const countryOptions=catalogCountryOptions(rows,origin,searchNames,formCountry);
+ replaceFilterOptions(sidebarCountry,countryOptions,"Все страны",formCountry);
  if(lastFilterCountry!==formCountry)sidebarResort.value="";
  const oldResort=lastFilterCountry===formCountry?sidebarResort.value:"";
  replaceFilterOptions(sidebarResort,[...resorts].sort(countryCompare).map(x=>({
@@ -1224,12 +1242,29 @@ function renderTourPreviews(reset=true){
  $("departureStatus").textContent=!previewsLoaded?"Проверяем текущий каталог…":
    cityRows.length?"Всего свежих вариантов из города (все страны и даты): "+cityRows.length.toLocaleString("ru-RU"):
    "Город в справочнике. Свежих проверенных туров пока нет.";
+ const alternativeScopeSection=$("otherOriginCountrySection");
+ const alternativeScopeChoices=$("otherOriginCountryChoices");
+ const alternativeScopes=otherOriginCountryOptions(verifiedRows(),$("departure").value,permittedCities);
+ alternativeScopeSection.hidden=!previewsLoaded||!alternativeScopes.length;
+ alternativeScopeChoices.replaceChildren();
+ for(const scope of alternativeScopes.slice(0,12)){
+   const button=el("button","quickCountryChip",scope.origin+" → "+scope.country+" · "+scope.count.toLocaleString("ru-RU")+" вар.");
+   button.type="button";
+   button.addEventListener("click",()=>{
+     departureUserInteracted=true;
+     $("departure").value=scope.origin;
+     $("departureGeoStatus").textContent="Город выбран вами.";
+     try{window.JamaicaDepartureGeo.remember(localStorage,scope.origin,[...permittedCities]);}catch{}
+     resetCatalogRestrictions(scope.country);
+   });
+   alternativeScopeChoices.append(button);
+ }
  const availableCountries=[...window.JamaicaCountryOffers.countryCounts(
    verifiedRows(),$("departure").value.trim()).keys()].sort(
      window.JamaicaCountryOffers.compareCountries);
  $("catalogBreadth").textContent=previewsLoaded?
   (country?"Выбрано направление «"+$("destination").value.trim()+"». Проверенных направлений: "+availableCountries.length+".":
-   "Направлений с проверенными вариантами: "+
+   "Направлений со свежими вариантами из "+$("departure").value+": "+
    availableCountries.length+(availableCountries.length?": "+availableCountries.slice(0,7).join(", ")+".":"; совпадений пока нет.")+
    "") :
   "Проверяем обязательные условия туров…";
