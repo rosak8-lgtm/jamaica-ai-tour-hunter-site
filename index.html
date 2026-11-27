@@ -212,6 +212,13 @@
 </section>
 <div class="offerCards" id="previewCards" aria-live="polite"></div>
 <button class="loadMore" type="button" id="previewMore" hidden>Показать ещё варианты поездок</button>
+<details id="historicalHotels" style="margin:18px 0" aria-label="Ранее проверенные гостиницы">
+ <summary id="historicalHotelsHeading">Ранее проверенные гостиницы за два часа</summary>
+ <p class="micro">История конкретных вариантов, а не доступные для бронирования туры. Цена за двоих указана на момент проверки. Вылеты в ближайшие 7 дней сохраняются до 30 минут, остальные — до 120 минут. Необходим новый расчёт цены и мест.</p>
+ <p class="micro" id="historicalHotelsNotice" role="status"></p>
+ <div class="offerCards" id="historicalHotelCards"></div>
+ <button class="loadMore" type="button" id="historicalHotelsMore" hidden>Ещё ранее проверенные варианты</button>
+</details>
 <details class="sourceDetails" id="sourceDetails">
  <summary>Актуальность предложений</summary>
  <p class="micro">Стоимость указана на момент проверки, не является гарантированной ценой покупки. Проверка окончательной цены, рейсов и наличия обязательна до договора и оплаты.</p>
@@ -540,6 +547,7 @@ for(const link of document.querySelectorAll('a[href="#hotels"]')){
 if(location.hash==="#hotels")openHotelDirectory();
 let previewRecords=[],previewVisible=0;
 let hourlyCheckedPayload=null;
+let historicalHotelPayload=null,historicalHotelLoad=null,historicalHotelLoadedAt=0,historicalHotelLimit=24;
 let lastSourceCoverage=[];
 let sourceCoverageFirstExpanded=false;
 let visualProofs=new Map();
@@ -1060,6 +1068,7 @@ function renderHourlyCheckedDates(){
    $("dateFrom").value=g.date;$("dateTo").value=g.date;$("dateTo").min=g.date;
    selectedNights.clear();selectedNights.add(g.nights);syncNightPickers();
    form.requestSubmit();
+   $("historicalHotels").open=true;void loadHistoricalHotels();
   });
   (i<8?first:more).append(button);
  }
@@ -1078,6 +1087,66 @@ async function loadHourlyCheckedDates(){
   hourlyCheckedPayload=JSON.parse(raw);
  }catch{hourlyCheckedPayload=null;}
 }
+function historyCriteria(){
+ return {origin:$("departure").value,country:$("destination").value,from:$("dateFrom").value,to:$("dateTo").value,
+ nights:[...selectedNights],hotel:$("hotelSearch").value,resort:sidebarResort.value,budget:Number($("budget").value)||0,
+ twoAdults:Travelers.isTwoAdults(travelerUI.current()),liveIds:new Set(verifiedRows().map(r=>r.id))};
+}
+function renderHistoricalHotels(reset=false){
+ if(!$("historicalHotels").open)return;
+ if(reset)historicalHotelLimit=24;
+ const criteria=historyCriteria();
+ const rows=$("favoritesOnly").checked?[]:window.JamaicaSearchRecovery.historicalHotels(historicalHotelPayload,criteria);
+ const target=$("historicalHotelCards"),frag=document.createDocumentFragment();
+ const notice=$("historicalHotelsNotice");
+ notice.textContent=historicalHotelLoad?"Загрузка истории…":historicalHotelPayload===null?
+   "История пока недоступна. Свежий каталог работает независимо.":
+   "Ранее проверенных вариантов по фильтрам: "+rows.length.toLocaleString("ru-RU");
+ for(const r of rows.slice(0,historicalHotelLimit)){
+  const card=el("article","historicalHotelCard");
+  card.style.cssText="border:1px solid #d6e1e4;border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start";
+  card.dataset.historyId=r.id;
+  card.append(el("strong","","Ранее проверено · требуется обновление"));
+  const hotel=el("a","",r.hotel);
+  hotel.href="./hotel.html?id="+encodeURIComponent(r.hotel_id);
+  card.append(hotel,el("p","micro",r.country+" · "+r.origin+" · "+r.date.split("-").reverse().join(".")+" · "+r.nights+" ноч."));
+  card.append(el("p","micro",r.room+(r.resort?" · "+r.resort:"")));
+  if(criteria.twoAdults)card.append(el("strong","","Ранее "+r.last_price_rub.toLocaleString("ru-RU")+" ₽ за двоих"));
+  else card.append(el("p","micro","Для вашего состава цена не рассчитана"));
+  card.append(el("p","micro","Проверено "+Math.max(0,Math.floor((Date.now()-Date.parse(r.observed_at_utc))/60000))+" мин. назад. Наличие сейчас неизвестно."));
+  const button=el("button","quickCountryChip","Выбрать параметры для поиска");
+  button.type="button";
+  button.addEventListener("click",()=>{
+   if(!window.JamaicaSearchRecovery.historicalHotels({schema:"jamaica.recent-checked-hotels.v1",classification:"HISTORICAL_HOTELS_NOT_OFFERS",rows:[r]},{}).length){renderHistoricalHotels();return;}
+   $("destination").value=r.country;sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
+   $("dateFrom").value=r.date;$("dateTo").value=r.date;$("dateTo").min=r.date;
+   $("hotelSearch").value=r.hotel;selectedNights.clear();selectedNights.add(r.nights);syncNightPickers();
+   form.requestSubmit();
+  });
+  card.append(button);frag.append(card);
+ }
+ target.replaceChildren(frag);
+ $("historicalHotelsMore").hidden=rows.length<=historicalHotelLimit;
+}
+async function loadHistoricalHotels(){
+ if(historicalHotelLoad||Date.now()-historicalHotelLoadedAt<180000)return;
+ historicalHotelLoadedAt=Date.now();
+ historicalHotelLoad=(async()=>{
+  try{
+   const response=await fetch("./recent-checked-hotels.json",{cache:"no-store",signal:AbortSignal.timeout(15000)});
+   if(!response.ok)throw Error("HISTORY_UNAVAILABLE");
+   const raw=await response.text();
+   if(raw.length>8000000)throw Error("HISTORY_OVERSIZE");
+   historicalHotelPayload=JSON.parse(raw);
+  }catch{historicalHotelPayload=null;}
+ })();
+ renderHistoricalHotels();
+ try{await historicalHotelLoad;}finally{historicalHotelLoad=null;renderHistoricalHotels();}
+}
+$("historicalHotels").addEventListener("toggle",()=>{
+ if($("historicalHotels").open){renderHistoricalHotels(true);void loadHistoricalHotels();}
+});
+$("historicalHotelsMore").addEventListener("click",()=>{historicalHotelLimit+=24;renderHistoricalHotels();});
 function renderTourPreviews(reset=true){
  const target=$("previewCards"),more=$("previewMore");
  if(reset){target.replaceChildren();previewVisible=0;}
@@ -1096,6 +1165,7 @@ function renderTourPreviews(reset=true){
  renderMonthShortcuts();
  renderSourceScanCoverage();
  renderHourlyCheckedDates();
+ renderHistoricalHotels(reset);
  const budget=Number($("budget").value)||0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
@@ -1784,6 +1854,7 @@ setInterval(()=>{
  if(document.visibilityState!=="visible"||catalogRefreshInFlight)return;
  const now=Date.now();
  renderHourlyCheckedDates();
+ if($("historicalHotels").open){renderHistoricalHotels();void loadHistoricalHotels();}
  let changed=false;
  const previousApplicationCount=applicationRows.length;
  applicationRows=applicationRows.filter(x=>window.JamaicaApplicationReference.eligible(x,now));
