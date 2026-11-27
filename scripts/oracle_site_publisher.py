@@ -33,6 +33,7 @@ import bot_visual_sidecar as visual
 import public_tour_eligibility as eligibility
 import site_bot_price_overlay as browser_price
 import catalog_property_identity as identity
+import recent_checked_dates as checked_dates
 from scripts import bg_scoped_publisher_bridge as scoped_bridge
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
@@ -118,7 +119,7 @@ def normalize_public_catalog_modes(root):
             raise CatalogHold("UNSAFE_PUBLIC_CATALOG_DIRECTORY")
     secure_dir(root)
     paths=[root/name for name in ("tour-previews.json",PUBLIC_VISUAL_PATH,
-                                 "application-reference.json","inquiry-config.json")]
+                                 "application-reference.json","inquiry-config.json",checked_dates.FILENAME)]
     shard_dir=root/SHARD_FOLDER
     if shard_dir.exists() or shard_dir.is_symlink():
         secure_dir(shard_dir)
@@ -945,6 +946,16 @@ def publish(env):
         log("JAMAICA_SCOPED_PROJECTION",json.dumps(scoped_stats,separators=(",",":")))
     except (CatalogHold,ValueError,OSError,TypeError,KeyError):
         log("JAMAICA_SCOPED_PROJECTION","HOLD_KEEP_LEGACY")
+    # Separate history: the strict live catalogue and its TTL remain unchanged.
+    history_path=CHECKOUT/checked_dates.FILENAME
+    if history_path.is_symlink():raise CatalogHold("UNSAFE_CHECKED_DATES_PATH")
+    try:
+        previous_history=json.loads(history_path.read_text(encoding="utf-8")) if history_path.stat().st_size<=1_000_000 else None
+    except (OSError,ValueError,UnicodeError):
+        previous_history=None
+    history=checked_dates.build(previous_history,published["previews"],visual_public,now=datetime.now(timezone.utc))
+    history_changed=history!=previous_history
+    log("JAMAICA_HOURLY_CHECKED_DATE_GROUPS_V109",len(history["groups"]))
     public_root,public_chunks=make_sharded_catalog(published)
     validate(public_root,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=scoped_ids)
     log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
@@ -986,7 +997,7 @@ def publish(env):
                        previous_pegas.get("quote_verified") is not False)
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
-    if not changed_dir and not visual_changed and not pegas_changed and not needs_publish(previous,public_root):
+    if not changed_dir and not visual_changed and not pegas_changed and not history_changed and not needs_publish(previous,public_root):
         save_recent_source_cache(next_cache) if next_cache is not None else None
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
@@ -1021,6 +1032,11 @@ def publish(env):
     visual_bytes=encode_public_visual_feed(visual_public)
     visual_path.write_bytes(visual_bytes)
     paths=["tour-previews.json","destination-directory.json",SHARD_FOLDER,PUBLIC_VISUAL_PATH]
+    if history_changed:
+        encoded=json.dumps(history,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
+        if len(encoded)>1_000_000:raise CatalogHold("CHECKED_DATES_TOO_LARGE")
+        history_path.write_bytes(encoded)
+        paths.append(checked_dates.FILENAME)
     if pegas_changed:
         data=json.dumps(pegas_feed,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
         if len(data)>8_000_000:raise CatalogHold("PEGAS_PUBLIC_FEED_TOO_LARGE")

@@ -51,7 +51,30 @@ def build_hotel_index(directory):
     return known
 
 
-def verify_catalog_hotel_identity(rows, directory):
+def public_departure_cities(page):
+    """Read the explicit site city choices for public QA only, not admission."""
+    from html.parser import HTMLParser
+    class CityChoices(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.active=False;self.selects=0;self.names=[]
+        def handle_starttag(self,tag,attrs):
+            props=dict(attrs)
+            if tag=="select" and props.get("id")=="departure":
+                self.active=True;self.selects+=1
+            elif self.active and tag=="option":
+                name=props.get("value")
+                if isinstance(name,str) and name and name==name.strip() and len(name)<=100 and not any(c in name for c in "<>{}|"):
+                    self.names.append(name)
+        def handle_endtag(self,tag):
+            if tag=="select":self.active=False
+    parser=CityChoices();parser.feed(page)
+    if parser.selects!=1 or not 1<=len(parser.names)<=200 or len(set(parser.names))!=len(parser.names) or "Иркутск" not in parser.names:
+        raise IdentityMismatch("PUBLIC_DEPARTURE_CHOICES_INVALID")
+    return frozenset(parser.names)
+
+
+def verify_catalog_hotel_identity(rows, directory, *, public_qa_origins=None):
     """Check every row and fail closed before the publisher writes public JSON.
 
     Exact source name and country are non-negotiable. A card with only an ID
@@ -59,6 +82,9 @@ def verify_catalog_hotel_identity(rows, directory):
     """
     if not isinstance(rows, list) or not rows:
         raise IdentityMismatch("SOURCE_PREVIEW_ROWS_EMPTY")
+    origins={"Иркутск"} if public_qa_origins is None else public_qa_origins
+    if not isinstance(origins,(set,frozenset)) or "Иркутск" not in origins or len(origins)>200:
+        raise IdentityMismatch("PUBLIC_DEPARTURE_CHOICES_INVALID")
     known = build_hotel_index(directory)
     checked = set()
     matched_countries = set()
@@ -77,7 +103,7 @@ def verify_catalog_hotel_identity(rows, directory):
             raise IdentityMismatch("SOURCE_PREVIEW_HOTEL_NAME_MISMATCH")
         if not isinstance(country, str) or country != expected[1]:
             raise IdentityMismatch("SOURCE_PREVIEW_HOTEL_COUNTRY_MISMATCH")
-        if row.get("origin") != "Иркутск":
+        if not isinstance(row.get("origin"),str) or row["origin"] not in origins:
             raise IdentityMismatch("SOURCE_PREVIEW_WRONG_DEPARTURE_CITY")
         if row.get("bookable") is not False or row.get("flight_verified") is not False:
             raise IdentityMismatch("SOURCE_PREVIEW_UNVERIFIED_BOOKING_CLAIM")

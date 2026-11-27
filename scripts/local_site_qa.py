@@ -56,7 +56,7 @@ def main():
     import catalog_property_identity as property_identity
     if previews["previews"]:
         try:
-            property_identity.verify_catalog_hotel_identity(previews["previews"],directory)
+            property_identity.verify_catalog_hotel_identity(previews["previews"],directory,public_qa_origins=property_identity.public_departure_cities(page))
         except property_identity.IdentityMismatch as exc:
             raise SystemExit("JAMAICA_HOTEL_IDENTITY_HOLD="+str(exc)) from exc
     else:
