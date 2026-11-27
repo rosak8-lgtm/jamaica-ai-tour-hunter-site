@@ -120,3 +120,23 @@ const urgentGroup={...hourGroup,date:"2026-11-29",observed_at_utc:"2026-11-27T09
 assert.deepEqual(hourly({...hourFeed,groups:[urgentGroup]},clock),[urgentGroup]);
 assert.deepEqual(hourly({...hourFeed,groups:[urgentGroup]},clock+1),[]);
 console.log("JAMAICA_V113_ADAPTIVE_RETENTION_PASS");
+
+
+const historical=globalThis.JamaicaSearchRecovery.historicalHotels;
+const histRow={id:"p_"+"a".repeat(24),hotel_id:"123456789",hotel:"TEST",origin:"Иркутск",country:"Китай",date:"2026-12-20",nights:7,room:"DBL",resort:"Санья",observed_at_utc:"2026-11-27T08:30:00Z",last_price_rub:90000};
+const hist={schema:"jamaica.recent-checked-hotels.v1",classification:"HISTORICAL_HOTELS_NOT_OFFERS",rows:[histRow]};
+assert.deepEqual(historical(hist,{},clock),[histRow]);
+assert.equal(historical(hist,{},clock+30*60000).length,1);
+assert.equal(historical(hist,{},clock+30*60000+1).length,0);
+assert.equal(historical(hist,{origin:"Москва"},clock).length,0);
+assert.equal(historical(hist,{country:"Вьетнам"},clock).length,0);
+assert.equal(historical(hist,{nights:[10]},clock).length,0);
+assert.equal(historical(hist,{hotel:"different"},clock).length,0);
+assert.equal(historical(hist,{twoAdults:true,budget:40000},clock).length,0);
+assert.equal(historical(hist,{twoAdults:false,budget:40000},clock).length,1);
+assert.equal(historical(hist,{liveIds:new Set([histRow.id])},clock).length,0);
+assert.equal(historical({...hist,rows:[{...histRow,date:"2026-11-29"}]}, {},clock).length,0);
+assert.equal(historical({...hist,rows:[{...histRow,bookable:true}]}, {},clock).length,0);
+assert.equal(historical({...hist,rows:[{...histRow,room:"<script>"}]}, {},clock).length,0);
+assert.equal(historical({...hist,rows:[histRow,{...histRow,observed_at_utc:"2026-11-27T09:30:00Z"}]}, {},clock)[0].observed_at_utc,"2026-11-27T09:30:00Z");
+console.log("JAMAICA_V114_HISTORICAL_HOTELS_PASS");
