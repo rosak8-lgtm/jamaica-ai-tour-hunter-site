@@ -68,10 +68,37 @@ assert.ok(searchStyle.includes('.quickCountryChip')&&
   'Destination shortcuts and old-source notices require styling');
 assert.ok(page.includes('./scripts/country-offer-balance.js')&&
  page.includes('window.JamaicaCountryOffers.interleaveCountries(rows)')&&
- page.includes('window.JamaicaCountryOffers.countryCounts(verifiedRows(),origin)'),
+ page.includes('window.JamaicaCountryOffers.countryCounts(rows,origin)')&&
+ page.includes('const rows=verifiedRows();')&&
+ page.includes('catalogCountryOptions(rows,origin,searchNames,formCountry)'),
  'Multi-country results must balance actual countries and match the selected departure city');
 assert.ok(page.includes('availableCountries.slice(0,7)')&&page.includes('interleaveCountries(list)'),
  'Search must interleave actual countries without inventing availability');
+// V98: execute the exact two production helpers, with the real grouping library.
+const countryUI={window:{}};
+vm.runInNewContext(fs.readFileSync('scripts/country-offer-balance.js','utf8'),countryUI);
+const helperStart=page.indexOf('function catalogCountryOptions(');
+const helperEnd=page.indexOf('function sourceFilterOptions(){',helperStart);
+assert.ok(helperStart>=0&&helperEnd>helperStart);
+vm.runInNewContext(page.slice(helperStart,helperEnd),countryUI);
+const selectCountries=countryUI.catalogCountryOptions;
+const otherCities=countryUI.otherOriginCountryOptions;
+const cityRows=[{origin:'Иркутск',country:'Таиланд'},{origin:'Иркутск',country:'Таиланд'},
+ {origin:'Санкт-Петербург',country:'Турция'},{origin:'Новосибирск',country:'Вьетнам'}];
+const countryChoices=selectCountries(cityRows,'Иркутск',['Таиланд','Китай','Турция','Египет'],'Китай');
+assert.equal(countryChoices.length,4);
+assert.equal(countryChoices[0].label,'Таиланд (2)');
+assert.equal(countryChoices.find(x=>x.value==='Китай').label,'Китай (нет свежих туров)');
+assert.equal(countryChoices.find(x=>x.value==='Турция').label,'Турция (нет свежих туров)');
+assert.equal(selectCountries([],'Иркутск',['Китай'],'Турция').length,2);
+assert.equal(selectCountries(cityRows,'Санкт-Петербург',['Таиланд','Турция'],'')[0].label,'Турция (1)');
+const elsewhere=otherCities(cityRows,'Иркутск',new Set(['Иркутск','Санкт-Петербург','Новосибирск']));
+assert.equal(elsewhere.length,2);
+assert.equal(elsewhere.find(x=>x.country==='Турция').origin,'Санкт-Петербург');
+assert.equal(otherCities(cityRows,'Иркутск',new Set(['Иркутск'])).length,0);
+assert.ok(page.includes('otherOriginCountryOptions(verifiedRows(),$("departure").value,permittedCities)')&&
+ page.includes('resetCatalogRestrictions(scope.country)')&&page.includes('$("departure").value=scope.origin'));
+console.log('JAMAICA_V98_COUNTRY_DISCOVERY_PASS');
 const mascotAsset=fs.readFileSync('assets/jamaica-parrot-mascot.svg','utf8');
 const mascotMark=fs.readFileSync('assets/jamaica-parrot-mark.svg','utf8');
 for(const a of [mascotAsset,mascotMark]){
