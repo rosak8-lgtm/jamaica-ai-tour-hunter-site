@@ -275,12 +275,13 @@ class Tests(unittest.TestCase):
         cities=public_departure_cities('<select id="departure"><option value="Иркутск">Иркутск</option><option value="Екатеринбург">Екатеринбург</option></select>')
         self.assertEqual(cities,{"Иркутск","Екатеринбург"})
         row={**feed()["previews"][0],"origin":"Екатеринбург"}
+        official={"hotels":[{"id":row["hotel_id"],"name":row["hotel"],"country":row["country"]}]}
         with self.assertRaisesRegex(IdentityMismatch,"SOURCE_PREVIEW_WRONG_DEPARTURE_CITY"):
-            verify_catalog_hotel_identity([row],directory())
-        self.assertEqual(verify_catalog_hotel_identity([row],directory(),public_qa_origins=cities)["checked"],1)
+            verify_catalog_hotel_identity([row],official)
+        self.assertEqual(verify_catalog_hotel_identity([row],official,public_qa_origins=cities)["checked"],1)
         for patch in ({"origin":"Неизвестный город"},{"hotel":"Wrong hotel"},{"flight_verified":True}):
             with self.assertRaises(IdentityMismatch):
-                verify_catalog_hotel_identity([{**row,**patch}],directory(),public_qa_origins=cities)
+                verify_catalog_hotel_identity([{**row,**patch}],official,public_qa_origins=cities)
         with self.assertRaises(IdentityMismatch):
             public_departure_cities('<select id="departure"><option value="Иркутск"></option><option value="Иркутск"></option></select>')
 
