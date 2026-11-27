@@ -117,7 +117,7 @@ for(const name of ['hotel.html','preview.html','tour.html','quote.html','checkou
   'Consistent customer pages: '+name);
 }
 
-assert.ok(page.includes('if(formCountry&&!countryCounts.has(formCountry))countryOptions.push({'),
+assert.ok(selectCountries([],'Иркутск',[],'Китай').some(x=>x.value==='Китай'&&x.label==='Китай (нет свежих туров)'),
  'The selected country must survive an empty current feed');
 assert.ok(page.includes('id="budgetNotice"')&&page.includes('budgetNotice").textContent=budgetMessage'),
  'Traveler must be informed when a budget cannot be applied');
