@@ -34,6 +34,7 @@ import public_tour_eligibility as eligibility
 import site_bot_price_overlay as browser_price
 import catalog_property_identity as identity
 import recent_checked_dates as checked_dates
+import recent_checked_hotels as checked_hotels
 from scripts import bg_scoped_publisher_bridge as scoped_bridge
 
 REPOSITORY = "git@github.com:rosak8-lgtm/jamaica-ai-tour-hunter-site.git"
@@ -119,7 +120,7 @@ def normalize_public_catalog_modes(root):
             raise CatalogHold("UNSAFE_PUBLIC_CATALOG_DIRECTORY")
     secure_dir(root)
     paths=[root/name for name in ("tour-previews.json",PUBLIC_VISUAL_PATH,
-                                 "application-reference.json","inquiry-config.json",checked_dates.FILENAME)]
+                                 "application-reference.json","inquiry-config.json",checked_dates.FILENAME,checked_hotels.FILENAME)]
     shard_dir=root/SHARD_FOLDER
     if shard_dir.exists() or shard_dir.is_symlink():
         secure_dir(shard_dir)
@@ -956,6 +957,16 @@ def publish(env):
     history=checked_dates.build(previous_history,published["previews"],visual_public,now=datetime.now(timezone.utc))
     history_changed=history!=previous_history
     log("JAMAICA_HOURLY_CHECKED_DATE_GROUPS_V109",len(history["groups"]))
+    hotel_history_path=CHECKOUT/checked_hotels.FILENAME
+    if hotel_history_path.is_symlink():raise CatalogHold("UNSAFE_CHECKED_HOTELS_PATH")
+    try:
+        previous_hotels=json.loads(hotel_history_path.read_text(encoding="utf-8")) if hotel_history_path.stat().st_size<=checked_hotels.MAX_BYTES else None
+    except (OSError,ValueError,UnicodeError):
+        previous_hotels=None
+    hotel_index=identity.build_hotel_index(directory) if published["previews"] or previous_hotels else {}
+    hotel_history=checked_hotels.build(previous_hotels,published["previews"],visual_public,hotel_index,now=datetime.now(timezone.utc))
+    hotel_history_changed=hotel_history!=previous_hotels
+    log("JAMAICA_HISTORICAL_HOTELS_V114",len(hotel_history["rows"]))
     public_root,public_chunks=make_sharded_catalog(published)
     validate(public_root,directory,allow_empty=True,allow_browser_prices=True,scoped_ids=scoped_ids)
     log("JAMAICA_PUBLIC_VISUALLY_VERIFIED_TOURS",len(published["previews"]))
@@ -997,7 +1008,7 @@ def publish(env):
                        previous_pegas.get("quote_verified") is not False)
     changed_dir=bool(run(["git","status","--porcelain","--","destination-directory.json"],
                          cwd=CHECKOUT,env=env).stdout.strip())
-    if not changed_dir and not visual_changed and not pegas_changed and not history_changed and not needs_publish(previous,public_root):
+    if not changed_dir and not visual_changed and not pegas_changed and not history_changed and not hotel_history_changed and not needs_publish(previous,public_root):
         save_recent_source_cache(next_cache) if next_cache is not None else None
         log("JAMAICA_ORACLE_PUBLISH","NO_CHANGE_GITHUB_COMMIT_SKIPPED")
         return
@@ -1037,6 +1048,11 @@ def publish(env):
         if len(encoded)>1_000_000:raise CatalogHold("CHECKED_DATES_TOO_LARGE")
         history_path.write_bytes(encoded)
         paths.append(checked_dates.FILENAME)
+    if hotel_history_changed:
+        data=json.dumps(hotel_history,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
+        if len(data)>checked_hotels.MAX_BYTES:raise CatalogHold("CHECKED_HOTELS_TOO_LARGE")
+        hotel_history_path.write_bytes(data)
+        paths.append(checked_hotels.FILENAME)
     if pegas_changed:
         data=json.dumps(pegas_feed,ensure_ascii=False,separators=(",",":")).encode("utf-8")+b"\n"
         if len(data)>8_000_000:raise CatalogHold("PEGAS_PUBLIC_FEED_TOO_LARGE")
