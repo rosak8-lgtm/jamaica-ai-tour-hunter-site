@@ -270,6 +270,52 @@ class Tests(unittest.TestCase):
             state["provider_last_hold"]["observed_at_utc"]="invalid";write()
             self.assertTrue(publisher.browser_recovery_priority(path=path,now=moment))
 
+    def test_v109_hourly_dates_never_renew_or_count_unverified(self):
+        from recent_checked_dates import build
+        now=datetime.now(timezone.utc)
+        at=now.isoformat()
+        row={"id":"p_"+format(1,"024x"),"origin":"Иркутск","country":"Китай",
+             "depart_date":(now.date()+timedelta(days=2)).isoformat(),"nights":7,
+             "price_observed_at_utc":at,"status":"REFERENCE_PRICE_LIST_ONLY",
+             "bookable":False,"quote_verified":False,"availability_verified":False,"flight_verified":False,
+             "price_source":"BG_EXACT_SELECTED_GREEN_BROWSER","price_reference_party":"TWO_ADULTS",
+             "price_reference_rub":80000}
+        proof={"preview_id":row["id"],"observed_at_utc":at,
+               "route_best_price_seen":True,"both_green_planes_seen":True}
+        second={**row,"id":"p_"+format(2,"024x"),"price_reference_rub":75000}
+        feed={"entries":[proof,{**proof,"preview_id":second["id"]}]}
+        out=build(None,[row,second,row,{**row,"id":"p_"+format(3,"024x")}],feed,now=now)
+        self.assertEqual(len(out["groups"]),1)
+        g=out["groups"][0]
+        self.assertEqual((g["count"],g["last_min_rub"],g["observed_at_utc"]),(2,75000,at))
+        self.assertEqual(build(out,[],{},now=now+timedelta(minutes=59)),out)
+        self.assertEqual(build(out,[],{},now=now+timedelta(minutes=61))["groups"],[])
+        self.assertEqual(build(None,[row],feed,now=now+timedelta(minutes=16))["groups"],[])
+        for change in ({"bookable":True},{"flight_verified":True},{"price_reference_party":"ONE_ADULT"},
+                       {"price_observed_at_utc":(now-timedelta(seconds=1)).isoformat()}):
+            self.assertEqual(build(None,[{**row,**change}],feed,now=now)["groups"],[])
+        self.assertEqual(build(None,[row],{"entries":[{**proof,"both_green_planes_seen":False}]},now=now)["groups"],[])
+        newer=now+timedelta(minutes=10)
+        new_at=newer.isoformat()
+        new=build(out,[{**row,"price_observed_at_utc":new_at,"price_reference_rub":90000}],
+                  {"entries":[{**proof,"observed_at_utc":new_at}]},now=newer)
+        self.assertEqual((new["groups"][0]["count"],new["groups"][0]["last_min_rub"]),(1,90000))
+        self.assertEqual(new["groups"][0]["observed_at_utc"],new_at)
+
+    def test_v109_history_invalid_groups_do_not_enter_live_catalogue(self):
+        from recent_checked_dates import build,SCHEMA
+        now=datetime.now(timezone.utc)
+        group={"origin":"Иркутск","country":"Китай","date":now.date().isoformat(),
+               "nights":7,"observed_at_utc":now.isoformat(),"count":5,"last_min_rub":90000}
+        old={"schema":SCHEMA,"classification":"HISTORICAL_SEARCH_ONLY_NOT_OFFERS",
+             "groups":[{**group,"bookable":True},{**group,"date":"2026-02-30"},
+                       {**group,"last_min_rub":True},{**group,"origin":"<script>"},
+                       {**group,"observed_at_utc":(now+timedelta(minutes=1)).isoformat()}]}
+        self.assertEqual(build(old,[],{},now=now)["groups"],[])
+        old["groups"]=[group]
+        self.assertEqual(build(old,[],{},now=now)["groups"],[group])
+        self.assertEqual(old["groups"],[group])
+
     def test_v107_broad_rate_quarantine_boundary_and_no_browser_gap_change(self):
         moment=datetime.now(timezone.utc)
         with tempfile.TemporaryDirectory() as work:
