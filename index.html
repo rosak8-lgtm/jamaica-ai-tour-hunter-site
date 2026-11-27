@@ -160,6 +160,12 @@
   <button type="button" class="resultsEdit resultsOtherCountries" id="otherCountries" hidden>Другие страны</button>
   <a class="resultsEdit" href="#request">Изменить поиск</a>
 </div>
+<div class="quickCountryChips" role="group" aria-label="Сохранённые параметры поиска">
+ <button type="button" class="quickCountryChip" id="saveLocalSearch">Сохранить поиск</button>
+ <button type="button" class="quickCountryChip" id="restoreLocalSearch" hidden>Вернуть сохранённый поиск</button>
+ <button type="button" class="quickCountryChip" id="deleteLocalSearch" hidden>Удалить сохранённый поиск</button>
+</div>
+<p id="localSearchNotice" class="micro" role="status" aria-live="polite">Сохраняются основные параметры, включая состав туристов, только на этом устройстве. Курорт и избранное не сохраняются. Это не заявка и не бронирование.</p>
 <p id="budgetNotice" class="micro" role="status" aria-live="polite" hidden></p>
 <p id="visualProofNotice" class="micro" role="status" aria-live="polite">Проверяем актуальные варианты путешествий. Цена и наличие мест уточняются перед оформлением.</p>
 <p class="catalogBreadth" id="catalogBreadth" role="status" aria-live="polite">Загружаем направления с найденными турами…</p>
@@ -1633,6 +1639,60 @@ async function refreshCatalog(){
   lastCatalogRefreshAt=Date.now();catalogRefreshInFlight=false;
  }
 }
+// Save one explicitly requested search on this browser only. No automatic
+// restore, no background supplier request, and no contact or payment data.
+const localSearchKey="jamaica.saved-search.v103";
+const localSearchNotice=$("localSearchNotice");
+function validateLocalSearch(q){
+ return window.JamaicaSearchRecovery.savedSearch(q,{
+   origins:[...$("departure").options].map(o=>o.value),
+   countries:countries.map(c=>c.n),
+   today:new Date().toISOString().slice(0,10),travelers:Travelers});
+}
+function updateSavedSearchControls(){
+ let present=false;
+ try{present=localStorage.getItem(localSearchKey)!==null;}catch{}
+ $("restoreLocalSearch").hidden=!present;
+ $("deleteLocalSearch").hidden=!present;
+}
+$("saveLocalSearch").addEventListener("click",()=>{
+ if(!travelerUI.commit()||!form.reportValidity())return;
+ const q=validateLocalSearch({...filters(),hotel:$("hotelSearch").value.trim()});
+ if(!q){localSearchNotice.textContent="Проверьте город, страну, даты и остальные параметры перед сохранением.";return;}
+ try{
+   localStorage.setItem(localSearchKey,JSON.stringify({schema:"jamaica.saved-search.v1",at:Date.now(),q}));
+   localSearchNotice.textContent="Основные параметры сохранены на этом устройстве. Восстановление доступно 30 дней, удалить запись можно в любое время. Курорт и избранное не сохранены. Ничего не отправлено.";
+ }catch{localSearchNotice.textContent="Не удалось сохранить поиск: хранилище браузера недоступно.";}
+ updateSavedSearchControls();
+});
+$("restoreLocalSearch").addEventListener("click",()=>{
+ let q;
+ try{
+   const raw=localStorage.getItem(localSearchKey);
+   if(!raw||raw.length>8192)throw Error("INVALID");
+   const item=JSON.parse(raw),age=Date.now()-item.at;
+   if(item.schema!=="jamaica.saved-search.v1"||!Number.isFinite(age)||age<0||age>30*86400000)throw Error("EXPIRED");
+   q=validateLocalSearch(item.q);
+   if(!q)throw Error("INVALID");
+ }catch{localSearchNotice.textContent="Сохранённый поиск устарел или содержит недоступные параметры. Выберите новые даты и сохраните поиск заново.";return;}
+ if(!travelerUI.apply(q.rooms)){localSearchNotice.textContent="Не удалось восстановить состав туристов.";return;}
+ departureUserInteracted=true;
+ $("departure").value=q.origin;$("departureGeoStatus").textContent="Город выбран вами.";
+ $("destination").value=q.country;
+ $("dateFrom").value=q.date;$("dateTo").min=q.date;$("dateTo").value=q.dateTo;
+ selectedNights.clear();for(const n of q.nights)selectedNights.add(n);
+ $("hotelSearch").value=q.hotel;$("budget").value=q.budget?String(q.budget):"";
+ sidebarResort.value="";lastFilterCountry="";$("favoritesOnly").checked=false;
+ syncNightPickers();
+ localSearchNotice.textContent="Основные параметры восстановлены. Курорт и избранное сброшены. Показываются только свежие совпадения.";
+ form.requestSubmit();
+});
+$("deleteLocalSearch").addEventListener("click",()=>{
+ try{localStorage.removeItem(localSearchKey);localSearchNotice.textContent="Сохранённый поиск удалён с этого устройства.";}
+ catch{localSearchNotice.textContent="Не удалось удалить сохранённый поиск.";}
+ updateSavedSearchControls();
+});
+updateSavedSearchControls();
 refreshCatalog();
 // A late IP hint must never override a customer who has begun searching.
 form.addEventListener("pointerdown",()=>{departureUserInteracted=true;},{once:true});

@@ -84,3 +84,20 @@ assert.equal(flexibleCities(flexibleRows,q,()=>false).length,0);
 assert.equal(flexibleCities([row("Москва","Китай","2026-12-04",9)],q).length,0);
 assert.equal(flexibleCities([row("Москва","Китай","2026-12-04",5)],q)[0].changeNights,true);
 console.log("JAMAICA_EXPLICIT_FLEXIBLE_OTHER_CITY_RECOVERY_PASS");
+
+
+import "./traveler-party.js";
+const savedSearch=globalThis.JamaicaSearchRecovery.savedSearch;
+const context={origins:["Иркутск","Москва"],countries:["Китай","Вьетнам"],today:"2026-11-27",travelers:globalThis.JamaicaTravelers};
+const input={origin:"Иркутск",country:"Китай",date:"2026-12-01",dateTo:"2027-01-15",nights:[10,7,10],rooms:[{adults:2,child_ages:[6]},{adults:1,child_ages:[]}],budget:60000,hotel:"Hotel",price:123,phone:"not retained"};
+const out=savedSearch(input,context);
+assert.deepEqual(out.nights,[7,10]);
+assert.deepEqual(out.rooms,input.rooms);
+assert.equal(out.budget,60000);
+assert.equal(out.dateTo,"2027-01-15");
+assert.equal("price" in out,false);
+assert.equal("phone" in out,false);
+assert.deepEqual(input.nights,[10,7,10]);
+for(const patch of [{origin:"Unknown"},{country:"Unknown"},{date:"2026-11-26"},{dateTo:"2026-11-30"},{date:"2027-02-30"},{nights:[2]},{rooms:[{adults:1,child_ages:[18]}]},{budget:-1},{hotel:"<script>"}])assert.equal(savedSearch({...input,...patch},context),null);
+assert.ok(savedSearch({...input,date:"",dateTo:"",country:"",budget:0,nights:[]},context));
+console.log("JAMAICA_V103_LOCAL_SAVED_SEARCH_PASS");

@@ -168,5 +168,29 @@ function representative(rows,opt,origin,extra=()=>true,compare){
  if(typeof compare==="function")matches.sort(compare);
  return matches[0]||null;
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative});
+// Explicit, local-only saved search. No supplier calls, offers, contact or payment data.
+function savedSearch(q,{origins,countries,today,travelers}){
+ const clean=(s,max)=>typeof s==="string"&&s.length<=max&&s===s.trim()&&!/[<>\x00-\x1f\x7f]/.test(s);
+ const validDay=s=>{
+   if(!/^20\d{2}-\d{2}-\d{2}$/.test(s||""))return false;
+   const d=Date.parse(s+"T00:00:00Z");
+   return Number.isFinite(d)&&new Date(d).toISOString().slice(0,10)===s;
+ };
+ if(!q||!Array.isArray(origins)||!Array.isArray(countries)||!travelers||
+    !validDay(today)||!origins.includes(q.origin)||
+    !clean(q.country,100)||(q.country&&!countries.includes(q.country))||
+    !clean(q.date,10)||!clean(q.dateTo,10)||
+    (q.date&&(!validDay(q.date)||q.date<today))||
+    (q.dateTo&&(!validDay(q.dateTo)||q.dateTo<today))||
+    (q.date&&q.dateTo&&q.date>q.dateTo)||
+    !Array.isArray(q.nights)||q.nights.length>178||
+    q.nights.some(n=>!Number.isInteger(n)||n<3||n>180)||
+    !clean(q.hotel,100)||!Number.isSafeInteger(q.budget)||
+    (q.budget!==0&&(q.budget<1000||q.budget>10000000)))return null;
+ const rooms=travelers.normalize(q.rooms);
+ if(!rooms)return null;
+ return {origin:q.origin,country:q.country,date:q.date,dateTo:q.dateTo,
+    nights:[...new Set(q.nights)].sort((a,b)=>a-b),rooms,budget:q.budget,hotel:q.hotel};
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative,savedSearch});
 })(globalThis);
