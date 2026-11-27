@@ -422,8 +422,14 @@ def main():
                 # Country chips must reflect ALL actually observed source
                 # countries while keeping the 251-name reference directory
                 # separate from the selectable *tour* results.
+                # V98: search choices include explicitly unavailable countries,
+                # while the quick chips must still represent ONLY verified stock.
                 observed=page.locator("#filterCountry option").evaluate_all(
-                    "(nodes)=>nodes.filter(n=>n.value).map(n=>n.value)")
+                    "(nodes)=>nodes.filter(n=>n.value&&!n.textContent.includes('нет свежих туров')).map(n=>n.value)")
+                no_stock=page.locator("#filterCountry option").evaluate_all(
+                    "(nodes)=>nodes.filter(n=>n.value&&n.textContent.includes('нет свежих туров')).map(n=>n.value)")
+                ensure(not set(observed).intersection(no_stock),"COUNTRY_STOCK_LABEL_OVERLAP")
+                ensure(page.locator("#otherOriginCountrySection").count()==1,"OTHER_ORIGIN_SECTION_MISSING")
                 chips=page.locator("#quickCountries .quickCountryChip:not(.quickCountryMore)").evaluate_all(
                     "(nodes)=>nodes.map(n=>n.textContent.split(' · ')[0]).filter(n=>n!=='Все направления')")
                 if len(observed)<=18:
