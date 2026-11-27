@@ -193,9 +193,9 @@
  <div id="exactDateChoices" class="quickCountryChips" role="group" aria-label="Даты и длительности найденных туров"></div>
  <details id="exactDateMore" hidden><summary>Ещё даты вылета</summary><div id="exactDateMoreChoices" class="quickCountryChips"></div></details>
 </section>
-<section id="hourlyCheckedDates" hidden aria-label="Ранее проверенные даты за последний час" style="margin:12px 0 18px">
- <strong id="hourlyCheckedHeading">Ранее проверенные вылеты за последний час</strong>
- <p class="micro">Это история поиска, не свежие туры. Цена и число вариантов указаны на момент прошлой проверки. Наличие мест и цена сейчас не подтверждены. Выбор даты фильтрует текущий каталог, но не запускает запрос оператору.</p>
+<section id="hourlyCheckedDates" hidden aria-label="Ранее проверенные даты за два часа" style="margin:12px 0 18px">
+ <strong id="hourlyCheckedHeading">Ранее проверенные вылеты за два часа</strong>
+ <p class="micro">Это история поиска, не свежие туры. Вылеты в ближайшие 7 дней показываются не более 30 минут, остальные — до 2 часов с момента проверки. Цена и число вариантов указаны на момент прошлой проверки. Наличие мест и цена сейчас не подтверждены. Выбор даты фильтрует текущий каталог, но не запускает запрос оператору.</p>
  <div id="hourlyCheckedChoices" class="quickCountryChips" role="group" aria-label="Ранее проверенные даты"></div>
  <details id="hourlyCheckedMore" hidden><summary>Ещё ранее проверенные даты</summary><div id="hourlyCheckedMoreChoices" class="quickCountryChips"></div></details>
 </section>
@@ -1048,10 +1048,10 @@ function renderHourlyCheckedDates(){
     a.date.localeCompare(b.date)||a.country.localeCompare(b.country,"ru")||a.nights-b.nights);
  const first=document.createDocumentFragment(),more=document.createDocumentFragment();
  for(const [i,g] of filtered.entries()){
-  const checked=new Date(g.observed_at_utc).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+  const checked=new Date(g.observed_at_utc).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}); const ageMinutes=Math.max(0,Math.floor((Date.now()-Date.parse(g.observed_at_utc))/60000));
   const text=g.country+" · "+g.date.split("-").reverse().join(".")+" · "+g.nights+" ноч. · ранее "+g.count+" вар."+
      (two?" · ранее от "+g.last_min_rub.toLocaleString("ru-RU")+" ₽ за двоих":" · цена для состава не рассчитана")+
-     " · проверено "+checked;
+     " · проверено "+checked+" ("+ageMinutes+" мин. назад)";
   const button=el("button","quickCountryChip",text);
   button.type="button";
   button.addEventListener("click",()=>{
@@ -1067,7 +1067,7 @@ function renderHourlyCheckedDates(){
  $("hourlyCheckedMoreChoices").replaceChildren(more);
  $("hourlyCheckedMore").hidden=filtered.length<=8;
  $("hourlyCheckedDates").hidden=!filtered.length;
- $("hourlyCheckedHeading").textContent="Ранее проверенные вылеты за последний час · "+new Set(filtered.map(g=>g.date)).size+" дат";
+ $("hourlyCheckedHeading").textContent="Ранее проверенные вылеты за два часа · "+new Set(filtered.map(g=>g.date)).size+" дат";
 }
 async function loadHourlyCheckedDates(){
  try{
