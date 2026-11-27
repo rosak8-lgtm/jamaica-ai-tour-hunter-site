@@ -1661,7 +1661,7 @@ $("saveLocalSearch").addEventListener("click",()=>{
  if(!q){localSearchNotice.textContent="Проверьте город, страну, даты и остальные параметры перед сохранением.";return;}
  try{
    localStorage.setItem(localSearchKey,JSON.stringify({schema:"jamaica.saved-search.v1",at:Date.now(),q}));
-   localSearchNotice.textContent="Основные параметры сохранены на этом устройстве на 30 дней. Курорт и избранное не сохранены. Ничего не отправлено.";
+   localSearchNotice.textContent="Основные параметры сохранены на этом устройстве. Восстановление доступно 30 дней, удалить запись можно в любое время. Курорт и избранное не сохранены. Ничего не отправлено.";
  }catch{localSearchNotice.textContent="Не удалось сохранить поиск: хранилище браузера недоступно.";}
  updateSavedSearchControls();
 });
