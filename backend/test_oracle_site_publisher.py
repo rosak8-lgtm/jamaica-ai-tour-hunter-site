@@ -285,6 +285,61 @@ class Tests(unittest.TestCase):
         with self.assertRaises(IdentityMismatch):
             public_departure_cities('<select id="departure"><option value="Иркутск"></option><option value="Иркутск"></option></select>')
 
+    def test_v114_historical_hotel_records_only_from_matching_exact_proof(self):
+        from recent_checked_hotels import build
+        from catalog_property_identity import build_hotel_index
+        now=datetime.now(timezone.utc)
+        at=now.isoformat()
+        row={**feed()["previews"][0],"depart_date":(now.date()+timedelta(days=14)).isoformat(),
+             "price_source":"BG_EXACT_SELECTED_GREEN_BROWSER","price_observed_at_utc":at}
+        proof={"preview_id":row["id"],"observed_at_utc":at,
+               "route_best_price_seen":True,"both_green_planes_seen":True}
+        hotels=build_hotel_index({"hotels":[{"id":row["hotel_id"],"name":row["hotel"],"country":row["country"]}]})
+        def go(old,records,proofs,clock=now):
+            return build(old,records,{"entries":proofs},hotels,now=clock)
+        good=go(None,[row,row],[proof])
+        self.assertEqual(len(good["rows"]),1)
+        h=good["rows"][0]
+        self.assertEqual(h["last_price_rub"],row["price_reference_rub"])
+        self.assertEqual(h["observed_at_utc"],at)
+        self.assertNotIn("bookable",h)
+        self.assertEqual(go(good,[],[],now+timedelta(minutes=119)),good)
+        self.assertEqual(go(good,[],[],now+timedelta(minutes=121))["rows"],[])
+        self.assertEqual(go(None,[row],[proof],now+timedelta(minutes=16))["rows"],[])
+        for change in ({"hotel":"WRONG"},{"flight_verified":True},{"price_reference_party":"ONE_ADULT"},{"room":"<script>"}):
+            self.assertEqual(go(None,[{**row,**change}],[proof])["rows"],[])
+        self.assertEqual(go(None,[row],[{**proof,"both_green_planes_seen":False}])["rows"],[])
+        self.assertEqual(go(None,[row],[{**proof,"observed_at_utc":(now-timedelta(seconds=1)).isoformat()}])["rows"],[])
+        urgent={**row,"depart_date":(now.date()+timedelta(days=2)).isoformat()}
+        u=go(None,[urgent],[proof])
+        self.assertEqual(len(u["rows"]),1)
+        self.assertEqual(go(u,[],[],now+timedelta(minutes=31))["rows"],[])
+        newer=now+timedelta(minutes=5)
+        stamp=newer.isoformat()
+        nextrow={**row,"id":"p_"+"b"*24,"price_observed_at_utc":stamp,"price_reference_rub":99000}
+        nxt=go(good,[nextrow],[{**proof,"preview_id":nextrow["id"],"observed_at_utc":stamp}],newer)
+        self.assertEqual([r["id"] for r in nxt["rows"]],[nextrow["id"]])
+        self.assertEqual(nxt["rows"][0]["observed_at_utc"],stamp)
+        bad={**good,"rows":[{**h,"bookable":True}]}
+        self.assertEqual(go(bad,[],[])["rows"],[])
+
+    def test_v114_history_byte_and_row_cap_preserves_multiple_date_groups(self):
+        import recent_checked_hotels as hh
+        now=datetime.now(timezone.utc)
+        at=now.isoformat()
+        base={**feed()["previews"][0],"price_source":"BG_EXACT_SELECTED_GREEN_BROWSER","price_observed_at_utc":at}
+        hotels={base["hotel_id"]:(base["hotel"],base["country"])}
+        rows=[{**base,"id":"p_"+format(i+1,"024x"),"depart_date":(now.date()+timedelta(days=14+i%3)).isoformat()} for i in range(12)]
+        proofs={"entries":[{"preview_id":r["id"],"observed_at_utc":at,"route_best_price_seen":True,"both_green_planes_seen":True} for r in rows]}
+        with patch.object(hh,"MAX_ROWS",3):
+            out=hh.build(None,rows,proofs,hotels,now=now)
+            self.assertEqual(len(out["rows"]),3)
+            self.assertEqual(len({r["date"] for r in out["rows"]}),3)
+        with patch.object(hh,"MAX_BYTES",1200):
+            out=hh.build(None,rows,proofs,hotels,now=now)
+            self.assertLessEqual(len(json.dumps(out,ensure_ascii=False,separators=(",",":")).encode()),1200)
+            self.assertGreater(len(out["rows"]),0)
+
     def test_v109_hourly_dates_never_renew_or_count_unverified(self):
         from recent_checked_dates import build
         now=datetime.now(timezone.utc)
