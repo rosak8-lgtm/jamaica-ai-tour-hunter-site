@@ -108,10 +108,15 @@ const clock=Date.parse("2026-11-27T10:00:00Z");
 const hourGroup={origin:"Иркутск",country:"Вьетнам",date:"2026-12-11",nights:3,observed_at_utc:"2026-11-27T09:20:00Z",count:783,last_min_rub:77950};
 const hourFeed={schema:"jamaica.recent-checked-dates.v1",classification:"HISTORICAL_SEARCH_ONLY_NOT_OFFERS",groups:[hourGroup]};
 assert.deepEqual(hourly(hourFeed,clock),[hourGroup]);
-assert.deepEqual(hourly(hourFeed,clock+20*60000),[hourGroup]);
-assert.deepEqual(hourly(hourFeed,clock+20*60000+1),[]);
+assert.deepEqual(hourly(hourFeed,clock+80*60000),[hourGroup]);
+assert.deepEqual(hourly(hourFeed,clock+80*60000+1),[]);
 assert.deepEqual(hourly({...hourFeed,groups:[hourGroup,{...hourGroup,observed_at_utc:"2026-11-27T09:40:00Z",count:2}]},clock).map(x=>x.count),[2]);
 for(const patch of [{bookable:true},{date:"2026-12-32"},{nights:2},{count:0},{last_min_rub:"77950"},{origin:"<script>"},{observed_at_utc:"2026-11-27T10:01:00Z"}])
  assert.deepEqual(hourly({...hourFeed,groups:[{...hourGroup,...patch}]},clock),[]);
 assert.deepEqual(hourly({...hourFeed,classification:"LIVE"},clock),[]);
 console.log("JAMAICA_V109_HOURLY_HISTORY_PASS");
+
+const urgentGroup={...hourGroup,date:"2026-11-29",observed_at_utc:"2026-11-27T09:30:00Z"};
+assert.deepEqual(hourly({...hourFeed,groups:[urgentGroup]},clock),[urgentGroup]);
+assert.deepEqual(hourly({...hourFeed,groups:[urgentGroup]},clock+1),[]);
+console.log("JAMAICA_V113_ADAPTIVE_RETENTION_PASS");
