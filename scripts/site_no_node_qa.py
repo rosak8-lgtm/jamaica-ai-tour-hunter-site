@@ -149,7 +149,7 @@ def main():
                 "UNSAFE_LIVE_CHECKOUT_CONFIG")
     if records:
         try:
-            proof=property_identity.verify_catalog_hotel_identity(records,directory)
+            proof=property_identity.verify_catalog_hotel_identity(records,directory,public_qa_origins=property_identity.public_departure_cities((ROOT/"index.html").read_text(encoding="utf-8")))
         except property_identity.IdentityMismatch as exc:
             raise SystemExit("JAMAICA_NO_NODE_QA_HOLD="+str(exc)) from exc
     else:
