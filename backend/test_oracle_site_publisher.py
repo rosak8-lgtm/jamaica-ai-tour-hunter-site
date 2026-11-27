@@ -478,6 +478,7 @@ class Tests(unittest.TestCase):
                 staging=Path(args[args.index("--output")+1])
                 self.assertNotEqual(staging,target)
                 staging.write_text(json.dumps(new))
+                return publisher.subprocess.CompletedProcess(args,0,"","")
             with patch.object(publisher,"RUNROOT",root), \
                  patch.object(publisher,"run",side_effect=export), \
                  patch.object(publisher.identity,"verify_catalog_hotel_identity") as check:
@@ -501,12 +502,61 @@ class Tests(unittest.TestCase):
                     if mode=="invalid":
                         staging=Path(args[args.index("--output")+1])
                         staging.write_text(json.dumps({**feed(),"bookable":True}))
+                    return publisher.subprocess.CompletedProcess(args,0,"","")
                 with patch.object(publisher,"RUNROOT",root), \
                      patch.object(publisher,"run",side_effect=export):
                     with self.assertRaises(publisher.CatalogHold):
                         publisher.refresh_source_feed(directory())
                 self.assertEqual(target.read_bytes(),previous)
                 self.assertEqual(list(root.iterdir()),[target])
+
+    def test_shared_provider_hold_protocol(self):
+        signal=publisher.parse_export_provider_hold("OTHER\nJAMAICA_BG_EXPORT_PROVIDER_HOLD=429:3600\n")
+        self.assertEqual((signal.status,signal.seconds),(429,3600))
+        for value in ("", "JAMAICA_BG_EXPORT_PROVIDER_HOLD=429:1799",
+            "JAMAICA_BG_EXPORT_PROVIDER_HOLD=200:1800",
+            "JAMAICA_BG_EXPORT_PROVIDER_HOLD=429:31536001",
+            "JAMAICA_BG_EXPORT_PROVIDER_HOLD=429:1800\nJAMAICA_BG_EXPORT_PROVIDER_HOLD=429:1800",
+            "JAMAICA_BG_EXPORT_PROVIDER_HOLD=429:1800 extra"):
+            self.assertIsNone(publisher.parse_export_provider_hold(value))
+
+    def test_shared_provider_hold_preserves_state_and_longer_pause(self):
+        with tempfile.TemporaryDirectory() as work:
+            state=Path(work)/"state.json"
+            old={"schema":"jamaica.site-bot.v1","cycle":87,"v49_last_exact_api_attempt_utc":NOW.isoformat()}
+            state.write_text(json.dumps(old));state.chmod(0o600)
+            end=publisher.persist_source_provider_hold(publisher.SourceProviderHold(429,3600),path=state,now=NOW)
+            result=json.loads(state.read_text())
+            self.assertEqual(end,NOW+timedelta(hours=1))
+            for key,value in old.items():self.assertEqual(result[key],value)
+            self.assertEqual(result["provider_last_hold"]["source"],"PUBLISHER_BROAD_SCAN")
+            self.assertTrue(publisher.provider_hold_active(path=state,now=NOW))
+            before=state.read_bytes()
+            self.assertEqual(publisher.persist_source_provider_hold(publisher.SourceProviderHold(503,1800),path=state,now=NOW),end)
+            self.assertEqual(state.read_bytes(),before)
+            self.assertEqual(state.stat().st_mode&0o777,0o600)
+            self.assertEqual(list(Path(work).iterdir()),[state])
+
+    def test_shared_provider_hold_invalid_state_rejected(self):
+        with tempfile.TemporaryDirectory() as work:
+            state=Path(work)/"state.json"
+            state.write_text(json.dumps({"schema":"jamaica.site-bot.v1","provider_hold_until_utc":"invalid"}));state.chmod(0o600)
+            before=state.read_bytes()
+            with self.assertRaises(publisher.CatalogHold):
+                publisher.persist_source_provider_hold(publisher.SourceProviderHold(429,1800),path=state,now=NOW)
+            self.assertEqual(state.read_bytes(),before)
+
+    def test_source_export_rate_limit_preserves_previous_feed(self):
+        with tempfile.TemporaryDirectory() as work:
+            root=Path(work);target=root/"generated-tour-previews.json"
+            target.write_text(json.dumps(feed()));before=target.read_bytes()
+            proc=publisher.subprocess.CompletedProcess(["export"],2,"JAMAICA_BG_EXPORT_PROVIDER_HOLD=429:3600\n","")
+            with patch.object(publisher,"RUNROOT",root),patch.object(publisher,"run",return_value=proc):
+                with self.assertRaises(publisher.SourceProviderHold) as raised:
+                    publisher.refresh_source_feed(directory(),probe_slot=42)
+                self.assertEqual((raised.exception.status,raised.exception.seconds),(429,3600))
+            self.assertEqual(target.read_bytes(),before)
+            self.assertEqual(list(root.iterdir()),[target])
 
     def test_valid_source_backed_feed_can_be_published(self):
         self.assertEqual(publisher.validate(feed(),directory()),1)
