@@ -214,5 +214,37 @@ function hourlyDateGroups(payload,now=Date.now()){
  }
  return [...groups.values()];
 }
-root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative,savedSearch,hourlyDateGroups});
+// History is a distinct schema, never a source of live offer rows.
+function historicalHotels(payload,criteria={},now=Date.now()){
+ if(!payload||payload.schema!=="jamaica.recent-checked-hotels.v1"||
+    payload.classification!=="HISTORICAL_HOTELS_NOT_OFFERS"||
+    !Array.isArray(payload.rows)||payload.rows.length>20000||!Number.isFinite(now))return [];
+ const keys=["id","hotel_id","hotel","origin","country","date","nights","room","resort","observed_at_utc","last_price_rub"];
+ const fold=s=>typeof s==="string"?s.trim().toLocaleLowerCase("ru"):"";
+ const origin=fold(criteria.origin),country=fold(criteria.country),hotel=fold(criteria.hotel),resort=fold(criteria.resort);
+ const live=criteria.liveIds instanceof Set?criteria.liveIds:new Set();
+ const nights=Array.isArray(criteria.nights)?criteria.nights:[];
+ const current=new Map(),groupCache=new Map();
+ for(const r of payload.rows){
+  if(!r||typeof r!=="object"||Object.keys(r).length!==keys.length||!keys.every(k=>Object.hasOwn(r,k)))continue;
+  if(typeof r.id!=="string"||!/^p_[0-9a-f]{24}$/.test(r.id)||live.has(r.id)||
+     typeof r.hotel_id!=="string"||!/^\d{7,20}$/.test(r.hotel_id))continue;
+  if(![[r.hotel,110,false],[r.room,300,false],[r.resort,100,true]].every(([s,limit,empty])=>
+       typeof s==="string"&&(empty||s.trim())&&s.length<=limit&&!/[<>\x00-\x1f{}]/.test(s)))continue;
+  if(origin&&fold(r.origin)!==origin||country&&fold(r.country)!==country||
+     hotel&&!fold(r.hotel).includes(hotel)||resort&&fold(r.resort)!==resort||
+     criteria.from&&r.date<criteria.from||criteria.to&&r.date>criteria.to||
+     nights.length&&!nights.includes(r.nights))continue;
+  if(!Number.isSafeInteger(r.last_price_rub)||r.last_price_rub<1000||r.last_price_rub>10000000||
+     criteria.twoAdults===true&&Number(criteria.budget)>0&&r.last_price_rub>2*Number(criteria.budget))continue;
+  const g={origin:r.origin,country:r.country,date:r.date,nights:r.nights,observed_at_utc:r.observed_at_utc,count:1,last_min_rub:1000};
+  const key=JSON.stringify(g);
+  if(!groupCache.has(key))groupCache.set(key,hourlyDateGroups({schema:"jamaica.recent-checked-dates.v1",classification:"HISTORICAL_SEARCH_ONLY_NOT_OFFERS",groups:[g]},now).length===1);
+  if(!groupCache.get(key))continue;
+  const old=current.get(r.id);
+  if(!old||Date.parse(r.observed_at_utc)>Date.parse(old.observed_at_utc))current.set(r.id,{...r});
+ }
+ return [...current.values()].sort((a,b)=>Date.parse(b.observed_at_utc)-Date.parse(a.observed_at_utc)||a.last_price_rub-b.last_price_rub||a.id.localeCompare(b.id));
+}
+root.JamaicaSearchRecovery=Object.freeze({analyze,departures,otherCountryOptions,dateOptions,otherCities,flexibleCities,representative,savedSearch,hourlyDateGroups,historicalHotels});
 })(globalThis);
