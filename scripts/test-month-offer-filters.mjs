@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 const src=fs.readFileSync("scripts/month-offer-filters.js","utf8");
 new vm.Script(src);
 const ctx={window:{}};vm.runInNewContext(src,ctx);
-const {range,activeMonth,monthsFor}=ctx.window.JamaicaMonths;
+const {range,activeMonth,monthsFor,observedMonthsFor}=ctx.window.JamaicaMonths;
 assert.equal(range("2026-12").from,"2026-12-01");
 assert.equal(range("2026-12").to,"2026-12-31");
 assert.equal(range("2027-02").to,"2027-02-28");
@@ -48,6 +48,18 @@ assert.equal(monthsFor(data,{
 assert.equal(monthsFor(data,{origin:"Москва",today:"2026-11-23"}).get("2027-03"),1);
 assert.equal(monthsFor(data,{origin:"Иркутск",country:"Япония"}).size,0);
 assert.equal(monthsFor(null,{origin:"Иркутск"}).size,0);
+// V101: no supplier claims from source metadata; never transfer another city's calendar.
+const coverage=[{country:"Таиланд",sampled_departure_months:["2026-10","2026-12","2027-01","2027-13","2027-01"]},
+ {country:"Китай",sampled_departure_months:["2027-02"]},{country:"Вьетнам",sampled_departure_months:null}];
+const observed=(q)=>Array.from(observedMonthsFor(coverage,q));
+assert.deepEqual(observed({origin:"Иркутск",today:"2026-11-27"}),["2026-12","2027-01","2027-02"]);
+assert.deepEqual(observed({origin:"ИРКУТСК",country:"таиланд",today:"2026-11-27"}),["2026-12","2027-01"]);
+assert.deepEqual(observed({origin:"Новосибирск",today:"2026-11-27"}),[]);
+assert.deepEqual(observed({origin:"Иркутск",country:"Египет",today:"2026-11-27"}),[]);
+assert.deepEqual(observed({origin:"Иркутск",country:"Вьетнам",today:"2026-11-27"}),[]);
+assert.deepEqual(Array.from(observedMonthsFor(null,{origin:"Иркутск"})),[]);
+assert.deepEqual(observed({origin:"Иркутск",today:"2027-01-31"}),["2027-01","2027-02"]);
+assert.equal(coverage[0].sampled_departure_months.length,5);
 const page=fs.readFileSync("index.html","utf8");
 const css=fs.readFileSync("assets/jamaica-search-ui.css","utf8");
 assert.ok(page.includes('id="quickMonths"')&&
@@ -59,4 +71,7 @@ assert.ok(page.includes('id="quickMonths"')&&
 assert.ok(css.includes('.quickMonthChip[aria-pressed="true"]')&&
  css.includes('.quickMonthChips{display:flex'),
  "Month chips must be accessible and mobile scrollable");
+assert.ok(page.includes('id="observedMonthChoices"')&&page.includes('months.filter(month=>!fresh.has(month))')&&
+ page.includes('Это фильтр каталога, не заявка оператору')&&page.includes('dateOptions.length.toLocaleString("ru-RU")'));
 console.log("JAMAICA_REAL_PUBLISHED_MONTH_SHORTCUTS_PASS");
+console.log("JAMAICA_V101_OBSERVED_CALENDAR_PASS");

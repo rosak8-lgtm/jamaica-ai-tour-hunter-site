@@ -38,5 +38,21 @@ function monthsFor(rows,{origin="",country="",today=""}={}){
  }
  return new Map([...counts].sort((a,b)=>a[0].localeCompare(b[0])));
 }
-root.JamaicaMonths=Object.freeze({range,activeMonth,monthsFor});
+// Discovery metadata is not inventory. Never use another city's coverage.
+function observedMonthsFor(coverage,{origin="",country="",today=""}={}){
+ const norm=x=>String(x||"").trim().toLocaleLowerCase("ru");
+ if(norm(origin)!=="иркутск"||!Array.isArray(coverage))return [];
+ const result=new Set();
+ for(const item of coverage){
+  if(!item||typeof item.country!=="string"||
+     (norm(country)&&norm(item.country)!==norm(country))||
+     !Array.isArray(item.sampled_departure_months))continue;
+  for(const month of item.sampled_departure_months){
+   const period=range(month);
+   if(period&&(!today||period.to>=today))result.add(month);
+  }
+ }
+ return [...result].sort().slice(0,24);
+}
+root.JamaicaMonths=Object.freeze({range,activeMonth,monthsFor,observedMonthsFor});
 })(typeof window!=="undefined"?window:globalThis);

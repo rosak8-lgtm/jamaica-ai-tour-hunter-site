@@ -179,9 +179,10 @@
  <p class="sourceSearchDisclaimer">Эти направления доступны для поиска. Число проверенных путешествий зависит от дат, города и текущей доступности.</p>
  <div id="sourceSearchCountryChips" class="sourceSearchCountryChips" role="group" aria-label="Направления фонового поиска без показа непроверенных туров"></div>
  <p id="sourceSearchMonths" class="sourceSearchMonths"></p>
+ <div id="observedMonthChoices" class="quickMonthChips" role="group" aria-label="Ранее наблюдавшиеся месяцы без свежих вариантов"></div>
 </details>
 <section id="exactDateOptions" hidden aria-label="Найденные даты вылета" style="margin:12px 0 18px">
- <strong>Найденные даты вылета</strong>
+ <strong id="exactDateHeading">Найденные даты вылета</strong>
  <p class="micro">Даты и длительности из свежего каталога. Нажмите на подходящий вариант; изменения ваших фильтров указаны на кнопке.</p>
  <div id="exactDateChoices" class="quickCountryChips" role="group" aria-label="Даты и длительности найденных туров"></div>
  <details id="exactDateMore" hidden><summary>Ещё даты вылета</summary><div id="exactDateMoreChoices" class="quickCountryChips"></div></details>
@@ -969,7 +970,7 @@ function renderSourceScanCoverage(){
  const root=$("sourceSearchCoverage"),chips=$("sourceSearchCountryChips");
  const countries=$("departure").value==="Иркутск"?lastSourceCoverage:[];
  root.hidden=!countries.length;
- if(!countries.length)return;
+ if(!countries.length){$("observedMonthChoices").replaceChildren();return;}
  if(!sourceCoverageFirstExpanded){root.open=true;sourceCoverageFirstExpanded=true;}
  const selected=$("destination").value.trim(),fragment=document.createDocumentFragment();
  const counts=window.JamaicaCountryOffers.countryCounts(verifiedRows(),$("departure").value.trim());
@@ -977,7 +978,6 @@ function renderSourceScanCoverage(){
  $("sourceSearchCoverageTitle").textContent=
    "Направления поиска: "+countries.length+
    " · свежих вариантов из выбранного города: "+total.toLocaleString("ru-RU");
- let months=[];
  for(const item of countries){
    const count=counts.get(item.country)||0;
    const button=el("button","sourceSearchChip",
@@ -990,15 +990,33 @@ function renderSourceScanCoverage(){
      form.requestSubmit();
    });
    fragment.append(button);
-   if(!selected||item.country===selected)months.push(...item.sampled_departure_months);
  }
  chips.replaceChildren(fragment);
- months=[...new Set(months)].sort();
+ const origin=$("departure").value;
+ const today=new Date().toISOString().slice(0,10);
+ const months=window.JamaicaMonths.observedMonthsFor(countries,{origin,country:selected,today});
+ const fresh=window.JamaicaMonths.monthsFor(verifiedRows(),{origin,country:selected,today});
+ const active=window.JamaicaMonths.activeMonth($("dateFrom").value,$("dateTo").value);
+ const notFresh=months.filter(month=>!fresh.has(month));
+ const monthButtons=document.createDocumentFragment();
+ for(const month of notFresh){
+   const period=window.JamaicaMonths.range(month);
+   if(!period)continue;
+   const [year,number]=month.split("-").map(Number);
+   const title=new Intl.DateTimeFormat("ru-RU",{year:"numeric",month:"long",timeZone:"UTC"}).format(new Date(Date.UTC(year,number-1,1)));
+   const button=el("button","quickMonthChip",title+" · нет свежих туров");
+   button.type="button";
+   button.setAttribute("aria-pressed",String(month===active));
+   button.addEventListener("click",()=>{
+     $("dateFrom").value=period.from;$("dateTo").value=period.to;$("dateTo").min=period.from;
+     form.requestSubmit();
+   });
+   monthButtons.append(button);
+ }
+ $("observedMonthChoices").replaceChildren(monthButtons);
  $("sourceSearchMonths").textContent=months.length?
-   "Месяцы поиска: "+
-     months.slice(0,18).join(", ")+
-     (months.length>18?" и другие.":".")+
-     " Наличие туров с полной проверкой не гарантировано.":
+   "Месяцы, ранее наблюдавшиеся в поиске: "+months.join(", ")+". "+
+   (notFresh.length?"Ниже можно выбрать месяц без свежих предложений. Это фильтр каталога, не заявка оператору и не подтверждение наличия.":""):
    "Даты подходящих путешествий пока уточняются.";
 }
 function renderTourPreviews(reset=true){
@@ -1068,6 +1086,7 @@ function renderTourPreviews(reset=true){
  $("exactDateMoreChoices").replaceChildren(dateMoreChoices);
  $("exactDateMore").hidden=dateOptions.length<=8;
  $("exactDateOptions").hidden=!dateOptions.length;
+ $("exactDateHeading").textContent="Найденные даты вылета · "+dateOptions.length.toLocaleString("ru-RU");
  // Concrete alternative countries remain visible even when the selected
  // country already has matches. The current filters are never changed silently.
  const alternativeRows=verifiedRows();
