@@ -193,6 +193,12 @@
  <div id="exactDateChoices" class="quickCountryChips" role="group" aria-label="Даты и длительности найденных туров"></div>
  <details id="exactDateMore" hidden><summary>Ещё даты вылета</summary><div id="exactDateMoreChoices" class="quickCountryChips"></div></details>
 </section>
+<section id="hourlyCheckedDates" hidden aria-label="Ранее проверенные даты за последний час" style="margin:12px 0 18px">
+ <strong id="hourlyCheckedHeading">Ранее проверенные вылеты за последний час</strong>
+ <p class="micro">Это история поиска, не свежие туры. Цена и число вариантов указаны на момент прошлой проверки. Наличие мест и цена сейчас не подтверждены. Выбор даты фильтрует текущий каталог, но не запускает запрос оператору.</p>
+ <div id="hourlyCheckedChoices" class="quickCountryChips" role="group" aria-label="Ранее проверенные даты"></div>
+ <details id="hourlyCheckedMore" hidden><summary>Ещё ранее проверенные даты</summary><div id="hourlyCheckedMoreChoices" class="quickCountryChips"></div></details>
+</section>
 <section id="exactCountryOptions" hidden aria-label="Другие найденные страны" style="margin:12px 0 18px">
  <strong>Другие страны с найденными вылетами</strong>
  <p class="micro">Выберите конкретную дату. Если длительность или даты отличаются от вашего запроса, это указано на кнопке.</p>
@@ -533,6 +539,7 @@ for(const link of document.querySelectorAll('a[href="#hotels"]')){
 }
 if(location.hash==="#hotels")openHotelDirectory();
 let previewRecords=[],previewVisible=0;
+let hourlyCheckedPayload=null;
 let lastSourceCoverage=[];
 let sourceCoverageFirstExpanded=false;
 let visualProofs=new Map();
@@ -1025,6 +1032,52 @@ function renderSourceScanCoverage(){
    (notFresh.length?"Ниже можно выбрать месяц без свежих предложений. Это фильтр каталога, не заявка оператору и не подтверждение наличия.":""):
    "Даты подходящих путешествий пока уточняются.";
 }
+function renderHourlyCheckedDates(){
+ const groups=window.JamaicaSearchRecovery.hourlyDateGroups(hourlyCheckedPayload);
+ const city=$("departure").value,country=$("destination").value;
+ const from=$("dateFrom").value,to=$("dateTo").value,nights=[...selectedNights];
+ const two=Travelers.isTwoAdults(travelerUI.current()),budget=Number($("budget").value)||0;
+ const availableCountries=new Set([...$("destination").options].map(x=>x.value));
+ const live=new Set(verifiedRows().map(x=>JSON.stringify([x.origin,x.country,x.depart_date,x.nights])));
+ const blocked=$("hotelSearch").value.trim()||sidebarResort.value.trim()||$("favoritesOnly").checked;
+ const filtered=blocked?[]:groups.filter(g=>g.origin===city&&availableCountries.has(g.country)&&
+    !live.has(JSON.stringify([g.origin,g.country,g.date,g.nights]))&&
+    (!from||g.date>=from)&&(!to||g.date<=to)&&(!nights.length||nights.includes(g.nights))&&
+    (!budget||!two||g.last_min_rub<=budget*2));
+ filtered.sort((a,b)=>Number(b.country===country)-Number(a.country===country)||
+    a.date.localeCompare(b.date)||a.country.localeCompare(b.country,"ru")||a.nights-b.nights);
+ const first=document.createDocumentFragment(),more=document.createDocumentFragment();
+ for(const [i,g] of filtered.entries()){
+  const checked=new Date(g.observed_at_utc).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+  const text=g.country+" · "+g.date.split("-").reverse().join(".")+" · "+g.nights+" ноч. · ранее "+g.count+" вар."+
+     (two?" · ранее от "+g.last_min_rub.toLocaleString("ru-RU")+" ₽ за двоих":" · цена для состава не рассчитана")+
+     " · проверено "+checked;
+  const button=el("button","quickCountryChip",text);
+  button.type="button";
+  button.addEventListener("click",()=>{
+   if(!window.JamaicaSearchRecovery.hourlyDateGroups({schema:"jamaica.recent-checked-dates.v1",classification:"HISTORICAL_SEARCH_ONLY_NOT_OFFERS",groups:[g]}).length){renderHourlyCheckedDates();return;}
+   $("destination").value=g.country;sidebarCountry.value="";sidebarResort.value="";lastFilterCountry="";
+   $("dateFrom").value=g.date;$("dateTo").value=g.date;$("dateTo").min=g.date;
+   selectedNights.clear();selectedNights.add(g.nights);syncNightPickers();
+   form.requestSubmit();
+  });
+  (i<8?first:more).append(button);
+ }
+ $("hourlyCheckedChoices").replaceChildren(first);
+ $("hourlyCheckedMoreChoices").replaceChildren(more);
+ $("hourlyCheckedMore").hidden=filtered.length<=8;
+ $("hourlyCheckedDates").hidden=!filtered.length;
+ $("hourlyCheckedHeading").textContent="Ранее проверенные вылеты за последний час · "+new Set(filtered.map(g=>g.date)).size+" дат";
+}
+async function loadHourlyCheckedDates(){
+ try{
+  const response=await fetch("./recent-checked-dates.json",{cache:"no-store"});
+  if(!response.ok)throw Error("HISTORY_UNAVAILABLE");
+  const raw=await response.text();
+  if(raw.length>1000000)throw Error("HISTORY_OVERSIZE");
+  hourlyCheckedPayload=JSON.parse(raw);
+ }catch{hourlyCheckedPayload=null;}
+}
 function renderTourPreviews(reset=true){
  const target=$("previewCards"),more=$("previewMore");
  if(reset){target.replaceChildren();previewVisible=0;}
@@ -1042,6 +1095,7 @@ function renderTourPreviews(reset=true){
  renderCountryShortcuts($("destination").value.trim());
  renderMonthShortcuts();
  renderSourceScanCoverage();
+ renderHourlyCheckedDates();
  const budget=Number($("budget").value)||0;
  const budgetMessage=!budget?"":!partyTwoAdults?
    "Бюджет не применён: справочная цена относится только к двум взрослым. Для выбранного состава требуется отдельный расчёт.":
@@ -1619,9 +1673,11 @@ async function refreshCatalog(){
  catalogRefreshInFlight=true;
  try{
   const secondFeed=window.JamaicaApplicationReference.load();
+  const hourlyLoad=loadHourlyCheckedDates();
   await loadVisualProofs(false);
   await loadTourPreviews();
   applicationRows=await secondFeed;
+  await hourlyLoad;
   if(applicationRows.length)previewsLoaded=true;
   sourceFilterOptions();renderTourPreviews(true);
   // Pages can briefly serve different generations of the two files. Retry
@@ -1727,6 +1783,7 @@ setInterval(()=>{
 setInterval(()=>{
  if(document.visibilityState!=="visible"||catalogRefreshInFlight)return;
  const now=Date.now();
+ renderHourlyCheckedDates();
  let changed=false;
  const previousApplicationCount=applicationRows.length;
  applicationRows=applicationRows.filter(x=>window.JamaicaApplicationReference.eligible(x,now));
