@@ -1037,7 +1037,7 @@ function renderHourlyCheckedDates(){
  const city=$("departure").value,country=$("destination").value;
  const from=$("dateFrom").value,to=$("dateTo").value,nights=[...selectedNights];
  const two=Travelers.isTwoAdults(travelerUI.current()),budget=Number($("budget").value)||0;
- const availableCountries=new Set([...$("destination").options].map(x=>x.value));
+ const availableCountries=new Set(countries.map(x=>x.n));
  const live=new Set(verifiedRows().map(x=>JSON.stringify([x.origin,x.country,x.depart_date,x.nights])));
  const blocked=$("hotelSearch").value.trim()||sidebarResort.value.trim()||$("favoritesOnly").checked;
  const filtered=blocked?[]:groups.filter(g=>g.origin===city&&availableCountries.has(g.country)&&
