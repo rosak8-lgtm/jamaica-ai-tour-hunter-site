@@ -62,6 +62,24 @@ SAFE_LOG = re.compile(r"^(JAMAICA_|COUNTRY_[0-9]+(?:_[-A-Z_]+)?=|COUNTRIES_|PREV
 class CatalogHold(Exception):
     pass
 
+class SourceProviderHold(CatalogHold):
+    def __init__(self,status,seconds):
+        super().__init__("SOURCE_PROVIDER_HOLD")
+        self.status=status
+        self.seconds=seconds
+
+def parse_export_provider_hold(stdout):
+    # Only the explicit, bounded child-process protocol; never parse secret URLs,
+    # exception text, or a failed request's arbitrary response body.
+    prefix="JAMAICA_BG_EXPORT_PROVIDER_HOLD="
+    lines=[line for line in stdout.splitlines() if line.startswith(prefix)]
+    if len(lines)!=1:return None
+    m=re.fullmatch(r"JAMAICA_BG_EXPORT_PROVIDER_HOLD=(401|403|429|503):([0-9]{1,8})",lines[0])
+    if not m:return None
+    status,seconds=map(int,m.groups())
+    if not 1800<=seconds<=31536000:return None
+    return SourceProviderHold(status,seconds)
+
 def log(key,value):
     print(f"{key}={value}",flush=True)
 
@@ -429,7 +447,11 @@ def refresh_source_feed(directory, *, probe_slot=None):
                  "--output",str(staged),"--max-countries","120",
                  "--per-country","5","--discover-state",str(DISCOVERY_STATE),
                  "--probe-slot",str(probe_slot)]
-        run(command,cwd=SCRIPTS,timeout=200,expose=True)
+        result=run(command,cwd=SCRIPTS,timeout=200,expose=True,check=False)
+        if result.returncode:
+            hold=parse_export_provider_hold(result.stdout)
+            if hold is not None:raise hold
+            raise CatalogHold("SOURCE_EXPORT_FAILED")
         if not staged.is_file() or staged.is_symlink():
             raise CatalogHold("GENERATED_FEED_MISSING_OR_UNSAFE")
         generated_bytes=staged.stat().st_size
@@ -527,6 +549,51 @@ def read_owner_json(path, limit):
         return result
     finally:os.close(fd)
 
+def persist_source_provider_hold(hold,*,path=None,now=None):
+    """Called ONLY under the existing shared browser lock by guarded_source_scan.
+    Atomically preserve every scheduler field and never shorten an active hold.
+    """
+    import stat
+    path=Path(path) if path is not None else BOT_STATE
+    now=now or datetime.now(timezone.utc)
+    if (not isinstance(hold,SourceProviderHold) or
+        type(hold.status) is not int or hold.status not in (401,403,429,503) or
+        type(hold.seconds) is not int or not 1800<=hold.seconds<=31536000 or
+        now.tzinfo is None):
+        raise CatalogHold("INVALID_SOURCE_PROVIDER_HOLD")
+    parent=path.parent.lstat()
+    if not stat.S_ISDIR(parent.st_mode) or parent.st_uid!=os.geteuid() or parent.st_mode&0o077:
+        raise CatalogHold("UNSAFE_PROVIDER_STATE_DIRECTORY")
+    try:
+        state=read_owner_json(path,100_000)
+        info=path.lstat()
+        if info.st_nlink!=1:raise CatalogHold("UNSAFE_PROVIDER_STATE_LINK")
+    except FileNotFoundError:
+        state={"schema":"jamaica.site-bot.v1","cycle":0}
+    if state.get("schema")!="jamaica.site-bot.v1":
+        raise CatalogHold("PROVIDER_STATE_SCHEMA_INVALID")
+    previous=state.get("provider_hold_until_utc")
+    end=timestamp(previous) if previous is not None else None
+    if previous is not None and end is None:raise CatalogHold("PROVIDER_STATE_CLOCK_INVALID")
+    proposed=now+timedelta(seconds=hold.seconds)
+    if end is not None and end>=proposed:return end
+    state["provider_hold_until_utc"]=proposed.isoformat()
+    state["provider_last_hold"]={"http_status":hold.status,"stage":"UNKNOWN",
+        "source":"PUBLISHER_BROAD_SCAN","country_id":None,
+        "observed_at_utc":now.isoformat(),"retry_seconds":hold.seconds}
+    encoded=json.dumps(state,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+    if len(encoded)>100_000:raise CatalogHold("PROVIDER_STATE_TOO_LARGE")
+    fd,name=tempfile.mkstemp(prefix=".source-hold-",dir=path.parent)
+    target=Path(name)
+    try:
+        with os.fdopen(fd,"wb") as stream:
+            os.fchmod(stream.fileno(),0o600)
+            stream.write(encoded);stream.flush();os.fsync(stream.fileno())
+        os.replace(target,path)
+    finally:
+        if target.exists():target.unlink()
+    return proposed
+
 def provider_hold_active(*,path=None,now=None):
     now=now or datetime.now(timezone.utc)
     try:
@@ -605,6 +672,10 @@ def guarded_source_scan(*,now=None):
         directory_check(directory)
         try:
             new=refresh_source_feed(directory,probe_slot=probe_slot)
+        except SourceProviderHold as hold:
+            end=persist_source_provider_hold(hold)
+            log("JAMAICA_BG_SHARED_PROVIDER_HOLD",f"{hold.status}:{end.isoformat()}")
+            return None,directory
         except (CatalogHold,subprocess.TimeoutExpired,OSError,ValueError,KeyError):
             log("JAMAICA_BROAD_SOURCE_SCAN","FAILED_USE_EXACT_PROOFS_ONLY")
             return None,directory
