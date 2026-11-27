@@ -371,7 +371,7 @@ def build(directory, api, max_countries=MAX_COUNTRIES, per_country=MAX_LISTS_PER
         except urllib.error.HTTPError as exc:
             # Stop the entire broad sweep after a supplier access/rate hold.
             # Do not continue issuing requests to the other countries.
-            if exc.code in (401,403,429):raise
+            if exc.code in (401,403,429,503):raise
             stats["status"]="UNVERIFIED"
         except (bg.SyncHold,urllib.error.URLError,ValueError,TimeoutError,KeyError):
             stats["status"]="UNVERIFIED"
@@ -467,9 +467,30 @@ def main():
         print("PUBLIC_PREVIEWS_"+str(i)+"="+str(stats["previews"]))
     print("NO_CONFIRMED_SALE_NO_BOOKING_NO_SECRET_EXPORTED=YES")
 
+def provider_retry_seconds(raw, at):
+    # A conservative minimum; honor a longer valid supplier instruction.
+    from email.utils import parsedate_to_datetime
+    if not isinstance(raw,str) or len(raw)>128:return 1800
+    try:
+        if re.fullmatch(r"[0-9]{1,9}",raw.strip()):
+            seconds=int(raw.strip())
+        else:
+            t=parsedate_to_datetime(raw)
+            if t.tzinfo is None:return 1800
+            seconds=int((t-at).total_seconds()+1)
+        return max(1800,min(seconds,31536000))
+    except (ValueError,TypeError,OverflowError,AttributeError):return 1800
+
 if __name__ == "__main__":
     try:
         main()
+    except urllib.error.HTTPError as exc:
+        if exc.code in (401,403,429,503):
+            delay=provider_retry_seconds(exc.headers.get("Retry-After") if exc.headers else None,
+                                         datetime.now(timezone.utc))
+            print(f"JAMAICA_BG_EXPORT_PROVIDER_HOLD={exc.code}:{delay}",flush=True)
+        print("JAMAICA_PREVIEW_EXPORT_HOLD=HTTPError",file=sys.stderr)
+        sys.exit(2)
     except Exception as exc:
         print("JAMAICA_PREVIEW_EXPORT_HOLD="+type(exc).__name__, file=sys.stderr)
         sys.exit(2)
