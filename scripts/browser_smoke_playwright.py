@@ -139,6 +139,14 @@ def main():
                         status=404,body=""))
                     historical.route("**/recent-checked-dates.json",lambda route:route.fulfill(
                         status=200,content_type="application/json",body=json.dumps(history,ensure_ascii=False)))
+                    hotel_row={"id":"p_"+"a"*24,"hotel_id":"123456789","hotel":"History TEST","origin":"Иркутск",
+                               "country":"Таиланд","date":future,"nights":7,"room":"DBL","resort":"",
+                               "observed_at_utc":item["observed_at_utc"],"last_price_rub":85000}
+                    hotel_history={"schema":"jamaica.recent-checked-hotels.v1","classification":"HISTORICAL_HOTELS_NOT_OFFERS",
+                                   "rows":[hotel_row,{**hotel_row,"id":"p_"+"b"*24,"date":urgent,
+                                             "observed_at_utc":(moment-timedelta(minutes=31)).isoformat()}]}
+                    historical.route("**/recent-checked-hotels.json",lambda route:route.fulfill(
+                        status=200,content_type="application/json",body=json.dumps(hotel_history,ensure_ascii=False)))
                     historical.goto(base,wait_until="domcontentloaded")
                     button=historical.locator("#hourlyCheckedChoices button").first
                     button.wait_for(timeout=18000)
@@ -149,6 +157,16 @@ def main():
                     ensure(historical.locator("#dateFrom").input_value()==future,"V113_HISTORY_DATE_NOT_APPLIED")
                     ensure(historical.locator("#previewCards article.offerCard").count()==0,"V113_HISTORY_CLICK_CREATED_OFFER")
                     print("V113_HISTORICAL_120_MIN_ONLY_BROWSER_PASS")
+                    hc=historical.locator("#historicalHotelCards article")
+                    hc.first.wait_for(timeout=18000)
+                    ensure(hc.count()==1,"V114_HISTORY_HOTEL_COUNT")
+                    ensure("Ранее 85" in hc.first.inner_text() and "Наличие сейчас неизвестно" in hc.first.inner_text(),"V114_HISTORY_PRICE_LABEL")
+                    ensure(hc.first.locator('a[href^="preview.html"]').count()==0,"V114_STALE_PREVIEW_LINK")
+                    hc.first.get_by_role("button",name="Выбрать параметры для поиска").click()
+                    ensure(historical.locator("#hotelSearch").input_value()=="History TEST","V114_HISTORY_HOTEL_FILTER")
+                    ensure(historical.locator("#previewCards article.offerCard").count()==0,"V114_HISTORY_HOTEL_CLICK_ADMITTED_AS_LIVE")
+                    print("V114_HISTORICAL_HOTEL_BROWSER_PASS")
+
                 finally:
                     historical.close()
 
