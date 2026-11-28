@@ -187,7 +187,7 @@ def main():
                     historical.locator("#dateTo").evaluate("(e)=>e.form.requestSubmit()")
                     historical.wait_for_function("()=>document.querySelectorAll('#historicalHotelCards article').length===2")
                     for mode,first in (("price","c"),("price_desc","a"),("date","a"),("date_desc","c")):
-                        historical.locator("#previewSort").select_option(mode)
+                        historical.locator('#previewSort input[value="'+mode+'"]').check()
                         ensure(hc.first.get_attribute("data-history-id")=="p_"+first*24,"V125_HISTORY_SORT_"+mode)
                     ensure(historical.locator("#previewCards article.offerCard").count()==0,"V125_HISTORY_ADMITTED_AS_LIVE")
                     print("V125_HISTORY_SORT_ALL_MODES_PASS")
@@ -611,7 +611,7 @@ def main():
                       str(photo_audit["cards"])+" cards checked; "+
                       str(photo_audit["photos"])+" sourced photos")
                 # Price sort must order known two-adult references, not departure dates.
-                page.locator("#previewSort").select_option("price")
+                page.locator('#previewSort input[value="price"]').check()
                 texts=page.locator("#previewCards article.offerCard strong").all_text_contents()
                 prices=[]
                 for line in texts:
@@ -620,7 +620,7 @@ def main():
                         prices.append(int(digits))
                 ensure(prices==sorted(prices),"GLOBAL_PRICE_SORT_NOT_ASCENDING")
                 # Multi-country default continues showing other countries on the first page.
-                page.locator("#previewSort").select_option("balanced")
+                page.locator('#previewSort input[value="balanced"]').check()
                 shown_again={name.split(" · ")[0] for name in page.locator("#previewCards article.offerCard h3").all_text_contents()}
                 ensure(len(shown_again)>=min(3,len(counts)) and shown_again.issubset(counts),"PRICE_SORT_BROKE_COUNTRY_COVERAGE")
                 if preview.get("truncated_to_public_limit") is True:
