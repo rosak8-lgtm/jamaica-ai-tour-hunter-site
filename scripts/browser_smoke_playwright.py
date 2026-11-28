@@ -148,6 +148,16 @@ def main():
                     historical.route("**/recent-checked-hotels.json",lambda route:route.fulfill(
                         status=200,content_type="application/json",body=json.dumps(hotel_history,ensure_ascii=False)))
                     historical.goto(base,wait_until="domcontentloaded")
+                    # Explicit search should surface historical hotels even before a date chip is clicked.
+                    historical.locator("#dateFrom").fill(future)
+                    historical.locator("#dateTo").fill(future)
+                    historical.locator("#dateTo").evaluate("(e)=>e.form.requestSubmit()")
+                    historical.wait_for_function("()=>document.querySelector('#historicalHotels')?.open===true")
+                    historical.locator("#historicalHotelCards article").first.wait_for(timeout=18000)
+                    ensure(historical.locator("#historicalHotelCards article").count()==1,"V117_HISTORY_FALLBACK_COUNT")
+                    ensure(historical.locator("#previewCards article.offerCard").count()==0,"V117_HISTORY_ADMITTED_AS_LIVE")
+                    print("V117_EXPLICIT_SEARCH_HISTORY_FALLBACK_PASS")
+
                     button=historical.locator("#hourlyCheckedChoices button").first
                     button.wait_for(timeout=18000)
                     ensure(historical.locator("#hourlyCheckedChoices button").count()==1,"V113_URGENT_EXPIRED_HISTORY_VISIBLE")
@@ -772,7 +782,7 @@ def main():
                 ensure(all(h.startswith("Мальдивы · ") for h in heads),
                        "COUNTRY_FILTER_MIXED_UNRELATED_TOURS")
                 if not heads:
-                    ensure("Пока нет подходящих туров" in page.locator("#searchProgress").inner_text()
+                    ensure("Пока нет свежих подтверждений по выбранным параметрам" in page.locator("#searchProgress").inner_text()
                            and "Показываем только актуальные проверенные варианты" in page.locator("#searchProgress").inner_text(),
                            "UNAVAILABLE_COUNTRY_NOT_EXPLAINED")
                 print("FULL_COUNTRY_DIRECTORY_SEARCH_IN_RESULTS=PASS")

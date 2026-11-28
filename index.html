@@ -216,6 +216,7 @@
  <summary id="historicalHotelsHeading">Ранее проверенные гостиницы за два часа</summary>
  <p class="micro">История конкретных вариантов, а не доступные для бронирования туры. Цена за двоих указана на момент проверки. Вылеты в ближайшие 7 дней сохраняются до 30 минут, остальные — до 120 минут. Необходим новый расчёт цены и мест.</p>
  <p class="micro" id="historicalHotelsNotice" role="status"></p>
+ <p class="micro">Обновление каталога не отправляет индивидуальный запрос на новую цену. Итоговая стоимость и наличие требуют отдельной проверки.</p>
  <div class="offerCards" id="historicalHotelCards"></div>
  <button class="loadMore" type="button" id="historicalHotelsMore" hidden>Ещё ранее проверенные варианты</button>
 </details>
@@ -443,6 +444,7 @@ form.addEventListener("submit",e=>{
  sourceFilterOptions();runSearch(true);
  if(typeof window.jamaicaUpdateHotels==="function")window.jamaicaUpdateHotels();
  if(typeof window.jamaicaUpdatePreviews==="function")window.jamaicaUpdatePreviews();
+ openHistoryForSearch();
  requestFreshSearchCatalog();
 });
 async function loadOffers(){
@@ -1092,12 +1094,19 @@ function historyCriteria(){
  nights:[...selectedNights],hotel:$("hotelSearch").value,resort:sidebarResort.value,budget:Number($("budget").value)||0,
  twoAdults:Travelers.isTwoAdults(travelerUI.current()),liveIds:new Set(verifiedRows().map(r=>r.id))};
 }
+function openHistoryForSearch(){
+ if($("favoritesOnly").checked)return;
+ $("historicalHotels").open=true;
+ renderHistoricalHotels(true);
+ void loadHistoricalHotels();
+}
 function renderHistoricalHotels(reset=false){
  if(!$("historicalHotels").open)return;
  if(reset)historicalHotelLimit=24;
  const criteria=historyCriteria();
  const rows=$("favoritesOnly").checked?[]:window.JamaicaSearchRecovery.historicalHotels(historicalHotelPayload,criteria);
  const target=$("historicalHotelCards"),frag=document.createDocumentFragment();
+ $("historicalHotelsHeading").textContent="Ранее проверенные гостиницы за два часа"+(historicalHotelPayload!==null?" · "+rows.length.toLocaleString("ru-RU")+" вариантов":"");
  const notice=$("historicalHotelsNotice");
  notice.textContent=historicalHotelLoad?"Загрузка истории…":historicalHotelPayload===null?
    "История пока недоступна. Свежий каталог доступен отдельно.":
@@ -1430,7 +1439,7 @@ function renderTourPreviews(reset=true){
  $("searchProgress").classList.toggle("hide",previewsLoaded&&list.length>0);
  if(previewsLoaded&&list.length===0){
    $("searchProgress").classList.remove("hide");
-   $("searchProgress").querySelector("strong").textContent="Пока нет подходящих туров";
+   $("searchProgress").querySelector("strong").textContent="Пока нет свежих подтверждений по выбранным параметрам";
    const extra=x=>(!hotel||(x.hotel+" "+x.resort+" "+x.room).toLocaleLowerCase("ru").includes(hotel))&&
       (!resortFilter||x.resort.toLocaleLowerCase("ru")===resortFilter)&&
       (!budget||!partyTwoAdults||(referencePrice(x)!==null&&referencePrice(x)<=budget*2))&&
@@ -1530,7 +1539,7 @@ function renderTourPreviews(reset=true){
    }else if(previewRecords.length){
      $("searchProgress").querySelector("p").append(" Получены карточки каталога, но свежие подтверждения пока не совпали или истекли. Каталог проверяется автоматически; это не означает, что туров у поставщика нет.");
    }
-   const refreshButton=el("button","btn btnWhite","Обновить проверенные туры");refreshButton.type="button";
+   const refreshButton=el("button","btn btnWhite","Обновить каталог");refreshButton.type="button";
    refreshButton.addEventListener("click",()=>requestFreshSearchCatalog(true));actions.append(refreshButton);
    const briefButton=el("button","btn btnWhite","Скопировать параметры поиска");
    briefButton.type="button";
