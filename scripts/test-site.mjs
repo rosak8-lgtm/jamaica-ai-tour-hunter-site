@@ -578,7 +578,7 @@ assert.ok(page.includes('previewPriceFresh'));
 assert.ok(page.includes('Цена на момент проверки на 2 взрослых') &&
  page.includes('JamaicaPublicVisualPolicy.observedPrice(x,visualProofs)'),
  'Only fresh DOM-observed BG prices for both-green same-tour offers may be displayed');
-assert.ok(page.includes('if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list)'));
+assert.ok(page.includes('if(!country&&sortMode==="balanced")list=interleaveCountries(list)'));
 assert.ok(page.includes('id="previewSort"'),'User-selectable tour sorting required');
 assert.ok(page.includes('function previewPriceCompare(a,b)'),'Price comparator required');
 assert.ok(page.includes('referencePrice(x)<=budget*2'),'Budget must honor 24-hour listed price, not 30-minute freshness');
