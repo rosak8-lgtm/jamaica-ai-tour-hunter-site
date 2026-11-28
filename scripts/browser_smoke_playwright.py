@@ -181,6 +181,7 @@ def main():
                     hotel_history["rows"].append({**hotel_row,"id":"p_"+"c"*24,
                         "date":later,"hotel":"History cheaper","last_price_rub":65000})
                     historical.reload(wait_until="domcontentloaded")
+                    historical.locator("#advancedFilters summary").click()
                     historical.locator("#hotelSearch").fill("")
                     historical.locator("#dateFrom").fill(future)
                     historical.locator("#dateTo").fill(later)
