@@ -1622,15 +1622,17 @@ async function loadVisualProofs(render=true){
    renderTourPreviews(true);
  }
 }
-async function loadTourPreviews(){
+async function loadTourPreviews(proofReady=Promise.resolve()){
  const serial=++previewLoadSerial;
  try{
-  const response=await fetch("./tour-previews.json",{cache:"no-store"});
+  const response=await fetch("./tour-previews.json",{cache:"no-store",signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error("PREVIEW_FEED_HTTP");
   const data=await response.json();
   if(data.schema!=="jamaica.tour-previews.v1"||data.bookable!==false||
      data.quote_verified!==false||data.availability_verified!==false||
      !Array.isArray(data.previews)||data.previews.length>8000)throw Error("PREVIEW_FEED_INVALID");
+  // Download root and proofs in parallel, but do not install new rows before proofs settle.
+  await proofReady;
   const refreshed=Date.parse(data.refreshed_at_utc||"");
   const age=Date.now()-refreshed;
   previewPriceFresh=Number.isFinite(refreshed)&&age>=-60000&&age<=30*60*1000;
@@ -1735,6 +1737,7 @@ async function loadTourPreviews(){
    }
   }
  }catch(e){
+  await proofReady;
   $("previewUpdatedAt").textContent="Не удалось проверить обновление каталога. Последняя загруженная копия может быть устаревшей.";
   sourceFilterOptions();renderTourPreviews(true);
  }
@@ -1753,8 +1756,8 @@ async function refreshCatalog(){
  try{
   const secondFeed=window.JamaicaApplicationReference.load();
   const hourlyLoad=loadHourlyCheckedDates();
-  await loadVisualProofs(false);
-  await loadTourPreviews();
+  const proofReady=loadVisualProofs(false);
+  await Promise.all([proofReady,loadTourPreviews(proofReady)]);
   applicationRows=await secondFeed;
   await hourlyLoad;
   if(applicationRows.length)previewsLoaded=true;
@@ -1767,8 +1770,8 @@ async function refreshCatalog(){
   for(const delay of [650,1800]){
    if(!needsPairRetry())break;
    await new Promise(resolve=>setTimeout(resolve,delay));
-   await loadVisualProofs(false);
-   await loadTourPreviews();
+   const retryProofReady=loadVisualProofs(false);
+   await Promise.all([retryProofReady,loadTourPreviews(retryProofReady)]);
   }
  }finally{
   lastCatalogRefreshAt=Date.now();catalogRefreshInFlight=false;
