@@ -176,6 +176,22 @@ def main():
                     ensure(historical.locator("#hotelSearch").input_value()=="History TEST","V114_HISTORY_HOTEL_FILTER")
                     ensure(historical.locator("#previewCards article.offerCard").count()==0,"V114_HISTORY_HOTEL_CLICK_ADMITTED_AS_LIVE")
                     print("V114_HISTORICAL_HOTEL_BROWSER_PASS")
+                    # Use an independent fixture with opposing price/date order.
+                    later=(moment.date()+timedelta(days=15)).isoformat()
+                    hotel_history["rows"].append({**hotel_row,"id":"p_"+"c"*24,
+                        "date":later,"hotel":"History cheaper","last_price_rub":65000})
+                    historical.reload(wait_until="domcontentloaded")
+                    historical.locator("#hotelSearch").fill("")
+                    historical.locator("#dateFrom").fill(future)
+                    historical.locator("#dateTo").fill(later)
+                    historical.locator("#dateTo").evaluate("(e)=>e.form.requestSubmit()")
+                    historical.wait_for_function("()=>document.querySelectorAll('#historicalHotelCards article').length===2")
+                    for mode,first in (("price","c"),("price_desc","a"),("date","a"),("date_desc","c")):
+                        historical.locator("#previewSort").select_option(mode)
+                        ensure(hc.first.get_attribute("data-history-id")=="p_"+first*24,"V125_HISTORY_SORT_"+mode)
+                    ensure(historical.locator("#previewCards article.offerCard").count()==0,"V125_HISTORY_ADMITTED_AS_LIVE")
+                    print("V125_HISTORY_SORT_ALL_MODES_PASS")
+
 
                 finally:
                     historical.close()
