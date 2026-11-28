@@ -78,7 +78,7 @@ def main():
     require("preview.html?id=" in main_src and
             "preview.html?id=" in pages["route.html"][0],
             "SELECTED_TOUR_LINK_MISSING")
-    require('if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list)' in main_src,
+    require('if(!country&&sortMode==="balanced")list=interleaveCountries(list)' in main_src,
             "MIXED_COUNTRY_RESULTS_MISSING")
     require("price_reference_party" in main_src and
             "Цена пока не подтверждена" in main_src,
