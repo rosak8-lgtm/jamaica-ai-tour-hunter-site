@@ -47,7 +47,7 @@ function manifest(feed){
  return items;
 }
 async function fetchShard(part,refreshed){
- const r=await fetch("./"+part.path,{cache:"no-store"});
+ const r=await fetch("./"+part.path,{cache:"no-store",signal:AbortSignal.timeout(12000)});
  if(!r.ok)throw Error("CATALOG_SHARD_UNAVAILABLE");
  const payload=await r.json();
  if(payload.schema!=="jamaica.tour-preview-shard.v1"||

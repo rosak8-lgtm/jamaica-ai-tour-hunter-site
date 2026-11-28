@@ -40,7 +40,7 @@ function observedPrice(row,proofs,now=Date.now()){
 }
 async function load(){
  try{
-  const response=await fetch("./tour-visual-evidence.json",{cache:"no-store"});
+  const response=await fetch("./tour-visual-evidence.json",{cache:"no-store",signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error("PROOF_FEED_NOT_AVAILABLE");
   const parsed=await response.json();
   if(!root.JamaicaVisualSelection)throw Error("NO_PROOF_VERIFIER");
