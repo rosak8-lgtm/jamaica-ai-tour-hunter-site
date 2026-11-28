@@ -150,7 +150,9 @@
   <select id="previewSort" aria-label="Сортировка туров">
     <option value="balanced">Разные страны · сначала недорогие</option>
     <option value="price">Сначала самые дешёвые по всем странам</option>
+    <option value="price_desc">Сначала самые дорогие</option>
     <option value="date">Сначала ближайшие даты</option>
+    <option value="date_desc">Сначала дальние даты</option>
   </select>
   <label class="favoritesToggle visualProofToggle" for="visualProofOnly">
    <input id="visualProofOnly" type="checkbox" checked disabled aria-label="Обязательное условие: актуальная проверка тура">
@@ -1105,6 +1107,10 @@ function renderHistoricalHotels(reset=false){
  if(reset)historicalHotelLimit=24;
  const criteria=historyCriteria();
  const rows=$("favoritesOnly").checked?[]:window.JamaicaSearchRecovery.historicalHotels(historicalHotelPayload,criteria);
+ const mode=$("previewSort").value;
+ const dateOrder=(a,b)=>a.date.localeCompare(b.date);
+ const tie=(a,b)=>a.hotel.localeCompare(b.hotel,"ru")||a.room.localeCompare(b.room,"ru")||a.id.localeCompare(b.id);
+ rows.sort((a,b)=>mode==="date_desc"?-dateOrder(a,b)||tie(a,b):mode==="date"||!criteria.twoAdults?dateOrder(a,b)||tie(a,b):mode==="price_desc"?b.last_price_rub-a.last_price_rub||dateOrder(a,b)||tie(a,b):a.last_price_rub-b.last_price_rub||dateOrder(a,b)||tie(a,b));
  const target=$("historicalHotelCards"),frag=document.createDocumentFragment();
  $("historicalHotelsHeading").textContent="Ранее проверенные гостиницы за два часа"+(historicalHotelPayload!==null?" · "+rows.length.toLocaleString("ru-RU")+" вариантов":"");
  const notice=$("historicalHotelsNotice");
@@ -1192,12 +1198,12 @@ function renderTourPreviews(reset=true){
    (!budget||!partyTwoAdults||(referencePrice(x)!==null&&
                 referencePrice(x)<=budget*2))
  );
- if(partyTwoAdults&&sortMode!=="date"){
-   list.sort(previewPriceCompare);
+ if(partyTwoAdults&&["balanced","price","price_desc"].includes(sortMode)){
+   list.sort(sortMode==="price_desc"?((a,b)=>{const ap=referencePrice(a),bp=referencePrice(b);return ap===null||bp===null?previewPriceCompare(a,b):bp-ap||previewPriceCompare(a,b);}):previewPriceCompare);
  }else{
-   list.sort((a,b)=>a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru"));
+   list.sort((a,b)=>(sortMode==="date_desc"?-1:1)*a.depart_date.localeCompare(b.depart_date)||a.country.localeCompare(b.country,"ru")||a.hotel.localeCompare(b.hotel,"ru"));
  }
- if(!country&&!(sortMode==="price"&&partyTwoAdults))list=interleaveCountries(list);
+ if(!country&&sortMode==="balanced")list=interleaveCountries(list);
  if($("favoritesOnly").checked)list=list.filter(x=>favoriteIds.has(x.id));
  // Actual date availability for this city and country, including dates
  // outside the selected range only as explicitly labelled alternatives.
